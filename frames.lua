@@ -107,7 +107,7 @@ function MCL_frames:SetTabs()
         i = i+1
 	end
 
-	Tab_OnClick(_G[frameName.."Tab1"]);
+	Tab_OnClick(_G[frameName.."Tab17"]);
 
 	return contents, numTabs;
 end
