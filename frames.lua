@@ -134,7 +134,7 @@ function MCL_frames:progressBar(relativeFrame)
 	MyStatusBar:SetMinMaxValues(0, 100)
 	MyStatusBar:SetValue(0)
 	MyStatusBar:SetWidth(150)
-	MyStatusBar:SetHeight(10)
+	MyStatusBar:SetHeight(15)
 	MyStatusBar:SetPoint("BOTTOMLEFT", relativeFrame, "BOTTOMLEFT", 0, 10)
 
 	MyStatusBar:SetStatusBarColor(0.1, 0.9, 0.1)
