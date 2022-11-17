@@ -1,0 +1,43 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
+	<Frame name="BaseMCLFrameTemplate" virtual="true">
+		<Frames>
+			<Button parentKey="CloseButton" inherits="UIPanelCloseButton">
+				<Anchors>
+					<Anchor point="TOPRIGHT" relativePoint="TOPRIGHT">
+						<Offset x="8" y="7"/>
+					</Anchor>
+				</Anchors>
+			</Button>
+		</Frames>
+	</Frame> 
+	<Frame name="MCLFrameTemplate" inherits="BaseMCLFrameTemplate" virtual="true">
+		<Layers>
+			<Layer level="BACKGROUND" textureSubLevel="-1">
+				<Texture parentKey="Bg" file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+					<Anchors>
+						<Anchor point="TOPLEFT" x="0" y="-15"/>
+						<Anchor point="BOTTOMRIGHT" x="0" y="2"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="TitleBg" file="Interface\Buttons\WHITE8X8" inherits="_UI-Frame-TitleTileBg">
+					<Anchors>
+						<Anchor point="TOPLEFT" x="0" y="0"/>
+						<Anchor point="TOPRIGHT" x="0" y="0"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="BACKGROUND">
+			</Layer>
+		</Layers>
+	</Frame>
+	<Frame name="MCL-Frame" inherits="MCLFrameTemplate" virtual="true">
+		<Layers>
+			<Layer level="BACKGROUND" textureSubLevel="1">
+			</Layer>
+		</Layers>
+	</Frame>
+	<Frame name="MCLFrameTemplateWithInset" inherits="MCLFrameTemplate" virtual="true">
+	</Frame>	
+</Ui>
