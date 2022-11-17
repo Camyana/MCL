@@ -65,9 +65,6 @@ end
 function MCL_Load:Toggle()
 	if not MCLFrame then
 		check_if_loaded = MCL_Load.init()
-        if check_if_loaded == true then
-            print("|cff00CCFFMCL: |cffFF0000/mcl reload |cffFFFFFFto refresh this data.")
-        end
         core.MCL_MF = core.Frames:CreateMainFrame()
         core.Function:initSections()
 	else

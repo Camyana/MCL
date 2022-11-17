@@ -176,7 +176,60 @@ end
 
 
 
+function MCL_frames:createOverviewCategory(set, relativeFrame)
+    local first = true
+    local col = 1
+    local oddFrame, evenFrame = false, false
+    local oddOverFlow, evenOverFlow = 0, 0
 
+	for k,v in pairs(set) do
+		if v ~= "Overview" then
+			local frame = CreateFrame("Frame", nil, relativeFrame, "BackdropTemplate")
+			frame:SetWidth(60);
+			frame:SetHeight(60);
+
+			if (first == true) then
+				frame:SetPoint("TOPLEFT", relativeFrame, "TOPLEFT", 0, -80);
+			elseif (col % 2 == 0) then
+				if evenFrame then
+					frame:SetPoint("TOPRIGHT", evenFrame, "TOPRIGHT", 0, -50);
+				else
+					frame:SetPoint("TOPRIGHT", oddFrame, "TOPRIGHT", 480, 0);
+				end
+			else
+				frame:SetPoint("BOTTOMLEFT", oddFrame, "BOTTOMLEFT", 0, -50);
+			end
+
+			first = false
+			frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+			frame.title:SetPoint("TOPLEFT", 0, 0)
+			frame.title:SetText(v)
+			
+			local pBar = core.Frames:progressBar(frame)
+			pBar:SetWidth(400)
+			pBar:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 30)
+
+			if (col % 2 == 0) then
+				evenFrame = frame
+				evenOverFlow = overflow
+			else
+				oddFrame = frame
+				oddOverFlow = overflow
+			end
+			col = col + 1
+
+			local t = {
+				name = v,
+				frame = pBar
+			}
+	
+			table.insert(core.overviewFrames, t)			
+		end	
+
+	end
+
+
+end
 
 
 ----------------------------------------------------------------
@@ -235,7 +288,8 @@ function MCL_frames:createCategoryFrame(set, relativeFrame)
             frame = category,
             mounts = v.mounts,
             collected = 0,
-            pBar = pBar
+            pBar = pBar,
+			rel = relativeFrame
         }
 
         table.insert(section, stats)

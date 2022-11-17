@@ -5,6 +5,8 @@ local MCL_functions = core.Function;
 
 core.mounts = {}
 core.stats= {}
+core.overviewStats = {}
+core.overviewFrames = {}
 
 function MCL_functions:getFaction()
     -- * --------------------------------
@@ -52,8 +54,12 @@ function MCL_functions:initSections()
 
     core.MCL_MF_Nav = core.Frames:createNavFrame(core.MCL_MF, 'Sections')
 
-    local tabFrames, numTabs = core.Frames:SetTabs()
-    
+    local tabFrames, numTabs = core.Frames:SetTabs() 
+
+    local function OverviewStats(relativeFrame)
+        core.Frames:createOverviewCategory(core.sections, relativeFrame)
+        -- core.Frames:createCategoryFrame(core.sections, relativeFrame)
+    end
 
     core.sectionFrames = {}
     for i=1, numTabs do
@@ -61,7 +67,9 @@ function MCL_functions:initSections()
         table.insert(core.sectionFrames, section_frame)
 
         for ii,v in ipairs(core.sectionNames) do
-            if v.name == core.sections[i] then
+            if v.name == "Overview" then
+                core.overview = section_frame
+            elseif v.name == core.sections[i] then
                 -- ! Create Frame for each category
                 if v.mounts then
                     for k,val in pairs(v.mounts) do
@@ -76,6 +84,8 @@ function MCL_functions:initSections()
             end            
         end
     end
+
+    OverviewStats(core.overview)
 
 
 end
@@ -257,12 +267,21 @@ function UpdateProgressBar(frame, total, collected)
 
 end
 
+local function clearOverviewStats()
+    for k in pairs (core.overviewStats) do
+        core.overviewStats[k] = nil
+    end
+end
+
 function MCL_functions:UpdateCollection()
+    clearOverviewStats()
     core.total = 0
+    core.collected = 0
     for k,v in pairs(core.mounts) do
+        core.total = core.total + 1
         if IsMountCollected(v.id) then
             UpdateBackground(v.frame)
-            core.total = core.total + 1
+            core.collected = core.collected + 1
         end
         -- * Check if mount is collected
         -- * Change colour of background
@@ -297,8 +316,16 @@ function MCL_functions:UpdateCollection()
                 else
                     UpdateProgressBar(vv.pBar, section_total, section_collected)
                 end
-            end
-        end
+                if vv["rel"] then
+                    for q,e in pairs(core.overviewFrames) do
+                        if e.name == vv.rel.title:GetText() then
+                            UpdateProgressBar(e.frame, section_total, section_collected)
+                        end
+                    end                     
+                end                
+            end             
+        end     
     end
+    UpdateProgressBar(core.overview.pBar, core.total, core.collected)
 end
 

@@ -1052,3 +1052,8 @@ core.sectionNames[17] = {
 	mounts = core.mountList[17],
 	category = {"Mythic +","Scroll of Resurrection", "Challenge Mode", "Recruit-A-Friend", "Ahead of the Curve", "Brawler's Guild", "Arena Mounts | TBC - WOD", "Arena Mounts | LEGION - SL", "Azeroth Choppers", "Original Epic Mounts", "Old Promotion Mounts", "Unobtainable Raid Mounts", "BrewFest"}
 }
+core.sectionNames[18] = {
+	name = "Overview",
+	mounts = {},
+	category = {}
+}
