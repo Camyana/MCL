@@ -1,0 +1,6 @@
+{
+    "Lua.diagnostics.globals": [
+        "C_MountJournal",
+        "C_Timer"
+    ]
+}

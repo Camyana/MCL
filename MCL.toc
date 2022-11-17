@@ -1,7 +1,7 @@
-## Interface: 100000
-## Title: MCL - Mount Collection Log
+## Interface: 100002
+## Title: Mount Collection Log - MCL
 ## Notes: A tool used to log collected mounts in a similiar way to Simple Armory.
-## Version: 1.0925h
+## Version: 2.0 
 ## DefaultState: enabled
 ## LoadWith: Blizzard_Collections
 ## SavedVariables: MCL_DB
@@ -12,5 +12,7 @@ libs\load_libs.xml
 button.xml
 frame.xml
 data.lua
-config.lua
+functions.lua
+frames.lua
+main.lua
 Core.lua

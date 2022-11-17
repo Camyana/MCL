@@ -3,87 +3,16 @@
 --------------------------------------------------------
 local _, core = ...;
 
-core.sectionNames = {
-	Classic = {
-		name = "Classic",
-		category = {"Reputation", "Dungeon Drop", "Raid Drop"},
-	},
-	TBC = {
-		name = "TBC",
-		category = {"Cenarion Expedition", "Kurenai/The Mag'har", "Netherwing", "Sha'tari Skyguard", "Vendor", "Dungeon Drop", "Raid Drop"},
-	},
-	WOTLK = {
-		name = "WOTLK",
-		category = {"Achievement", "Quest", "Vendor", "Argent Tournament", "Reputation", "Dungeon Drop", "Raid Drop", "Rare Spawn"},
-	},
-	CATA = {
-		name = "CATA",
-		category = {"Achievement", "Quest", "Vendor", "Dungeon Drop", "Raid Drop", "Rare Spawn"},
-	},
-	MOP = {
-		name = "MOP",
-		category = {"Achievement", "Golden Lotus", "Order of the Cloud Serpent", "Shado-Pan", "Kun-Lai Vendor", "The Tillers", "Primal Eggs", "Quest", "Raid Drop", "Rare Spawn", "World Boss", "Reputation"},
-	},
-	WOD = {
-		name = "WOD",
-		category = {"Achievement", "Vendor", "Garrison", "Missions", "Stables", "Trading Post", "Fishing Shack", "Rare Spawn", "World Boss", "Raid Drop"},
-	},
-	LEGION = {
-		name = "LEGION",
-		category = {"Achievement", "Vendor", "Quest", "Riddle", "Reputation", "Rare Spawn", "Dungeon Drop", "Raid Drop", "Class", "Paragon Reputation"},
-	},
-	BFA = {
-		name = "BFA",
-		category = {"Achievement", "Vendor", "Quest", "Medals", "Allied Races", "Reputation", "Riddle", "Tinkering", "Zone", "Rare Spawn", "World Boss", "Warfront: Arathi", "Warfront: Darkshore", "Assault: Vale of Eternal Blossoms", "Assault: Uldum", "Dungeon Drop", "Raid Drop", "Island Expedition", "Dubloons", "Visions", "Paragon Reputation", "Pre-Launch Event"},
-	},
-	SL =  {
-		name = "SL",
-		category = {"Achievement", "Vendor", "Treasures", "Adventures", "Riddles", "Tormentors", "Maw Assaults", "Reputation", "Paragon Reputation", "Dungeon Drop", "Raid Drop", "Zone", "Daily Activities", "Rare Spawn", "Oozing Necroray Egg", "Covenant Feature", "Night Fae", "Kyrian", "Necrolords", "Venthyr", "Protoform Synthesis", "Torghast"},
-	},
-	Horde = {
-		name = "Horde",
-		category = {"Pandaren", "Orc", "Undead", "Tauren", "Troll", "Goblin", "Blood Elf"}
-	},
-	Alliance = {
-		name = "Alliance",
-		category = {"Pandaren", "Human", "Gnome", "Dwarf", "Dark Iron Dwarf", "Draenei", "Night Elf", "Worgen"}
-	},
-	Professions = {
-		name = "Professions",
-		category = {"Alchemy", "Archeology", "Engineering", "Fishing", "Jewelcrafting", "Tailoring", "Leatherworking", "Blacksmith"},
-	},
-	PVP = {
-		name = "PVP",
-		category = {"Achievement", "Mark of Honor", "Honor", "Vicious Saddle", "Gladiator", "Halaa", "Timeless Isle", "Talon's Vengeance"},
-	},
-	WorldEvents = {
-		name = "WorldEvents",
-		category = {"Achievement", "Brewfest", "Hallow's End", "Love is in the Air", "Noblegarden", "Winter Veil", "Brawler's Guild", "Darkmoon Faire", "Timewalking"},
-	},
-	Promotion = {
-		name = "Promotion",
-		category = {"Blizzard Store", "Blizzcon", "Collector's Edition", "WoW Classic", "WoW Anniversary Mounts", "Hearthstone", "Warcraft III Reforged", "Recruit-A-Friend", "Azeroth Choppers", "Trading Card Game", "Timewalking Alterac Valley"},
-	},
-	Other = {
-		name = "Other",
-		category = {"Guild Vendor", "BMAH", "Mount Collection", "Exalted Reputations", "Toy", "Heirlooms", "Paladin", "Warlock"}
-	},
-	Unobtainable = {
-		name = "Unobtainable",
-		category = {"Mythic +","Scroll of Resurrection", "Challenge Mode", "Recruit-A-Friend", "Ahead of the Curve", "Brawler's Guild", "Arena Mounts | TBC - WOD", "Arena Mounts | LEGION - SL", "Azeroth Choppers", "Original Epic Mounts", "Old Promotion Mounts", "Unobtainable Raid Mounts", "BrewFest"}
-	},
-	Overview = {
-		name = "Overview",
-		category = {"Classic", "TBC", "WOTLK", "CATA", "MOP", "WOD", "LEGION", "BFA", "SL", "Faction", "Professions", "PVP", "WorldEvents", "Promotion", "Other", "Unobtainable"}
-	}
-}
-core.mountList = {
-	SL = {
-		name = "SL",
+core.sectionNames = {}
+core.mountList = {}
+
+core.mountList[1] = {
+	name = "SL",
+	categories = {
 		Achievement = {
 			name = "Achievement",
-			mounts = {186654, 186637, 184183, 182596, 186653, 184166, 186655, 187673, 192557},
-			mountID = {15491, 1549, 1576}
+			mounts = {186654, 186637, 184183, 182596, 186653, 184166, 186655, 187673, 192557, "m15491", "m1549", "m1576"},
+			mountID = {"m15491", "m1549", "m1576"}
 		},
 		Vendor = {
 			name = "Vendor",
@@ -127,7 +56,7 @@ core.mountList = {
 		},
 		DungeonDrop = {
 			name = "Dungeon Drop",
-			mounts = {181819, 186638},
+			mounts = {181819, 186638, "m1445"},
 			mountID = {1445}
 		},
 		RaidDrop = {
@@ -190,9 +119,11 @@ core.mountList = {
 			mounts = {188700, 188696, 188736},
 			mountID = {}
 		}
-	},
-	BFA = {
-		name = "BFA",
+	}
+}
+core.mountList[2] = {
+	name = "BFA",
+	categories = {
 		Achievement = {
 			name = "Achievement",
 			mounts = {168056, 168055, 169162, 163577, 169194, 168329, 161215, 163216, 166539, 167171, 174861, 174654},
@@ -303,9 +234,11 @@ core.mountList = {
 			mounts = {163127, 163128},
 			mountID = {}
 		}
-	},
-	Legion = {
-		name = "LEGION",
+	}
+}
+core.mountList[3] = {
+	name = "LEGION",
+	categories = {
 		Achievement = {
 			name = "Achievement",
 			mounts = {141216, 138387, 141217, 143864, 152815, 153041, 129280},
@@ -343,7 +276,7 @@ core.mountList = {
 		},
 		Class = {
 			name = "Class",
-			mounts = {142231, 143502, 143503, 143505, 143504, 143493, 143492, 143490, 143491, 142225, 142232, 143489, 142227, 142228, 142226, 142233, 143637},
+			mounts = {142231, 143502, 143503, 143505, 143504, 143493, 143492, 143490, 143491, 142225, 142232, 143489, 142227, 142228, 142226, 142233, 143637, "m868", "m860", "m861", "m898"},
 			mountID = {868, 860, 861, 898}
 		},
 		ParagonReputation = {
@@ -355,10 +288,12 @@ core.mountList = {
 			name = "Reputation",
 			mounts = {152788, 152797, 152793, 152795, 152794, 152796, 152791},
 			mountID = {}
-		}																											
-	},
-	WOD = {
-		name = "WOD",
+		}
+	}																										
+}
+core.mountList[4] = {
+	name = "WOD",
+	categories = {
 		Achievement = {
 			name = "Achievement",
 			mounts = {116670, 116383, 127140, 128706},
@@ -408,10 +343,12 @@ core.mountList = {
 			name = "Fishing Shack",
 			mounts = {87791},
 			mountID = {}
-		}				
-	},
-	MOP = {
-		name = "MOP",
+		}		
+	}		
+}
+core.mountList[5] = {
+	name = "MOP",
+	categories = {
 		Achievement = {
 			name = "Achievement",
 			mounts = {87769, 87773, 81559, 93662, 104208, 89785},
@@ -471,10 +408,12 @@ core.mountList = {
 			name = "Reputation",
 			mounts = {93169, 95565, 81354, 89304, 85262, 89363, 87774, 93168, 95564},
 			mountID = {}
-		}																																	
-	},
-	CATA = {
-		name = "CATA",
+		}
+	}																																
+}
+core.mountList[6] = {
+	name = "CATA",
+	categories = {
 		Achievement = {
 			name = "Achievement",
 			mounts = {62900, 62901, 69213, 69230, 77068},
@@ -504,10 +443,12 @@ core.mountList = {
 			name = "Rare Spawn",
 			mounts = {67151, 63042, 63046},
 			mountID = {}
-		}												
-	},
-	WOTLK = {
-		name = "WOTLK",
+		}		
+	}										
+}
+core.mountList[7] = {
+	name = "WOTLK",
+	categories = {
 		Achievement = {
 			name = "Achievement",
 			mounts = {44160, 45801, 45802, 51954, 51955},
@@ -547,10 +488,12 @@ core.mountList = {
 			name = "Rare Spawn",
 			mounts = {44168},
 			mountID = {}
-		}																					
-	},
-	TBC = {
-		name = "TBC",
+		}			
+	}																		
+}
+core.mountList[8] = {
+	name = "TBC",
+	categories = {
 		CenarionExpedition = {
 			name = "Cenarion Expedition",
 			mounts = {33999},
@@ -586,9 +529,11 @@ core.mountList = {
 			mounts = {32458, 30480},
 			mountID = {}
 		}
-	},
-	Classic = {
-		name = "Classic",
+	}
+}
+core.mountList[9] = {
+	name = "Classic",
+	categories = {	
 		Reputation = {
 			name = "Reputation",
 			mounts = {13086, 46102},
@@ -603,10 +548,12 @@ core.mountList = {
 			name = "Raid Drop",
 			mounts = {21218, 21321, 21323, 21324},
 			mountID = {}
-		}						
-	},
-	Alliance = {
-		name = "Alliance",
+		}
+	}						
+}
+core.mountList[10] = {
+	name = "Alliance",
+	categories = {	
 		Human = {
 			name = "Human",
 			mounts = {18776, 18777, 18778, 5655, 2411, 2414, 5656},
@@ -646,10 +593,12 @@ core.mountList = {
 			name = "Pandaren",
 			mounts = {91010, 91012, 91011, 91013, 91014, 91015, 91004, 91008, 91009, 91005, 91006, 91007},
 			mountID = {}
-		},														
-	},
-	Horde = {
-		name = "Horde",
+		},	
+	}													
+}
+core.mountList[11] = {
+	name = "Horde",
+	categories = {	
 		Orc = {
 			name = "Orc",
 			mounts = {18796, 18798, 18797, 46099, 5668, 5665, 1132},
@@ -685,9 +634,11 @@ core.mountList = {
 			mounts = {91010, 91012, 91011, 91013, 91014, 91015, 91004, 91008, 91009, 91005, 91006, 91007},
 			mountID = {}
 		},	
-	},
-	Professions = {
-		name = "Professions",
+	}
+}
+core.mountList[12] = {
+	name = "Professions",
+	categories = {	
 		Alchemy = {
 			name = "Alchemy",
 			mounts = {65891},
@@ -728,9 +679,11 @@ core.mountList = {
 			mounts = {137686},
 			mountID = {}
 		}
-	},
-	PVP = {
-		name = "PVP",
+	}
+}
+core.mountList[13] = {
+	name = "PVP",
+	categories = {	
 		Achievement = {
 			name = "Achievement",
 			mounts = {44223, 44224},
@@ -771,9 +724,11 @@ core.mountList = {
 			mounts = {142369},
 			mountID = {}
 		}
-	},
-	WorldEvents = {
-		name = "WorldEvents",
+	}
+}
+core.mountList[14] = {
+	name = "WorldEvents",
+	categories = {	
 		Achievement = {
 			name = "Achievement",
 			mounts = {44177},
@@ -819,9 +774,11 @@ core.mountList = {
 			mounts = {129923, 129922, 87775, 167894, 167895, 133543, 188674, 187595},
 			mountID = {}
 		}
-	},
-	Promotion = {
-		name = "Promotion",
+	}
+}
+core.mountList[15] = {
+	name = "Promotion",
+	categories = {	
 		AnnualPass = {
 			name = "Annual Pass",
 			mounts = {76755},
@@ -829,32 +786,32 @@ core.mountList = {
 		},
 		BlizzardStore = {
 			name = "Blizzard Store",
-			mounts = {54811, 69846, 78924, 95341, 97989, 107951, 112326, 122469, 147901, 156564, 160589, 166775, 166774, 166776},
+			mounts = {54811, 69846, 78924, 95341, 97989, 107951, 112326, 122469, 147901, 156564, 160589, 166775, 166774, 166776, "m1266", "m1267", "m1290", "m1346", "m1291", "m1456", "m1330", "m1531", "m1581"},
 			mountID = {1266, 1267, 1290, 1346, 1291, 1456, 1330, 1531, 1581}
 		},
 		Blizzcon = {
 			name = "Blizzcon",
-			mounts = {43599, 151618},
+			mounts = {43599, 151618, "m1458"},
 			mountID = {1458}
 		},
 		CollectorsEdition = {
 			name = "Collector's Edition",
-			mounts = {85870, 109013, 128425, 153539, 153540},
+			mounts = {85870, 109013, 128425, 153539, 153540, "m1289", "m1556"},
 			mountID = {1289, 1556}
 		},
 		WowClassic = {
 			name = "WoW Classic",
-			mounts = {},
+			mounts = {"m1444", "m1602"},
 			mountID = {1444, 1602}
 		},
 		anniversary = {
 			name = "WoW Anniversary Mounts",
-			mounts = {115484, 172022, 172012, 172023, 186469},
+			mounts = {115484, 172022, 172012, 172023, 186469, "m1424"},
 			mountID = {1424}
 		},
 		Hearthstone = {
 			name = "Hearthstone",
-			mounts = {98618},
+			mounts = {98618, "m1513"},
 			mountID = {1513}
 		},
 		WarcraftIII = {
@@ -886,10 +843,12 @@ core.mountList = {
 			name = "Timewalking Alterac Valley",
 			mounts = {172023, 172022},
 			mountID = {}
-		}		
-	},
-	Other = {
-		name = "Other",
+		}
+	}	
+}
+core.mountList[16] = {
+	name = "Other",
+	categories = {	
 		GuildVendor = {
 			name = "Guild Vendor",
 			mounts = {63125, 62298, 85666, 116666},
@@ -932,12 +891,14 @@ core.mountList = {
 		},
 		Warlock = {
 			name="Warlock",
-			mounts = {},
+			mounts = {"m17", "m83"},
 			mountID = {17, 83},
 		}
-	},
-	Unobtainable = {
-		name = "Unobtainable",
+	}
+}
+core.mountList[17] = {
+	name = "Unobtainable",
+	categories = {	
 		MythicPlus = {
 			name = "Mythic +",
 			mounts = {182717, 187525, 174836, 187682},
@@ -995,7 +956,7 @@ core.mountList = {
 		},
 		RaidMounts = {
 			name = "Unobtainable Raid Mounts",
-			mounts = {49098, 49096, 49046, 49044, 44164, 33809, 21176},
+			mounts = {49098, 49096, 49046, 49044, 44164, 33809, 21176, "m937"},
 			mountID = {937}
 		},
 		BrewFest = {
@@ -1004,4 +965,90 @@ core.mountList = {
 			mountID = {}
 		}
 	}
+}
+
+core.sectionNames[1] = {
+	name = "Vanilla",
+	mounts = core.mountList[9],
+	category = {"Reputation", "Dungeon Drop", "Raid Drop"},
+}
+core.sectionNames[2] = {
+	name = "The Burning Crusade",
+	mounts = core.mountList[8],
+	category = {"Cenarion Expedition", "Kurenai/The Mag'har", "Netherwing", "Sha'tari Skyguard", "Vendor", "Dungeon Drop", "Raid Drop"},
+}
+core.sectionNames[3] = {
+	name = "Wrath of the Lich King",
+	mounts = core.mountList[7],
+	category = {"Achievement", "Quest", "Vendor", "Argent Tournament", "Reputation", "Dungeon Drop", "Raid Drop", "Rare Spawn"},
+}
+core.sectionNames[4] = {
+	name = "Cataclysm",
+	mounts = core.mountList[6],
+	category = {"Achievement", "Quest", "Vendor", "Dungeon Drop", "Raid Drop", "Rare Spawn"},
+}
+core.sectionNames[5] = {
+	name = "Mists of Pandaria",
+	mounts = core.mountList[5],
+	category = {"Achievement", "Golden Lotus", "Order of the Cloud Serpent", "Shado-Pan", "Kun-Lai Vendor", "The Tillers", "Primal Eggs", "Quest", "Raid Drop", "Rare Spawn", "World Boss", "Reputation"},
+}
+core.sectionNames[6] = {
+	name = "Warlords of Draenor",
+	mounts = core.mountList[4],
+	category = {"Achievement", "Vendor", "Garrison", "Missions", "Stables", "Trading Post", "Fishing Shack", "Rare Spawn", "World Boss", "Raid Drop"},
+}
+core.sectionNames[7] = {
+	name = "Legion",
+	mounts = core.mountList[3],
+	category = {"Achievement", "Vendor", "Quest", "Riddle", "Reputation", "Rare Spawn", "Dungeon Drop", "Raid Drop", "Class", "Paragon Reputation"},
+}
+core.sectionNames[8] = {
+	name = "Battle for Azeroth",
+	mounts = core.mountList[2],
+	category = {"Achievement", "Vendor", "Quest", "Medals", "Allied Races", "Reputation", "Riddle", "Tinkering", "Zone", "Rare Spawn", "World Boss", "Warfront: Arathi", "Warfront: Darkshore", "Assault: Vale of Eternal Blossoms", "Assault: Uldum", "Dungeon Drop", "Raid Drop", "Island Expedition", "Dubloons", "Visions", "Paragon Reputation", "Pre-Launch Event"},
+}
+core.sectionNames[9] = {
+	name = "Shadowlands",
+	mounts = core.mountList[1],
+	category = {"Achievement", "Vendor", "Treasures", "Adventures", "Riddles", "Tormentors", "Maw Assaults", "Reputation", "Paragon Reputation", "Dungeon Drop", "Raid Drop", "Zone", "Daily Activities", "Rare Spawn", "Oozing Necroray Egg", "Covenant Feature", "Night Fae", "Kyrian", "Necrolords", "Venthyr", "Protoform Synthesis", "Torghast"},
+}
+core.sectionNames[10] = {
+	name = "Horde",
+	mounts = core.mountList[11],
+	category = {"Pandaren", "Orc", "Undead", "Tauren", "Troll", "Goblin", "Blood Elf"}
+}
+core.sectionNames[11] = {
+	name = "Alliance",
+	mounts = core.mountList[10],
+	category = {"Pandaren", "Human", "Gnome", "Dwarf", "Dark Iron Dwarf", "Draenei", "Night Elf", "Worgen"}
+}
+core.sectionNames[12] = {
+	name = "Professions",
+	mounts = core.mountList[12],
+	category = {"Alchemy", "Archeology", "Engineering", "Fishing", "Jewelcrafting", "Tailoring", "Leatherworking", "Blacksmith"},
+}
+core.sectionNames[13] = {
+	name = "PVP",
+	mounts = core.mountList[13],
+	category = {"Achievement", "Mark of Honor", "Honor", "Vicious Saddle", "Gladiator", "Halaa", "Timeless Isle", "Talon's Vengeance"},
+}
+core.sectionNames[14] = {
+	name = "World Events",
+	mounts = core.mountList[14],
+	category = {"Achievement", "Brewfest", "Hallow's End", "Love is in the Air", "Noblegarden", "Winter Veil", "Brawler's Guild", "Darkmoon Faire", "Timewalking"},
+}
+core.sectionNames[15] = {
+	name = "Promotion",
+	mounts = core.mountList[15],
+	category = {"Blizzard Store", "Blizzcon", "Collector's Edition", "WoW Classic", "WoW Anniversary Mounts", "Hearthstone", "Warcraft III Reforged", "Recruit-A-Friend", "Azeroth Choppers", "Trading Card Game", "Timewalking Alterac Valley"},
+}
+core.sectionNames[16] = {
+	name = "Other",
+	mounts = core.mountList[16],
+	category = {"Guild Vendor", "BMAH", "Mount Collection", "Exalted Reputations", "Toy", "Heirlooms", "Paladin", "Warlock"}
+}
+core.sectionNames[17] = {
+	name = "Unobtainable",
+	mounts = core.mountList[17],
+	category = {"Mythic +","Scroll of Resurrection", "Challenge Mode", "Recruit-A-Friend", "Ahead of the Curve", "Brawler's Guild", "Arena Mounts | TBC - WOD", "Arena Mounts | LEGION - SL", "Azeroth Choppers", "Original Epic Mounts", "Old Promotion Mounts", "Unobtainable Raid Mounts", "BrewFest"}
 }

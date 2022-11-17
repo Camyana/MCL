@@ -6,7 +6,7 @@
 			<Button parentKey="CloseButton" inherits="UIPanelCloseButton">
 				<Anchors>
 					<Anchor point="TOPRIGHT" relativePoint="TOPRIGHT">
-						<Offset x="8" y="7"/>
+						<Offset x="0" y="3"/>
 					</Anchor>
 				</Anchors>
 			</Button>

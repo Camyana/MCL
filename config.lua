@@ -10,24 +10,6 @@ core.Config = {};
 local MCL_Load = core.Config;
 
 
-local MCL_collectableMounts = 0
-local MCL_u = 0
-local MCL_rowC = 0
-local MCL_x = 10
-local MCL_y = -25
-local MCL_MF
-local MCL_currentFrame
-local MCL_totalCollected = 0
-local MCL_complete
-local MCL_totalc
-local MCL_total
-local MCL_mountCache = {}
-local MCL_mountFrames = {}
-local MCL_aCount = 0
-local MCL_col = 0
-local yTwo = -30
-local MCL_loaded = 0
-
 
 ----------------------------------------------------
 -- Initialise Database
@@ -51,7 +33,6 @@ local function InitMounts()
 		end
 	end
 	if(load_check > 900) then
-		print(load_check)
 		return false
 	end
 end
@@ -251,14 +232,14 @@ end
 local function Tab_OnClick(self)
 	PanelTemplates_SetTab(self:GetParent(), self:GetID());
 
-	local scrollChild = MCL_MF.ScrollFrame:GetScrollChild();
+	local scrollChild = MCL_mainFrame.ScrollFrame:GetScrollChild();
 	if(scrollChild) then
 		scrollChild:Hide();
 	end
 
-	MCL_MF.ScrollFrame:SetScrollChild(self.content);
+	MCL_mainFrame.ScrollFrame:SetScrollChild(self.content);
 	self.content:Show();
-	MCL_MF.ScrollFrame:SetVerticalScroll(0);
+	MCL_mainFrame.ScrollFrame:SetVerticalScroll(0);
 end
 
 local function SetTabs(frame, numTabs, ...)
@@ -268,18 +249,18 @@ local function SetTabs(frame, numTabs, ...)
 
 	for i = 1, numTabs do
 
-		local tab = CreateFrame("Button", frameName.."Tab"..i, frame, "PanelTabButtonTemplate");
+		local tab = CreateFrame("Button", frameName.."Tab"..i, frame, "MCLButtonTemplate");
 		tab:SetID(i);
 		tab:SetText(select(i, ...));
 		tab:SetScript("OnClick", Tab_OnClick);
 		tab:SetSize(30,30)
-		tab.content = CreateFrame("Frame", nil, MCL_MF.ScrollFrame);
+		tab.content = CreateFrame("Frame", nil, MCL_mainFrame.ScrollFrame);
 		tab.content:SetSize(1100, 550);
 		tab.content:Hide();
 
 		table.insert(contents, tab.content);
 		if (i == 1) then
-			tab:SetPoint("TOPLEFT", MCL_MF, "BOTTOMLEFT", 5, 5);
+			tab:SetPoint("TOPLEFT", MCL_mainFrame, "BOTTOMLEFT", 5, 5);
 		else
 			tab:SetPoint("TOPLEFT", _G[frameName.."Tab"..(i-1)], "TOPRIGHT", 5, 0);
 		end
@@ -586,40 +567,40 @@ function MCL_Load:CreateMenu()
     if not IsAddOnLoaded("Blizzard_Collections") then
         LoadAddOn("Blizzard_Collections")
     end
-    MCL_MF = CreateFrame("Frame", "MCLFrame", UIParent, "MCLFrameTemplateWithInset");
-    MCL_MF.Bg:SetVertexColor(0,0,0,0.8)
-    MCL_MF.TitleBg:SetVertexColor(0.1,0.1,0.1,0.8)
-    MCL_MF:Hide()
+    MCL_mainFrame = CreateFrame("Frame", "MCLFrame", UIParent, "MCLFrameTemplateWithInset");
+    MCL_mainFrame.Bg:SetVertexColor(0,0,0,0.8)
+    MCL_mainFrame.TitleBg:SetVertexColor(0.1,0.1,0.1,0.8)
+    MCL_mainFrame:Hide()
 	--Master Frame for addon
-	MCL_MF:SetMovable(true)
-	MCL_MF:EnableMouse(true)
-	MCL_MF:RegisterForDrag("LeftButton")
-	MCL_MF:SetScript("OnDragStart", MCL_MF.StartMoving)
-	MCL_MF:SetScript("OnDragStop", MCL_MF.StopMovingOrSizing)
-	MCL_MF:SetFrameStrata("DIALOG")
+	MCL_mainFrame:SetMovable(true)
+	MCL_mainFrame:EnableMouse(true)
+	MCL_mainFrame:RegisterForDrag("LeftButton")
+	MCL_mainFrame:SetScript("OnDragStart", MCL_mainFrame.StartMoving)
+	MCL_mainFrame:SetScript("OnDragStop", MCL_mainFrame.StopMovingOrSizing)
+	MCL_mainFrame:SetFrameStrata("DIALOG")
 
 	--MCL Frame settings
-	MCL_MF:SetSize(1200, 600); -- width, height
-	MCL_MF:SetPoint("CENTER", UIParent, "CENTER"); -- point, relativeFrame, relativePoint, xOffset, yOffset
-	MCL_MF:EnableMouse(true)
-	MCL_MF:SetHyperlinksEnabled(true)
-	MCL_MF:SetScript("OnHyperlinkClick", ChatFrame_OnHyperlinkShow)
-	CreateFullBorder(MCL_MF)
+	MCL_mainFrame:SetSize(1200, 600); -- width, height
+	MCL_mainFrame:SetPoint("CENTER", UIParent, "CENTER"); -- point, relativeFrame, relativePoint, xOffset, yOffset
+	MCL_mainFrame:EnableMouse(true)
+	MCL_mainFrame:SetHyperlinksEnabled(true)
+	MCL_mainFrame:SetScript("OnHyperlinkClick", ChatFrame_OnHyperlinkShow)
+	CreateFullBorder(MCL_mainFrame)
 
 	--Creating title for frame
-	MCL_MF.title = MCL_MF:CreateFontString(nil, "OVERLAY", "GameFontHighlight");
-	MCL_MF.title:SetPoint("LEFT", MCL_MF.TitleBg, "LEFT", 5, 2);
-	MCL_MF.title:SetText("Mount Collection Log");
+	MCL_mainFrame.title = MCL_mainFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight");
+	MCL_mainFrame.title:SetPoint("LEFT", MCL_mainFrame.TitleBg, "LEFT", 5, 2);
+	MCL_mainFrame.title:SetText("Mount Collection Log");
 
-	MCL_MF.ScrollFrame = CreateFrame("ScrollFrame", nil, MCL_MF, "UIPanelScrollFrameTemplate");
-	MCL_MF.ScrollFrame:SetPoint("TOPLEFT", MCL_MF.Bg, "TOPLEFT", 4, -7);
-	MCL_MF.ScrollFrame:SetPoint("BOTTOMRIGHT", MCL_MF.Bg, "BOTTOMRIGHT", -3, 6);
-	MCL_MF.ScrollFrame:SetClipsChildren(true);
-	MCL_MF.ScrollFrame:SetScript("OnMouseWheel", ScrollFrame_OnMouseWheel);	
+	MCL_mainFrame.ScrollFrame = CreateFrame("ScrollFrame", nil, MCL_mainFrame, "UIPanelScrollFrameTemplate");
+	MCL_mainFrame.ScrollFrame:SetPoint("TOPLEFT", MCL_mainFrame.Bg, "TOPLEFT", 4, -7);
+	MCL_mainFrame.ScrollFrame:SetPoint("BOTTOMRIGHT", MCL_mainFrame.Bg, "BOTTOMRIGHT", -3, 6);
+	MCL_mainFrame.ScrollFrame:SetClipsChildren(true);
+	MCL_mainFrame.ScrollFrame:SetScript("OnMouseWheel", ScrollFrame_OnMouseWheel);	
 
-	MCL_MF.ScrollFrame.ScrollBar:ClearAllPoints();
-	MCL_MF.ScrollFrame.ScrollBar:SetPoint("TOPLEFT", MCL_MF.ScrollFrame, "TOPRIGHT", -8, -19);
-	MCL_MF.ScrollFrame.ScrollBar:SetPoint("BOTTOMRIGHT", MCL_MF.ScrollFrame, "BOTTOMRIGHT", -8, 17);
+	MCL_mainFrame.ScrollFrame.ScrollBar:ClearAllPoints();
+	MCL_mainFrame.ScrollFrame.ScrollBar:SetPoint("TOPLEFT", MCL_mainFrame.ScrollFrame, "TOPRIGHT", -8, -19);
+	MCL_mainFrame.ScrollFrame.ScrollBar:SetPoint("BOTTOMRIGHT", MCL_mainFrame.ScrollFrame, "BOTTOMRIGHT", -8, 17);
 
 	local MCL_playerFaction
 	local MCL_playerFactionStr = UnitFactionGroup("player")
@@ -631,7 +612,7 @@ function MCL_Load:CreateMenu()
 
 
 
-	local MCL_overview, MCL_classic, MCL_tbc, MCL_wotlk, MCL_cata, MCL_mop, MCL_wod, MCL_legion, MCL_bfa, MCL_sl, MCL_racial, MCL_professions, MCL_pvp, MCL_worldevents, MCL_promotion, MCL_other, MCL_unobtainable = SetTabs(MCL_MF, 17, "Overview", "Classic", "TBC", "WOTLK", "CATA", "MOP", "WOD", "LEGION", "BFA", "SL", MCL_playerFactionStr, "Professions", "PVP", "WorldEvents", "Promotion", "Other", "Unobtainable");
+	local MCL_overview, MCL_classic, MCL_tbc, MCL_wotlk, MCL_cata, MCL_mop, MCL_wod, MCL_legion, MCL_bfa, MCL_sl, MCL_racial, MCL_professions, MCL_pvp, MCL_worldevents, MCL_promotion, MCL_other, MCL_unobtainable = SetTabs(MCL_mainFrame, 17, "Overview", "Classic", "TBC", "WOTLK", "CATA", "MOP", "WOD", "LEGION", "BFA", "SL", MCL_playerFactionStr, "Professions", "PVP", "WorldEvents", "Promotion", "Other", "Unobtainable");
 
 	local MCL_sections = {
 		MCL_overview,
@@ -732,7 +713,7 @@ function MCL_Load:CreateMenu()
 				yTwo = -40 --Starting point of category frames
 				local xTwo = 20
 				MCL_rowC = 0
-				local frameName = MCL_MF:GetName()
+				local frameName = MCL_mainFrame:GetName()
 				--Cycle through each section and check if database entry matches any string.
 				for s = 1, #MCL_sectionStrings do
 					MCL_col = 0
@@ -836,10 +817,10 @@ function MCL_Load:CreateMenu()
 				end			
 			end
 		end
-		MCL_MF.title:SetText("Mount Collection Log |  Collected "..MCL_totalCollected);
-		MCL_Data_refresh = CreateFrame("Button", nil, MCL_MF);
+		MCL_mainFrame.title:SetText("Mount Collection Log |  Collected "..MCL_totalCollected);
+		MCL_Data_refresh = CreateFrame("Button", nil, MCL_mainFrame);
 		MCL_Data_refresh:SetSize(60, 13);
-		MCL_Data_refresh:SetPoint("TOPRIGHT", MCL_MF,  -20, -2);
+		MCL_Data_refresh:SetPoint("TOPRIGHT", MCL_mainFrame,  -20, -2);
 		MCL_Data_refresh.title = MCL_Data_refresh:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 		MCL_Data_refresh.title:SetPoint("CENTER", 0, 0)
 		MCL_Data_refresh.title:SetText("Refresh")
