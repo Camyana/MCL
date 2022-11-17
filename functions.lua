@@ -143,13 +143,14 @@ function MCL_functions:LinkMountItem(id, frame)
         local item, itemLink = GetItemInfo(id);
         local mountID = C_MountJournal.GetMountFromItem(id)
         local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID = C_MountJournal.GetMountInfoByID(mountID)
-        frame:SetHyperlinksEnabled(true)
-        _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(mountID)             
+     
         frame:HookScript("OnEnter", function()
             if (itemLink) then
+                frame:SetHyperlinksEnabled(true)
+                _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(mountID)                     
                 GameTooltip:SetOwner(frame, "ANCHOR_TOP")
                 GameTooltip:SetHyperlink(itemLink)
-                GameTooltip:AddLine(source)
+                GameTooltip:AddLine(source)   
                 GameTooltip:Show()
             end
         end)
@@ -251,16 +252,20 @@ end
 
 
 function UpdateProgressBar(frame, total, collected)
+    if total == 0 then
+        return
+    end
 	frame:SetValue((collected/total)*100)
     frame.Text:SetText(collected.."/"..total.." ("..math.floor(((collected/total)*100)).."%)")
 
-	if ((collected/total)*100) < 66 then
-		frame:SetStatusBarColor(0.941, 0.658, 0.019)
-	end
+
 	if ((collected/total)*100) < 33 then
-		frame:SetStatusBarColor(0.929, 0.007, 0.019)
-	end
-	if collected == total then
+		frame:SetStatusBarColor(0.929, 0.007, 0.019)  -- red
+    elseif ((collected/total)*100) < 66 then
+		frame:SetStatusBarColor(0.941, 0.658, 0.019) -- orange
+    elseif ((collected/total)*100) < 99 then
+		frame:SetStatusBarColor(0.1, 0.9, 0.1) -- green
+	elseif collected == total then
 		frame:SetStatusBarColor(0, 0.5, 0.9) --blue
 	end
 
@@ -289,6 +294,7 @@ function MCL_functions:UpdateCollection()
     for k,v in pairs(core.stats) do
         local section_total = 0
         local section_collected = 0
+        local section_name
         -- if (type(v) == "table") then
         for kk,vv in pairs(v) do
             local collected = 0
@@ -317,13 +323,17 @@ function MCL_functions:UpdateCollection()
                 end
                 if vv["rel"] then
                     for q,e in pairs(core.overviewFrames) do
-                        if e.name == vv.rel.title:GetText() then
+                        if e.name == vv.rel.title:GetText() then                       
                             UpdateProgressBar(e.frame, section_total, section_collected)
+                            section_name = vv.rel.title:GetText()
                         end
                     end                     
-                end                
-            end             
-        end     
+                end               
+            end            
+        end
+        if section_name == "Unobtainable" then
+            core.total = core.total + section_collected - section_total
+        end
     end
     UpdateProgressBar(core.overview.pBar, core.total, core.collected)
 end

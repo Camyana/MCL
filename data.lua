@@ -11,7 +11,7 @@ core.mountList[1] = {
 	categories = {
 		Achievement = {
 			name = "Achievement",
-			mounts = {186654, 186637, 184183, 182596, 186653, 184166, 186655, 187673, 192557, "m15491", "m1549", "m1576"},
+			mounts = {186654, 186637, 184183, 182596, 186653, 184166, 186655, 187673, "m1549", "m1576"},
 			mountID = {"m15491", "m1549", "m1576"}
 		},
 		Vendor = {
@@ -61,7 +61,7 @@ core.mountList[1] = {
 		},
 		RaidDrop = {
 			name = "Raid Drop",
-			mounts = {186656, 186642, 190768, 190771},
+			mounts = {186656, 186642, 190768},
 			mountID = {}
 		},
 		Zone = {
@@ -599,7 +599,7 @@ core.mountList[10] = {
 			mounts = {201720, 201702, 201719, 201704, 198809, 198811, 198810, 198808},
 			mountID = {},
 		}		
-	}													
+	}				
 }
 core.mountList[11] = {
 	name = "Horde",
@@ -716,7 +716,7 @@ core.mountList[13] = {
 		},
 		Gladiator = {
 			name = "Gladiator",
-			mounts = {191290},
+			mounts = {},
 			mountID = {}
 		},
 		Halaa = {
@@ -906,7 +906,7 @@ core.mountList[17] = {
 	categories = {	
 		MythicPlus = {
 			name = "Mythic +",
-			mounts = {182717, 187525, 174836, 187682},
+			mounts = {182717, 187525, 174836, 187682, 192557},
 			mountID = {}
 		},
 		ScrollOfResurrection = {
@@ -926,7 +926,7 @@ core.mountList[17] = {
 		},
 		AOTC = {
 			name = "Ahead of the Curve",
-			mounts = {104246, 128422, 152901, 174862},
+			mounts = {104246, 128422, 152901, 174862, 190771},
 			mountID = {}
 		},
 		Brawl = {
@@ -935,13 +935,8 @@ core.mountList[17] = {
 			mountID = {}
 		},
 		Arena = {
-			name = "Arena Mounts | TBC - WOD",
-			mounts = {30609, 34092, 37676, 43516, 46708, 46171, 47840, 50435, 71339, 71954, 85785, 95041, 104325, 104326, 104327, 128277, 128281, 128282},
-			mountID = {}
-		},
-		Arena2 = {
-			name = "Arena Mounts | LEGION - SL",
-			mounts = {141843, 141844, 141845, 141846, 141847, 141848, 153493, 156879, 156880, 156881, 156884, 183937, 186177, 189507},
+			name = "Arena Mounts",
+			mounts = {30609, 34092, 37676, 43516, 46708, 46171, 47840, 50435, 71339, 71954, 85785, 95041, 104325, 104326, 104327, 128277, 128281, 128282, 141843, 141844, 141845, 141846, 141847, 141848, 153493, 156879, 156880, 156881, 156884, 183937, 186177, 189507, 191290},
 			mountID = {}
 		},
 		DCAzerothChopper = {
