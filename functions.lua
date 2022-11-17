@@ -134,22 +134,21 @@ function MCL_functions:LinkMountItem(id, frame)
             if button == 'LeftButton' then
                 DressUpMount(mountID)
             end			
-            if button=='RightButton' then
+            if button == 'RightButton' then               
                 CastSpellByName(mountName);
             end
         end)          
 
     else
         local item, itemLink = GetItemInfo(id);
-        id = 13086
         local mountID = C_MountJournal.GetMountFromItem(id)
-        local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID = C_MountJournal.GetMountInfoByID(mountID)        
+        local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID = C_MountJournal.GetMountInfoByID(mountID)
+        frame:SetHyperlinksEnabled(true)
+        _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(mountID)             
         frame:HookScript("OnEnter", function()
             if (itemLink) then
                 GameTooltip:SetOwner(frame, "ANCHOR_TOP")
                 GameTooltip:SetHyperlink(itemLink)
-                frame:SetHyperlinksEnabled(true)
-                _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(mountID)
                 GameTooltip:AddLine(source)
                 GameTooltip:Show()
             end
@@ -168,7 +167,7 @@ function MCL_functions:LinkMountItem(id, frame)
 					print(itemLink)
 				end
 			end
-			if button=='RightButton' then
+			if button == 'RightButton' then
 				CastSpellByName(mountName);
 			end
 		end)
