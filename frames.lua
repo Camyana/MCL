@@ -168,7 +168,7 @@ function MCL_frames:createContentFrame(relativeFrame, title)
 
     frame.pBar = core.Frames:progressBar(frame)
     frame.pBar:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, -15)
-    frame.pBar:SetWidth(1000)
+    frame.pBar:SetWidth(880)
     frame.pBar:SetHeight(20)
 
 	return frame;

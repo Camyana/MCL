@@ -10,9 +10,9 @@ SlashCmdList["MCL"] = function(msg)
     if msg == "show" then
         core.Main.Toggle();
     end
---     if msg == "icon" then
---         core.Config.MCL_MM();
---     end        
+    if msg == "icon" then
+        core.Function.MCL_MM();
+    end        
     if msg == "" then
         core.Main.Toggle();
     end

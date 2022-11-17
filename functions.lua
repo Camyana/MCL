@@ -105,7 +105,7 @@ function MCL_functions:TestFunction()
 end
 
 function MCL_functions:getTableLength(set)
-    i = 1
+    local i = 1
     for k,v in pairs(set) do
         i = i+1
     end
@@ -328,3 +328,35 @@ function MCL_functions:UpdateCollection()
     UpdateProgressBar(core.overview.pBar, core.total, core.collected)
 end
 
+--------------------------------------------------
+-- Minimap Icon
+--------------------------------------------------
+
+
+local MCL_MM = LibStub("AceAddon-3.0"):NewAddon("MCL_MM", "AceConsole-3.0")
+local MCL_LDB = LibStub("LibDataBroker-1.1"):NewDataObject("MCL!", {
+type = "data source",
+text = "MCL!",
+icon = "Interface\\AddOns\\MCL\\mcl-logo-32",
+OnClick = function(_, button) 
+	core.Main:Toggle() 
+end,
+})
+local icon = LibStub("LibDBIcon-1.0")
+
+function MCL_MM:OnInitialize() -- Obviously you'll need a ## SavedVariables: BunniesDB line in your TOC, duh!
+	self.db = LibStub("AceDB-3.0"):New("MCL_DB", { profile = { minimap = { hide = false, }, }, }) icon:Register("MCL!", MCL_LDB, self.db.profile.minimap) self:RegisterChatCommand("mcl", "UpdateMinimapButton")
+end
+
+function MCL_MM:MCL_MM()
+	self.db.profile.minimap.hide = not self.db.profile.minimap.hide
+	if self.db.profile.minimap.hide then
+		icon:Hide("MCL!")
+	else
+		icon:Show("MCL!")
+	end
+end
+
+function MCL_functions:MCL_MM()
+	MCL_MM:MCL_MM()
+end

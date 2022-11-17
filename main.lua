@@ -63,12 +63,12 @@ end
 -- * -----------------------------------------------------
 
 function MCL_Load:Toggle()
-	if not MCLFrame then
+	if not core.MCL_MF then
 		check_if_loaded = MCL_Load.init()
         core.MCL_MF = core.Frames:CreateMainFrame()
         core.Function:initSections()
 	else
-		MCLFrame:SetShown(not MCLFrame:IsShown());
+		core.MCL_MF:SetShown(not core.MCL_MF:IsShown());
 	end
     core.Function:UpdateCollection()
 end

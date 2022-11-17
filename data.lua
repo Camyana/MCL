@@ -593,7 +593,12 @@ core.mountList[10] = {
 			name = "Pandaren",
 			mounts = {91010, 91012, 91011, 91013, 91014, 91015, 91004, 91008, 91009, 91005, 91006, 91007},
 			mountID = {}
-		},	
+		},
+		Dracthyr = {
+			name = "Dracthyr",
+			mounts = {201720, 201702, 201719, 201704, 198809, 198811, 198810, 198808},
+			mountID = {},
+		}		
 	}													
 }
 core.mountList[11] = {
@@ -633,7 +638,12 @@ core.mountList[11] = {
 			name = "Pandaren",
 			mounts = {91010, 91012, 91011, 91013, 91014, 91015, 91004, 91008, 91009, 91005, 91006, 91007},
 			mountID = {}
-		},	
+		},
+		Dracthyr = {
+			name = "Dracthyr",
+			mounts = {201720, 201702, 201719, 201704, 198809, 198811, 198810, 198808},
+			mountID = {},
+		}
 	}
 }
 core.mountList[12] = {
@@ -877,11 +887,6 @@ core.mountList[16] = {
 		Heirlooms = {
 			name = "Heirlooms",
 			mounts = {120968, 122703},
-			mountID = {}
-		},
-		GuildVendor = {
-			name = "Guild Vendor",
-			mounts = {63125, 62298, 67107, 85666, 116666},
 			mountID = {}
 		},
 		Paladin = {
