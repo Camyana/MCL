@@ -326,16 +326,20 @@ function MCL_functions:UpdateCollection()
                 if vv["mounts"] then
                     for kkk, vvv in pairs(vv.mounts) do
                         local faction, faction_specific = IsMountFactionSpecific(vvv)
-                        if vvv == 170069 then
-                            print(IsMountFactionSpecific(vvv))
+                        if faction then
+                            if faction == 1 then
+                                faction = "Alliance"
+                            else
+                                faction = "Horde"
+                            end
                         end
-                        if (faction_specific == false) or (faction_specific == true and faction == UnitFactionGroup("player")) then                      
+                        if (faction_specific == false) or (faction_specific == true and faction == UnitFactionGroup("player")) then                     
                             if string.sub(vvv, 1, 1 ) == "m" then
                                 isCollected = IsMountCollected(string.sub(vvv, 2, -1))
-                            end
+                            else
                                 local id = core.Function:GetMountID(vvv)
                                 isCollected = IsMountCollected(id)
-                            -- end
+                            end
                             if isCollected then
                                 collected = collected +1
                             end
