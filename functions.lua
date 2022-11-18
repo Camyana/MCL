@@ -19,6 +19,17 @@ function MCL_functions:getFaction()
 	end
 end
 
+local function IsMountFactionSpecific(id)
+    if string.sub(id, 1, 1) == "m" then
+        mount_Id = string.sub(id, 2, -1)
+        local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID, _ = C_MountJournal.GetMountInfoByID(mount_Id)
+        return faction, isFactionSpecific
+    else
+        mount_Id = C_MountJournal.GetMountFromItem(id)
+        local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID, _ = C_MountJournal.GetMountInfoByID(mount_Id)
+        return faction, isFactionSpecific
+    end
+end    
 
 -- Tables Mounts into Global List
 function MCL_functions:TableMounts(id, frame, section, category)
@@ -186,47 +197,57 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
 
     for kk,vv in pairs(set) do
         local mount_Id
-        if count == 12 then
-            overflow = overflow + frame_size + 10
-        end            
-        local frame = CreateFrame("Button", nil, relativeFrame, "BackdropTemplate");
-        frame:SetWidth(frame_size);
-        frame:SetHeight(frame_size);
-        frame:SetBackdrop({
-            edgeFile = [[Interface\Buttons\WHITE8x8]],
-            edgeSize = frame_size + 2,
-        })           
-        frame:SetBackdropBorderColor(1, 0, 0, 0.03)	-- ! Default Red Backdrop
+        local faction, faction_specific = IsMountFactionSpecific(vv)
+        if faction then
+            if faction == 1 then
+                faction = "Alliance"
+            else
+                faction = "Horde"
+            end
+        end
+        if (faction_specific == false) or (faction_specific == true and faction == UnitFactionGroup("player")) then
+            if count == 12 then
+                overflow = overflow + frame_size + 10
+            end            
+            local frame = CreateFrame("Button", nil, relativeFrame, "BackdropTemplate");
+            frame:SetWidth(frame_size);
+            frame:SetHeight(frame_size);
+            frame:SetBackdrop({
+                edgeFile = [[Interface\Buttons\WHITE8x8]],
+                edgeSize = frame_size + 2,
+            })           
+            frame:SetBackdropBorderColor(1, 0, 0, 0.03)	-- ! Default Red Backdrop
+            
+            if count == 12 then
+                frame:SetPoint("BOTTOMLEFT", first_frame, "BOTTOMLEFT", 0, -overflow);
+                count = 0           
+            elseif relativeFrame == category then
+                frame:SetPoint("BOTTOMLEFT", category, "BOTTOMLEFT", 0, -35);
+                first_frame = frame
+            else
+                frame:SetPoint("RIGHT", relativeFrame, "RIGHT", frame_size+10, 0);
+            end
+
+            frame.tex = frame:CreateTexture()
+            frame.tex:SetAllPoints(frame)
+            if string.sub(vv, 1, 1) == "m" then
+                mount_Id = string.sub(vv, 2, -1)
+                local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID, _ = C_MountJournal.GetMountInfoByID(mount_Id)
+                frame.tex:SetTexture(icon)
+            else
+                mount_Id = C_MountJournal.GetMountFromItem(vv)
+                frame.tex:SetTexture(GetItemIcon(vv))
+            end
         
-        if count == 12 then
-            frame:SetPoint("BOTTOMLEFT", first_frame, "BOTTOMLEFT", 0, -overflow);
-            count = 0           
-        elseif relativeFrame == category then
-            frame:SetPoint("BOTTOMLEFT", category, "BOTTOMLEFT", 0, -35);
-            first_frame = frame
-        else
-            frame:SetPoint("RIGHT", relativeFrame, "RIGHT", frame_size+10, 0);
-        end
+            frame.tex:SetVertexColor(0.75, 0.75, 0.75, 0.3);	
 
-        frame.tex = frame:CreateTexture()
-        frame.tex:SetAllPoints(frame)
-        if string.sub(vv, 1, 1) == "m" then
-            mount_Id = string.sub(vv, 2, -1)
-            local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID, _ = C_MountJournal.GetMountInfoByID(mount_Id)
-            frame.tex:SetTexture(icon)
-        else
-            mount_Id = C_MountJournal.GetMountFromItem(vv)
-            frame.tex:SetTexture(GetItemIcon(vv))
-        end
-     
-        frame.tex:SetVertexColor(0.75, 0.75, 0.75, 0.3);	
+            core.Function:LinkMountItem(vv, frame)
 
-        core.Function:LinkMountItem(vv, frame)
+            relativeFrame = frame
+            count = count + 1
 
-        relativeFrame = frame
-        count = count + 1
-
-        MCL_functions:TableMounts(mount_Id, frame, tab, category)         
+            MCL_functions:TableMounts(mount_Id, frame, tab, category)
+        end  
     end   
     return overflow
 end
@@ -304,16 +325,22 @@ function MCL_functions:UpdateCollection()
             if (type(vv) == "table") then
                 if vv["mounts"] then
                     for kkk, vvv in pairs(vv.mounts) do
-                        if string.sub(vvv, 1, 1 ) == "m" then
-                            isCollected = IsMountCollected(string.sub(vvv, 2, -1))
+                        local faction, faction_specific = IsMountFactionSpecific(vvv)
+                        if vvv == 170069 then
+                            print(IsMountFactionSpecific(vvv))
                         end
-                            local id = core.Function:GetMountID(vvv)
-                            isCollected = IsMountCollected(id)
-                        -- end
-                        if isCollected then
-                            collected = collected +1
+                        if (faction_specific == false) or (faction_specific == true and faction == UnitFactionGroup("player")) then                      
+                            if string.sub(vvv, 1, 1 ) == "m" then
+                                isCollected = IsMountCollected(string.sub(vvv, 2, -1))
+                            end
+                                local id = core.Function:GetMountID(vvv)
+                                isCollected = IsMountCollected(id)
+                            -- end
+                            if isCollected then
+                                collected = collected +1
+                            end
+                            total = total +1
                         end
-                        total = total +1
                     end
                     UpdateProgressBar(vv.pBar, total, collected)
                     section_total = section_total + total
