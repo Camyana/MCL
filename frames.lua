@@ -96,7 +96,6 @@ function MCL_frames:SetTabs()
 
 		tab.title:SetText(tostring(v.name));
 		if v.icon ~= nil then
-			print("attempting to set icon")
 			tab.icon = CreateFrame("Frame", nil, tab);
 			tab.icon:SetSize(32, 32)
 			tab.icon:SetPoint("RIGHT", tab, "RIGHT", 0, 0)
@@ -228,9 +227,11 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
 			pBar:HookScript("OnEnter", function()
 				r,g,b,a = pBar:GetStatusBarColor()
 				local temp = pBar:SetStatusBarColor(0.8, 0.5, 0.9, 1)
+				pBar.GetParent().bg:SetVertexColor(0.843, 0.874, 0.898, 1)
 			end)
 			pBar:HookScript("OnLeave", function()
 				pBar:SetStatusBarColor(r, g, b, a)
+				pBar.GetParent().bg:SetVertexColor(0.843, 0.874, 0.898, 0.5)
 			end)
 
 			pBar:SetScript("OnMouseDown", function(self, button)
