@@ -3,10 +3,13 @@ local MCL, core = ...;
 core.Frames = {};
 local MCL_frames = core.Frames;
 
+core.TabTable = {}
 
 local nav_width = 150
 local main_frame_width = 1200
 local main_frame_height = 600
+
+local r,g,b,a
 
 
 local function ScrollFrame_OnMouseWheel(self, delta)
@@ -46,7 +49,7 @@ function MCL_frames:CreateMainFrame()
 	MCL_mainFrame.title:SetText("Mount Collection Log");
     
     -- Scroll Frame for Main Window
-	MCL_mainFrame.ScrollFrame = CreateFrame("ScrollFrame", nil, MCL_mainFrame, "UIPanelScrollFrameTemplate");
+	MCL_mainFrame.ScrollFrame = CreateFrame("ScrollFrame", nil, MCL_mainFrame, "MinimalScrollFrameTemplate");
 	MCL_mainFrame.ScrollFrame:SetPoint("TOPLEFT", MCL_mainFrame.Bg, "TOPLEFT", 4, -7);
 	MCL_mainFrame.ScrollFrame:SetPoint("BOTTOMRIGHT", MCL_mainFrame.Bg, "BOTTOMRIGHT", -3, 6);
 	MCL_mainFrame.ScrollFrame:SetClipsChildren(true);
@@ -104,7 +107,11 @@ function MCL_frames:SetTabs()
 		else
 			tab:SetPoint("BOTTOM", _G[frameName.."Tab"..(i-1)], "BOTTOM", 0, -30);
 		end
+
+		core.TabTable[i] = v
+
         i = i+1
+		
 	end
 
 	Tab_OnClick(_G[frameName.."Tab17"]);
@@ -208,6 +215,24 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
 			local pBar = core.Frames:progressBar(frame)
 			pBar:SetWidth(400)
 			pBar:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 30)
+
+			pBar:HookScript("OnEnter", function()
+				r,g,b,a = pBar:GetStatusBarColor()
+				local temp = pBar:SetStatusBarColor(0.8, 0.5, 0.9, 1)
+			end)
+			pBar:HookScript("OnLeave", function()
+				pBar:SetStatusBarColor(r, g, b, a)
+			end)
+
+			pBar:SetScript("OnMouseDown", function(self, button)
+				if button == 'LeftButton' then
+					for i,tab in ipairs(core.TabTable) do
+						if tab == v then
+							Tab_OnClick(_G["NavTab"..i]);
+						end
+					end
+				end			
+			end) 
 
 			if (col % 2 == 0) then
 				evenFrame = frame

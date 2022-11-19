@@ -292,6 +292,10 @@ function UpdateProgressBar(frame, total, collected)
 
 end
 
+function UpdateProgressBarColor(frame)
+	frame:SetStatusBarColor(0, 0.5, 0.9)
+end
+
 local function clearOverviewStats()
     for k in pairs (core.overviewStats) do
         core.overviewStats[k] = nil
