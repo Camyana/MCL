@@ -94,7 +94,16 @@ function MCL_frames:SetTabs()
         tab.title = tab:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         tab.title:SetPoint("LEFT", 0, 0)       
 
-		tab.title:SetText(tostring(v));
+		tab.title:SetText(tostring(v.name));
+		if v.icon ~= nil then
+			print("attempting to set icon")
+			tab.icon = CreateFrame("Frame", nil, tab);
+			tab.icon:SetSize(32, 32)
+			tab.icon:SetPoint("RIGHT", tab, "RIGHT", 0, 0)
+			tab.icon.tex = tab.icon:CreateTexture()
+			tab.icon.tex:SetAllPoints(tab.icon)
+			tab.icon.tex:SetTexture(v.icon)
+		end
 		tab:SetScript("OnClick", Tab_OnClick);
         tab:SetWidth(nav_width)
 		tab.content = CreateFrame("Frame", nil, tabFrame.ScrollFrame);
@@ -108,13 +117,13 @@ function MCL_frames:SetTabs()
 			tab:SetPoint("BOTTOM", _G[frameName.."Tab"..(i-1)], "BOTTOM", 0, -30);
 		end
 
-		core.TabTable[i] = v
+		core.TabTable[i] = v.name
 
         i = i+1
 		
 	end
 
-	Tab_OnClick(_G[frameName.."Tab17"]);
+	Tab_OnClick(_G[frameName.."Tab18"]);
 
 	return contents, numTabs;
 end
@@ -190,7 +199,7 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
     local oddOverFlow, evenOverFlow = 0, 0
 
 	for k,v in pairs(set) do
-		if v ~= "Overview" then
+		if v.name ~= "Overview" then
 			local frame = CreateFrame("Frame", nil, relativeFrame, "BackdropTemplate")
 			frame:SetWidth(60);
 			frame:SetHeight(60);
@@ -210,7 +219,7 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
 			first = false
 			frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 			frame.title:SetPoint("TOPLEFT", 0, 0)
-			frame.title:SetText(v)
+			frame.title:SetText(v.name)
 			
 			local pBar = core.Frames:progressBar(frame)
 			pBar:SetWidth(400)
@@ -227,7 +236,7 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
 			pBar:SetScript("OnMouseDown", function(self, button)
 				if button == 'LeftButton' then
 					for i,tab in ipairs(core.TabTable) do
-						if tab == v then
+						if tab == v.name then
 							Tab_OnClick(_G["NavTab"..i]);
 						end
 					end
@@ -244,7 +253,7 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
 			col = col + 1
 
 			local t = {
-				name = v,
+				name = v.name,
 				frame = pBar
 			}
 	

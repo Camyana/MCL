@@ -228,11 +228,6 @@ core.mountList[2] = {
 			name = "Paragon Reputation",
 			mounts = {169198},
 			mountID = {}
-		},
-		PreLaunchEvent = {
-			name = "Pre-Launch Event",
-			mounts = {163127, 163128},
-			mountID = {}
 		}
 	}
 }
@@ -789,20 +784,10 @@ core.mountList[14] = {
 core.mountList[15] = {
 	name = "Promotion",
 	categories = {	
-		AnnualPass = {
-			name = "Annual Pass",
-			mounts = {76755},
-			mountID = {}
-		},
 		BlizzardStore = {
 			name = "Blizzard Store",
-			mounts = {54811, 69846, 78924, 95341, 97989, 107951, 112326, 122469, 147901, 156564, 160589, 166775, 166774, 166776, "m1266", "m1267", "m1290", "m1346", "m1291", "m1456", "m1330", "m1531", "m1581"},
+			mounts = {54811, 69846, 78924, 95341, 97989, 107951, 112326, 122469, 147901, 156564, 160589, 166775, 166774, 166776, "m1266", "m1267", "m1290", "m1346", "m1291", "m1456", "m1330", "m1531", "m1581", "m1312"},
 			mountID = {1266, 1267, 1290, 1346, 1291, 1456, 1330, 1531, 1581}
-		},
-		Blizzcon = {
-			name = "Blizzcon",
-			mounts = {43599, 151618, "m1458"},
-			mountID = {1458}
 		},
 		CollectorsEdition = {
 			name = "Collector's Edition",
@@ -816,8 +801,8 @@ core.mountList[15] = {
 		},
 		anniversary = {
 			name = "WoW Anniversary Mounts",
-			mounts = {115484, 172022, 172012, 172023, 186469, "m1424"},
-			mountID = {1424}
+			mounts = {172022, 172023, 186469},
+			mountID = {}
 		},
 		Hearthstone = {
 			name = "Hearthstone",
@@ -832,11 +817,6 @@ core.mountList[15] = {
 		RAF = {
 			name = "Recruit-A-Friend",
 			mounts = {173297, 173299},
-			mountID = {}
-		},
-		ScrollOfResurrection = {
-			name = "Scroll of Resurrection",
-			mounts = {76902},
 			mountID = {}
 		},
 		AzerothChoppers = {
@@ -898,6 +878,10 @@ core.mountList[16] = {
 			name="Warlock",
 			mounts = {"m17", "m83"},
 			mountID = {17, 83},
+		},
+		DemonHunter = {
+			name="Demon Hunter",
+			mounts = {"m780"},
 		}
 	}
 }
@@ -921,7 +905,7 @@ core.mountList[17] = {
 		},
 		RAF = {
 			name = "Recruit-A-Friend",
-			mounts = {83086, 106246, 118515, 37719},
+			mounts = {83086, 106246, 118515, 37719, "m382"},
 			mountID = {}
 		},
 		AOTC = {
@@ -951,9 +935,9 @@ core.mountList[17] = {
 		},
 		Promotion = {
 			name = "Old Promotion Mounts",
-			mounts = {76755, 95341, 112327, 92724, 143631, 163128, 163127},
+			mounts = {76755, 95341, 112327, 92724, 143631, 163128, 163127, 76755, 43599, 151618, "m1458"},
 			mountID = {}
-		},
+		},	
 		RaidMounts = {
 			name = "Unobtainable Raid Mounts",
 			mounts = {49098, 49096, 49046, 49044, 44164, 33809, 21176, "m937"},
@@ -963,97 +947,121 @@ core.mountList[17] = {
 			name = "BrewFest",
 			mounts = {33976},
 			mountID = {}
-		}
+		},
+		Anniversary = {
+			name="Old Anniversary Mounts",
+			mounts = {172012, 115484, "m1424"},
+			mountID = {}
+		},
+		PreLaunchEvent = {
+			name = "Pre-Launch Event",
+			mounts = {163127, 163128},
+			mountID = {}
+		}	
 	}
+}
+core.mountList[18] = {
+	name = "Dragonflight",
+	categories = {
+		Quest = {
+			name = "Quests [Placeholder]",
+			mounts = {198870}
+		},
+	},
 }
 
 core.sectionNames[1] = {
 	name = "Vanilla",
 	mounts = core.mountList[9],
-	category = {"Reputation", "Dungeon Drop", "Raid Drop"},
+	icon = "Interface\\AddOns\\MCL\\icons\\classic.blp",
 }
 core.sectionNames[2] = {
 	name = "The Burning Crusade",
 	mounts = core.mountList[8],
-	category = {"Cenarion Expedition", "Kurenai/The Mag'har", "Netherwing", "Sha'tari Skyguard", "Vendor", "Dungeon Drop", "Raid Drop"},
+	icon = "Interface\\AddOns\\MCL\\icons\\bc.blp",
 }
 core.sectionNames[3] = {
 	name = "Wrath of the Lich King",
 	mounts = core.mountList[7],
-	category = {"Achievement", "Quest", "Vendor", "Argent Tournament", "Reputation", "Dungeon Drop", "Raid Drop", "Rare Spawn"},
+	icon = "Interface\\AddOns\\MCL\\icons\\wrath.blp",
 }
 core.sectionNames[4] = {
 	name = "Cataclysm",
 	mounts = core.mountList[6],
-	category = {"Achievement", "Quest", "Vendor", "Dungeon Drop", "Raid Drop", "Rare Spawn"},
+	icon = "Interface\\AddOns\\MCL\\icons\\cata.blp",
 }
 core.sectionNames[5] = {
 	name = "Mists of Pandaria",
 	mounts = core.mountList[5],
-	category = {"Achievement", "Golden Lotus", "Order of the Cloud Serpent", "Shado-Pan", "Kun-Lai Vendor", "The Tillers", "Primal Eggs", "Quest", "Raid Drop", "Rare Spawn", "World Boss", "Reputation"},
+	icon = "Interface\\AddOns\\MCL\\icons\\mists.blp",
 }
 core.sectionNames[6] = {
 	name = "Warlords of Draenor",
 	mounts = core.mountList[4],
-	category = {"Achievement", "Vendor", "Garrison", "Missions", "Stables", "Trading Post", "Fishing Shack", "Rare Spawn", "World Boss", "Raid Drop"},
+	icon = "Interface\\AddOns\\MCL\\icons\\wod.blp",
 }
 core.sectionNames[7] = {
 	name = "Legion",
 	mounts = core.mountList[3],
-	category = {"Achievement", "Vendor", "Quest", "Riddle", "Reputation", "Rare Spawn", "Dungeon Drop", "Raid Drop", "Class", "Paragon Reputation"},
+	icon = "Interface\\AddOns\\MCL\\icons\\legion.blp",
 }
 core.sectionNames[8] = {
 	name = "Battle for Azeroth",
 	mounts = core.mountList[2],
-	category = {"Achievement", "Vendor", "Quest", "Medals", "Allied Races", "Reputation", "Riddle", "Tinkering", "Zone", "Rare Spawn", "World Boss", "Warfront: Arathi", "Warfront: Darkshore", "Assault: Vale of Eternal Blossoms", "Assault: Uldum", "Dungeon Drop", "Raid Drop", "Island Expedition", "Dubloons", "Visions", "Paragon Reputation", "Pre-Launch Event"},
+	icon = "Interface\\AddOns\\MCL\\icons\\bfa.blp",
 }
 core.sectionNames[9] = {
 	name = "Shadowlands",
 	mounts = core.mountList[1],
-	category = {"Achievement", "Vendor", "Treasures", "Adventures", "Riddles", "Tormentors", "Maw Assaults", "Reputation", "Paragon Reputation", "Dungeon Drop", "Raid Drop", "Zone", "Daily Activities", "Rare Spawn", "Oozing Necroray Egg", "Covenant Feature", "Night Fae", "Kyrian", "Necrolords", "Venthyr", "Protoform Synthesis", "Torghast"},
+	icon = "Interface\\AddOns\\MCL\\icons\\sl.blp",
 }
 core.sectionNames[10] = {
-	name = "Horde",
-	mounts = core.mountList[11],
-	category = {"Pandaren", "Orc", "Undead", "Tauren", "Troll", "Goblin", "Blood Elf"}
+	name = "Dragonflight",
+	mounts = core.mountList[18],
+	icon = "Interface\\AddOns\\MCL\\icons\\df.blp",
 }
 core.sectionNames[11] = {
-	name = "Alliance",
-	mounts = core.mountList[10],
-	category = {"Pandaren", "Human", "Gnome", "Dwarf", "Dark Iron Dwarf", "Draenei", "Night Elf", "Worgen"}
+	name = "Horde",
+	mounts = core.mountList[11],
+	icon = "Interface\\AddOns\\MCL\\icons\\horde.blp",
 }
 core.sectionNames[12] = {
-	name = "Professions",
-	mounts = core.mountList[12],
-	category = {"Alchemy", "Archeology", "Engineering", "Fishing", "Jewelcrafting", "Tailoring", "Leatherworking", "Blacksmith"},
+	name = "Alliance",
+	mounts = core.mountList[10],
+	icon = "Interface\\AddOns\\MCL\\icons\\alliance.blp",
 }
 core.sectionNames[13] = {
-	name = "PVP",
-	mounts = core.mountList[13],
-	category = {"Achievement", "Mark of Honor", "Honor", "Vicious Saddle", "Gladiator", "Halaa", "Timeless Isle", "Talon's Vengeance"},
+	name = "Professions",
+	mounts = core.mountList[12],
+	icon = "Interface\\AddOns\\MCL\\icons\\professions.blp",
 }
 core.sectionNames[14] = {
-	name = "World Events",
-	mounts = core.mountList[14],
-	category = {"Achievement", "Brewfest", "Hallow's End", "Love is in the Air", "Noblegarden", "Winter Veil", "Brawler's Guild", "Darkmoon Faire", "Timewalking"},
+	name = "PVP",
+	mounts = core.mountList[13],
+	icon = "Interface\\AddOns\\MCL\\icons\\pvp.blp",
 }
 core.sectionNames[15] = {
-	name = "Promotion",
-	mounts = core.mountList[15],
-	category = {"Blizzard Store", "Blizzcon", "Collector's Edition", "WoW Classic", "WoW Anniversary Mounts", "Hearthstone", "Warcraft III Reforged", "Recruit-A-Friend", "Azeroth Choppers", "Trading Card Game", "Timewalking Alterac Valley"},
+	name = "World Events",
+	mounts = core.mountList[14],
+	icon = "Interface\\AddOns\\MCL\\icons\\holiday.blp",
 }
 core.sectionNames[16] = {
-	name = "Other",
-	mounts = core.mountList[16],
-	category = {"Guild Vendor", "BMAH", "Mount Collection", "Exalted Reputations", "Toy", "Heirlooms", "Paladin", "Warlock"}
+	name = "Promotion",
+	mounts = core.mountList[15],
+	icon = "Interface\\AddOns\\MCL\\icons\\promotion.blp",
 }
 core.sectionNames[17] = {
-	name = "Unobtainable",
-	mounts = core.mountList[17],
-	category = {"Mythic +","Scroll of Resurrection", "Challenge Mode", "Recruit-A-Friend", "Ahead of the Curve", "Brawler's Guild", "Arena Mounts | TBC - WOD", "Arena Mounts | LEGION - SL", "Azeroth Choppers", "Original Epic Mounts", "Old Promotion Mounts", "Unobtainable Raid Mounts", "BrewFest"}
+	name = "Other",
+	mounts = core.mountList[16],
+	icon = "Interface\\AddOns\\MCL\\icons\\other.blp",
 }
 core.sectionNames[18] = {
+	name = "Unobtainable",
+	mounts = core.mountList[17],
+	icon = "Interface\\AddOns\\MCL\\icons\\unobtainable.blp",
+}
+core.sectionNames[19] = {
 	name = "Overview",
 	mounts = {},
-	category = {}
+	icon = "Interface\\AddOns\\MCL\\icons\\mcl.blp",	
 }

@@ -187,6 +187,38 @@ function MCL_functions:LinkMountItem(id, frame)
     end  
 end
 
+function MCL_functions:CompareMountJournal()
+    print("Comparing Mount Journal to Addon")
+    MOUNTLIST = {}
+
+    local mounts = {}
+    for k,v in pairs(C_MountJournal.GetMountIDs()) do
+        local check = false
+        for kk,vv in pairs(core.mounts) do
+            local id = vv.id
+            if type(id) == "string" then
+                id = tonumber(vv.id)
+            end
+            if id == tonumber(v) then
+                check = true
+            end
+        end
+        if check == false then
+            table.insert(mounts, v)
+        end
+    end
+    for x,y in pairs(mounts) do
+        local mountName, spellID, icon, isActive, _, sourceType, _, isFactionSpecific, faction, _, isCollected, mountID, _ = C_MountJournal.GetMountInfoByID(y)
+        local _, _, sourceText, _, _, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(y)
+        local item = {
+            name = mountName,
+            source = sourceText,
+            id = mountID,
+        }
+        table.insert(MOUNTLIST, item)
+        -- print(mountName, mountID)
+    end
+end
 
 function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, tab)
 
