@@ -8,6 +8,7 @@ core.stats= {}
 core.overviewStats = {}
 core.overviewFrames = {}
 
+
 function MCL_functions:getFaction()
     -- * --------------------------------
     -- * Get's player faction
@@ -57,7 +58,11 @@ function MCL_functions:initSections()
 
     for i, v in ipairs(core.sectionNames) do
         if v.name ~= faction then
-            table.insert(core.sections, v.name)
+            local t = {
+                name = v.name,
+                icon = v.icon
+            }
+            table.insert(core.sections, t)
         else
             -- Skip opposite faction
         end
@@ -74,13 +79,13 @@ function MCL_functions:initSections()
 
     core.sectionFrames = {}
     for i=1, numTabs do
-        local section_frame = core.Frames:createContentFrame(tabFrames[i], core.sections[i])
+        local section_frame = core.Frames:createContentFrame(tabFrames[i], core.sections[i].name)
         table.insert(core.sectionFrames, section_frame)
 
         for ii,v in ipairs(core.sectionNames) do
             if v.name == "Overview" then
                 core.overview = section_frame
-            elseif v.name == core.sections[i] then
+            elseif v.name == core.sections[i].name then
                 -- ! Create Frame for each category
                 if v.mounts then
                     for k,val in pairs(v.mounts) do
@@ -187,38 +192,28 @@ function MCL_functions:LinkMountItem(id, frame)
     end  
 end
 
+
 function MCL_functions:CompareMountJournal()
     print("Comparing Mount Journal to Addon")
-    MOUNTLIST = {}
-
     local mounts = {}
+    local i = 1
     for k,v in pairs(C_MountJournal.GetMountIDs()) do
-        local check = false
+        mounts[i] = v
         for kk,vv in pairs(core.mounts) do
-            local id = vv.id
-            if type(id) == "string" then
-                id = tonumber(vv.id)
+            if vv.id == mounts[i] then
+                mounts[i] = nil
             end
-            if id == tonumber(v) then
-                check = true
-            end
-        end
-        if check == false then
-            table.insert(mounts, v)
         end
     end
-    for x,y in pairs(mounts) do
-        local mountName, spellID, icon, isActive, _, sourceType, _, isFactionSpecific, faction, _, isCollected, mountID, _ = C_MountJournal.GetMountInfoByID(y)
-        local _, _, sourceText, _, _, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(y)
-        local item = {
-            name = mountName,
-            source = sourceText,
-            id = mountID,
-        }
-        table.insert(MOUNTLIST, item)
-        -- print(mountName, mountID)
+    for x,y in ipairs(mounts) do
+        if y ~= nil then
+            local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID, _ = C_MountJournal.GetMountInfoByID(y)
+            print(mountName, mountID)
+        end
     end
 end
+
+
 
 function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, tab)
 

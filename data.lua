@@ -964,7 +964,7 @@ core.mountList[18] = {
 	name = "Dragonflight",
 	categories = {
 		Quest = {
-			name = "Quests [Placeholder]",
+			name = "Quests",
 			mounts = {198870}
 		},
 	},
