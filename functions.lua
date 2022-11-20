@@ -96,7 +96,7 @@ function MCL_functions:initSections()
                     table.insert(core.mountFrames, mountFrame)
                     category.info = category:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
                     category.info:SetPoint("BOTTOM", 450, -500)
-                    category.info:SetText("Ctrl + Right Click to pin")
+                    category.info:SetText("Ctrl + Right Click to pin uncollected mounts")
                 end                   
                 -- ! Create Frame for each category
                 if v.mounts then
