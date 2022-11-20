@@ -967,10 +967,6 @@ core.mountList[18] = {
 			name = "Achievement",
 			mounts = {194034, 194705, 194521, 194549, 199412, 192791 },
 		},
-		Vendor = {
-			name = "Vendor",
-			mounts = {201719, 201720, 201702, 201704, 198808, 198809, 198810, 198811 },
-		},
 		Treasures = {
 			name = "Treasures",
 			mounts = {201440, 198825, 192777},
