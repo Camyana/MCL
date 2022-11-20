@@ -4,7 +4,7 @@
 ## Version: 2.0.2
 ## DefaultState: enabled
 ## LoadWith: Blizzard_Collections
-## SavedVariables: MCL_DB
+## SavedVariables: MCL_DB, MOUNTLIST, MCL_PINNED
 ## Author: Xubo - Tarren-Mill
 ## Description: A tool used to log collected mounts in a similiar way to Simple Armory.
 

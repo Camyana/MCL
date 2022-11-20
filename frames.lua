@@ -5,8 +5,8 @@ local MCL_frames = core.Frames;
 
 core.TabTable = {}
 
-local nav_width = 150
-local main_frame_width = 1200
+local nav_width = 200
+local main_frame_width = 1250
 local main_frame_height = 600
 
 local r,g,b,a
@@ -105,7 +105,11 @@ function MCL_frames:SetTabs()
 		end
 		tab:SetScript("OnClick", Tab_OnClick);
         tab:SetWidth(nav_width)
-		tab.content = CreateFrame("Frame", nil, tabFrame.ScrollFrame);
+		if v.name == "Pinned" then
+			tab.content = CreateFrame("Frame", "PinnedTab", tabFrame.ScrollFrame);
+		else
+			tab.content = CreateFrame("Frame", nil, tabFrame.ScrollFrame);
+		end
 		tab.content:SetSize(1100, 550);
 		tab.content:Hide();
 
@@ -122,7 +126,7 @@ function MCL_frames:SetTabs()
 		
 	end
 
-	Tab_OnClick(_G[frameName.."Tab18"]);
+	Tab_OnClick(_G[frameName.."Tab19"]);
 
 	return contents, numTabs;
 end
@@ -175,16 +179,19 @@ function MCL_frames:createContentFrame(relativeFrame, title)
 	--category:SetSize(490, boxSize);
 	frame:SetWidth(490)
 	frame:SetHeight(30)
-	frame:SetPoint("TOPLEFT", relativeFrame, 175, 0);
+	frame:SetPoint("TOPLEFT", relativeFrame, nav_width+30, 0);
     frame:SetBackdropColor(0, 1, 0)
 	frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	frame.title:SetPoint("LEFT", 0, 0)
 	frame.title:SetText(title)
 
-    frame.pBar = core.Frames:progressBar(frame)
-    frame.pBar:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, -15)
-    frame.pBar:SetWidth(880)
-    frame.pBar:SetHeight(20)
+
+	if title ~= "Pinned" then
+		frame.pBar = core.Frames:progressBar(frame)
+		frame.pBar:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, -15)
+		frame.pBar:SetWidth(880)
+		frame.pBar:SetHeight(20)
+	end
 
 	return frame;
 end
@@ -198,7 +205,7 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
     local oddOverFlow, evenOverFlow = 0, 0
 
 	for k,v in pairs(set) do
-		if v.name ~= "Overview" then
+		if (v.name ~= "Overview") and (v.name ~= "Pinned") then
 			local frame = CreateFrame("Frame", nil, relativeFrame, "BackdropTemplate")
 			frame:SetWidth(60);
 			frame:SetHeight(60);
@@ -227,11 +234,9 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
 			pBar:HookScript("OnEnter", function()
 				r,g,b,a = pBar:GetStatusBarColor()
 				local temp = pBar:SetStatusBarColor(0.8, 0.5, 0.9, 1)
-				pBar.GetParent().bg:SetVertexColor(0.843, 0.874, 0.898, 1)
 			end)
 			pBar:HookScript("OnLeave", function()
 				pBar:SetStatusBarColor(r, g, b, a)
-				pBar.GetParent().bg:SetVertexColor(0.843, 0.874, 0.898, 0.5)
 			end)
 
 			pBar:SetScript("OnMouseDown", function(self, button)
@@ -301,10 +306,10 @@ function MCL_frames:createCategoryFrame(set, relativeFrame)
         first = false
         category.title = category:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         category.title:SetPoint("TOPLEFT", 0, 0)
-        category.title:SetText(v.name)
+		category.title:SetText(v.name)
         local pBar = core.Frames:progressBar(category) 
-
-        local overflow = core.Function:CreateMountsForCategory(v.mounts, category, frame_size, relativeFrame, category)
+		local overflow = core.Function:CreateMountsForCategory(v.mounts, category, frame_size, relativeFrame, category, false, false)
+	
             
         category:SetSize(((frame_size + 10) * 12),45)
 

@@ -963,11 +963,35 @@ core.mountList[17] = {
 core.mountList[18] = {
 	name = "Dragonflight",
 	categories = {
-		Quest = {
-			name = "Quests",
-			mounts = {198870}
+		Achievement = {
+			name = "Achievement",
+			mounts = {194034, 194705, 194521, 194549, 199412, 192791 },
 		},
-	},
+		Vendor = {
+			name = "Vendor",
+			mounts = {201719, 201720, 201702, 201704, 198808, 198809, 198810, 198811 },
+		},
+		Treasures = {
+			name = "Treasures",
+			mounts = {201440, 198825, 192777},
+		},
+		Adventures = {
+			name = "Adventures",
+			mounts = {192799, 198870 },
+		},
+		Reputation = {		
+			name = "Reputation",
+			mounts = {192762, 198872, 192761, 192764 },
+		},
+		Zone = {
+			name = "Zone",
+			mounts = {192601, 198873, 198871, 192775 },
+		},
+		PVP = {
+			name = "PVP",
+			mounts = {201788, 201789, 202086 }
+		}
+	}
 }
 
 core.sectionNames[1] = {
@@ -1061,6 +1085,11 @@ core.sectionNames[18] = {
 	icon = "Interface\\AddOns\\MCL\\icons\\unobtainable.blp",
 }
 core.sectionNames[19] = {
+	name = "Pinned",
+	mounts = {MCL_PINNED},
+	icon = "Interface\\AddOns\\MCL\\icons\\pin.blp",	
+}
+core.sectionNames[20] = {
 	name = "Overview",
 	mounts = {},
 	icon = "Interface\\AddOns\\MCL\\icons\\mcl.blp",	

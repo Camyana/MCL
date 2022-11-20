@@ -7,6 +7,7 @@ core.mounts = {}
 core.stats= {}
 core.overviewStats = {}
 core.overviewFrames = {}
+core.mountFrames = {}
 
 
 function MCL_functions:getFaction()
@@ -84,8 +85,16 @@ function MCL_functions:initSections()
 
         for ii,v in ipairs(core.sectionNames) do
             if v.name == "Overview" then
-                core.overview = section_frame
+                core.overview = section_frame        
             elseif v.name == core.sections[i].name then
+                if v.name == "Pinned" then
+                    local category = CreateFrame("Frame", "PinnedFrame", section_frame, "BackdropTemplate");
+                    category:SetWidth(60);
+                    category:SetHeight(60);
+                    category:SetPoint("TOPLEFT", section_frame, "TOPLEFT", 0, 0);
+                    local overflow, mountFrame = core.Function:CreateMountsForCategory(MCL_PINNED, category, 30, tabFrames[i], true, true)
+                    table.insert(core.mountFrames, mountFrame)
+                end                   
                 -- ! Create Frame for each category
                 if v.mounts then
                     for k,val in pairs(v.mounts) do
@@ -128,7 +137,110 @@ function MCL_functions:getTableLength(set)
     return i
 end
 
-function MCL_functions:LinkMountItem(id, frame)
+function MCL_functions:SetMouseClickFunctionalityPin(frame, mountID, mountName, itemLink)
+    frame:SetScript("OnMouseDown", function(self, button)
+        if IsControlKeyDown() then
+            if button == 'LeftButton' then
+                DressUpMount(mountID)
+            elseif button == 'RightButton' then
+                if IsMountCollected(mountID) == false then
+                    local pin = false
+                    local pin_count = table.getn(MCL_PINNED)
+                    if pin_count ~= nil then                     
+                        for i=1, pin_count do                      
+                            if MCL_PINNED[i] == "m"..mountID then
+                                pin = i
+                            end
+                        end
+                    end
+                                          
+                    table.remove(MCL_PINNED, pin)
+                    local index = 0
+                    for k,v in pairs(core.mountFrames[1]) do
+                        index = index + 1
+                        if tostring(v.mountID) == tostring(mountID) then
+                            table.remove(core.mountFrames[1],  index)
+                            for kk,vv in ipairs(core.mountFrames[1]) do
+                                if kk == 1 then
+                                    vv:SetParent(_G["PinnedFrame"])
+                                else
+                                    vv:SetParent(core.mountFrames[1][kk-1])
+                                end
+                            end
+                            frame:Hide()
+                            core.Function:UpdateCollection()
+                        end
+                    end
+                end
+            end               
+        elseif button=='LeftButton' then
+            if (itemLink) then
+                print(itemLink)
+            end
+        end
+        if button == 'RightButton' then
+            CastSpellByName(mountName);
+        end
+    end)
+end
+
+function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, itemLink) -- * Mount Frames
+    frame:SetScript("OnMouseDown", function(self, button)
+        if IsControlKeyDown() then
+            if button == 'LeftButton' then
+                DressUpMount(mountID)
+            elseif button == 'RightButton' then
+                if IsMountCollected(mountID) == false then
+                    local pin = false
+                    local pin_count = table.getn(MCL_PINNED)
+                    if pin_count ~= nil then                     
+                        for i=1, pin_count do                      
+                            if MCL_PINNED[i] == "m"..mountID then
+                                pin = i
+                            end
+                        end
+                    end
+                    if pin ~= false then
+                        frame.pin:SetAlpha(0)
+                        table.remove(MCL_PINNED, pin)
+                        local index = 0
+                        for k,v in pairs(core.mountFrames[1]) do
+                            index = index + 1
+                            if tostring(v.mountID) == tostring(mountID) then
+                                core.mountFrames[1][index]:Hide()                                
+                                table.remove(core.mountFrames[1],  index)
+                                for kk,vv in ipairs(core.mountFrames[1]) do
+                                    if kk == 1 then
+                                        vv:SetParent(_G["PinnedFrame"])
+                                        vv:Show()
+                                    else
+                                        vv:SetParent(core.mountFrames[1][kk-1])
+                                        vv:Show()
+                                    end
+                                end                                
+                            end
+                        end
+
+                    else	                            
+                        frame.pin:SetAlpha(1)
+                        table.insert(MCL_PINNED, "m"..mountID)
+                        core.Function:CreatePinnedMount(mountID)
+
+                    end
+                end
+            end               
+        elseif button=='LeftButton' then
+            if (itemLink) then
+                print(itemLink)
+            end
+        end
+        if button == 'RightButton' then
+            CastSpellByName(mountName);
+        end
+    end)
+end
+
+function MCL_functions:LinkMountItem(id, frame, pin)
 	--Adding a tooltip for mounts
     if string.sub(id, 1, 1) == "m" then
         id = string.sub(id, 2, -1)
@@ -145,16 +257,11 @@ function MCL_functions:LinkMountItem(id, frame)
         frame:HookScript("OnLeave", function()
             GameTooltip:Hide()
         end)
-
-        frame:SetScript("OnMouseDown", function(self, button)
-            if button == 'LeftButton' then
-                DressUpMount(mountID)
-            end			
-            if button == 'RightButton' then               
-                CastSpellByName(mountName);
-            end
-        end)          
-
+        if pin == true then
+            core.Function:SetMouseClickFunctionalityPin(frame, mountID, mountName, itemLink)
+        else
+            core.Function:SetMouseClickFunctionality(frame, mountID, mountName, itemLink)
+        end  
     else
         local item, itemLink = GetItemInfo(id);
         local mountID = C_MountJournal.GetMountFromItem(id)
@@ -173,23 +280,13 @@ function MCL_functions:LinkMountItem(id, frame)
         frame:HookScript("OnLeave", function()
             GameTooltip:Hide()
         end)
-
-		frame:SetScript("OnMouseDown", function(self, button)
-			if IsControlKeyDown() then
-				if button == 'LeftButton' then
-					DressUpMount(mountID)
-				end
-			elseif button=='LeftButton' then
-				if (itemLink) then
-					print(itemLink)
-				end
-			end
-			if button == 'RightButton' then
-				CastSpellByName(mountName);
-			end
-		end)
-
-    end  
+        if pin == true then
+            core.Function:SetMouseClickFunctionalityPin(frame, mountID, mountName, itemLink)
+        else
+            core.Function:SetMouseClickFunctionality(frame, mountID, mountName, itemLink)
+        end    
+    end
+     
 end
 
 
@@ -214,13 +311,26 @@ function MCL_functions:CompareMountJournal()
 end
 
 
+function MCL_functions:CheckIfPinned(mountID)
+    if MCL_PINNED == nil then
+        MCL_PINNED = {}
+    end
+    for k,v in pairs(MCL_PINNED) do
+        if v == mountID then
+            return true, k
+        end
+    end
+    return false, nil
+end
 
-function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, tab)
+
+function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, tab, skip_total, pin)
 
     local category = relativeFrame
     local count = 0
     local first_frame
     local overflow = 0
+    local mountFrames = {}
 
     for kk,vv in pairs(set) do
         local mount_Id
@@ -242,9 +352,17 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
             frame:SetBackdrop({
                 edgeFile = [[Interface\Buttons\WHITE8x8]],
                 edgeSize = frame_size + 2,
-            })           
-            frame:SetBackdropBorderColor(1, 0, 0, 0.03)	-- ! Default Red Backdrop
-            
+            })
+
+            frame.pin = frame:CreateTexture()
+            frame.pin:SetWidth(24)
+            frame.pin:SetHeight(24)
+            frame.pin:SetTexture("Interface\\AddOns\\MCL\\icons\\pin.blp")
+            frame.pin:SetPoint("TOPLEFT", frame, "TOPLEFT", 20,12)
+            frame.pin:SetAlpha(0)
+
+            frame:SetBackdropBorderColor(1, 0, 0, 0.03)
+                        
             if count == 12 then
                 frame:SetPoint("BOTTOMLEFT", first_frame, "BOTTOMLEFT", 0, -overflow);
                 count = 0           
@@ -266,18 +384,82 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
                 frame.tex:SetTexture(GetItemIcon(vv))
             end
         
-            frame.tex:SetVertexColor(0.75, 0.75, 0.75, 0.3);	
+            frame.tex:SetVertexColor(0.75, 0.75, 0.75, 0.3);
 
-            core.Function:LinkMountItem(vv, frame)
+            frame.mountID = mount_Id
+
+            local pin_check = core.Function:CheckIfPinned("m"..frame.mountID)
+            if pin_check == true then
+                frame.pin:SetAlpha(1)
+            else
+                frame.pin:SetAlpha(0)	-- ! Default Red Backdrop
+            end            
+
+            core.Function:LinkMountItem(vv, frame, pin)
 
             relativeFrame = frame
             count = count + 1
-
-            MCL_functions:TableMounts(mount_Id, frame, tab, category)
+            if skip_total == true then
+            else
+                if tab then
+                    MCL_functions:TableMounts(mount_Id, frame, tab, category)
+                end
+            end
+            table.insert(mountFrames, frame)
         end  
     end   
-    return overflow
+    return overflow, mountFrames
 end
+
+
+function MCL_functions:CreatePinnedMount(mount_Id)
+
+    local frame_size = 30
+    local mountFrames = {}
+    local total_pinned = table.getn(core.mountFrames[1])
+    if total_pinned == 0 then
+        local overflow, mountFrame = core.Function:CreateMountsForCategory(MCL_PINNED, _G["PinnedFrame"], 30, _G["PinnedTab"], true, true)
+        core.mountFrames[1] = mountFrame
+    else
+        local relativeFrame = core.mountFrames[1][total_pinned]
+
+        local frame = CreateFrame("Button", nil, relativeFrame, "BackdropTemplate");
+        frame:SetWidth(frame_size);
+        frame:SetHeight(frame_size);
+        frame:SetBackdrop({
+            edgeFile = [[Interface\Buttons\WHITE8x8]],
+            edgeSize = frame_size + 2,
+        })
+
+        frame.pin = frame:CreateTexture()
+        frame.pin:SetWidth(24)
+        frame.pin:SetHeight(24)
+        frame.pin:SetTexture("Interface\\AddOns\\MCL\\icons\\pin.blp")
+        frame.pin:SetPoint("TOPLEFT", frame, "TOPLEFT", 20,12)
+        frame.pin:SetAlpha(1)
+
+        frame:SetPoint("RIGHT", relativeFrame, "RIGHT", frame_size+10, 0);
+
+
+        frame.tex = frame:CreateTexture()
+        frame.tex:SetAllPoints(frame)
+        local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID, _ = C_MountJournal.GetMountInfoByID(mount_Id)
+        frame.tex:SetTexture(icon)
+
+        frame.tex:SetVertexColor(0.75, 0.75, 0.75, 0.3);
+
+        frame.mountID = mount_Id
+
+        local pin_check = core.Function:CheckIfPinned("m"..frame.mountID)
+        frame:SetBackdropBorderColor(1, 0, 0 , 0.03)
+
+        core.Function:LinkMountItem("m"..tostring(mount_Id), frame, true)
+
+        table.insert(core.mountFrames[1], frame)
+  
+    end
+end
+
 
 function MCL_functions:GetMountID(id)
     if string.sub(id, 1, 1) == "m" then
@@ -294,6 +476,10 @@ function IsMountCollected(id)
 end
 
 function UpdateBackground(frame)
+    local pinned, pin = core.Function:CheckIfPinned(frame.mountID)
+    if pinned == true then
+        table.remove(MCL_PINNED, pin)
+    end
     frame:SetBackdropBorderColor(0, 0.45, 0, 0.4)
     frame.tex:SetVertexColor(1, 1, 1, 1);	
 end
@@ -329,6 +515,23 @@ local function clearOverviewStats()
     end
 end
 
+local function IsMountPinned(id)
+    for k,v in pairs(core.mountFrames[1]) do
+        if v.mountID == id then
+            return true 
+        end
+    end
+end
+
+local function UpdatePin(frame)
+    local pinned, pin = core.Function:CheckIfPinned("m"..tostring(frame.mountID))
+    if pinned == true then
+        frame.pin:SetAlpha(1)
+    else
+        frame.pin:SetAlpha(0)
+    end
+end   
+
 function MCL_functions:UpdateCollection()
     clearOverviewStats()
     core.total = 0
@@ -338,10 +541,9 @@ function MCL_functions:UpdateCollection()
         if IsMountCollected(v.id) then
             UpdateBackground(v.frame)
             core.collected = core.collected + 1
+        else
+            UpdatePin(v.frame)
         end
-        -- * Check if mount is collected
-        -- * Change colour of background
-        -- * Add to total
     end
     for k,v in pairs(core.stats) do
         local section_total = 0
