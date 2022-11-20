@@ -94,6 +94,9 @@ function MCL_functions:initSections()
                     category:SetPoint("TOPLEFT", section_frame, "TOPLEFT", 0, 0);
                     local overflow, mountFrame = core.Function:CreateMountsForCategory(MCL_PINNED, category, 30, tabFrames[i], true, true)
                     table.insert(core.mountFrames, mountFrame)
+                    category.info = category:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+                    category.info:SetPoint("BOTTOM", 450, -500)
+                    category.info:SetText("Ctrl + Right Click to pin")
                 end                   
                 -- ! Create Frame for each category
                 if v.mounts then

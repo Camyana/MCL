@@ -59,7 +59,7 @@ end
 -- * -----------------------------------------------------
 
 function MCL_Load:PreLoad()      
-    if load_check > 920 then
+    if load_check > 1500 then
         return true
     else
         print("MCL - Initialising, try again")        
@@ -99,7 +99,6 @@ local function onevent(self, event, arg1, ...)
 	    if not IsAddOnLoaded("Blizzard_Collections") then
 	        LoadAddOn("Blizzard_Collections")
 	    end
-        MCL_Load:Toggle()       
     end
 end
 
