@@ -19,4 +19,7 @@ SlashCmdList["MCL"] = function(msg)
     if msg == "compare" then
         core.Function:CompareMountJournal();
     end
+    if msg == "organise" then
+        core.Function:OrganiseSectionFrames();
+    end
  end 

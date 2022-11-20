@@ -114,12 +114,14 @@ function MCL_frames:SetTabs()
 		tab.content:Hide();
 
 		table.insert(contents, tab.content);
-		if (i == 1) then
+
+		if tab.title:GetText() == "Overview" then
+			tab:SetPoint("TOPLEFT", tabFrame, "TOPLEFT", 0, 20);
+		elseif (i == 1) or tab.title:GetText() == "Overview" then
 			tab:SetPoint("TOPLEFT", tabFrame, "TOPLEFT", 0, -10);
 		else
 			tab:SetPoint("BOTTOM", _G[frameName.."Tab"..(i-1)], "BOTTOM", 0, -30);
 		end
-
 		core.TabTable[i] = v.name
 
         i = i+1
@@ -137,11 +139,10 @@ function MCL_frames:createNavFrame(relativeFrame, title)
 	local frame = CreateFrame("Frame", "Nav", relativeFrame, "BackdropTemplate");
 	frame:SetWidth(nav_width)
 	frame:SetHeight(main_frame_height - 20)
-	frame:SetPoint("TOPLEFT", relativeFrame, 5, -15);
+	frame:SetPoint("TOPLEFT", relativeFrame, 5, -35);
     frame:SetBackdropColor(1, 1, 1)
 	frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	frame.title:SetPoint("LEFT", 0, 0)
-
 	return frame;
 end
 

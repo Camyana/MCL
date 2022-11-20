@@ -990,52 +990,52 @@ core.mountList[18] = {
 	}
 }
 
-core.sectionNames[1] = {
+core.sectionNames[10] = {
 	name = "Vanilla",
 	mounts = core.mountList[9],
 	icon = "Interface\\AddOns\\MCL\\icons\\classic.blp",
 }
-core.sectionNames[2] = {
+core.sectionNames[9] = {
 	name = "The Burning Crusade",
 	mounts = core.mountList[8],
 	icon = "Interface\\AddOns\\MCL\\icons\\bc.blp",
 }
-core.sectionNames[3] = {
+core.sectionNames[8] = {
 	name = "Wrath of the Lich King",
 	mounts = core.mountList[7],
 	icon = "Interface\\AddOns\\MCL\\icons\\wrath.blp",
 }
-core.sectionNames[4] = {
+core.sectionNames[7] = {
 	name = "Cataclysm",
 	mounts = core.mountList[6],
 	icon = "Interface\\AddOns\\MCL\\icons\\cata.blp",
 }
-core.sectionNames[5] = {
+core.sectionNames[6] = {
 	name = "Mists of Pandaria",
 	mounts = core.mountList[5],
 	icon = "Interface\\AddOns\\MCL\\icons\\mists.blp",
 }
-core.sectionNames[6] = {
+core.sectionNames[5] = {
 	name = "Warlords of Draenor",
 	mounts = core.mountList[4],
 	icon = "Interface\\AddOns\\MCL\\icons\\wod.blp",
 }
-core.sectionNames[7] = {
+core.sectionNames[4] = {
 	name = "Legion",
 	mounts = core.mountList[3],
 	icon = "Interface\\AddOns\\MCL\\icons\\legion.blp",
 }
-core.sectionNames[8] = {
+core.sectionNames[3] = {
 	name = "Battle for Azeroth",
 	mounts = core.mountList[2],
 	icon = "Interface\\AddOns\\MCL\\icons\\bfa.blp",
 }
-core.sectionNames[9] = {
+core.sectionNames[2] = {
 	name = "Shadowlands",
 	mounts = core.mountList[1],
 	icon = "Interface\\AddOns\\MCL\\icons\\sl.blp",
 }
-core.sectionNames[10] = {
+core.sectionNames[1] = {
 	name = "Dragonflight",
 	mounts = core.mountList[18],
 	icon = "Interface\\AddOns\\MCL\\icons\\df.blp",

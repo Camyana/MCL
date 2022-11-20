@@ -115,6 +115,14 @@ function MCL_functions:initSections()
 
 end
 
+function MCL_functions:OrganiseSectionFrames()
+    local sectionLength = table.getn(core.sectionFrames)
+    local firstTab = core.sectionFrames[1]:GetParent()
+    local lastTab = core.sectionFrames[sectionLength]:GetParent()
+    core.sectionFrames[sectionLength]:SetParent(firstTab)
+    core.sectionFrames[sectionLength]:SetParent(lastTab)
+end
+
 function MCL_functions:CreateBorder(frame, side)
     frame.borders = frame:CreateLine(nil, "BACKGROUND", nil, 0)
     local l = frame.borders
@@ -541,6 +549,33 @@ function MCL_functions:UpdateCollection()
         if IsMountCollected(v.id) then
             UpdateBackground(v.frame)
             core.collected = core.collected + 1
+            local pin = false
+            local pin_count = table.getn(MCL_PINNED)
+            if pin_count ~= nil then                     
+                for i=1, pin_count do                      
+                    if MCL_PINNED[i] == "m"..v.frame.mountID then
+                        table.remove(MCL_PINNED, i)
+                    end
+                end
+            end
+            UpdatePin(v.frame)                
+            local index = 0
+            for kk,vv in pairs(core.mountFrames[1]) do
+                index = index + 1
+                if tostring(vv.mountID) == tostring(v.frame.mountID) then
+                    local f = core.mountFrames[1][index]
+                    table.remove(core.mountFrames[1],  index)
+                    for kkk,vvv in ipairs(core.mountFrames[1]) do
+                        if kkk == 1 then
+                            vvv:SetParent(_G["PinnedFrame"])
+                        else
+                            vvv:SetParent(core.mountFrames[1][kkk-1])
+                        end
+                    end
+                    f:Hide()
+                end
+            end            
+
         else
             UpdatePin(v.frame)
         end
