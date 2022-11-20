@@ -1001,7 +1001,7 @@ core.sectionNames[2] = {
 	icon = "Interface\\AddOns\\MCL\\icons\\bc.blp",
 }
 core.sectionNames[3] = {
-	name = "Wotlk",
+	name = "Wrath of the Lich King",
 	mounts = core.mountList[7],
 	icon = "Interface\\AddOns\\MCL\\icons\\wrath.blp",
 }

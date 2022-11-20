@@ -5,7 +5,7 @@ local MCL_frames = core.Frames;
 
 core.TabTable = {}
 
-local nav_width = 200
+local nav_width = 180
 local main_frame_width = 1250
 local main_frame_height = 600
 

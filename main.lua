@@ -98,7 +98,8 @@ local function onevent(self, event, arg1, ...)
         f:UnregisterEvent("PLAYER_LOGIN")
 	    if not IsAddOnLoaded("Blizzard_Collections") then
 	        LoadAddOn("Blizzard_Collections")
-	    end        
+	    end
+        MCL_Load:Toggle()       
     end
 end
 
