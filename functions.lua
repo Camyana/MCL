@@ -408,7 +408,11 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
 
 
             if pin then
-                frame:SetPoint("BOTTOMLEFT", previous_frame, "BOTTOMLEFT", 0, -60);
+                local y = -60
+                if previous_frame == category then
+                    y = -20
+                end
+                frame:SetPoint("BOTTOMLEFT", previous_frame, "BOTTOMLEFT", 0, y);
 
                 frame.sectionName = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
                 frame.sectionName:SetPoint("LEFT", 600, 0)
@@ -505,7 +509,7 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
         frame.category = category
         frame.section = section
 
-        frame:SetPoint("BOTTOMLEFT", relativeFrame, "BOTTOMLEFT", 0, -40);
+        frame:SetPoint("BOTTOMLEFT", relativeFrame, "BOTTOMLEFT", 0, -60);
 
         frame.sectionName = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         frame.sectionName:SetPoint("LEFT", 600, 0)
