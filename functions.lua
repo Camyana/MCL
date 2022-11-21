@@ -148,7 +148,7 @@ function MCL_functions:getTableLength(set)
     return i
 end
 
-function MCL_functions:SetMouseClickFunctionalityPin(frame, mountID, mountName, itemLink)
+function MCL_functions:SetMouseClickFunctionalityPin(frame, mountID, mountName, itemLink, spellID)
     frame:SetScript("OnMouseDown", function(self, button)
         if IsControlKeyDown() then
             if button == 'LeftButton' then
@@ -186,7 +186,9 @@ function MCL_functions:SetMouseClickFunctionalityPin(frame, mountID, mountName, 
             end               
         elseif button=='LeftButton' then
             if (itemLink) then
-                print(itemLink)
+                frame:SetScript("OnHyperlinkClick", ChatFrame_OnHyperlinkShow(_, itemLink, itemLink, _))
+            elseif (spellID) then
+                frame:SetScript("OnHyperlinkClick", ChatFrame_OnHyperlinkShow(_, GetSpellLink(spellID), GetSpellLink(spellID), _))
             end
         end
         if button == 'RightButton' then
@@ -195,7 +197,7 @@ function MCL_functions:SetMouseClickFunctionalityPin(frame, mountID, mountName, 
     end)
 end
 
-function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, itemLink) -- * Mount Frames
+function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, itemLink, spellID) -- * Mount Frames
     frame:SetScript("OnMouseDown", function(self, button)
         if IsControlKeyDown() then
             if button == 'LeftButton' then
@@ -242,7 +244,10 @@ function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, ite
             end               
         elseif button=='LeftButton' then
             if (itemLink) then
-                print(itemLink)
+                frame:SetScript("OnHyperlinkClick", ChatFrame_OnHyperlinkShow(_, itemLink, itemLink, _))
+                -- print(itemLink)
+            elseif (spellID) then
+                frame:SetScript("OnHyperlinkClick", ChatFrame_OnHyperlinkShow(_, GetSpellLink(spellID), GetSpellLink(spellID), _))
             end
         end
         if button == 'RightButton' then
@@ -271,9 +276,9 @@ function MCL_functions:LinkMountItem(id, frame, pin)
             GameTooltip:Hide()
         end)
         if pin == true then
-            core.Function:SetMouseClickFunctionalityPin(frame, mountID, mountName, itemLink)
+            core.Function:SetMouseClickFunctionalityPin(frame, mountID, mountName, itemLink, spellID)
         else
-            core.Function:SetMouseClickFunctionality(frame, mountID, mountName, itemLink)
+            core.Function:SetMouseClickFunctionality(frame, mountID, mountName, itemLink, spellID)
         end  
     else
         local item, itemLink = GetItemInfo(id);

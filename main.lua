@@ -40,26 +40,13 @@ local function InitMounts()
 	end
 end
 
-function MCL_Load:init()
-
-    -- * -------------------------------------------------
-    -- * Pre-requirements to addon loading. Must include the blizzard_collections addon and be able to load all the mounts inside of the addon. 
-    
-    -- local check = 0
-    -- while (check < 900) do
-    --     check = InitMounts()
-    -- end	
-    -- * Addon pre-requirements met, start creating the frames
-    -- * -------------------------------------------------
-    return false
-end
 
 -- * -----------------------------------------------------
 -- * Toggle the main window
 -- * -----------------------------------------------------
 
 function MCL_Load:PreLoad()      
-    if load_check > 1500 then
+    if load_check > 1000 then
         return true
     else
         print("MCL - Initialising, try again")        
@@ -86,9 +73,9 @@ local login = true
 
 
 
----------------------------------------------------
--- Loads addon once Blizzard_Collections has loaded in.
----------------------------------------------------
+-- * -------------------------------------------------
+-- * Loads addon once Blizzard_Collections has loaded in.
+-- * -------------------------------------------------
 
 
 local function onevent(self, event, arg1, ...)
