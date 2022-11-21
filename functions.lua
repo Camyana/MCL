@@ -259,8 +259,10 @@ function MCL_functions:LinkMountItem(id, frame, pin)
 
         frame:HookScript("OnEnter", function()
             if (spellID) then
+                _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(id) 
                 GameTooltip:SetOwner(frame, "ANCHOR_TOP")
                 GameTooltip:SetSpellByID(spellID)
+                GameTooltip:AddLine(source) 
                 GameTooltip:Show()
                 frame:SetHyperlinksEnabled(true)
             end
