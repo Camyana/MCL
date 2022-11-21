@@ -391,6 +391,8 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
             frame:SetBackdrop({
                 edgeFile = [[Interface\Buttons\WHITE8x8]],
                 edgeSize = frame_size + 2,
+                bgFile = [[Interface\Buttons\WHITE8x8]],
+                tileSize = frame_size + 2,                
             })
 
             frame.pin = frame:CreateTexture()
@@ -404,6 +406,7 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
             frame.section = category.section
 
             frame:SetBackdropBorderColor(1, 0, 0, 0.03)
+            frame:SetBackdropColor(0, 0, 0, 1)
 
 
             frame.tex = frame:CreateTexture()
@@ -418,12 +421,20 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
         
             frame.tex:SetVertexColor(0.75, 0.75, 0.75, 0.3);
 
+            frame.mountID = mount_Id            
+
+            local pin_check = core.Function:CheckIfPinned("m"..frame.mountID)
+            if pin_check == true then
+                frame.pin:SetAlpha(1)
+            else
+                frame.pin:SetAlpha(0)
+            end              
+
             if pin then
-                local y = -60
+                local y = 30
                 if previous_frame == category then
-                    y = -30
+                    y = 0
                 end
-                frame:SetPoint("BOTTOMLEFT", previous_frame, "BOTTOMLEFT", 0, y);
 
                 frame.sectionName = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
                 frame.sectionName:SetPoint("LEFT", 650, 0)
@@ -447,11 +458,15 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
                 frame.border:SetStartPoint("BOTTOMLEFT")
                 frame.border:SetEndPoint("BOTTOMRIGHT")
                 frame:SetWidth(1000)
-                frame:SetHeight(59)
+                frame:SetHeight(frame.sourceText:GetStringHeight()+20)
+                
                 frame:SetBackdropBorderColor(0, 0, 0, 0.8)
+                frame:SetBackdropColor(0, 0, 0, 0.8)
                 frame.tex:SetVertexColor(1, 1, 1, 1)
 
-                frame.pin:SetPoint("TOPLEFT", frame, "TOPLEFT", 20,-5)
+                frame.pin:SetAlpha(0)
+
+                frame:SetPoint("BOTTOMLEFT", previous_frame, "BOTTOMLEFT", 0, -frame.sourceText:GetStringHeight()-y);
                 
                 frame.sourceText:SetJustifyH("LEFT")              
                 
@@ -464,17 +479,7 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
                 first_frame = frame
             else
                 frame:SetPoint("RIGHT", relativeFrame, "RIGHT", frame_size+10, 0);
-            end
-
-
-            frame.mountID = mount_Id
-
-            local pin_check = core.Function:CheckIfPinned("m"..frame.mountID)
-            if pin_check == true then
-                frame.pin:SetAlpha(1)
-            else
-                frame.pin:SetAlpha(0)
-            end            
+            end          
 
             core.Function:LinkMountItem(val, frame, pin)
 
@@ -513,6 +518,8 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
         frame:SetBackdrop({
             edgeFile = [[Interface\Buttons\WHITE8x8]],
             edgeSize = frame_size + 2,
+            bgFile = [[Interface\Buttons\WHITE8x8]],
+            tileSize = frame_size + 2,    
         })
 
         frame.pin = frame:CreateTexture()
@@ -532,8 +539,6 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
 
         frame.category = category
         frame.section = section
-
-        frame:SetPoint("BOTTOMLEFT", relativeFrame, "BOTTOMLEFT", 0, -60);
 
         frame.sectionName = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         frame.sectionName:SetPoint("LEFT", 600, 0)
@@ -557,21 +562,18 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
         frame.border:SetStartPoint("BOTTOMLEFT")
         frame.border:SetEndPoint("BOTTOMRIGHT")
         frame:SetWidth(1000)
-        frame:SetHeight(59)
+        frame:SetHeight(frame.sourceText:GetStringHeight()+20)
         frame:SetBackdropBorderColor(0, 0, 0, 0.8)
+        frame:SetBackdropColor(0, 0, 0, 0.8)
         frame.tex:SetVertexColor(1, 1, 1, 1)
 
-        frame.pin:SetPoint("TOPLEFT", frame, "TOPLEFT", 20,-5)
+        frame.pin:SetAlpha(0)
 
-        
-        
+        frame:SetPoint("BOTTOMLEFT", relativeFrame, "BOTTOMLEFT", 0, -frame.sourceText:GetStringHeight()-30);
+
         frame.sourceText:SetJustifyH("LEFT") 
 
-
         frame.mountID = mount_Id
-
-        local pin_check = core.Function:CheckIfPinned("m"..frame.mountID)
-        frame:SetBackdropBorderColor(1, 0, 0 , 0.03)
 
         core.Function:LinkMountItem("m"..tostring(mount_Id), frame, true)
 
