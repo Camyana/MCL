@@ -271,7 +271,7 @@ function MCL_functions:LinkMountItem(id, frame, pin)
         frame:HookScript("OnEnter", function()
             if (spellID) then
                 _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(id) 
-                GameTooltip:SetOwner(frame, "ANCHOR_TOP")
+                GameTooltip:SetOwner(frame, "ANCHOR_TOPLEFT")
                 GameTooltip:SetSpellByID(spellID)
                 GameTooltip:AddLine(source) 
                 GameTooltip:Show()
@@ -406,20 +406,31 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
             frame:SetBackdropBorderColor(1, 0, 0, 0.03)
 
 
+            frame.tex = frame:CreateTexture()
+            frame.tex:SetSize(frame_size, frame_size)
+            frame.tex:SetPoint("LEFT")
+
+            if string.sub(val, 1, 1) == "m" then
+                frame.tex:SetTexture(icon)
+            else
+                frame.tex:SetTexture(GetItemIcon(val))
+            end
+        
+            frame.tex:SetVertexColor(0.75, 0.75, 0.75, 0.3);
 
             if pin then
                 local y = -60
                 if previous_frame == category then
-                    y = -20
+                    y = -30
                 end
                 frame:SetPoint("BOTTOMLEFT", previous_frame, "BOTTOMLEFT", 0, y);
 
                 frame.sectionName = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-                frame.sectionName:SetPoint("LEFT", 600, 0)
+                frame.sectionName:SetPoint("LEFT", 650, 0)
                 frame.sectionName:SetText(vv.section)
 
                 frame.categoryName = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-                frame.categoryName:SetPoint("LEFT", 800, 0)
+                frame.categoryName:SetPoint("LEFT", 850, 0)
                 frame.categoryName:SetText(vv.category)  
                 
                 frame.mountName = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -427,8 +438,23 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
                 frame.mountName:SetText(mountName)  
                 
                 frame.sourceText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-                frame.sourceText:SetPoint("LEFT", 280, 0)
-                frame.sourceText:SetText(sourceText)                  
+                frame.sourceText:SetPoint("LEFT", 250, 0)
+                frame.sourceText:SetText(sourceText)  
+                
+                frame.border = frame:CreateLine(nil, "BACKGROUND", nil, 0)
+                frame.border:SetThickness(3)
+                frame.border:SetColorTexture(1, 1, 1, 0.3)
+                frame.border:SetStartPoint("BOTTOMLEFT")
+                frame.border:SetEndPoint("BOTTOMRIGHT")
+                frame:SetWidth(1000)
+                frame:SetHeight(59)
+                frame:SetBackdropBorderColor(0, 0, 0, 0.8)
+                frame.tex:SetVertexColor(1, 1, 1, 1)
+
+                frame.pin:SetPoint("TOPLEFT", frame, "TOPLEFT", 20,-5)
+                
+                frame.sourceText:SetJustifyH("LEFT")              
+                
                 previous_frame = frame
             elseif count == 12 then
                 frame:SetPoint("BOTTOMLEFT", first_frame, "BOTTOMLEFT", 0, -overflow);
@@ -440,16 +466,6 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
                 frame:SetPoint("RIGHT", relativeFrame, "RIGHT", frame_size+10, 0);
             end
 
-            frame.tex = frame:CreateTexture()
-            frame.tex:SetAllPoints(frame)
-
-            if string.sub(val, 1, 1) == "m" then
-                frame.tex:SetTexture(icon)
-            else
-                frame.tex:SetTexture(GetItemIcon(val))
-            end
-        
-            frame.tex:SetVertexColor(0.75, 0.75, 0.75, 0.3);
 
             frame.mountID = mount_Id
 
@@ -506,6 +522,13 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
         frame.pin:SetPoint("TOPLEFT", frame, "TOPLEFT", 20,12)
         frame.pin:SetAlpha(1)
 
+        frame.tex = frame:CreateTexture()
+        frame.tex:SetAllPoints(frame)
+        local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID, _ = C_MountJournal.GetMountInfoByID(mount_Id)
+        frame.tex:SetTexture(icon)
+
+        frame.tex:SetVertexColor(0.75, 0.75, 0.75, 0.3);        
+
         frame.category = category
         frame.section = section
 
@@ -527,13 +550,18 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
         frame.sourceText:SetPoint("LEFT", 280, 0)
         frame.sourceText:SetText(sourceText)          
 
+        frame.border = frame:CreateLine(nil, "BACKGROUND", nil, 0)
+        frame.border:SetThickness(1)
+        frame.border:SetColorTexture(1, 1, 1, 0.8)
+        frame.border:SetStartPoint("BOTTOMLEFT")
+        frame.border:SetEndPoint("BOTTOMRIGHT")
+        frame:SetWidth(1000)
+        frame:SetHeight(50)
+        frame:SetBackdropBorderColor(0, 0, 0, 0.8)
+        frame.tex:SetVertexColor(1, 1, 1, 1)
+        
+        frame.sourceText:SetJustifyH("LEFT") 
 
-        frame.tex = frame:CreateTexture()
-        frame.tex:SetAllPoints(frame)
-        local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID, _ = C_MountJournal.GetMountInfoByID(mount_Id)
-        frame.tex:SetTexture(icon)
-
-        frame.tex:SetVertexColor(0.75, 0.75, 0.75, 0.3);
 
         frame.mountID = mount_Id
 
