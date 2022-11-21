@@ -308,6 +308,10 @@ function MCL_frames:createCategoryFrame(set, relativeFrame)
         category.title = category:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         category.title:SetPoint("TOPLEFT", 0, 0)
 		category.title:SetText(v.name)
+
+		category.section = relativeFrame.title:GetText()
+		category.category = v.name
+
         local pBar = core.Frames:progressBar(category) 
 		local overflow = core.Function:CreateMountsForCategory(v.mounts, category, frame_size, relativeFrame, category, false, false)
 	

@@ -48,12 +48,6 @@ function MCL_functions:initSections()
     -- * --------------------------------
     -- * Create variables and assign strings to each section.
     -- * --------------------------------
-
-    -- TODO: Create Frame for Section
-    -- TODO: Label name
-    -- TODO: GET categories
-    -- -- TODO: PUT Mounts in categories
-    -- TODO: GET Mounts in categories
     local faction = MCL_functions:getFaction()
     core.sections = {}
 
@@ -95,7 +89,7 @@ function MCL_functions:initSections()
                     local overflow, mountFrame = core.Function:CreateMountsForCategory(MCL_PINNED, category, 30, tabFrames[i], true, true)
                     table.insert(core.mountFrames, mountFrame)
                     category.info = category:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-                    category.info:SetPoint("BOTTOM", 450, -500)
+                    category.info:SetPoint("TOP", 450, -0)
                     category.info:SetText("Ctrl + Right Click to pin uncollected mounts")
                 end                   
                 -- ! Create Frame for each category
@@ -107,8 +101,6 @@ function MCL_functions:initSections()
                         end
                     end
                 end 
-            else
-                -- Skip opposite faction
             end            
         end
     end
@@ -118,12 +110,22 @@ function MCL_functions:initSections()
 
 end
 
-function MCL_functions:OrganiseSectionFrames()
-    local sectionLength = table.getn(core.sectionFrames)
-    local firstTab = core.sectionFrames[1]:GetParent()
-    local lastTab = core.sectionFrames[sectionLength]:GetParent()
-    core.sectionFrames[sectionLength]:SetParent(firstTab)
-    core.sectionFrames[sectionLength]:SetParent(lastTab)
+
+function MCL_functions:GetCollectedMounts()
+    for k,v in pairs(C_MountJournal.GetMountIDs()) do
+        local mountName, spellID, icon, _, isUsable, _, _, isFactionSpecific, faction, _, isCollected, mountID = C_MountJournal.GetMountInfoByID(v)
+        if isCollected and (isFactionSpecific == false) and isUsable then
+            local exists = false
+            for l,w in pairs(core.mounts) do
+                if w.frame.mountID == v then
+                    exists = true
+                end
+            end
+            if exists == false then
+                print(mountName, mountID)
+            end
+        end
+    end
 end
 
 function MCL_functions:CreateBorder(frame, side)
@@ -136,9 +138,6 @@ function MCL_functions:CreateBorder(frame, side)
     return frame
 end
 
-function MCL_functions:TestFunction()
-    print("hello world")
-end
 
 function MCL_functions:getTableLength(set)
     local i = 1
@@ -159,7 +158,7 @@ function MCL_functions:SetMouseClickFunctionalityPin(frame, mountID, mountName, 
                     local pin_count = table.getn(MCL_PINNED)
                     if pin_count ~= nil then                     
                         for i=1, pin_count do                      
-                            if MCL_PINNED[i] == "m"..mountID then
+                            if MCL_PINNED[i].mountID == "m"..mountID then
                                 pin = i
                             end
                         end
@@ -208,7 +207,7 @@ function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, ite
                     local pin_count = table.getn(MCL_PINNED)
                     if pin_count ~= nil then                     
                         for i=1, pin_count do                      
-                            if MCL_PINNED[i] == "m"..mountID then
+                            if MCL_PINNED[i].mountID == "m"..mountID then
                                 pin = i
                             end
                         end
@@ -233,11 +232,19 @@ function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, ite
                                 end                                
                             end
                         end
-
                     else	                            
                         frame.pin:SetAlpha(1)
-                        table.insert(MCL_PINNED, "m"..mountID)
-                        core.Function:CreatePinnedMount(mountID)
+                        local t = {
+                            mountID = "m"..mountID,
+                            category = frame.category,
+                            section = frame.section
+                        }
+                        if pin_count == nil then
+                            MCL_PINNED[1] = t
+                        else
+                            MCL_PINNED[pin_count+1] = t
+                        end
+                        core.Function:CreatePinnedMount(mountID, frame.category, frame.section)
 
                     end
                 end
@@ -245,7 +252,6 @@ function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, ite
         elseif button=='LeftButton' then
             if (itemLink) then
                 frame:SetScript("OnHyperlinkClick", ChatFrame_OnHyperlinkShow(_, itemLink, itemLink, _))
-                -- print(itemLink)
             elseif (spellID) then
                 frame:SetScript("OnHyperlinkClick", ChatFrame_OnHyperlinkShow(_, GetSpellLink(spellID), GetSpellLink(spellID), _))
             end
@@ -334,7 +340,7 @@ function MCL_functions:CheckIfPinned(mountID)
         MCL_PINNED = {}
     end
     for k,v in pairs(MCL_PINNED) do
-        if v == mountID then
+        if v.mountID == mountID then
             return true, k
         end
     end
@@ -345,14 +351,29 @@ end
 function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, tab, skip_total, pin)
 
     local category = relativeFrame
+    local previous_frame = relativeFrame
     local count = 0
     local first_frame
     local overflow = 0
     local mountFrames = {}
+    local val
+    local mountName, spellID, icon, _, _, sourceType, _, isFactionSpecific, faction, _, isCollected, mountID, sourceText
 
     for kk,vv in pairs(set) do
         local mount_Id
-        local faction, faction_specific = IsMountFactionSpecific(vv)
+        if pin then
+            val = vv.mountID
+        else
+            val = vv
+        end
+        if string.sub(val, 1, 1) == "m" then
+            mount_Id = string.sub(val, 2, -1)
+            mountName, spellID, icon, _, _, sourceType, _, isFactionSpecific, faction, _, isCollected, mountID, _ = C_MountJournal.GetMountInfoByID(mount_Id)
+            _,_, sourceText =  C_MountJournal.GetMountInfoExtraByID(mount_Id)
+        else
+            mount_Id = C_MountJournal.GetMountFromItem(val)
+        end        
+        local faction, faction_specific = IsMountFactionSpecific(val)
         if faction then
             if faction == 1 then
                 faction = "Alliance"
@@ -379,9 +400,33 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
             frame.pin:SetPoint("TOPLEFT", frame, "TOPLEFT", 20,12)
             frame.pin:SetAlpha(0)
 
+            frame.category = category.category
+            frame.section = category.section
+
             frame:SetBackdropBorderColor(1, 0, 0, 0.03)
-                        
-            if count == 12 then
+
+
+
+            if pin then
+                frame:SetPoint("BOTTOMLEFT", previous_frame, "BOTTOMLEFT", 0, -60);
+
+                frame.sectionName = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+                frame.sectionName:SetPoint("LEFT", 600, 0)
+                frame.sectionName:SetText(vv.section)
+
+                frame.categoryName = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+                frame.categoryName:SetPoint("LEFT", 800, 0)
+                frame.categoryName:SetText(vv.category)  
+                
+                frame.mountName = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+                frame.mountName:SetPoint("LEFT", 50, 0)
+                frame.mountName:SetText(mountName)  
+                
+                frame.sourceText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+                frame.sourceText:SetPoint("LEFT", 280, 0)
+                frame.sourceText:SetText(sourceText)                  
+                previous_frame = frame
+            elseif count == 12 then
                 frame:SetPoint("BOTTOMLEFT", first_frame, "BOTTOMLEFT", 0, -overflow);
                 count = 0           
             elseif relativeFrame == category then
@@ -393,13 +438,11 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
 
             frame.tex = frame:CreateTexture()
             frame.tex:SetAllPoints(frame)
-            if string.sub(vv, 1, 1) == "m" then
-                mount_Id = string.sub(vv, 2, -1)
-                local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID, _ = C_MountJournal.GetMountInfoByID(mount_Id)
+
+            if string.sub(val, 1, 1) == "m" then
                 frame.tex:SetTexture(icon)
             else
-                mount_Id = C_MountJournal.GetMountFromItem(vv)
-                frame.tex:SetTexture(GetItemIcon(vv))
+                frame.tex:SetTexture(GetItemIcon(val))
             end
         
             frame.tex:SetVertexColor(0.75, 0.75, 0.75, 0.3);
@@ -410,10 +453,10 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
             if pin_check == true then
                 frame.pin:SetAlpha(1)
             else
-                frame.pin:SetAlpha(0)	-- ! Default Red Backdrop
+                frame.pin:SetAlpha(0)
             end            
 
-            core.Function:LinkMountItem(vv, frame, pin)
+            core.Function:LinkMountItem(val, frame, pin)
 
             relativeFrame = frame
             count = count + 1
@@ -430,7 +473,7 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
 end
 
 
-function MCL_functions:CreatePinnedMount(mount_Id)
+function MCL_functions:CreatePinnedMount(mount_Id, category, section)
 
     local frame_size = 30
     local mountFrames = {}
@@ -440,6 +483,9 @@ function MCL_functions:CreatePinnedMount(mount_Id)
         core.mountFrames[1] = mountFrame
     else
         local relativeFrame = core.mountFrames[1][total_pinned]
+
+        local mountName, spellID, icon, _, _, sourceType, _, isFactionSpecific, faction, _, isCollected, mountID, _ = C_MountJournal.GetMountInfoByID(mount_Id)
+        _,_, sourceText =  C_MountJournal.GetMountInfoExtraByID(mount_Id)
 
         local frame = CreateFrame("Button", nil, relativeFrame, "BackdropTemplate");
         frame:SetWidth(frame_size);
@@ -456,7 +502,26 @@ function MCL_functions:CreatePinnedMount(mount_Id)
         frame.pin:SetPoint("TOPLEFT", frame, "TOPLEFT", 20,12)
         frame.pin:SetAlpha(1)
 
-        frame:SetPoint("RIGHT", relativeFrame, "RIGHT", frame_size+10, 0);
+        frame.category = category
+        frame.section = section
+
+        frame:SetPoint("BOTTOMLEFT", relativeFrame, "BOTTOMLEFT", 0, -40);
+
+        frame.sectionName = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        frame.sectionName:SetPoint("LEFT", 600, 0)
+        frame.sectionName:SetText(section)
+
+        frame.categoryName = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        frame.categoryName:SetPoint("LEFT", 800, 0)
+        frame.categoryName:SetText(category)
+        
+        frame.mountName = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        frame.mountName:SetPoint("LEFT", 50, 0)
+        frame.mountName:SetText(mountName)  
+        
+        frame.sourceText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        frame.sourceText:SetPoint("LEFT", 280, 0)
+        frame.sourceText:SetText(sourceText)          
 
 
         frame.tex = frame:CreateTexture()
@@ -563,7 +628,7 @@ function MCL_functions:UpdateCollection()
             local pin_count = table.getn(MCL_PINNED)
             if pin_count ~= nil then                     
                 for i=1, pin_count do                      
-                    if MCL_PINNED[i] == "m"..v.frame.mountID then
+                    if MCL_PINNED[i].mountID == "m"..v.frame.mountID then
                         table.remove(MCL_PINNED, i)
                     end
                 end
