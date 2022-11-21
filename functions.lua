@@ -523,7 +523,8 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
         frame.pin:SetAlpha(1)
 
         frame.tex = frame:CreateTexture()
-        frame.tex:SetAllPoints(frame)
+        frame.tex:SetSize(frame_size, frame_size)
+        frame.tex:SetPoint("LEFT")
         local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID, _ = C_MountJournal.GetMountInfoByID(mount_Id)
         frame.tex:SetTexture(icon)
 
@@ -556,9 +557,13 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
         frame.border:SetStartPoint("BOTTOMLEFT")
         frame.border:SetEndPoint("BOTTOMRIGHT")
         frame:SetWidth(1000)
-        frame:SetHeight(50)
+        frame:SetHeight(59)
         frame:SetBackdropBorderColor(0, 0, 0, 0.8)
         frame.tex:SetVertexColor(1, 1, 1, 1)
+
+        frame.pin:SetPoint("TOPLEFT", frame, "TOPLEFT", 20,-5)
+
+        
         
         frame.sourceText:SetJustifyH("LEFT") 
 
