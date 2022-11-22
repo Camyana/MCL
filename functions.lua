@@ -8,6 +8,7 @@ core.stats= {}
 core.overviewStats = {}
 core.overviewFrames = {}
 core.mountFrames = {}
+core.mountCheck = {}
 
 
 function MCL_functions:getFaction()
@@ -112,18 +113,31 @@ end
 
 
 function MCL_functions:GetCollectedMounts()
+    local mounts = {}
     for k,v in pairs(C_MountJournal.GetMountIDs()) do
         local mountName, spellID, icon, _, isUsable, _, _, isFactionSpecific, faction, _, isCollected, mountID = C_MountJournal.GetMountInfoByID(v)
-        if isCollected and (isFactionSpecific == false) and isUsable then
-            local exists = false
-            for l,w in pairs(core.mounts) do
-                if w.frame.mountID == v then
-                    exists = true
+        if isCollected then
+            if faction then
+                if faction == 1 then
+                    faction = "Alliance"
+                else
+                    faction = "Horde"
                 end
             end
-            if exists == false then
-                print(mountName, mountID)
+            if (isFactionSpecific == false) or (isFactionSpecific == true and faction == UnitFactionGroup("player")) then                     
+                table.insert(mounts, mountID)
+            end   
+        end
+    end
+    for k,v in pairs(mounts) do
+        local exists = false
+        for kk,vv in pairs(core.mountCheck) do
+            if v == vv then
+                exists = true
             end
+        end
+        if exists == false then
+            print(v)
         end
     end
 end
@@ -661,6 +675,7 @@ function MCL_functions:UpdateCollection()
     for k,v in pairs(core.mounts) do
         core.total = core.total + 1
         if IsMountCollected(v.id) then
+            table.insert(core.mountCheck, v.id)
             UpdateBackground(v.frame)
             core.collected = core.collected + 1
             local pin = false
