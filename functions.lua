@@ -153,6 +153,31 @@ function MCL_functions:CreateBorder(frame, side)
 end
 
 
+function MCL_functions:CreateFullBorder(self)
+    if not self.borders then
+        self.borders = {}
+        for i=1, 4 do
+            self.borders[i] = self:CreateLine(nil, "BACKGROUND", nil, 0)
+            local l = self.borders[i]
+            l:SetThickness(2)
+            l:SetColorTexture(0, 0, 0, 0.7)
+            if i==1 then
+                l:SetStartPoint("TOPLEFT", 0, 1)
+                l:SetEndPoint("TOPRIGHT", 0, 1)
+            elseif i==2 then
+                l:SetStartPoint("TOPRIGHT", 0, 1)
+                l:SetEndPoint("BOTTOMRIGHT", 0, 2)
+            elseif i==3 then
+                l:SetStartPoint("BOTTOMRIGHT", 0, 2)
+                l:SetEndPoint("BOTTOMLEFT", 0, 2)
+            else
+                l:SetStartPoint("BOTTOMLEFT", 0, 2)
+                l:SetEndPoint("TOPLEFT", 0, 1)
+            end
+        end
+    end
+end
+
 function MCL_functions:getTableLength(set)
     local i = 1
     for k,v in pairs(set) do
@@ -555,11 +580,11 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
         frame.section = section
 
         frame.sectionName = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-        frame.sectionName:SetPoint("LEFT", 600, 0)
+        frame.sectionName:SetPoint("LEFT", 650, 0)
         frame.sectionName:SetText(section)
 
         frame.categoryName = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-        frame.categoryName:SetPoint("LEFT", 800, 0)
+        frame.categoryName:SetPoint("LEFT", 850, 0)
         frame.categoryName:SetText(category)
         
         frame.mountName = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -567,7 +592,7 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
         frame.mountName:SetText(mountName)  
         
         frame.sourceText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-        frame.sourceText:SetPoint("LEFT", 280, 0)
+        frame.sourceText:SetPoint("LEFT", 250, 0)
         frame.sourceText:SetText(sourceText)          
 
         frame.border = frame:CreateLine(nil, "BACKGROUND", nil, 0)

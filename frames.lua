@@ -27,7 +27,7 @@ end
 
 function MCL_frames:CreateMainFrame()
     MCL_mainFrame = CreateFrame("Frame", "MCLFrame", UIParent, "MCLFrameTemplateWithInset");
-    MCL_mainFrame.Bg:SetVertexColor(0,0,0,0.8)
+    MCL_mainFrame.Bg:SetVertexColor(0,0,0,0.95)
     MCL_mainFrame.TitleBg:SetVertexColor(0.1,0.1,0.1,0.8)
     MCL_mainFrame:Show()
 
@@ -57,7 +57,9 @@ function MCL_frames:CreateMainFrame()
     
 	MCL_mainFrame.ScrollFrame.ScrollBar:ClearAllPoints();
 	MCL_mainFrame.ScrollFrame.ScrollBar:SetPoint("TOPLEFT", MCL_mainFrame.ScrollFrame, "TOPRIGHT", -8, -19);
-	MCL_mainFrame.ScrollFrame.ScrollBar:SetPoint("BOTTOMRIGHT", MCL_mainFrame.ScrollFrame, "BOTTOMRIGHT", -8, 17);    
+	MCL_mainFrame.ScrollFrame.ScrollBar:SetPoint("BOTTOMRIGHT", MCL_mainFrame.ScrollFrame, "BOTTOMRIGHT", -8, 17);
+
+	core.Function:CreateFullBorder(MCL_mainFrame)
 
     tinsert(UISpecialFrames, "MCLFrame")
     return MCL_mainFrame
@@ -76,6 +78,7 @@ local function Tab_OnClick(self)
 	self.content:Show();
 	MCL_mainFrame.ScrollFrame:SetVerticalScroll(0);
 end
+
 
 
 function MCL_frames:SetTabs()
@@ -111,7 +114,7 @@ function MCL_frames:SetTabs()
 			tab.content = CreateFrame("Frame", nil, tabFrame.ScrollFrame);
 		end
 		tab.content:SetSize(1100, 550);
-		tab.content:Hide();
+		tab.content:Hide();		
 
 		table.insert(contents, tab.content);
 
@@ -138,11 +141,11 @@ function MCL_frames:createNavFrame(relativeFrame, title)
 	--Creating a frame to place expansion content in.
 	local frame = CreateFrame("Frame", "Nav", relativeFrame, "BackdropTemplate");
 	frame:SetWidth(nav_width)
-	frame:SetHeight(main_frame_height - 20)
+	frame:SetHeight(main_frame_height)
 	frame:SetPoint("TOPLEFT", relativeFrame, 5, -35);
     frame:SetBackdropColor(1, 1, 1)
 	frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-	frame.title:SetPoint("LEFT", 0, 0)
+	frame.title:SetPoint("LEFT", 0, 0)	
 	return frame;
 end
 
