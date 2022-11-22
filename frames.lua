@@ -28,7 +28,7 @@ end
 function MCL_frames:CreateMainFrame()
     MCL_mainFrame = CreateFrame("Frame", "MCLFrame", UIParent, "MCLFrameTemplateWithInset");
     MCL_mainFrame.Bg:SetVertexColor(0,0,0,0.95)
-    MCL_mainFrame.TitleBg:SetVertexColor(0.1,0.1,0.1,0.8)
+    MCL_mainFrame.TitleBg:SetVertexColor(0.1,0.1,0.1,0.95)
     MCL_mainFrame:Show()
 
 	--MCL Frame settings
@@ -47,6 +47,7 @@ function MCL_frames:CreateMainFrame()
 	MCL_mainFrame.title = MCL_mainFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight");
 	MCL_mainFrame.title:SetPoint("LEFT", MCL_mainFrame.TitleBg, "LEFT", 5, 2);
 	MCL_mainFrame.title:SetText("Mount Collection Log");
+	MCL_mainFrame.title:SetTextColor(0, 0.7, 0.85)
     
     -- Scroll Frame for Main Window
 	MCL_mainFrame.ScrollFrame = CreateFrame("ScrollFrame", nil, MCL_mainFrame, "MinimalScrollFrameTemplate");
