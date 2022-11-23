@@ -3,12 +3,14 @@ local MCL, core = ...;
 core.Function = {};
 local MCL_functions = core.Function;
 
+
 core.mounts = {}
 core.stats= {}
 core.overviewStats = {}
 core.overviewFrames = {}
 core.mountFrames = {}
 core.mountCheck = {}
+core.addon_name = "Mount Collection Log | MCL"
 
 
 function MCL_functions:getFaction()
@@ -33,6 +35,42 @@ local function IsMountFactionSpecific(id)
         return faction, isFactionSpecific
     end
 end    
+
+function MCL_functions:resetToDefault()
+    MCL_SETTINGS = {}
+    MCL_SETTINGS.opacity = 0.95
+    MCL_SETTINGS.statusBarTexture = nil
+    MCL_SETTINGS.progressColors = {
+		low = {
+			["a"] = 1,
+			["r"] = 0.929,
+			["g"] = 0.007,
+			["b"] = 0.019,
+		},
+		high = {
+			["a"] = 1,
+			["r"] = 0.1,
+			["g"] = 0.9,
+			["b"] = 0.1,
+		},
+		medium = {
+			["a"] = 1,
+			["r"] = 0.941,
+			["g"] = 0.658,
+			["b"] = 0.019,
+		},
+		complete = {
+			["a"] = 1,
+			["r"] = 0,
+			["g"] = 0.5,
+			["b"] = 0.9,
+		},
+    }
+end
+
+if MCL_SETTINGS == nil then
+    core.Function:resetToDefault()
+end
 
 -- Tables Mounts into Global List
 function MCL_functions:TableMounts(id, frame, section, category)
@@ -647,23 +685,28 @@ end
 
 
 function UpdateProgressBar(frame, total, collected)
-    if total == 0 then
-        return
+    if total == nil and collected == nil then
+    else
+        if total == 0 then
+            return
+        end
+        frame:SetValue((collected/total)*100)
+        frame.Text:SetText(collected.."/"..total.." ("..math.floor(((collected/total)*100)).."%)")
+        frame.val = (collected/total)*100
     end
-	frame:SetValue((collected/total)*100)
-    frame.Text:SetText(collected.."/"..total.." ("..math.floor(((collected/total)*100)).."%)")
-
-
-	if ((collected/total)*100) < 33 then
-		frame:SetStatusBarColor(0.929, 0.007, 0.019)  -- red
-    elseif ((collected/total)*100) < 66 then
-		frame:SetStatusBarColor(0.941, 0.658, 0.019) -- orange
-    elseif ((collected/total)*100) < 99 then
-		frame:SetStatusBarColor(0.1, 0.9, 0.1) -- green
-	elseif collected == total then
-		frame:SetStatusBarColor(0, 0.5, 0.9) --blue
+    if frame.val == nil then
+        return frame
+    end
+    
+	if frame.val < 33 then
+        frame:SetStatusBarColor(MCL_SETTINGS.progressColors.low.r, MCL_SETTINGS.progressColors.low.g, MCL_SETTINGS.progressColors.low.b)
+    elseif frame.val < 66 then
+		frame:SetStatusBarColor(MCL_SETTINGS.progressColors.medium.r, MCL_SETTINGS.progressColors.medium.g, MCL_SETTINGS.progressColors.medium.b) -- orange
+    elseif frame.val < 100 then
+		frame:SetStatusBarColor(MCL_SETTINGS.progressColors.high.r, MCL_SETTINGS.progressColors.high.g, MCL_SETTINGS.progressColors.high.b) -- green
+	elseif frame.val == 100 then frame:SetStatusBarColor(MCL_SETTINGS.progressColors.complete.r, MCL_SETTINGS.progressColors.complete.g, MCL_SETTINGS.progressColors.complete.b)--blue
 	end
-
+    return frame
 end
 
 function UpdateProgressBarColor(frame)
@@ -695,6 +738,7 @@ end
 
 function MCL_functions:UpdateCollection()
     clearOverviewStats()
+    core.MCL_MF.Bg:SetVertexColor(0,0,0,MCL_SETTINGS.opacity)
     core.total = 0
     core.collected = 0
     for k,v in pairs(core.mounts) do
@@ -768,16 +812,16 @@ function MCL_functions:UpdateCollection()
                             total = total +1
                         end
                     end
-                    UpdateProgressBar(vv.pBar, total, collected)
+                    vv.pBar = UpdateProgressBar(vv.pBar, total, collected)
                     section_total = section_total + total
                     section_collected = section_collected + collected
                 else
-                    UpdateProgressBar(vv.pBar, section_total, section_collected)
+                    vv.pBar = UpdateProgressBar(vv.pBar, section_total, section_collected)
                 end
                 if vv["rel"] then
                     for q,e in pairs(core.overviewFrames) do
                         if e.name == vv.rel.title:GetText() then                       
-                            UpdateProgressBar(e.frame, section_total, section_collected)
+                            e.frame = UpdateProgressBar(e.frame, section_total, section_collected)
                             section_name = vv.rel.title:GetText()
                         end
                     end                     
@@ -788,12 +832,30 @@ function MCL_functions:UpdateCollection()
             core.total = core.total + section_collected - section_total
         end
     end
-    UpdateProgressBar(core.overview.pBar, core.total, core.collected)
+    core.overview.pBar = UpdateProgressBar(core.overview.pBar, core.total, core.collected)
+end
+
+
+function MCL_functions:updateFromSettings(setting)
+    for k,v in pairs(core.statusBarFrames) do
+        if setting == "texture" then
+            v:SetStatusBarTexture(core.media:Fetch("statusbar", MCL_SETTINGS.statusBarTexture))
+        elseif setting == "progressColor" then
+            v = UpdateProgressBar(v)
+        end
+    end
+    if setting == "opacity" then
+        core.MCL_MF.Bg:SetVertexColor(0,0,0,MCL_SETTINGS.opacity)
+    end
 end
 
 --------------------------------------------------
 -- Minimap Icon
 --------------------------------------------------
+
+function MCL_functions:test()
+    print("Test")
+end
 
 
 local MCL_MM = LibStub("AceAddon-3.0"):NewAddon("MCL_MM", "AceConsole-3.0")
@@ -822,4 +884,123 @@ end
 
 function MCL_functions:MCL_MM()
 	MCL_MM:MCL_MM()
+end
+
+
+function MCL_functions:updateFromDefaults()
+    core.Function:resetToDefault()
+    core.Function:updateFromSettings("opacity")
+    core.Function:updateFromSettings("texture")
+    core.Function:updateFromSettings("progressColor")
+end
+
+function MCL_functions:AddonSettings()
+    local AceConfig = LibStub("AceConfig-3.0");
+    local media = LibStub("LibSharedMedia-3.0")
+    core.media = media
+    local options = {
+        type = 'group',
+        args = {
+            window_opacity = {
+                type = "group",
+                name = "Main WIndow",
+                order = 1,
+                args = {
+                    mainWindow = {             
+                        order = 1,
+                        name = "Main window opacity",
+                        desc = "Changes the opacity of the main window",
+                        type = "range",
+                        min = 0,
+                        max = 1,
+                        softMin = 0,
+                        softMax = 1,
+                        bigStep = 0.05,
+                        isPercent = false,
+                        width = "normal",
+                        set = function(info, val) MCL_SETTINGS.opacity = val; core.Function:updateFromSettings("opacity"); end,
+                        get = function(info) return MCL_SETTINGS.opacity; end,
+                    }
+                }
+            },
+            texture = {
+                type = "group",
+                name = "Texture",
+                order = 2,
+                args = { 
+                    texture = {              
+                        order = 2,
+                        type = "select",
+                        name = "Statusbar Texture",
+                        desc = "Set the statusbar texture.",
+                        values = media:HashTable("statusbar"),
+                        -- image = function(info) return media:Fetch("STATUSBAR", MCL_SETTINGS.statusBarTexture) end,
+                        dialogControl = "LSM30_Statusbar",
+                        set = function(info, val) MCL_SETTINGS.statusBarTexture = val; core.Function:updateFromSettings("texture"); end,
+                        get = function(info) return MCL_SETTINGS.statusBarTexture; end,
+                    }
+                }
+            },
+            Colors = {
+                type = "group",
+                name = "Colors",
+                order = 3,
+                args = {
+                    progressColorLow = {
+                        order = 3,
+                        type = "color",
+                        name = "Progress Bar (<33%)",
+                        desc = "Set the progress bar colors to be shown when the percentage collected is below 33%",
+                        set = function(info, r, g, b) MCL_SETTINGS.progressColors.low.r = r; MCL_SETTINGS.progressColors.low.g = g; MCL_SETTINGS.progressColors.low.b = b; core.Function:updateFromSettings("progressColor"); end,
+                        get = function(info) return MCL_SETTINGS.progressColors.low.r, MCL_SETTINGS.progressColors.low.g, MCL_SETTINGS.progressColors.low.b; end,                
+                    },
+                    progressColorMedium = {
+                        order = 4,
+                        type = "color",
+                        name = "Progress Bar (<66%)",
+                        desc = "Set the progress bar colors to be shown when the percentage collected is below 66%",
+                        set = function(info, r, g, b) MCL_SETTINGS.progressColors.medium.r = r; MCL_SETTINGS.progressColors.medium.g = g; MCL_SETTINGS.progressColors.medium.b = b; core.Function:updateFromSettings("progressColor"); end,
+                        get = function(info) return MCL_SETTINGS.progressColors.medium.r, MCL_SETTINGS.progressColors.medium.g, MCL_SETTINGS.progressColors.medium.b; end,                
+                    },
+                    progressColorHigh = {
+                        order = 5,
+                        type = "color",
+                        name = "Progress Bar (<100%)",
+                        desc = "Set the progress bar colors to be shown when the percentage collected is below 100%",
+                        set = function(info, r, g, b) MCL_SETTINGS.progressColors.high.r = r; MCL_SETTINGS.progressColors.high.g = g; MCL_SETTINGS.progressColors.high.b = b; core.Function:updateFromSettings("progressColor"); end,
+                        get = function(info) return MCL_SETTINGS.progressColors.high.r, MCL_SETTINGS.progressColors.high.g, MCL_SETTINGS.progressColors.high.b; end,                
+                    },
+                    progressColorComplete = {
+                        order = 6,
+                        type = "color",
+                        name = "Progress Bar (100%)",
+                        desc = "Set the progress bar colors to be shown when all mounts are collected",
+                        set = function(info, r, g, b) MCL_SETTINGS.progressColors.complete.r = r; MCL_SETTINGS.progressColors.complete.g = g; MCL_SETTINGS.progressColors.complete.b = b; core.Function:updateFromSettings("progressColor"); end,
+                        get = function(info) return MCL_SETTINGS.progressColors.complete.r, MCL_SETTINGS.progressColors.complete.g, MCL_SETTINGS.progressColors.complete.b; end,                
+                    },
+                }
+            },
+            defaults = {
+                type = "group",
+                name = "Defaults",
+                order = 4,
+                args = { 
+                    defaults = {
+                        order = 1,
+                        name = "Reset Settings",
+                        desc = "Reset to default settings",
+                        type = "execute",
+                        func = function()
+                           core.Function:updateFromDefaults()
+                        end
+                      }
+                }
+            },                                                         
+        },
+    }
+
+
+    AceConfig:RegisterOptionsTable(core.addon_name, options, {});
+    core.AceConfigDialog = LibStub("AceConfigDialog-3.0");
+    core.AceConfigDialog:AddToBlizOptions(core.addon_name, core.addon_name, nil);
 end

@@ -86,6 +86,7 @@ local function onevent(self, event, arg1, ...)
 	    if not IsAddOnLoaded("Blizzard_Collections") then
 	        LoadAddOn("Blizzard_Collections")
 	    end
+        core.Function:AddonSettings()
     end
 end
 

@@ -4,6 +4,7 @@ core.Frames = {};
 local MCL_frames = core.Frames;
 
 core.TabTable = {}
+core.statusBarFrames  = {}
 
 local nav_width = 180
 local main_frame_width = 1250
@@ -25,11 +26,24 @@ local function ScrollFrame_OnMouseWheel(self, delta)
 end
 
 
+function MCL_frames:openSettings()
+	Settings.OpenToCategory(core.addon_name)
+end
+
 function MCL_frames:CreateMainFrame()
     MCL_mainFrame = CreateFrame("Frame", "MCLFrame", UIParent, "MCLFrameTemplateWithInset");
-    MCL_mainFrame.Bg:SetVertexColor(0,0,0,0.95)
+    MCL_mainFrame.Bg:SetVertexColor(0,0,0,MCL_SETTINGS.opacity)
     MCL_mainFrame.TitleBg:SetVertexColor(0.1,0.1,0.1,0.95)
     MCL_mainFrame:Show()
+	
+	MCL_mainFrame.settings = CreateFrame("Button", nil, MCL_mainFrame);
+	MCL_mainFrame.settings:SetSize(15, 15)
+	MCL_mainFrame.settings:SetPoint("TOPRIGHT", MCL_mainFrame, "TOPRIGHT", -30, 0)
+	MCL_mainFrame.settings.tex = MCL_mainFrame.settings:CreateTexture()
+	MCL_mainFrame.settings.tex:SetAllPoints(MCL_mainFrame.settings)
+	MCL_mainFrame.settings.tex:SetTexture("Interface\\AddOns\\MCL\\icons\\settings.blp")
+	MCL_mainFrame.settings:SetScript("OnClick", function()MCL_frames:openSettings()end)
+
 
 	--MCL Frame settings
 	MCL_mainFrame:SetSize(main_frame_width, main_frame_height); -- width, height
@@ -60,6 +74,8 @@ function MCL_frames:CreateMainFrame()
 	MCL_mainFrame.ScrollFrame.ScrollBar:SetPoint("TOPLEFT", MCL_mainFrame.ScrollFrame, "TOPRIGHT", -8, -19);
 	MCL_mainFrame.ScrollFrame.ScrollBar:SetPoint("BOTTOMRIGHT", MCL_mainFrame.ScrollFrame, "BOTTOMRIGHT", -8, 17);
 
+	MCL_mainFrame:SetFrameLevel(100)
+
 	core.Function:CreateFullBorder(MCL_mainFrame)
 
     tinsert(UISpecialFrames, "MCLFrame")
@@ -79,7 +95,6 @@ local function Tab_OnClick(self)
 	self.content:Show();
 	MCL_mainFrame.ScrollFrame:SetVerticalScroll(0);
 end
-
 
 
 function MCL_frames:SetTabs()
@@ -153,7 +168,7 @@ end
 
 function MCL_frames:progressBar(relativeFrame)
 	MyStatusBar = CreateFrame("StatusBar", nil, relativeFrame, "BackdropTemplate")
-	MyStatusBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+	MyStatusBar:SetStatusBarTexture(core.media:Fetch("statusbar", MCL_SETTINGS.statusBarTexture))
 	MyStatusBar:GetStatusBarTexture():SetHorizTile(false)
 	MyStatusBar:SetMinMaxValues(0, 100)
 	MyStatusBar:SetValue(0)
@@ -173,6 +188,8 @@ function MCL_frames:progressBar(relativeFrame)
 	MyStatusBar.Text:SetJustifyH("CENTER")
 	MyStatusBar.Text:SetJustifyV("CENTER")
 	MyStatusBar.Text:SetText()
+
+	table.insert(core.statusBarFrames, MyStatusBar)
 
 	return MyStatusBar
 end
