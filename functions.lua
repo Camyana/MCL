@@ -36,37 +36,46 @@ local function IsMountFactionSpecific(id)
     end
 end    
 
-function MCL_functions:resetToDefault()
-    MCL_SETTINGS = {}
-    MCL_SETTINGS.opacity = 0.95
-    MCL_SETTINGS.statusBarTexture = nil
-    MCL_SETTINGS.progressColors = {
-		low = {
-			["a"] = 1,
-			["r"] = 0.929,
-			["g"] = 0.007,
-			["b"] = 0.019,
-		},
-		high = {
-			["a"] = 1,
-			["r"] = 0.1,
-			["g"] = 0.9,
-			["b"] = 0.1,
-		},
-		medium = {
-			["a"] = 1,
-			["r"] = 0.941,
-			["g"] = 0.658,
-			["b"] = 0.019,
-		},
-		complete = {
-			["a"] = 1,
-			["r"] = 0,
-			["g"] = 0.5,
-			["b"] = 0.9,
-		},
-    }
-    MCL_SETTINGS.unobtainable = false
+function MCL_functions:resetToDefault(setting)
+    if setting == nil then
+        MCL_SETTINGS = {}        
+        MCL_SETTINGS.unobtainable = false
+    end
+    if setting == "Opacity" or setting == nil then
+        MCL_SETTINGS.opacity = 0.95
+    end
+    if setting == "Texture" or setting == nil then
+        MCL_SETTINGS.statusBarTexture = nil
+    end
+    if setting == "Colors" or setting == nil then
+        MCL_SETTINGS.progressColors = {
+            low = {
+                ["a"] = 1,
+                ["r"] = 0.929,
+                ["g"] = 0.007,
+                ["b"] = 0.019,
+            },
+            high = {
+                ["a"] = 1,
+                ["r"] = 0.1,
+                ["g"] = 0.9,
+                ["b"] = 0.1,
+            },
+            medium = {
+                ["a"] = 1,
+                ["r"] = 0.941,
+                ["g"] = 0.658,
+                ["b"] = 0.019,
+            },
+            complete = {
+                ["a"] = 1,
+                ["r"] = 0,
+                ["g"] = 0.5,
+                ["b"] = 0.9,
+            },
+        }
+    end
+
 end
 
 if MCL_SETTINGS == nil then
@@ -902,11 +911,12 @@ function MCL_functions:MCL_MM()
 end
 
 
-function MCL_functions:updateFromDefaults()
-    core.Function:resetToDefault()
+function MCL_functions:updateFromDefaults(setting)
+    core.Function:resetToDefault(setting)
     core.Function:updateFromSettings("opacity")
     core.Function:updateFromSettings("texture")
     core.Function:updateFromSettings("progressColor")
+    core.Function:updateFromSettings("unobtainable", false)
 end
 
 function MCL_functions:AddonSettings()
@@ -914,121 +924,197 @@ function MCL_functions:AddonSettings()
     local media = LibStub("LibSharedMedia-3.0")
     core.media = media
     local options = {
-        type = 'group',
+        type = "group",
+        name = "Mount Collection Log Settings",
+        order = 1,
         args = {
-            window_opacity = {
-                type = "group",
-                name = "Main WIndow",
+            headerone = {             
                 order = 1,
-                args = {
-                    mainWindow = {             
-                        order = 1,
-                        name = "Main window opacity",
-                        desc = "Changes the opacity of the main window",
-                        type = "range",
-                        min = 0,
-                        max = 1,
-                        softMin = 0,
-                        softMax = 1,
-                        bigStep = 0.05,
-                        isPercent = false,
-                        width = "normal",
-                        set = function(info, val) MCL_SETTINGS.opacity = val; core.Function:updateFromSettings("opacity"); end,
-                        get = function(info) return MCL_SETTINGS.opacity; end,
-                    }
-                }
-            },
-            texture = {
-                type = "group",
-                name = "Texture",
-                order = 2,
-                args = { 
-                    texture = {              
-                        order = 2,
-                        type = "select",
-                        name = "Statusbar Texture",
-                        desc = "Set the statusbar texture.",
-                        values = media:HashTable("statusbar"),
-                        -- image = function(info) return media:Fetch("STATUSBAR", MCL_SETTINGS.statusBarTexture) end,
-                        dialogControl = "LSM30_Statusbar",
-                        set = function(info, val) MCL_SETTINGS.statusBarTexture = val; core.Function:updateFromSettings("texture"); end,
-                        get = function(info) return MCL_SETTINGS.statusBarTexture; end,
-                    }
-                }
-            },
-            Colors = {
-                type = "group",
-                name = "Colors",
-                order = 3,
-                args = {
-                    progressColorLow = {
-                        order = 3,
-                        type = "color",
-                        name = "Progress Bar (<33%)",
-                        desc = "Set the progress bar colors to be shown when the percentage collected is below 33%",
-                        set = function(info, r, g, b) MCL_SETTINGS.progressColors.low.r = r; MCL_SETTINGS.progressColors.low.g = g; MCL_SETTINGS.progressColors.low.b = b; core.Function:updateFromSettings("progressColor"); end,
-                        get = function(info) return MCL_SETTINGS.progressColors.low.r, MCL_SETTINGS.progressColors.low.g, MCL_SETTINGS.progressColors.low.b; end,                
-                    },
-                    progressColorMedium = {
-                        order = 4,
-                        type = "color",
-                        name = "Progress Bar (<66%)",
-                        desc = "Set the progress bar colors to be shown when the percentage collected is below 66%",
-                        set = function(info, r, g, b) MCL_SETTINGS.progressColors.medium.r = r; MCL_SETTINGS.progressColors.medium.g = g; MCL_SETTINGS.progressColors.medium.b = b; core.Function:updateFromSettings("progressColor"); end,
-                        get = function(info) return MCL_SETTINGS.progressColors.medium.r, MCL_SETTINGS.progressColors.medium.g, MCL_SETTINGS.progressColors.medium.b; end,                
-                    },
-                    progressColorHigh = {
-                        order = 5,
-                        type = "color",
-                        name = "Progress Bar (<100%)",
-                        desc = "Set the progress bar colors to be shown when the percentage collected is below 100%",
-                        set = function(info, r, g, b) MCL_SETTINGS.progressColors.high.r = r; MCL_SETTINGS.progressColors.high.g = g; MCL_SETTINGS.progressColors.high.b = b; core.Function:updateFromSettings("progressColor"); end,
-                        get = function(info) return MCL_SETTINGS.progressColors.high.r, MCL_SETTINGS.progressColors.high.g, MCL_SETTINGS.progressColors.high.b; end,                
-                    },
-                    progressColorComplete = {
-                        order = 6,
-                        type = "color",
-                        name = "Progress Bar (100%)",
-                        desc = "Set the progress bar colors to be shown when all mounts are collected",
-                        set = function(info, r, g, b) MCL_SETTINGS.progressColors.complete.r = r; MCL_SETTINGS.progressColors.complete.g = g; MCL_SETTINGS.progressColors.complete.b = b; core.Function:updateFromSettings("progressColor"); end,
-                        get = function(info) return MCL_SETTINGS.progressColors.complete.r, MCL_SETTINGS.progressColors.complete.g, MCL_SETTINGS.progressColors.complete.b; end,                
-                    },
-                }
-            },
-            other = {
-                type = "group",
-                name = "Other",
-                order = 4,
-                args = {
-                    mainWindow = {             
-                        order = 1,
-                        name = "Hide Unobtainable from overview",
-                        desc = "Hide Unobtainable mounts from the overview.",
-                        type = "toggle",
-                        width = "full",
-                        set = function(info, val) MCL_SETTINGS.unobtainable = val; core.Function:updateFromSettings("unobtainable", val); end,
-                        get = function(info) return MCL_SETTINGS.unobtainable; end,
-                    }
-                }
+                name = "Main Window Options",
+                type = "header",
+                width = "full",
             },            
-            defaults = {
-                type = "group",
-                name = "Defaults",
+            mainWindow = {             
+                order = 2,
+                name = "Main Window Opacity",
+                desc = "Changes the opacity of the main window",
+                type = "range",
+                width = "normal",
+                min = 0,
+                max = 1,
+                softMin = 0,
+                softMax = 1,
+                bigStep = 0.05,
+                isPercent = false,
+                set = function(info, val) MCL_SETTINGS.opacity = val; core.Function:updateFromSettings("opacity"); end,
+                get = function(info) return MCL_SETTINGS.opacity; end,
+            },
+            spacer1 = {
+                order = 2.5,
+                cmdHidden = true,
+                name = "",
+                type = "description",
+                width = "half",
+            },
+            defaultOpacity = {
+                order = 3,
+                name = "Reset Opacity",
+                desc = "Reset to default opacity",
+                width = "normal",
+                type = "execute",
+                func = function()
+                    core.Function:updateFromDefaults("Opacity")
+                end
+            },              
+            headertwo = {             
+                order = 4,
+                name = "Progress Bar Settings",
+                type = "header",
+                width = "normal",
+            },             
+            texture = {              
                 order = 5,
-                args = { 
-                    defaults = {
-                        order = 1,
-                        name = "Reset Settings",
-                        desc = "Reset to default settings",
-                        type = "execute",
-                        func = function()
-                           core.Function:updateFromDefaults()
-                        end
-                      }
-                }
-            },                                                         
-        },
-    }
+                type = "select",
+                name = "Statusbar Texture",
+                width = "normal",
+                desc = "Set the statusbar texture.",
+                values = media:HashTable("statusbar"),
+                -- image = function(info) return media:Fetch("STATUSBAR", MCL_SETTINGS.statusBarTexture) end,
+                dialogControl = "LSM30_Statusbar",
+                set = function(info, val) MCL_SETTINGS.statusBarTexture = val; core.Function:updateFromSettings("texture"); end,
+                get = function(info) return MCL_SETTINGS.statusBarTexture; end,
+            },
+            spacer2 = {
+                order = 5.5,
+                cmdHidden = true,
+                name = "",
+                type = "description",
+                width = "half",
+            },            
+            defaultTexture = {
+                order = 6,
+                name = "Reset Texture",
+                desc = "Reset to default texture",
+                width = "normal",
+                type = "execute",
+                func = function()
+                    core.Function:updateFromDefaults("Texture")
+                end
+            },
+            spacer3 = {
+                order = 6.5,
+                cmdHidden = true,
+                name = "",
+                type = "description",
+                width = "full",
+            },
+            spacer3large = {
+                order = 6.6,
+                cmdHidden = true,
+                name = "",
+                type = "description",
+                width = "full",
+            },                                  
+            progressColorLow = {
+                order = 7,
+                type = "color",
+                name = "Progress Bar (<33%)",
+                width = "normal",
+                desc = "Set the progress bar colors to be shown when the percentage collected is below 33%",
+                set = function(info, r, g, b) MCL_SETTINGS.progressColors.low.r = r; MCL_SETTINGS.progressColors.low.g = g; MCL_SETTINGS.progressColors.low.b = b; core.Function:updateFromSettings("progressColor"); end,
+                get = function(info) return MCL_SETTINGS.progressColors.low.r, MCL_SETTINGS.progressColors.low.g, MCL_SETTINGS.progressColors.low.b; end,                
+            },
+            spacer4 = {
+                order = 7.5,
+                cmdHidden = true,
+                name = "",
+                type = "description",
+                width = "half",
+            },            
+            progressColorMedium = {
+                order = 8,
+                type = "color",
+                name = "Progress Bar (<66%)",
+                width = "normal",
+                desc = "Set the progress bar colors to be shown when the percentage collected is below 66%",
+                set = function(info, r, g, b) MCL_SETTINGS.progressColors.medium.r = r; MCL_SETTINGS.progressColors.medium.g = g; MCL_SETTINGS.progressColors.medium.b = b; core.Function:updateFromSettings("progressColor"); end,
+                get = function(info) return MCL_SETTINGS.progressColors.medium.r, MCL_SETTINGS.progressColors.medium.g, MCL_SETTINGS.progressColors.medium.b; end,                
+            },
+            spacer5 = {
+                order = 8.5,
+                cmdHidden = true,
+                name = "",
+                type = "description",
+                width = "half",
+            },             
+            progressColorHigh = {
+                order = 9,
+                type = "color",
+                name = "Progress Bar (<100%)",
+                width = "normal",
+                desc = "Set the progress bar colors to be shown when the percentage collected is below 100%",
+                set = function(info, r, g, b) MCL_SETTINGS.progressColors.high.r = r; MCL_SETTINGS.progressColors.high.g = g; MCL_SETTINGS.progressColors.high.b = b; core.Function:updateFromSettings("progressColor"); end,
+                get = function(info) return MCL_SETTINGS.progressColors.high.r, MCL_SETTINGS.progressColors.high.g, MCL_SETTINGS.progressColors.high.b; end,                
+            },
+            spacer6 = {
+                order = 9.5,
+                cmdHidden = true,
+                name = "",
+                type = "description",
+                width = "half",
+            },             
+            progressColorComplete = {
+                order = 10,
+                type = "color",
+                name = "Progress Bar (100%)",
+                width = "normal",
+                desc = "Set the progress bar colors to be shown when all mounts are collected",
+                set = function(info, r, g, b) MCL_SETTINGS.progressColors.complete.r = r; MCL_SETTINGS.progressColors.complete.g = g; MCL_SETTINGS.progressColors.complete.b = b; core.Function:updateFromSettings("progressColor"); end,
+                get = function(info) return MCL_SETTINGS.progressColors.complete.r, MCL_SETTINGS.progressColors.complete.g, MCL_SETTINGS.progressColors.complete.b; end,                
+            },
+            defaultColor = {
+                order = 11,
+                name = "Reset Colors",
+                desc = "Reset to default colors",
+                width = "normal",
+                type = "execute",
+                func = function()
+                    core.Function:updateFromDefaults("Colors")
+                end
+            },              
+            headerthree = {             
+                order = 12,
+                name = "Unobtainable Settings",
+                type = "header",
+                width = "full",
+            },            
+            unobtainable = {             
+                order = 13,
+                name = "Hide Unobtainable from overview",
+                desc = "Hide Unobtainable mounts from the overview.",
+                type = "toggle",
+                width = "full",
+                set = function(info, val) MCL_SETTINGS.unobtainable = val; core.Function:updateFromSettings("unobtainable", val); end,
+                get = function(info) return MCL_SETTINGS.unobtainable; end,
+            },
+            headerfour = {             
+                order = 14,
+                name = "Reset Settings",
+                type = "header",
+                width = "full",
+            },             
+            defaults = {
+                order = 15,
+                name = "Reset Settings",
+                desc = "Reset to default settings",
+                width = "normal",
+                type = "execute",
+                func = function()
+                    core.Function:updateFromDefaults()
+                end
+            }                                                                                                       
+        }
+    }                                                        
 
 
     AceConfig:RegisterOptionsTable(core.addon_name, options, {});

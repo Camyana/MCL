@@ -74,7 +74,7 @@ function MCL_frames:CreateMainFrame()
 	MCL_mainFrame.ScrollFrame.ScrollBar:SetPoint("TOPLEFT", MCL_mainFrame.ScrollFrame, "TOPRIGHT", -8, -19);
 	MCL_mainFrame.ScrollFrame.ScrollBar:SetPoint("BOTTOMRIGHT", MCL_mainFrame.ScrollFrame, "BOTTOMRIGHT", -8, 17);
 
-	MCL_mainFrame:SetFrameLevel(100)
+	MCL_mainFrame:SetFrameStrata("HIGH")
 
 	core.Function:CreateFullBorder(MCL_mainFrame)
 
@@ -262,6 +262,9 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
 			end)
 			if v.name == "Unobtainable" then
 				pBar.unobtainable = MCL_SETTINGS.unobtainable
+				if MCL_SETTINGS.unobtainable == true then
+					pBar:GetParent():Hide()
+				end
 			end
 
 			pBar:SetScript("OnMouseDown", function(self, button)
