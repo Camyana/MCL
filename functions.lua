@@ -66,6 +66,7 @@ function MCL_functions:resetToDefault()
 			["b"] = 0.9,
 		},
     }
+    MCL_SETTINGS.unobtainable = false
 end
 
 if MCL_SETTINGS == nil then
@@ -700,15 +701,14 @@ function UpdateProgressBar(frame, total, collected)
     if frame.val == nil then
         return frame
     end
-    
-	if frame.val < 33 then
-        frame:SetStatusBarColor(MCL_SETTINGS.progressColors.low.r, MCL_SETTINGS.progressColors.low.g, MCL_SETTINGS.progressColors.low.b)
-    elseif frame.val < 66 then
-		frame:SetStatusBarColor(MCL_SETTINGS.progressColors.medium.r, MCL_SETTINGS.progressColors.medium.g, MCL_SETTINGS.progressColors.medium.b) -- orange
-    elseif frame.val < 100 then
-		frame:SetStatusBarColor(MCL_SETTINGS.progressColors.high.r, MCL_SETTINGS.progressColors.high.g, MCL_SETTINGS.progressColors.high.b) -- green
-	elseif frame.val == 100 then frame:SetStatusBarColor(MCL_SETTINGS.progressColors.complete.r, MCL_SETTINGS.progressColors.complete.g, MCL_SETTINGS.progressColors.complete.b)--blue
-	end
+        if frame.val < 33 then
+            frame:SetStatusBarColor(MCL_SETTINGS.progressColors.low.r, MCL_SETTINGS.progressColors.low.g, MCL_SETTINGS.progressColors.low.b)
+        elseif frame.val < 66 then
+            frame:SetStatusBarColor(MCL_SETTINGS.progressColors.medium.r, MCL_SETTINGS.progressColors.medium.g, MCL_SETTINGS.progressColors.medium.b) -- orange
+        elseif frame.val < 100 then
+            frame:SetStatusBarColor(MCL_SETTINGS.progressColors.high.r, MCL_SETTINGS.progressColors.high.g, MCL_SETTINGS.progressColors.high.b) -- green
+        elseif frame.val == 100 then frame:SetStatusBarColor(MCL_SETTINGS.progressColors.complete.r, MCL_SETTINGS.progressColors.complete.g, MCL_SETTINGS.progressColors.complete.b)--blue
+        end
     return frame
 end
 
@@ -839,7 +839,7 @@ function MCL_functions:UpdateCollection()
 end
 
 
-function MCL_functions:updateFromSettings(setting)
+function MCL_functions:updateFromSettings(setting, val)
     for k,v in pairs(core.statusBarFrames) do
         if setting == "texture" then
             v:SetStatusBarTexture(core.media:Fetch("statusbar", MCL_SETTINGS.statusBarTexture))
@@ -849,6 +849,18 @@ function MCL_functions:updateFromSettings(setting)
     end
     if setting == "opacity" then
         core.MCL_MF.Bg:SetVertexColor(0,0,0,MCL_SETTINGS.opacity)
+    elseif setting:lower() == "unobtainable" then
+        for k,v in pairs(core.overviewFrames) do
+            if v.name:lower() == setting:lower() then
+                if val == true then
+                    v.frame:GetParent():Hide()
+                    v.frame.unobtainable = true
+                else 
+                    v.frame.unobtainable = false
+                    v.frame:GetParent():Show()
+                end
+            end
+        end
     end
 end
 
@@ -983,10 +995,26 @@ function MCL_functions:AddonSettings()
                     },
                 }
             },
+            other = {
+                type = "group",
+                name = "Other",
+                order = 4,
+                args = {
+                    mainWindow = {             
+                        order = 1,
+                        name = "Hide Unobtainable from overview",
+                        desc = "Hide Unobtainable mounts from the overview.",
+                        type = "toggle",
+                        width = "full",
+                        set = function(info, val) MCL_SETTINGS.unobtainable = val; core.Function:updateFromSettings("unobtainable", val); end,
+                        get = function(info) return MCL_SETTINGS.unobtainable; end,
+                    }
+                }
+            },            
             defaults = {
                 type = "group",
                 name = "Defaults",
-                order = 4,
+                order = 5,
                 args = { 
                     defaults = {
                         order = 1,

@@ -260,6 +260,9 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
 			pBar:HookScript("OnLeave", function()
 				pBar:SetStatusBarColor(r, g, b, a)
 			end)
+			if v.name == "Unobtainable" then
+				pBar.unobtainable = MCL_SETTINGS.unobtainable
+			end
 
 			pBar:SetScript("OnMouseDown", function(self, button)
 				if button == 'LeftButton' then
@@ -269,7 +272,7 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
 						end
 					end
 				end			
-			end) 
+			end)
 
 			if (col % 2 == 0) then
 				evenFrame = frame
