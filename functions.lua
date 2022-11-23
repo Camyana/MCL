@@ -468,8 +468,7 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
             frame:SetBackdrop({
                 edgeFile = [[Interface\Buttons\WHITE8x8]],
                 edgeSize = frame_size + 2,
-                bgFile = [[Interface\Buttons\WHITE8x8]],
-                tileSize = frame_size + 2,                
+                bgFile = [[Interface\Buttons\WHITE8x8]],              
             })
 
             frame.pin = frame:CreateTexture()
@@ -483,7 +482,7 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
             frame.section = category.section
 
             frame:SetBackdropBorderColor(1, 0, 0, 0.03)
-            frame:SetBackdropColor(0, 0, 0, 1)
+            frame:SetBackdropColor(0, 0, 0, MCL_SETTINGS.opacity)
 
 
             frame.tex = frame:CreateTexture()
@@ -537,8 +536,12 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
                 frame:SetWidth(1000)
                 frame:SetHeight(frame.sourceText:GetStringHeight()+20)
                 
-                frame:SetBackdropBorderColor(0, 0, 0, 0.8)
-                frame:SetBackdropColor(0, 0, 0, 0.8)
+                frame:SetBackdrop({
+                    bgFile = [[Interface\Buttons\WHITE8x8]],              
+                })
+
+                frame:SetBackdropBorderColor(0, 0, 0, MCL_SETTINGS.opacity)
+                frame:SetBackdropColor(0, 0, 0, MCL_SETTINGS.opacity)
                 frame.tex:SetVertexColor(1, 1, 1, 1)
 
                 frame.pin:SetAlpha(0)
@@ -593,8 +596,8 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
         frame:SetWidth(frame_size);
         frame:SetHeight(frame_size);
         frame:SetBackdrop({
-            edgeFile = [[Interface\Buttons\WHITE8x8]],
-            edgeSize = frame_size + 2,
+            -- edgeFile = [[Interface\Buttons\WHITE8x8]],
+            -- edgeSize = frame_size + 2,
             bgFile = [[Interface\Buttons\WHITE8x8]],
             tileSize = frame_size + 2,    
         })
@@ -640,8 +643,8 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
         frame.border:SetEndPoint("BOTTOMRIGHT")
         frame:SetWidth(1000)
         frame:SetHeight(frame.sourceText:GetStringHeight()+20)
-        frame:SetBackdropBorderColor(0, 0, 0, 0.8)
-        frame:SetBackdropColor(0, 0, 0, 0.8)
+        frame:SetBackdropBorderColor(0, 0, 0, MCL_SETTINGS.opacity)
+        frame:SetBackdropColor(0, 0, 0, MCL_SETTINGS.opacity)
         frame.tex:SetVertexColor(1, 1, 1, 1)
 
         frame.pin:SetAlpha(0)
