@@ -3,7 +3,6 @@ local MCL, core = ...;
 core.Function = {};
 local MCL_functions = core.Function;
 
-
 core.mounts = {}
 core.stats= {}
 core.overviewStats = {}
