@@ -17,7 +17,7 @@ SlashCmdList["MCL"] = function(msg)
         core.Main.Toggle();
     end
     if msg:lower() == "compare" then
-        core.Function:CompareMountJournal();
+        core.Function:compareLink();
     end
     if msg:lower() == "debug" then
         core.Function:GetCollectedMounts();

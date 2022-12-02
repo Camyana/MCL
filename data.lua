@@ -969,7 +969,7 @@ core.mountList[18] = {
 		},
 		Achievement = {
 			name = "Achievement",
-			mounts = {199412, 192791}, -- Shellack 192784 | Raging Magmammoth TBD
+			mounts = {199412, 192806, 192791, 192784},
 		},
 		Treasures = {
 			name = "Treasures",
@@ -980,8 +980,8 @@ core.mountList[18] = {
 			mounts = {192799, 198870, "m1545"},
 		},
 		Reputation = {		
-			name = "Reputation",
-			mounts = {192762, 198872, 192761, 192764}, --200118, 201426, 201425  Ottuks to add
+			name = "Renown",
+			mounts = {192762, 198872, 192761, 192764, 200118, 201426, 201425},
 		},
 		Zone = {
 			name = "Zone",

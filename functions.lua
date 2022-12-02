@@ -92,10 +92,114 @@ function MCL_functions:TableMounts(id, frame, section, category)
     table.insert(core.mounts, mount)
 end
 
+function MCL_functions:simplearmoryLink()
+    local region = GetCVar("portal")
+
+    local realmName = GetRealmName()
+
+    local playerName = UnitName("player")
+
+    local string = "https://simplearmory.com/#/"..region.."/"..realmName.."/"..playerName
+
+    KethoEditBox_Show(string)
+
+end
+
+function MCL_functions:dfaLink()
+    local region = GetCVar("portal")
+
+    local realmName = GetRealmName()
+
+    local playerName = UnitName("player")
+
+    local string = "https://www.dataforazeroth.com/characters/"..region.."/"..realmName.."/"..playerName
+
+    KethoEditBox_Show(string)
+
+end
+
+function MCL_functions:compareLink()
+    local region = GetCVar("portal")
+
+    local realmName = GetRealmName()
+
+    local playerName = UnitName("player")
+    local targetName, targetRealm
+    if UnitIsPlayer("target") then
+        targetName, targetRealm = UnitName("target")
+        if targetRealm == nil then
+            targetRealm = realmName
+        end
+    else
+        KethoEditBox_Show("Mount off requires a target")
+        return
+    end
+    
+    local string = "https://wow-mcl.herokuapp.com/?realma="..region.."."..realmName.."&charactera="..playerName.."&realmb="..region.."."..targetRealm.."&characterb="..targetName
+    
+    KethoEditBox_Show(string)
+end
+
+
+function KethoEditBox_Show(text)
+    if not KethoEditBox then
+        local f = CreateFrame("Frame", "KethoEditBox", UIParent, "DialogBoxFrame")
+        f:SetPoint("CENTER")
+        f:SetSize(700, 100)
+        
+        f:SetBackdrop({
+            bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+            edgeFile = "Interface\\PVPFrame\\UI-Character-PVP-Highlight", -- this one is neat
+            edgeSize = 16,
+            insets = { left = 8, right = 6, top = 8, bottom = 8 },
+        })
+        f:SetBackdropBorderColor(0, .44, .87, 0.5) -- darkblue
+        
+        -- Movable
+        f:SetMovable(true)
+        f:SetClampedToScreen(true)
+        f:SetScript("OnMouseDown", function(self, button)
+            if button == "LeftButton" then
+                self:StartMoving()
+            end
+        end)
+        f:SetScript("OnMouseUp", f.StopMovingOrSizing)
+        
+        -- ScrollFrame
+        local sf = CreateFrame("ScrollFrame", "KethoEditBoxScrollFrame", KethoEditBox, "UIPanelScrollFrameTemplate")
+        sf:SetPoint("LEFT", 16, 0)
+        sf:SetPoint("RIGHT", -32, 0)
+        sf:SetPoint("TOP", 0, -16)
+        sf:SetPoint("BOTTOM", KethoEditBoxButton, "TOP", 0, 0)
+        
+        -- EditBox
+        local eb = CreateFrame("EditBox", "KethoEditBoxEditBox", KethoEditBoxScrollFrame)
+        eb:SetSize(sf:GetSize())
+        eb:SetMultiLine(true)
+        eb:SetAutoFocus(false) -- dont automatically focus
+        eb:SetFontObject("ChatFontNormal")
+        eb:SetScript("OnEscapePressed", function() f:Hide() end)
+        sf:SetScrollChild(eb)
+        
+        -- Resizable
+        f:SetResizable(true)
+        f:SetFrameStrata("HIGH")
+        
+        f:Show()
+    end
+    
+    if text then
+        KethoEditBoxEditBox:SetText(text)
+    end
+    KethoEditBox:Show()
+    core.MCL_MF:Hide()
+end
+
 function MCL_functions:initSections()
     -- * --------------------------------
     -- * Create variables and assign strings to each section.
     -- * --------------------------------
+
     local faction = MCL_functions:getFaction()
     core.sections = {}
 
