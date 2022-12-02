@@ -986,6 +986,10 @@ core.mountList[18] = {
 		Zone = {
 			name = "Zone",
 			mounts = {192601, 198873, 198871, 192775 },
+		},
+		Secret = {
+			name = "Secret",
+			mounts = {192786}
 		}
 	}
 }
