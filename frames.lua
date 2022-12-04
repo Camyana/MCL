@@ -206,7 +206,7 @@ function MCL_frames:createNavFrame(relativeFrame, title)
 end
 
 
-function MCL_frames:progressBar(relativeFrame)
+function MCL_frames:progressBar(relativeFrame, top)
 	MyStatusBar = CreateFrame("StatusBar", nil, relativeFrame, "BackdropTemplate")
 	MyStatusBar:SetStatusBarTexture(core.media:Fetch("statusbar", MCL_SETTINGS.statusBarTexture))
 	MyStatusBar:GetStatusBarTexture():SetHorizTile(false)
@@ -214,7 +214,11 @@ function MCL_frames:progressBar(relativeFrame)
 	MyStatusBar:SetValue(0)
 	MyStatusBar:SetWidth(150)
 	MyStatusBar:SetHeight(15)
-	MyStatusBar:SetPoint("BOTTOMLEFT", relativeFrame, "BOTTOMLEFT", 0, 10)
+	if top then
+		MyStatusBar:SetPoint("BOTTOMLEFT", relativeFrame, "BOTTOMLEFT", 0, 10)
+	else
+		MyStatusBar:SetPoint("BOTTOMLEFT", relativeFrame, "BOTTOMLEFT", 0, 10)
+	end
 
 	MyStatusBar:SetStatusBarColor(0.1, 0.9, 0.1)
 
@@ -381,7 +385,7 @@ function MCL_frames:createCategoryFrame(set, relativeFrame)
 
         local pBar = core.Frames:progressBar(category) 
 		local overflow = core.Function:CreateMountsForCategory(v.mounts, category, frame_size, relativeFrame, category, false, false)
-	
+
             
         category:SetSize(((frame_size + 10) * 12),45)
 
