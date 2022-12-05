@@ -569,7 +569,7 @@ function MCL_functions:CreateManuscriptForCategory(set, frame_size,mountName)
     local first_frame = pop
     local relativeFrame
     pop:SetPoint("CENTER");
-    pop.Bg:SetVertexColor(0,0,0,MCL_SETTINGS.opacity+0.1)
+    pop.Bg:SetVertexColor(0,0,0,MCL_SETTINGS.opacity)
     pop.TitleBg:SetVertexColor(0.1,0.1,0.1,0.95)
     pop:SetMovable(true)
 	pop:EnableMouse(true)
