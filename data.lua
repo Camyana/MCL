@@ -814,6 +814,11 @@ core.mountList[15] = {
 			mounts = {164571},
 			mountID = {}
 		},
+		DiabloIV = {
+			name = "Diablo IV",
+			mounts = {"m1596"},
+			mountID = {}
+		},		
 		RAF = {
 			name = "Recruit-A-Friend",
 			mounts = {173297, 173299},
