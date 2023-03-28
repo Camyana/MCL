@@ -821,7 +821,7 @@ core.mountList[15] = {
 		},		
 		RAF = {
 			name = "Recruit-A-Friend",
-			mounts = {173297, 173299},
+			mounts = {173297, 173299, 204091},
 			mountID = {}
 		},
 		AzerothChoppers = {
@@ -990,7 +990,7 @@ core.mountList[18] = {
 		},
 		Zone = {
 			name = "Zone",
-			mounts = {192601, 198873, 198871, 192775, 201454, 192800},
+			mounts = {192601, 198873, 198871, 192775, 201454, 192800, 204382, 192785, 192790, 192772},
 		},
 		TradingPost = {
 			name = "Trading Post",
