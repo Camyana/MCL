@@ -388,6 +388,7 @@ function MCL_functions:SetMouseClickFunctionalityPin(frame, mountID, mountName, 
 end
 
 function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, itemLink, spellID, isDragonRidable) -- * Mount Frames
+
     frame:SetScript("OnMouseDown", function(self, button)
         if IsControlKeyDown() then
             if button == 'LeftButton' then
