@@ -44,22 +44,22 @@ function MCL_frames:CreateMainFrame()
 	MCL_mainFrame.settings.tex:SetTexture("Interface\\AddOns\\MCL\\icons\\settings.blp")
 	MCL_mainFrame.settings:SetScript("OnClick", function()MCL_frames:openSettings()end)
 
-	MCL_mainFrame.compare = CreateFrame("Button", nil, MCL_mainFrame);
-	MCL_mainFrame.compare:SetSize(60, 15)
-	MCL_mainFrame.compare:SetPoint("TOPRIGHT", MCL_mainFrame, "TOPRIGHT", -60, -1)
-	MCL_mainFrame.compare.tex = MCL_mainFrame.compare:CreateTexture()
-	MCL_mainFrame.compare.tex:SetAllPoints(MCL_mainFrame.compare)
-	MCL_mainFrame.compare.tex:SetTexture("Interface\\Buttons\\WHITE8x8")
-	MCL_mainFrame.compare.tex:SetVertexColor(0.1,0.1,0.1,0.95, MCL_SETTINGS.opacity)
-	MCL_mainFrame.compare.text = MCL_mainFrame.compare:CreateFontString(nil, "OVERLAY", "GameFontHighlight");
-	MCL_mainFrame.compare.text:SetPoint("CENTER", MCL_mainFrame.compare, "CENTER", 0, 0);
-	MCL_mainFrame.compare.text:SetText("Mount Off")
-	MCL_mainFrame.compare.text:SetTextColor(0, 0.7, 0.85)	
-	MCL_mainFrame.compare:SetScript("OnClick", function()core.Function:compareLink()end)
+	-- MCL_mainFrame.compare = CreateFrame("Button", nil, MCL_mainFrame);
+	-- MCL_mainFrame.compare:SetSize(60, 15)
+	-- MCL_mainFrame.compare:SetPoint("TOPRIGHT", MCL_mainFrame, "TOPRIGHT", -60, -1)
+	-- MCL_mainFrame.compare.tex = MCL_mainFrame.compare:CreateTexture()
+	-- MCL_mainFrame.compare.tex:SetAllPoints(MCL_mainFrame.compare)
+	-- MCL_mainFrame.compare.tex:SetTexture("Interface\\Buttons\\WHITE8x8")
+	-- MCL_mainFrame.compare.tex:SetVertexColor(0.1,0.1,0.1,0.95, MCL_SETTINGS.opacity)
+	-- MCL_mainFrame.compare.text = MCL_mainFrame.compare:CreateFontString(nil, "OVERLAY", "GameFontHighlight");
+	-- MCL_mainFrame.compare.text:SetPoint("CENTER", MCL_mainFrame.compare, "CENTER", 0, 0);
+	-- MCL_mainFrame.compare.text:SetText("Mount Off")
+	-- MCL_mainFrame.compare.text:SetTextColor(0, 0.7, 0.85)	
+	-- MCL_mainFrame.compare:SetScript("OnClick", function()core.Function:compareLink()end)
 
 	MCL_mainFrame.sa = CreateFrame("Button", nil, MCL_mainFrame);
 	MCL_mainFrame.sa:SetSize(60, 15)
-	MCL_mainFrame.sa:SetPoint("TOPRIGHT", MCL_mainFrame, "TOPRIGHT", -125, -1)
+	MCL_mainFrame.sa:SetPoint("TOPRIGHT", MCL_mainFrame, "TOPRIGHT", -60, -1)
 	MCL_mainFrame.sa.tex = MCL_mainFrame.sa:CreateTexture()
 	MCL_mainFrame.sa.tex:SetAllPoints(MCL_mainFrame.sa)
 	MCL_mainFrame.sa.tex:SetTexture("Interface\\Buttons\\WHITE8x8")
@@ -72,7 +72,7 @@ function MCL_frames:CreateMainFrame()
 	
 	MCL_mainFrame.dfa = CreateFrame("Button", nil, MCL_mainFrame);
 	MCL_mainFrame.dfa:SetSize(60, 15)
-	MCL_mainFrame.dfa:SetPoint("TOPRIGHT", MCL_mainFrame, "TOPRIGHT", -190, -1)
+	MCL_mainFrame.dfa:SetPoint("TOPRIGHT", MCL_mainFrame, "TOPRIGHT", -125, -1)
 	MCL_mainFrame.dfa.tex = MCL_mainFrame.dfa:CreateTexture()
 	MCL_mainFrame.dfa.tex:SetAllPoints(MCL_mainFrame.dfa)
 	MCL_mainFrame.dfa.tex:SetTexture("Interface\\Buttons\\WHITE8x8")
