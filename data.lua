@@ -994,7 +994,7 @@ core.mountList[18] = {
 		},
 		TradingPost = {
 			name = "Trading Post",
-			mounts = {190231, 190168, 190539, 190767, 206027}, 
+			mounts = {190231, 190168, 190539, 190767, 190613},
 		},
 		Secret = {
 			name = "Secret",
