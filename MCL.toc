@@ -1,7 +1,7 @@
-## Interface: 100100
+## Interface: 100105
 ## Title: |cFF1FB7EBMCL |cFFFFFFFF- Mount Collection Log
 ## Notes: A tool used to log collected mounts in a similiar way to Simple Armory.
-## Version: 2.1.8
+## Version: 2.1.9
 ## DefaultState: enabled
 ## LoadWith: Blizzard_Collections
 ## SavedVariables: MCL_DB, MOUNTLIST, MCL_PINNED, MCL_SETTINGS
