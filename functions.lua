@@ -10,7 +10,6 @@ core.overviewFrames = {}
 core.mountFrames = {}
 core.mountCheck = {}
 core.addon_name = "Mount Collection Log | MCL"
-core.manuscripts = {}
 
 
 function MCL_functions:getFaction()
@@ -205,14 +204,20 @@ function MCL_functions:initSections()
     core.sections = {}
 
     for i, v in ipairs(core.sectionNames) do
-        if v.name ~= faction then
-            local t = {
-                name = v.name,
-                icon = v.icon
-            }
-            table.insert(core.sections, t)
-        else
-            -- Skip opposite faction
+        local success, err = pcall(function()
+            if v.name ~= faction then
+                local t = {
+                    name = v.name,
+                    icon = v.icon
+                }
+                table.insert(core.sections, t)
+            else
+                -- Skip opposite faction
+            end
+        end)
+
+        if not success then
+            print("Error in iteration with section name "..v.name..": "..err)
         end
     end
 
@@ -227,36 +232,42 @@ function MCL_functions:initSections()
 
     core.sectionFrames = {}
     for i=1, numTabs do
-        local section_frame = core.Frames:createContentFrame(tabFrames[i], core.sections[i].name)
-        table.insert(core.sectionFrames, section_frame)
+        local success, err = pcall(function()
+            local section_frame = core.Frames:createContentFrame(tabFrames[i], core.sections[i].name)
+            table.insert(core.sectionFrames, section_frame)
 
-        for ii,v in ipairs(core.sectionNames) do
-            if v.name == "Overview" then
-                core.overview = section_frame        
-            elseif v.name == core.sections[i].name then
-                if v.name == "Pinned" then
-                    local category = CreateFrame("Frame", "PinnedFrame", section_frame, "BackdropTemplate");
-                    category:SetWidth(60);
-                    category:SetHeight(60);
-                    category:SetPoint("TOPLEFT", section_frame, "TOPLEFT", 0, 0);
-                    local overflow, mountFrame = core.Function:CreateMountsForCategory(MCL_PINNED, category, 30, tabFrames[i], true, true)
-                    table.insert(core.mountFrames, mountFrame)
-                    category.info = category:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-                    category.info:SetPoint("TOP", 450, -0)
-                    category.info:SetText("Ctrl + Right Click to pin uncollected mounts")
-                end                   
-                -- ! Create Frame for each category
-                if v.mounts then
-                    for k,val in pairs(v.mounts) do
-                        if k == 'categories' then
-                            local section = core.Frames:createCategoryFrame(val, section_frame)
-                            table.insert(core.stats, section)
+            for ii,v in ipairs(core.sectionNames) do
+                if v.name == "Overview" then
+                    core.overview = section_frame        
+                elseif v.name == core.sections[i].name then
+                    if v.name == "Pinned" then
+                        local category = CreateFrame("Frame", "PinnedFrame", section_frame, "BackdropTemplate");
+                        category:SetWidth(60);
+                        category:SetHeight(60);
+                        category:SetPoint("TOPLEFT", section_frame, "TOPLEFT", 0, 0);
+                        local overflow, mountFrame = core.Function:CreateMountsForCategory(MCL_PINNED, category, 30, tabFrames[i], true, true)
+                        table.insert(core.mountFrames, mountFrame)
+                        category.info = category:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+                        category.info:SetPoint("TOP", 450, -0)
+                        category.info:SetText("Ctrl + Right Click to pin uncollected mounts")
+                    end                   
+                    -- ! Create Frame for each category
+                    if v.mounts then
+                        for k,val in pairs(v.mounts) do
+                            if k == 'categories' then
+                                local section = core.Frames:createCategoryFrame(val, section_frame)
+                                table.insert(core.stats, section)
+                            end
                         end
-                    end
-                end 
-            end            
+                    end 
+                end            
+            end
+        end)
+        
+        if not success then
+            print("Error in iteration "..i..": "..err)
         end
-    end
+    end    
 
     OverviewStats(core.overview)
 
@@ -563,86 +574,6 @@ function MCL_functions:CheckIfPinned(mountID)
     return false, nil
 end
 
-function MCL_functions:CreateManuscriptForCategory(set, frame_size,mountName)
-    local count = 0
-    local overflow = 0
-    local pop = CreateFrame("Frame", nil, UIParent, "MCLFrameTemplateWithInset");
-    local first_frame = pop
-    local relativeFrame
-    pop:SetPoint("CENTER");
-    pop.Bg:SetVertexColor(0,0,0,MCL_SETTINGS.opacity)
-    pop.TitleBg:SetVertexColor(0.1,0.1,0.1,0.95)
-    pop:SetMovable(true)
-	pop:EnableMouse(true)
-
-	pop:RegisterForDrag("LeftButton")
-	pop:SetScript("OnDragStart", pop.StartMoving)
-	pop:SetScript("OnDragStop", MCL_mainFrame.StopMovingOrSizing)   
-
-	pop.title = pop:CreateFontString(nil, "OVERLAY", "GameFontHighlight");
-	pop.title:SetPoint("LEFT", pop.TitleBg, "LEFT", 5, 2);
-	pop.title:SetText(mountName);
-	pop.title:SetTextColor(0, 0.7, 0.85)
-
-    pop.stats = CreateFrame("Frame", nil, pop, "BackdropTemplate")
-	pop.stats:SetWidth(((frame_size+10)*12))
-    pop.stats:SetHeight(20)
-	pop.stats:SetPoint("TOPLEFT", pop, "TOPLEFT", 5, -35)
-    pop.stats.pBar = core.Frames:progressBar(pop.stats)
-    pop.stats.pBar:SetWidth(((frame_size+10)*12))
-
-
-    for k,v in pairs(set) do
-        if count == 12 then
-            overflow = overflow + frame_size + 10
-        end         
-        local itemTexture = GetItemIcon(v[1])
-        local frame = CreateFrame("Button", nil, first_frame, "BackdropTemplate");
-        frame:SetWidth(frame_size);
-        frame:SetHeight(frame_size);
-
-        frame.quest = v[2]
-
-        frame:SetBackdrop({
-            edgeFile = [[Interface\Buttons\WHITE8x8]],
-            edgeSize = frame_size + 2,
-            bgFile = [[Interface\Buttons\WHITE8x8]],              
-        })
-
-
-        frame:SetBackdropBorderColor(1, 0, 0, 0.03)
-        frame:SetBackdropColor(0, 0, 0, MCL_SETTINGS.opacity)
-
-        frame.source = v[3]
-
-
-        frame.tex = frame:CreateTexture()
-        frame.tex:SetSize(frame_size, frame_size)
-        frame.tex:SetPoint("LEFT")
-        frame.tex:SetTexture(itemTexture)
-    
-        frame.tex:SetVertexColor(0.75, 0.75, 0.75, 0.3);
-
-        if relativeFrame == nil then
-            frame:SetPoint("TOPLEFT", pop, "TOPLEFT", 10, -55);
-            first_frame = frame
-        elseif count == 12 then
-            frame:SetPoint("BOTTOMLEFT", first_frame, "BOTTOMLEFT", 0, -overflow);
-            count = 0
-        else
-            frame:SetPoint("RIGHT", relativeFrame, "RIGHT", frame_size+10, 0);
-        end 
-        count = count + 1
-        relativeFrame = frame
-        core.Function:LinkMountItem(v[1], frame, false, true)
-        table.insert(core.manuscripts, frame)       
-    end
-    pop:SetSize(((frame_size+10)*12) + 20, overflow+frame_size+70)
-    pop:SetFrameStrata("DIALOG")
-    pop:Hide()
-    return pop
-end
-
 
 function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, tab, skip_total, pin)
 
@@ -793,26 +724,6 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
             else
                 if tab then
                     MCL_functions:TableMounts(mount_Id, frame, tab, category)
-                end
-            end
-            if isDragonRidable then
-                for k,v in pairs(core.dragonRiding) do
-                    if k == val then
-                        frame.pop = core.Function:CreateManuscriptForCategory(v.manuscripts, frame_size, mountName)
-                        frame.mini_pBar = core.Frames:progressBar(frame)
-                        frame.mini_pBar:SetWidth(frame_size)
-                        frame.mini_pBar.Text:Hide()
-                        frame.mini_pBar:SetHeight(5)
-                        frame.mini_pBar:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0,-10)
-                        frame.mini_pBar:HookScript("OnEnter", function()
-                            GameTooltip:SetOwner(frame, "ANCHOR_BOTTOMLEFT")
-                            GameTooltip:AddLine(string.format("%s/%s", frame.mini_pBar.collected, frame.mini_pBar.total))
-                            GameTooltip:Show()
-                        end)
-                        frame.mini_pBar:HookScript("OnLeave", function()
-                            GameTooltip:Hide()
-                        end)                                          
-                    end
                 end
             end
             table.insert(mountFrames, frame)
@@ -1025,28 +936,6 @@ function MCL_functions:UpdateCollection()
 
         else
             UpdatePin(v.frame)
-        end
-        if v.frame.dragonRidable then
-            for key, m in pairs(core.dragonRiding) do
-                if key == v.frame.itemID then
-                    local count = 0
-                    local collected = 0
-                    for i,j in pairs(m.manuscripts) do
-                        count = count + 1
-                        if C_QuestLog.IsQuestFlaggedCompleted(j[2]) then
-                            collected = collected + 1
-                        end
-                    end
-                    UpdateProgressBar(v.frame.pop.stats.pBar, count, collected)
-                    UpdateProgressBar(v.frame.mini_pBar, count, collected)
-                end
-            end
-        end
-    end
-    for k,v in pairs(core.manuscripts) do
-        if C_QuestLog.IsQuestFlaggedCompleted(v.quest) then
-            v:SetBackdropBorderColor(0, 0.45, 0, 0.4)
-            v.tex:SetVertexColor(1, 1, 1, 1);
         end
     end
     for k,v in pairs(core.stats) do
