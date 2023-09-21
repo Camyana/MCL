@@ -480,9 +480,10 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
         local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID, isDragonRidable = C_MountJournal.GetMountInfoByID(id)
 
         frame:HookScript("OnEnter", function()
+            GameTooltip:SetOwner(frame, "ANCHOR_TOPLEFT")
             if (spellID) then
                 _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(id) 
-                GameTooltip:SetOwner(frame, "ANCHOR_TOPLEFT")
+
                 GameTooltip:SetSpellByID(spellID)
                 GameTooltip:AddLine(source) 
                 GameTooltip:Show()
@@ -501,8 +502,8 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
         local item, itemLink = GetItemInfo(id);
         if dragonriding then
             frame:HookScript("OnEnter", function()
+                GameTooltip:SetOwner(frame, "ANCHOR_TOPLEFT")
                 if (id) then
-                    GameTooltip:SetOwner(frame, "ANCHOR_TOPLEFT")
                     GameTooltip:SetItemByID(id)
                     GameTooltip:AddLine(frame.source)
                     GameTooltip:Show()
@@ -518,10 +519,10 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
             local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID, isDragonRidable = C_MountJournal.GetMountInfoByID(mountID)
         
             frame:HookScript("OnEnter", function()
+                GameTooltip:SetOwner(frame, "ANCHOR_TOP")
                 if (itemLink) then
                     frame:SetHyperlinksEnabled(true)
                     _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(mountID)                     
-                    GameTooltip:SetOwner(frame, "ANCHOR_TOP")
                     GameTooltip:SetHyperlink(itemLink)
                     GameTooltip:AddLine(source)
                     GameTooltip:Show()
