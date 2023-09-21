@@ -46,7 +46,7 @@ end
 -- * -----------------------------------------------------
 
 function MCL_Load:PreLoad()      
-    if load_check > 1000 then
+    if load_check > 2000 then
         return true
     else   
         InitMounts()         
