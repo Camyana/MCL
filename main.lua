@@ -48,22 +48,38 @@ end
 function MCL_Load:PreLoad()      
     if load_check > 1000 then
         return true
-    else
-        print("MCL - Initialising, try again")        
+    else   
         InitMounts()         
         return false
     end
 end
 
-function MCL_Load:Toggle()
-    if MCL_Load:PreLoad() == false then
-        return
+-- Initialization function
+function MCL_Load:Init()
+    local function repeatCheck()
+        if MCL_Load:PreLoad() == true then
+            if core.MCL_MF == nil then
+                core.MCL_MF = core.Frames:CreateMainFrame()
+                core.MCL_MF:SetShown(false) -- Keeps the UI frame 'closed' once created
+                core.Function:initSections()
+            end
+            core.Function:UpdateCollection()
+        else
+            -- If not ready, wait for another second (or any amount of reasonable time) and then check again
+            C_Timer.After(1, repeatCheck)
+        end
     end
+
+    -- Initially starts the check
+    repeatCheck()
+end
+
+-- Toggle function
+function MCL_Load:Toggle()
     if core.MCL_MF == nil then
-        core.MCL_MF = core.Frames:CreateMainFrame()            
-        core.Function:initSections()               
+        return -- Immune to function calls before the initialization process is complete, as the frame doesn't exist yet.
     else
-        core.MCL_MF:SetShown(not core.MCL_MF:IsShown());
+        core.MCL_MF:SetShown(not core.MCL_MF:IsShown()) -- The addon's frame exists and can be toggled.
     end
     core.Function:UpdateCollection()
 end
@@ -87,6 +103,9 @@ local function onevent(self, event, arg1, ...)
 	        LoadAddOn("Blizzard_Collections")
 	    end
         core.Function:AddonSettings()
+        
+        -- Initiate the addon when the required addon is loaded
+        MCL_Load:Init()
     end
 end
 

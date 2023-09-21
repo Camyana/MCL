@@ -1035,6 +1035,11 @@ local MCL_LDB = LibStub("LibDataBroker-1.1"):NewDataObject("MCL!", {
 type = "data source",
 text = "MCL!",
 icon = "Interface\\AddOns\\MCL\\mcl-logo-32",
+OnTooltipShow = function(tooltip)
+    tooltip:SetText("MCL")
+    tooltip:AddLine("Mount Collection Log", 1, 1, 1)
+    tooltip:Show()
+end,
 OnClick = function(_, button) 
 	core.Main:Toggle() 
 end,
@@ -1127,7 +1132,6 @@ function MCL_functions:AddonSettings()
                 width = "normal",
                 desc = "Set the statusbar texture.",
                 values = media:HashTable("statusbar"),
-                -- image = function(info) return media:Fetch("STATUSBAR", MCL_SETTINGS.statusBarTexture) end,
                 dialogControl = "LSM30_Statusbar",
                 set = function(info, val) MCL_SETTINGS.statusBarTexture = val; core.Function:updateFromSettings("texture"); end,
                 get = function(info) return MCL_SETTINGS.statusBarTexture; end,
