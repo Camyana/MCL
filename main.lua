@@ -17,27 +17,46 @@ local load_check = 0
 -- * Function is designed to check if the ingame mount journal has loaded correctly before loading our own database.
 -- * -----------------------------------------------
 
-local function InitMounts()
-	load_check = 0
-	for b,n in pairs(core.mountList) do
-		for h,j in pairs(n) do
-			if (type(j) == "table") then
-				for k,v in pairs(j) do
+
+function CountMounts()
+    local count = 0
+    for b,n in pairs(core.mountList) do
+        for h,j in pairs(n) do
+            if (type(j) == "table") then
+                for k,v in pairs(j) do
                     for kk,vv in pairs(v.mounts) do
-                        if string.sub(vv, 1, 1) == "m" then
-                        else
-                            load_check = load_check + 1
-                            local a = vv
-                            mountName = C_MountJournal.GetMountFromItem(vv)
-                        end
-                        if mountName ~= nil then
-                            load_check = load_check + 1                   
-                        end                        
+                        count = count + 1
                     end                    
-				end
-			end
-		end
-	end
+                end
+            end
+        end
+    end
+    return count
+end
+
+-- Save total mount count
+local totalMountCount = CountMounts()
+
+local function InitMounts()
+    load_check = 0
+    totalMountCount = 0
+    for b,n in pairs(core.mountList) do
+        for h,j in pairs(n) do
+            if (type(j) == "table") then
+                for k,v in pairs(j) do
+                    for kk,vv in pairs(v.mounts) do
+                        if not string.match(vv, "^m") then
+                            totalMountCount = totalMountCount + 1
+                            local mountName = C_MountJournal.GetMountFromItem(vv)
+                            if mountName ~= nil then
+                                load_check = load_check + 1
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
 end
 
 
@@ -45,10 +64,16 @@ end
 -- * Toggle the main window
 -- * -----------------------------------------------------
 
+
+core.dataLoaded = false
+
 function MCL_Load:PreLoad()      
-    if load_check > 2000 then
+    if load_check >= totalMountCount then
+        -- print("Preload passed:", "totalMountCount", totalMountCount, "load_check", load_check)
+        core.dataLoaded = true
         return true
     else   
+        -- print("Preload ongoing:", "totalMountCount", totalMountCount, "load_check", load_check)
         InitMounts()         
         return false
     end
@@ -76,6 +101,11 @@ end
 
 -- Toggle function
 function MCL_Load:Toggle()
+    -- Check preload status and if false, prevent execution.
+    if core.dataLoaded == false then
+        print("Data not loaded yet.")
+        return
+    end 
     if core.MCL_MF == nil then
         return -- Immune to function calls before the initialization process is complete, as the frame doesn't exist yet.
     else
