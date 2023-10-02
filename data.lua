@@ -316,7 +316,7 @@ core.mountList[4] = {
 		},
 		TradingPost = {
 			name = "Trading Post",
-			mounts = {116782, 116665},
+			mounts = {116782, 116665, 137576, 208598},
 			mountID = {}
 		},
 		RareSpawn = {
