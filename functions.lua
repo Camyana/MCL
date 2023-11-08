@@ -23,17 +23,42 @@ function MCL_functions:getFaction()
 	end
 end
 
+-- local function IsMountFactionSpecific(id)
+--     if string.sub(id, 1, 1) == "m" then
+--         mount_Id = string.sub(id, 2, -1)
+--         local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID, _ = C_MountJournal.GetMountInfoByID(mount_Id)
+--         return faction, isFactionSpecific
+--     else
+--         mount_Id = C_MountJournal.GetMountFromItem(id)
+--         local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID, _ = C_MountJournal.GetMountInfoByID(mount_Id)
+--         return faction, isFactionSpecific
+--     end
+-- end
+
+local function GetMountInfoByIDChecked(mount_Id)
+    local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID, _ = C_MountJournal.GetMountInfoByID(mount_Id)
+    return faction, isFactionSpecific
+end
+
 local function IsMountFactionSpecific(id)
+    local mount_Id, ok, faction, isFactionSpecific
+
     if string.sub(id, 1, 1) == "m" then
         mount_Id = string.sub(id, 2, -1)
-        local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID, _ = C_MountJournal.GetMountInfoByID(mount_Id)
-        return faction, isFactionSpecific
     else
         mount_Id = C_MountJournal.GetMountFromItem(id)
-        local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID, _ = C_MountJournal.GetMountInfoByID(mount_Id)
+    end
+
+    -- Use pcall to execute GetMountInfoByIDChecked and capture any error
+    ok, faction, isFactionSpecific = pcall(GetMountInfoByIDChecked, mount_Id)
+
+    -- If an error occurred, print the error message along with the id that caused the error
+    if not ok then
+        return nil, nil
+    else
         return faction, isFactionSpecific
     end
-end    
+end
 
 function MCL_functions:resetToDefault(setting)
     if setting == nil then
