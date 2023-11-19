@@ -34,6 +34,11 @@ function CountMounts()
     return count
 end
 
+-- Global for Addon Compartment
+MCL_OnAddonCompartmentClick = function()
+    MCL_Load:Toggle()
+end
+
 -- Save total mount count
 local totalMountCount = CountMounts()
 
