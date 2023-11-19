@@ -869,6 +869,9 @@ end
 
 
 function UpdateProgressBar(frame, total, collected)
+    if not frame then
+        return
+    end    
     if total == nil and collected == nil then
     else
         if total == 0 then
