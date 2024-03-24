@@ -887,6 +887,10 @@ core.mountList[16] = {
 		DemonHunter = {
 			name="Demon Hunter",
 			mounts = {"m780"},
+		},
+		PlunderStorm = {
+			name="Plunderstorm",
+			mounts = {"m1259","m994", "m2090"},
 		}
 	}
 }
