@@ -801,12 +801,12 @@ core.mountList[15] = {
 		},
 		anniversary = {
 			name = "WoW Anniversary Mounts",
-			mounts = {172022, 172023, 186469, 208572, 163186, 212522},
+			mounts = {172022, 172023, 186469, 208572},
 			mountID = {}
 		},
 		Hearthstone = {
 			name = "Hearthstone",
-			mounts = {98618, "m1513"},
+			mounts = {98618, "m1513", 163186, 212522},
 			mountID = {1513}
 		},
 		WarcraftIII = {
