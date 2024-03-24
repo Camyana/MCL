@@ -838,7 +838,11 @@ core.mountList[15] = {
 			name = "Timewalking Alterac Valley",
 			mounts = {172023, 172022},
 			mountID = {}
-		}
+		},
+		PlunderStorm = {
+			name="Plunderstorm",
+			mounts = {"m1259","m994", "m2090"},
+		}		
 	}	
 }
 core.mountList[16] = {
@@ -887,10 +891,6 @@ core.mountList[16] = {
 		DemonHunter = {
 			name="Demon Hunter",
 			mounts = {"m780"},
-		},
-		PlunderStorm = {
-			name="Plunderstorm",
-			mounts = {"m1259","m994", "m2090"},
 		}
 	}
 }
@@ -998,7 +998,7 @@ core.mountList[18] = {
 		},
 		TradingPost = {
 			name = "Trading Post",
-			mounts = {190231, 190168, 190539, 190767, 190613, 206156, 137576, 208598, 211084, 211074, 210919, 212227},
+			mounts = {190231, 190168, 190539, 190767, 190613, 206156, 137576, 208598, 211084, 211074, 210919, 212227, 212630},
 		},
 		Secret = {
 			name = "Secret",
