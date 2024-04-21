@@ -479,14 +479,16 @@ function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, ite
             end               
         elseif button=='LeftButton' then
             if isDragonRidable then
-                if frame.pop:IsShown() then
+                if frame.pop and frame.pop:IsShown() then 
                     frame.pop:Hide()
-                else
+                elseif frame.pop then
                     frame.pop:Show()
                 end
             else
                 if (itemLink) then
-                    frame:SetScript("OnHyperlinkClick", ChatFrame_OnHyperlinkShow(_, itemLink, itemLink, _))
+                    frame:SetScript("OnHyperlinkClick", function()
+                        ChatFrame_OnHyperlinkShow(nil, itemLink, "LeftButton")
+                    end)
                 elseif (spellID) then
                     frame:SetScript("OnHyperlinkClick", ChatFrame_OnHyperlinkShow(_, GetSpellLink(spellID), GetSpellLink(spellID), _))
                 end
