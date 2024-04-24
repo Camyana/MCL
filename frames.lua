@@ -187,7 +187,7 @@ function MCL_frames:createNavFrame(relativeFrame, title)
 	local frame = CreateFrame("Frame", "Nav", relativeFrame, "BackdropTemplate");
 	frame:SetWidth(nav_width)
 	frame:SetHeight(main_frame_height)
-	frame:SetPoint("TOPLEFT", relativeFrame, 5, -35);
+	frame:SetPoint("TOPLEFT", relativeFrame, 5, -38);
     frame:SetBackdropColor(1, 1, 1)
 	frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	frame.title:SetPoint("LEFT", 0, 0)	
