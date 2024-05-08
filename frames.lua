@@ -219,7 +219,7 @@ function MCL_frames:progressBar(relativeFrame, top)
 	MyStatusBar.Text:SetFontObject(GameFontWhite)
 	MyStatusBar.Text:SetPoint("CENTER")
 	MyStatusBar.Text:SetJustifyH("CENTER")
-	MyStatusBar.Text:SetJustifyV("CENTER")
+	-- MyStatusBar.Text:SetJustifyV("CENTER")
 	MyStatusBar.Text:SetText()
 
 	table.insert(core.statusBarFrames, MyStatusBar)
