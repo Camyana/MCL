@@ -19,14 +19,20 @@ local load_check = 0
 
 
 function CountMounts()
+    core.mountList = core.mountList or {}
     local count = 0
-    for b,n in pairs(core.mountList) do
-        for h,j in pairs(n) do
-            if (type(j) == "table") then
-                for k,v in pairs(j) do
-                    for kk,vv in pairs(v.mounts) do
-                        count = count + 1
-                    end                    
+    for b, n in pairs(core.mountList) do
+        if type(n) == "table" then
+            for h, j in pairs(n) do
+                if type(j) == "table" then
+                    for k, v in pairs(j) do
+                        -- Ensure v.mounts is a table before attempting to iterate over it
+                        if type(v.mounts) == "table" then
+                            for kk, vv in pairs(v.mounts) do
+                                count = count + 1
+                            end
+                        end
+                    end
                 end
             end
         end
@@ -134,8 +140,8 @@ local function onevent(self, event, arg1, ...)
         login = nil
         f:UnregisterEvent("ADDON_LOADED")
         f:UnregisterEvent("PLAYER_LOGIN")
-	    if not IsAddOnLoaded("Blizzard_Collections") then
-	        LoadAddOn("Blizzard_Collections")
+	    if not C_AddOns.IsAddOnLoaded("Blizzard_Collections") then
+	        C_AddOns.LoadAddOn("Blizzard_Collections")
 	    end
         core.Function:AddonSettings()
         
