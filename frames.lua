@@ -173,10 +173,9 @@ function MCL_frames:SetTabs()
 		core.TabTable[i] = v.name
 
         i = i+1
-		
 	end
 
-	Tab_OnClick(_G[frameName.."Tab1"]);
+	Tab_OnClick(_G[frameName.."Tab20"]);
 
 	return contents, numTabs;
 end

@@ -241,9 +241,9 @@ function MCL_functions:initSections()
             end
         end)
 
-        if not success then
-            print("Error in iteration with section name "..v.name..": "..err)
-        end
+        -- if not success then
+        --     print("Error in iteration with section name "..v.name..": "..err)
+        -- end
     end
 
     core.MCL_MF_Nav = core.Frames:createNavFrame(core.MCL_MF, 'Sections')
@@ -374,7 +374,7 @@ function MCL_functions:getTableLength(set)
     return i
 end
 
-function MCL_functions:SetMouseClickFunctionalityPin(frame, mountID, mountName, itemLink, spellID, isDragonRidable)
+function MCL_functions:SetMouseClickFunctionalityPin(frame, mountID, mountName, itemLink, spellID, isSteadyFlight)
     frame:SetScript("OnMouseDown", function(self, button)
         if IsControlKeyDown() then
             if button == 'LeftButton' then
@@ -423,7 +423,7 @@ function MCL_functions:SetMouseClickFunctionalityPin(frame, mountID, mountName, 
     end)
 end
 
-function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, itemLink, spellID, isDragonRidable) -- * Mount Frames
+function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, itemLink, spellID, isSteadyFlight) -- * Mount Frames
 
     frame:SetScript("OnMouseDown", function(self, button)
         if IsControlKeyDown() then
@@ -478,7 +478,7 @@ function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, ite
                 end
             end               
         elseif button=='LeftButton' then
-            if isDragonRidable then
+            if isSteadyFlight then
                 if frame.pop and frame.pop:IsShown() then 
                     frame.pop:Hide()
                 elseif frame.pop then
@@ -504,7 +504,7 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
 	--Adding a tooltip for mounts
     if string.sub(id, 1, 1) == "m" then
         id = string.sub(id, 2, -1)
-        local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID, isDragonRidable = C_MountJournal.GetMountInfoByID(id)
+        local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID, isSteadyFlight = C_MountJournal.GetMountInfoByID(id)
 
         frame:HookScript("OnEnter", function()
             GameTooltip:SetOwner(frame, "ANCHOR_TOPLEFT")
@@ -521,9 +521,9 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
             GameTooltip:Hide()
         end)
         if pin == true then
-            core.Function:SetMouseClickFunctionalityPin(frame, mountID, mountName, itemLink, spellID, isDragonRidable)
+            core.Function:SetMouseClickFunctionalityPin(frame, mountID, mountName, itemLink, spellID, isSteadyFlight)
         else
-            core.Function:SetMouseClickFunctionality(frame, mountID, mountName, itemLink, spellID, isDragonRidable)
+            core.Function:SetMouseClickFunctionality(frame, mountID, mountName, itemLink, spellID, isSteadyFlight)
         end  
     else
         local item, itemLink = GetItemInfo(id);
@@ -543,7 +543,7 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
 
         else
             local mountID = C_MountJournal.GetMountFromItem(id)
-            local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID, isDragonRidable = C_MountJournal.GetMountInfoByID(mountID)
+            local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID, isSteadyFlight = C_MountJournal.GetMountInfoByID(mountID)
         
             frame:HookScript("OnEnter", function()
                 GameTooltip:SetOwner(frame, "ANCHOR_TOP")
@@ -559,9 +559,9 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
                 GameTooltip:Hide()
             end)
             if pin == true then
-                core.Function:SetMouseClickFunctionalityPin(frame, mountID, mountName, itemLink, _, isDragonRidable)
+                core.Function:SetMouseClickFunctionalityPin(frame, mountID, mountName, itemLink, _, isSteadyFlight)
             else
-                core.Function:SetMouseClickFunctionality(frame, mountID, mountName, itemLink, _, isDragonRidable)
+                core.Function:SetMouseClickFunctionality(frame, mountID, mountName, itemLink, _, isSteadyFlight)
             end
         end
     end
@@ -612,7 +612,7 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
     local overflow = 0
     local mountFrames = {}
     local val
-    local mountName, spellID, icon, _, _, sourceType, _, isFactionSpecific, faction, _, isCollected, mountID, sourceText, isDragonRidable
+    local mountName, spellID, icon, _, _, sourceType, _, isFactionSpecific, faction, _, isCollected, mountID, sourceText, isSteadyFlight
 
     for kk,vv in pairs(set) do
         local mount_Id
@@ -623,11 +623,11 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
         end
         if string.sub(val, 1, 1) == "m" then
             mount_Id = string.sub(val, 2, -1)
-            mountName, spellID, icon, _, _, sourceType, _, isFactionSpecific, faction, _, isCollected, mountID, isDragonRidable = C_MountJournal.GetMountInfoByID(mount_Id)
+            mountName, spellID, icon, _, _, sourceType, _, isFactionSpecific, faction, _, isCollected, mountID, isSteadyFlight = C_MountJournal.GetMountInfoByID(mount_Id)
             _,_, sourceText =  C_MountJournal.GetMountInfoExtraByID(mount_Id)
         else
             mount_Id = C_MountJournal.GetMountFromItem(val)
-            mountName, spellID, icon, _, _, sourceType, _, isFactionSpecific, faction, _, isCollected, mountID, isDragonRidable = C_MountJournal.GetMountInfoByID(mount_Id)
+            mountName, spellID, icon, _, _, sourceType, _, isFactionSpecific, faction, _, isCollected, mountID, isSteadyFlight = C_MountJournal.GetMountInfoByID(mount_Id)
         end        
         local faction, faction_specific = IsMountFactionSpecific(val)
         if faction then
@@ -660,7 +660,7 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
             frame.category = category.category
             frame.section = category.section
 
-            frame.dragonRidable = isDragonRidable
+            frame.dragonRidable = isSteadyFlight
 
 
             frame:SetBackdropBorderColor(1, 0, 0, 0.03)
@@ -1163,9 +1163,10 @@ function MCL_functions:AddonSettings()
                 width = "normal",
                 desc = "Set the statusbar texture.",
                 values = media:HashTable("statusbar"),
-                dialogControl = "LSM30_Statusbar",
+                -- Removed dialogControl = "LSM30_Statusbar",
                 set = function(info, val) MCL_SETTINGS.statusBarTexture = val; core.Function:updateFromSettings("texture"); end,
                 get = function(info) return MCL_SETTINGS.statusBarTexture; end,
+                style = "dropdown", -- This ensures it uses a dropdown menu for selection
             },
             spacer2 = {
                 order = 5.5,
@@ -1280,6 +1281,24 @@ function MCL_functions:AddonSettings()
                 set = function(info, val) MCL_SETTINGS.unobtainable = val; core.Function:updateFromSettings("unobtainable", val); end,
                 get = function(info) return MCL_SETTINGS.unobtainable; end,
             },
+            minimapIconToggle = {
+                order = 14,
+                name = "Show Minimap Icon",
+                desc = "Toggle the display of the Minimap Icon.",
+                type = "toggle",
+                width = "full",
+                set = function(info, val)
+                    MCL_MM.db.profile.minimap.hide = not val
+                    if val then
+                        icon:Show("MCL!")
+                    else
+                        icon:Hide("MCL!")
+                    end
+                end,
+                get = function(info)
+                    return not MCL_MM.db.profile.minimap.hide
+                end,
+            },            
             headerfour = {             
                 order = 14,
                 name = "Reset Settings",
