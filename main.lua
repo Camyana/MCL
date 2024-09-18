@@ -90,24 +90,42 @@ function MCL_Load:PreLoad()
     end
 end
 
+-- Set a maximum number of initialization retries
+local MAX_INIT_RETRIES = 3
+
 -- Initialization function
-function MCL_Load:Init()
+function MCL_Load:Init(force)
     local function repeatCheck()
-        if MCL_Load:PreLoad() == true then
+        local retries = 0
+        if MCL_Load:PreLoad() then
+            -- Initialization steps
             if core.MCL_MF == nil then
                 core.MCL_MF = core.Frames:CreateMainFrame()
-                core.MCL_MF:SetShown(false) -- Keeps the UI frame 'closed' once created
+                core.MCL_MF:SetShown(false)
                 core.Function:initSections()
             end
             core.Function:UpdateCollection()
+            init_load = false -- Ensure that the initialization does not repeat unnecessarily.
         else
-            -- If not ready, wait for another second (or any amount of reasonable time) and then check again
-            C_Timer.After(1, repeatCheck)
+            retries = retries + 1
+            if retries < MAX_INIT_RETRIES then
+                -- Retry the initialization process after a delay
+                C_Timer.After(1, repeatCheck)
+            end
         end
     end
 
-    -- Initially starts the check
-    repeatCheck()
+    -- Force reinitialization if specifically requested
+    if force then
+        load_check = 0
+        core.dataLoaded = false
+    end
+
+    -- Check if we need to attempt initialization
+    if not core.dataLoaded then
+        init_load = true
+        repeatCheck()
+    end
 end
 
 -- Toggle function

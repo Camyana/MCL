@@ -1,6 +1,8 @@
 
 local MCL, core = ...;
 
+local MCL_Load = core.Main;
+
 core.Frames = {};
 local MCL_frames = core.Frames;
 
