@@ -58,10 +58,20 @@ local function InitMounts()
                     for kk,vv in pairs(v.mounts) do
                         if not string.match(vv, "^m") then
                             totalMountCount = totalMountCount + 1
+                            -- local mountName = C_MountJournal.GetMountFromItem(vv)
+                            -- if mountName ~= nil then
+                            --     load_check = load_check + 1
+                            -- else
+                            --     local mountName = C_Item.RequestLoadItemDataByID(vv)
+                            --     if mountName ~= nil then
+                            --         load_check = load_check + 1
+                            --     end
+                            -- end
+                            C_Item.RequestLoadItemDataByID(vv)
                             local mountName = C_MountJournal.GetMountFromItem(vv)
                             if mountName ~= nil then
                                 load_check = load_check + 1
-                            end
+                            end                            
                         end
                     end
                 end
@@ -132,7 +142,7 @@ end
 function MCL_Load:Toggle()
     -- Check preload status and if false, prevent execution.
     if core.dataLoaded == false then
-        print("Data not loaded yet.")
+        MCL_Load:Init()
         return
     end 
     if core.MCL_MF == nil then
