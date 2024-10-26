@@ -776,7 +776,7 @@ core.mountList[14] = {
 		},
 		TimeWalking = {
 			name = "Timewalking",
-			mounts = {129923, 129922, 87775, 167894, 167895, 133543, 188674, 187595},
+			mounts = {129923, 129922, 87775, 167894, 167895, 133543, 188674, 187595, 231374, 224398, 224399},
 			mountID = {}
 		}
 	}
@@ -796,12 +796,12 @@ core.mountList[15] = {
 		},
 		WowClassic = {
 			name = "WoW Classic",
-			mounts = {"m1444", "m1602"},
+			mounts = {"m1444", "m1602", "m1812"},
 			mountID = {1444, 1602}
 		},
 		anniversary = {
 			name = "WoW Anniversary Mounts",
-			mounts = {172022, 172023, 186469, 208572},
+			mounts = {172022, 172023, 186469, 208572, 228760},
 			mountID = {}
 		},
 		Hearthstone = {
@@ -842,6 +842,10 @@ core.mountList[15] = {
 		PlunderStorm = {
 			name="Plunderstorm",
 			mounts = {"m1259","m994", "m2090"},
+		},
+		ProductPromotion = {
+			name="Product Promotion",
+			mounts = {"m1947", "m1946"}
 		}
 	}	
 }
