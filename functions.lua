@@ -289,9 +289,9 @@ function MCL_functions:initSections()
             end
         end)
         
-        if not success then
-            print("Error in iteration "..i..": "..err)
-        end
+        -- if not success then
+        --     print("Error in iteration "..i..": "..err)
+        -- end
     end    
 
     OverviewStats(core.overview)
