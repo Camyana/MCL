@@ -316,7 +316,7 @@ core.mountList[4] = {
 		},
 		TradingPost = {
 			name = "Trading Post",
-			mounts = {116782, 116665},
+			mounts = {116782, 116665,233019,233020,233023,233354},
 			mountID = {}
 		},
 		RareSpawn = {
@@ -751,7 +751,7 @@ core.mountList[14] = {
 		},
 		LoveAir = {
 			name = "Love is in the Air",
-			mounts = {72146, 50250, 210973},
+			mounts = {72146, 50250, 210973, 232926},
 			mountID = {}
 		},
 		NobleGarden = {
@@ -776,7 +776,12 @@ core.mountList[14] = {
 		},
 		TimeWalking = {
 			name = "Timewalking",
-			mounts = {129923, 129922, 87775, 167894, 167895, 133543, 188674, 187595, 231374, 224398, 224399},
+			mounts = {129923, 129922, 87775, 167894, 167895, 133543, 188674, 187595, 231374, 224398, 224399,234730,232624,205208,234721,234716,234740},
+			mountID = {}
+		},
+		Lunar = {
+			name = "Lunar Festival",
+			mounts = {232901},
 			mountID = {}
 		}
 	}
@@ -801,7 +806,7 @@ core.mountList[15] = {
 		},
 		anniversary = {
 			name = "WoW Anniversary Mounts",
-			mounts = {172022, 172023, 186469, 208572, 228760},
+			mounts = {172022, 172023, 186469, 208572, 228760, 229348},
 			mountID = {}
 		},
 		Hearthstone = {
@@ -841,7 +846,7 @@ core.mountList[15] = {
 		},
 		PlunderStorm = {
 			name="Plunderstorm",
-			mounts = {"m1259","m994", "m2090"},
+			mounts = {"m1259","m994", "m2090",233241,233240,233243,233242},
 		},
 		ProductPromotion = {
 			name="Product Promotion",
@@ -1039,7 +1044,7 @@ core.mountList[19] = {
 		},
 		Achievement = {
 			name = "Achievement",
-			mounts = {223266,224415,226357,223267,223286,223158},
+			mounts = {223266,224415,226357,223267,223286,223158,235515},
 		},
 		Quest = {
 			name = "Quest",
@@ -1064,10 +1069,13 @@ core.mountList[19] = {
 		Zone = {
 			name = "Zone",
 			mounts = {223269, 223318},
-		},			
+		},
+		SirenIsland = {
+			name = "Siren Island",
+			mounts = {232639, 233058, 233489, 232991}
+		}			
 	}
 }
-
 core.sectionNames[11] = {
 	name = "Vanilla",
 	mounts = core.mountList[9],
