@@ -1181,3 +1181,6 @@ core.sectionNames[21] = {
 	mounts = {},
 	icon = "Interface\\AddOns\\MCL\\icons\\mcl.blp",	
 }
+core.regionalFilter = {
+	['CN'] = {210077},
+}
