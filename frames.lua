@@ -15,6 +15,8 @@ local main_frame_height = 640
 
 local r,g,b,a
 
+local L = LibStub("AceLocale-3.0"):GetLocale("MCL")
+
 
 local function ScrollFrame_OnMouseWheel(self, delta)
 	local newValue = self:GetVerticalScroll() - (delta * 50);
@@ -144,7 +146,7 @@ function MCL_frames:SetTabs()
         tab.title = tab:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         tab.title:SetPoint("LEFT", 0, 0)       
 
-		tab.title:SetText(tostring(v.name));
+		tab.title:SetText(tostring(L[v.name]));
 		if v.icon ~= nil then
 			tab.icon = CreateFrame("Frame", nil, tab);
 			tab.icon:SetSize(32, 32)
@@ -165,7 +167,7 @@ function MCL_frames:SetTabs()
 
 		table.insert(contents, tab.content);
 
-		if tab.title:GetText() == "Overview" then
+		if tab.title:GetText() == L["Overview"] then
 			tab:SetPoint("TOPLEFT", tabFrame, "TOPLEFT", 0, 20);
 		elseif (i == 1) or tab.title:GetText() == "Overview" then
 			tab:SetPoint("TOPLEFT", tabFrame, "TOPLEFT", 0, -10);
@@ -239,7 +241,7 @@ function MCL_frames:createContentFrame(relativeFrame, title)
     frame:SetBackdropColor(0, 1, 0)
 	frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	frame.title:SetPoint("LEFT", 0, 0)
-	frame.title:SetText(title)
+	frame.title:SetText(L[title])
 
 
 	if title ~= "Pinned" then
@@ -281,7 +283,14 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
 			first = false
 			frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 			frame.title:SetPoint("TOPLEFT", 0, 0)
-			frame.title:SetText(v.name)
+			local localizedName = L[v.name]
+			if localizedName then
+				frame.title:SetText(localizedName)
+			else
+				-- Handle missing translation (e.g., use v.name as a fallback)
+				frame.title:SetText(v.name)
+				print("Warning: Missing translation for " .. v.name)
+			end			
 			
 			local pBar = core.Frames:progressBar(frame)
 			pBar:SetWidth(400)
@@ -368,10 +377,17 @@ function MCL_frames:createCategoryFrame(set, relativeFrame)
         first = false
         category.title = category:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         category.title:SetPoint("TOPLEFT", 0, 0)
-		category.title:SetText(v.name)
+		local localizedName = L[v.name]
+		if localizedName then
+			category.title:SetText(localizedName)
+		else
+			-- Handle missing translation (e.g., use v.name as a fallback)
+			category.title:SetText(v.name)
+			print("Warning: Missing translation for " .. v.name)
+		end
 
 		category.section = relativeFrame.title:GetText()
-		category.category = v.name
+		category.category = localizedName
 
         local pBar = core.Frames:progressBar(category) 
 		local overflow = core.Function:CreateMountsForCategory(v.mounts, category, frame_size, relativeFrame, category, false, false)

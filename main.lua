@@ -12,12 +12,12 @@ local init_load = true
 local load_check = 0
 local region = GetCVar('portal')
 
+
 -- * -------------------------------------------------
 -- * Initialise Database
 -- * Cycles through data.lua, checks if in game mount journal has an entry for mount. Restarts function if mount does is not loaded yet.
 -- * Function is designed to check if the ingame mount journal has loaded correctly before loading our own database.
 -- * -----------------------------------------------
-
 
 function IsRegionalFiltered(id)
     if core.regionalFilter[region] ~= nil then
