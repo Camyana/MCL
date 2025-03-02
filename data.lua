@@ -1190,6 +1190,10 @@ core.sectionNames[21] = {
 	icon = "Interface\\AddOns\\MCL\\icons\\mcl.blp",	
 }
 
+core.regionalFilter = {
+	['CN'] = {210077},
+}
+
 -- Mounts not currently in game?
 
 -- 229945 - Busted - https://www.wowhead.com/item=229945/thunderdrum-misfire

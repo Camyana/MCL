@@ -10,6 +10,7 @@ core.Main = {};
 local MCL_Load = core.Main;
 local init_load = true
 local load_check = 0
+local region = GetCVar('portal')
 
 -- * -------------------------------------------------
 -- * Initialise Database
@@ -17,6 +18,17 @@ local load_check = 0
 -- * Function is designed to check if the ingame mount journal has loaded correctly before loading our own database.
 -- * -----------------------------------------------
 
+
+function IsRegionalFiltered(id)
+    if core.regionalFilter[region] ~= nil then
+        for k, v in pairs(core.regionalFilter[region]) do
+            if v == id then
+                return true
+            end
+        end
+    end
+    return false
+end
 
 function CountMounts()
     core.mountList = core.mountList or {}
@@ -73,6 +85,25 @@ local function InitMounts()
                                 load_check = load_check + 1
                             end                            
                         end
+                        if not IsRegionalFiltered(vv) then
+                            if not string.match(vv, "^m") then
+                                totalMountCount = totalMountCount + 1
+                                -- local mountName = C_MountJournal.GetMountFromItem(vv)
+                                -- if mountName ~= nil then
+                                --     load_check = load_check + 1
+                                -- else
+                                --     local mountName = C_Item.RequestLoadItemDataByID(vv)
+                                --     if mountName ~= nil then
+                                --         load_check = load_check + 1
+                                --     end
+                                -- end
+                                C_Item.RequestLoadItemDataByID(vv)
+                                local mountName = C_MountJournal.GetMountFromItem(vv)
+                                if mountName ~= nil then
+                                    load_check = load_check + 1
+                                end                            
+                            end
+                        end 
                     end
                 end
             end
