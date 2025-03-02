@@ -929,32 +929,33 @@ end
 
 function MCL_functions:UpdateCollection()
     clearOverviewStats()
-    core.MCL_MF.Bg:SetVertexColor(0,0,0,MCL_SETTINGS.opacity)
+    core.MCL_MF.Bg:SetVertexColor(0, 0, 0, MCL_SETTINGS.opacity)
     core.total = 0
     core.collected = 0
-    for k,v in pairs(core.mounts) do
+
+    -- Count mounts from core.mounts
+    for k, v in pairs(core.mounts) do
+        local mountID = v.id
         core.total = core.total + 1
-        if IsMountCollected(v.id) then
-            table.insert(core.mountCheck, v.id)
+        if IsMountCollected(mountID) then
+            table.insert(core.mountCheck, mountID)
             UpdateBackground(v.frame)
             core.collected = core.collected + 1
-            local pin = false
-            local pin_count = table.getn(MCL_PINNED)
-            if pin_count ~= nil then                     
-                for i=1, pin_count do                      
-                    if MCL_PINNED[i].mountID == "m"..v.frame.mountID then
-                        table.remove(MCL_PINNED, i)
-                    end
+            local pin_count = table.getn(MCL_PINNED) or 0
+            for i = 1, pin_count do
+                if MCL_PINNED[i].mountID == "m"..v.frame.mountID then
+                    table.remove(MCL_PINNED, i)
+                    break
                 end
             end
-            UpdatePin(v.frame)                
+            UpdatePin(v.frame)
             local index = 0
-            for kk,vv in pairs(core.mountFrames[1]) do
+            for kk, vv in pairs(core.mountFrames[1] or {}) do
                 index = index + 1
                 if tostring(vv.mountID) == tostring(v.frame.mountID) then
                     local f = core.mountFrames[1][index]
-                    table.remove(core.mountFrames[1],  index)
-                    for kkk,vvv in ipairs(core.mountFrames[1]) do
+                    table.remove(core.mountFrames[1], index)
+                    for kkk, vvv in ipairs(core.mountFrames[1]) do
                         if kkk == 1 then
                             vvv:SetParent(_G["PinnedFrame"])
                         else
@@ -962,45 +963,49 @@ function MCL_functions:UpdateCollection()
                         end
                     end
                     f:Hide()
+                    break
                 end
-            end            
-
+            end
         else
             UpdatePin(v.frame)
         end
     end
-    for k,v in pairs(core.stats) do
+
+    -- Update section stats with validation
+    for k, v in pairs(core.stats) do
         local section_total = 0
         local section_collected = 0
         local section_name
-        -- if (type(v) == "table") then
-        for kk,vv in pairs(v) do
+        for kk, vv in pairs(v) do
             local collected = 0
             local total = 0
-            local isCollected
-
-            if (type(vv) == "table") then
+            if type(vv) == "table" then
                 if vv["mounts"] then
                     for kkk, vvv in pairs(vv.mounts) do
                         local faction, faction_specific = IsMountFactionSpecific(vvv)
                         if faction then
-                            if faction == 1 then
-                                faction = "Alliance"
-                            else
-                                faction = "Horde"
-                            end
+                            if faction == 1 then faction = "Alliance" else faction = "Horde" end
                         end
-                        if (faction_specific == false) or (faction_specific == true and faction == UnitFactionGroup("player")) then                     
-                            if string.sub(vvv, 1, 1 ) == "m" then
-                                isCollected = IsMountCollected(string.sub(vvv, 2, -1))
+                        if (faction_specific == false) or (faction_specific == true and faction == UnitFactionGroup("player")) then
+                            local mountID
+                            if string.sub(vvv, 1, 1) == "m" then
+                                mountID = tonumber(string.sub(vvv, 2, -1))
                             else
-                                local id = core.Function:GetMountID(vvv)
-                                isCollected = IsMountCollected(id)
+                                mountID = C_MountJournal.GetMountFromItem(vvv)
                             end
-                            if isCollected then
-                                collected = collected +1
+                            if mountID then
+                                local isCollected = IsMountCollected(mountID)
+                                if isCollected == nil then
+                                    print("MCL: Warning - Mount ID", mountID, "not fully loaded for", vvv, "in section", vv.rel and vv.rel.name or "unknown")
+                                    C_Item.RequestLoadItemDataByID(vvv) -- Force load if item-based
+                                end
+                                total = total + 1
+                                if isCollected then
+                                    collected = collected + 1
+                                end
+                            else
+                                print("MCL: Warning - No mount ID for", vvv, "in section", vv.rel and vv.rel.name or "unknown")
                             end
-                            total = total +1
                         end
                     end
                     vv.pBar = UpdateProgressBar(vv.pBar, total, collected)
@@ -1010,18 +1015,24 @@ function MCL_functions:UpdateCollection()
                     vv.pBar = UpdateProgressBar(vv.pBar, section_total, section_collected)
                 end
                 if vv["rel"] then
-                    for q,e in pairs(core.overviewFrames) do
-                        if e.name == vv.rel.title:GetText() then                       
+                    for q, e in pairs(core.overviewFrames) do
+                        if e.name == vv.rel.name then
                             e.frame = UpdateProgressBar(e.frame, section_total, section_collected)
-                            section_name = vv.rel.title:GetText()
+                            section_name = e.name
                         end
-                    end                     
-                end               
-            end            
+                    end
+                end
+            end
         end
         if section_name == "Unobtainable" then
             core.total = core.total + section_collected - section_total
         end
+    end
+
+    -- Validate and update overall progress
+    if core.total < 0 then
+        print("MCL: Error - core.total is negative:", core.total, "Resetting to 0")
+        core.total = 0
     end
     core.overview.pBar = UpdateProgressBar(core.overview.pBar, core.total, core.collected)
 end
