@@ -68,23 +68,6 @@ local function InitMounts()
             if (type(j) == "table") then
                 for k,v in pairs(j) do
                     for kk,vv in pairs(v.mounts) do
-                        if not string.match(vv, "^m") then
-                            totalMountCount = totalMountCount + 1
-                            -- local mountName = C_MountJournal.GetMountFromItem(vv)
-                            -- if mountName ~= nil then
-                            --     load_check = load_check + 1
-                            -- else
-                            --     local mountName = C_Item.RequestLoadItemDataByID(vv)
-                            --     if mountName ~= nil then
-                            --         load_check = load_check + 1
-                            --     end
-                            -- end
-                            C_Item.RequestLoadItemDataByID(vv)
-                            local mountName = C_MountJournal.GetMountFromItem(vv)
-                            if mountName ~= nil then
-                                load_check = load_check + 1
-                            end                            
-                        end
                         if not IsRegionalFiltered(vv) then
                             if not string.match(vv, "^m") then
                                 totalMountCount = totalMountCount + 1
@@ -103,7 +86,24 @@ local function InitMounts()
                                     load_check = load_check + 1
                                 end                            
                             end
-                        end 
+                        end                        
+                        if not string.match(vv, "^m") then
+                            totalMountCount = totalMountCount + 1
+                            -- local mountName = C_MountJournal.GetMountFromItem(vv)
+                            -- if mountName ~= nil then
+                            --     load_check = load_check + 1
+                            -- else
+                            --     local mountName = C_Item.RequestLoadItemDataByID(vv)
+                            --     if mountName ~= nil then
+                            --         load_check = load_check + 1
+                            --     end
+                            -- end
+                            C_Item.RequestLoadItemDataByID(vv)
+                            local mountName = C_MountJournal.GetMountFromItem(vv)
+                            if mountName ~= nil then
+                                load_check = load_check + 1
+                            end                            
+                        end
                     end
                 end
             end
