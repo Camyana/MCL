@@ -169,7 +169,7 @@ function MCL_frames:SetTabs()
 
 		if tab.title:GetText() == L["Overview"] then
 			tab:SetPoint("TOPLEFT", tabFrame, "TOPLEFT", 0, 20);
-		elseif (i == 1) or tab.title:GetText() == "Overview" then
+		elseif (i == 1) or tab.title:GetText() == L["Overview"] then
 			tab:SetPoint("TOPLEFT", tabFrame, "TOPLEFT", 0, -10);
 		else
 			tab:SetPoint("BOTTOM", _G[frameName.."Tab"..(i-1)], "BOTTOM", 0, -30);
