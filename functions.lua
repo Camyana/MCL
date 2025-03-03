@@ -2,6 +2,7 @@ local MCL, core = ...;
 
 core.Function = {};
 local MCL_functions = core.Function;
+local L = core.L
 
 core.mounts = {}
 core.stats= {}
@@ -274,7 +275,7 @@ function MCL_functions:initSections()
                         table.insert(core.mountFrames, mountFrame)
                         category.info = category:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
                         category.info:SetPoint("TOP", 450, -0)
-                        category.info:SetText("Ctrl + Right Click to pin uncollected mounts")
+                        category.info:SetText(core.L["Ctrl + Right Click to pin uncollected mounts"])
                     end                   
                     -- ! Create Frame for each category
                     if v.mounts then
@@ -1024,7 +1025,7 @@ function MCL_functions:UpdateCollection()
                 end
             end
         end
-        if section_name == "Unobtainable" then
+        if section_name == core.L["Unobtainable"] then
             core.total = core.total + section_collected - section_total
         end
     end
@@ -1120,19 +1121,19 @@ function MCL_functions:AddonSettings()
     core.media = media
     local options = {
         type = "group",
-        name = "Mount Collection Log Settings",
+        name = core.L["Mount Collection Log Settings"],
         order = 1,
         args = {
             headerone = {             
                 order = 1,
-                name = "Main Window Options",
+                name = core.L["Main Window Options"],
                 type = "header",
                 width = "full",
             },            
             mainWindow = {             
                 order = 2,
-                name = "Main Window Opacity",
-                desc = "Changes the opacity of the main window",
+                name = core.L["Main Window Opacity"],
+                desc = core.L["Changes the opacity of the main window"],
                 type = "range",
                 width = "normal",
                 min = 0,
@@ -1153,8 +1154,8 @@ function MCL_functions:AddonSettings()
             },
             defaultOpacity = {
                 order = 3,
-                name = "Reset Opacity",
-                desc = "Reset to default opacity",
+                name = core.L["Reset Opacity"],
+                desc = core.L["Reset to default opacity"],
                 width = "normal",
                 type = "execute",
                 func = function()
@@ -1163,16 +1164,16 @@ function MCL_functions:AddonSettings()
             },              
             headertwo = {             
                 order = 4,
-                name = "Progress Bar Settings",
+                name = core.L["Progress Bar Settings"],
                 type = "header",
                 width = "normal",
             },             
             texture = {              
                 order = 5,
                 type = "select",
-                name = "Statusbar Texture",
+                name = core.L["Statusbar Texture"],
                 width = "normal",
-                desc = "Set the statusbar texture.",
+                desc = core.L["Set the statusbar texture."],
                 values = media:HashTable("statusbar"),
                 -- Removed dialogControl = "LSM30_Statusbar",
                 set = function(info, val) MCL_SETTINGS.statusBarTexture = val; core.Function:updateFromSettings("texture"); end,
@@ -1188,8 +1189,8 @@ function MCL_functions:AddonSettings()
             },            
             defaultTexture = {
                 order = 6,
-                name = "Reset Texture",
-                desc = "Reset to default texture",
+                name = core.L["Reset Texture"],
+                desc = core.L["Reset to default texture"],
                 width = "normal",
                 type = "execute",
                 func = function()
@@ -1213,9 +1214,9 @@ function MCL_functions:AddonSettings()
             progressColorLow = {
                 order = 7,
                 type = "color",
-                name = "Progress Bar (<33%)",
+                name = core.L["Progress Bar (<33%)"],
                 width = "normal",
-                desc = "Set the progress bar colors to be shown when the percentage collected is below 33%",
+                desc = core.L["Set the progress bar colors to be shown when the percentage collected is below 33%"],
                 set = function(info, r, g, b) MCL_SETTINGS.progressColors.low.r = r; MCL_SETTINGS.progressColors.low.g = g; MCL_SETTINGS.progressColors.low.b = b; core.Function:updateFromSettings("progressColor"); end,
                 get = function(info) return MCL_SETTINGS.progressColors.low.r, MCL_SETTINGS.progressColors.low.g, MCL_SETTINGS.progressColors.low.b; end,                
             },
@@ -1229,9 +1230,9 @@ function MCL_functions:AddonSettings()
             progressColorMedium = {
                 order = 8,
                 type = "color",
-                name = "Progress Bar (<66%)",
+                name = core.L["Progress Bar (<66%)"],
                 width = "normal",
-                desc = "Set the progress bar colors to be shown when the percentage collected is below 66%",
+                desc = core.L["Set the progress bar colors to be shown when the percentage collected is below 66%"],
                 set = function(info, r, g, b) MCL_SETTINGS.progressColors.medium.r = r; MCL_SETTINGS.progressColors.medium.g = g; MCL_SETTINGS.progressColors.medium.b = b; core.Function:updateFromSettings("progressColor"); end,
                 get = function(info) return MCL_SETTINGS.progressColors.medium.r, MCL_SETTINGS.progressColors.medium.g, MCL_SETTINGS.progressColors.medium.b; end,                
             },
@@ -1245,9 +1246,9 @@ function MCL_functions:AddonSettings()
             progressColorHigh = {
                 order = 9,
                 type = "color",
-                name = "Progress Bar (<100%)",
+                name = core.L["Progress Bar (<100%)"],
                 width = "normal",
-                desc = "Set the progress bar colors to be shown when the percentage collected is below 100%",
+                desc = core.L["Set the progress bar colors to be shown when the percentage collected is below 100%"],
                 set = function(info, r, g, b) MCL_SETTINGS.progressColors.high.r = r; MCL_SETTINGS.progressColors.high.g = g; MCL_SETTINGS.progressColors.high.b = b; core.Function:updateFromSettings("progressColor"); end,
                 get = function(info) return MCL_SETTINGS.progressColors.high.r, MCL_SETTINGS.progressColors.high.g, MCL_SETTINGS.progressColors.high.b; end,                
             },
@@ -1261,16 +1262,16 @@ function MCL_functions:AddonSettings()
             progressColorComplete = {
                 order = 10,
                 type = "color",
-                name = "Progress Bar (100%)",
+                name = core.L["Progress Bar (100%)"],
                 width = "normal",
-                desc = "Set the progress bar colors to be shown when all mounts are collected",
+                desc = core.L["Set the progress bar colors to be shown when all mounts are collected"],
                 set = function(info, r, g, b) MCL_SETTINGS.progressColors.complete.r = r; MCL_SETTINGS.progressColors.complete.g = g; MCL_SETTINGS.progressColors.complete.b = b; core.Function:updateFromSettings("progressColor"); end,
                 get = function(info) return MCL_SETTINGS.progressColors.complete.r, MCL_SETTINGS.progressColors.complete.g, MCL_SETTINGS.progressColors.complete.b; end,                
             },
             defaultColor = {
                 order = 11,
-                name = "Reset Colors",
-                desc = "Reset to default colors",
+                name = core.L["Reset Colors"],
+                desc = core.L["Reset to default colors"],
                 width = "normal",
                 type = "execute",
                 func = function()
@@ -1279,14 +1280,14 @@ function MCL_functions:AddonSettings()
             },              
             headerthree = {             
                 order = 12,
-                name = "Unobtainable Settings",
+                name = core.L["Unobtainable Settings"],
                 type = "header",
                 width = "full",
             },            
             unobtainable = {             
                 order = 13,
-                name = "Hide Unobtainable from overview",
-                desc = "Hide Unobtainable mounts from the overview.",
+                name = core.L["Hide Unobtainable from overview"],
+                desc = core.L["Hide Unobtainable mounts from the overview."],
                 type = "toggle",
                 width = "full",
                 set = function(info, val) MCL_SETTINGS.unobtainable = val; core.Function:updateFromSettings("unobtainable", val); end,
@@ -1294,8 +1295,8 @@ function MCL_functions:AddonSettings()
             },
             minimapIconToggle = {
                 order = 14,
-                name = "Show Minimap Icon",
-                desc = "Toggle the display of the Minimap Icon.",
+                name = core.L["Show Minimap Icon"],
+                desc = core.L["Toggle the display of the Minimap Icon."],
                 type = "toggle",
                 width = "full",
                 set = function(info, val)
@@ -1311,15 +1312,15 @@ function MCL_functions:AddonSettings()
                 end,
             },            
             headerfour = {             
-                order = 14,
-                name = "Reset Settings",
+                order = 15,
+                name = core.L["Reset Settings"],
                 type = "header",
                 width = "full",
             },             
             defaults = {
-                order = 15,
-                name = "Reset Settings",
-                desc = "Reset to default settings",
+                order = 16,
+                name = core.L["Reset Settings"],
+                desc = core.L["Reset to default settings"],
                 width = "normal",
                 type = "execute",
                 func = function()

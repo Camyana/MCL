@@ -15,7 +15,7 @@ local main_frame_height = 640
 
 local r,g,b,a
 
-local L = LibStub("AceLocale-3.0"):GetLocale("MCL")
+local L = core.L
 
 
 local function ScrollFrame_OnMouseWheel(self, delta)

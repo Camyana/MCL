@@ -10,9 +10,10 @@
 ## IconTexture: Interface\AddOns\MCL\mcl-logo-32
 ## AddonCompartmentFunc: MCL_OnAddonCompartmentClick
 
-locales\enUS.lua
-locales\enCN.lua
 libs\load_libs.xml
+locales\MCL_enUS.lua
+locales\MCL_zhCN.lua
+locales.lua
 button.xml
 frame.xml
 data.lua
