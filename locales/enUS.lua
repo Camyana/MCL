@@ -1,4 +1,4 @@
-local L = LibStub("AceLocale-3.0"):NewLocale ("MCL", "enCN", true) 
+local L = LibStub("AceLocale-3.0"):NewLocale ("MCL", "enUS", true)
 if not L then return end 
 
 --------------------------------------------------------------------------------------------------------------------------------------------
@@ -169,3 +169,34 @@ L["World Events"] = "World Events"
 L["WorldEvents"] = "WorldEvents"
 L["Wrath of the Lich King"] = "Wrath of the Lich King"
 L["Zone"] = "Zone"
+
+------ setting panel ------
+L["Ctrl + Right Click to pin uncollected mounts"] = "Ctrl + Right Click to pin uncollected mounts"
+L["Mount Collection Log Settings"] = "Mount Collection Log Settings"
+L["Main Window Options"] = "Main Window Options"
+L["Main Window Opacity"] = "Main Window Opacity"
+L["Changes the opacity of the main window"] = "Changes the opacity of the main window"
+L["Reset Opacity"] = "Reset Opacity"
+L["Reset to default opacity"] = "Reset to default opacity"
+L["Progress Bar Settings"] = "Progress Bar Settings"
+L["Statusbar Texture"] = "Statusbar Texture"
+L["Set the statusbar texture."] = "Set the statusbar texture."
+L["Reset Texture"] = "Reset Texture"
+L["Reset to default texture"] = "Reset to default texture"
+L["Progress Bar (<33%)"] = "Progress Bar (<33%)"
+L["Set the progress bar colors to be shown when the percentage collected is below 33%"] = "Set the progress bar colors to be shown when the percentage collected is below 33%"
+L["Progress Bar (<66%)"] = "Progress Bar (<66%)"
+L["Set the progress bar colors to be shown when the percentage collected is below 66%"] = "Set the progress bar colors to be shown when the percentage collected is below 66%"
+L["Progress Bar (<100%)"] = "Progress Bar (<100%)"
+L["Set the progress bar colors to be shown when the percentage collected is below 100%"] = "Set the progress bar colors to be shown when the percentage collected is below 100%"
+L["Progress Bar (100%)"] = "Progress Bar (100%)"
+L["Set the progress bar colors to be shown when all mounts are collected"] = "Set the progress bar colors to be shown when all mounts are collected"
+L["Reset Colors"] = "Reset Colors"
+L["Reset to default colors"] = "Reset to default colors"
+L["Unobtainable Settings"] = "Unobtainable Settings"
+L["Hide Unobtainable from overview"] = "Hide Unobtainable from overview"
+L["Hide Unobtainable mounts from the overview."] = "Hide Unobtainable mounts from the overview."
+L["Show Minimap Icon"] = "Show Minimap Icon"
+L["Toggle the display of the Minimap Icon."] = "Toggle the display of the Minimap Icon."
+L["Reset Settings"] = "Reset Settings"
+L["Reset to default settings"] = "Reset to default settings"

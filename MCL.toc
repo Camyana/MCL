@@ -11,7 +11,7 @@
 ## AddonCompartmentFunc: MCL_OnAddonCompartmentClick
 
 locales\enUS.lua
-locales\enCN.lua
+locales\zhCN.lua
 libs\load_libs.xml
 button.xml
 frame.xml
