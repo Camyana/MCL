@@ -168,6 +168,9 @@ if L then
     L["WorldEvents"] = "WorldEvents"
     L["Wrath of the Lich King"] = "Wrath of the Lich King"
     L["Zone"] = "Zone"
+    L["Incursion"] = "Incursion"
+    L["Horrific Visions"] = "Horrific Visions"
+    L["Ashran"] = "Ashran"
 
     ------ setting panel ------
     L["Ctrl + Right Click to pin uncollected mounts"] = "Ctrl + Right Click to pin uncollected mounts"
