@@ -1,1 +1,9 @@
 .vscode
+mount_report.py
+mount_missing_report.py
+.venv
+mounts_live.json
+mounts_to_add.json
+add_mounts_to_data_lua.py
+missing_mounts.html
+/__pycache__
