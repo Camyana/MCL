@@ -1,13 +1,13 @@
 -- * ------------------------------------------------------
 -- *  Namespaces
 -- * ------------------------------------------------------
-local MCL, core = ...;
+local MCL, MCLCore = ...;
 
 -- * ------------------------------------------------------
 -- * Variables
 -- * ------------------------------------------------------
-core.Main = {};
-local MCL_Load = core.Main;
+MCLCore.Main = {};
+local MCL_Load = MCLCore.Main;
 local init_load = true
 local load_check = 0
 local region = GetCVar('portal')
@@ -20,8 +20,8 @@ local region = GetCVar('portal')
 -- * -----------------------------------------------
 
 function IsRegionalFiltered(id)
-    if core.regionalFilter[region] ~= nil then
-        for k, v in pairs(core.regionalFilter[region]) do
+    if MCLCore.regionalFilter[region] ~= nil then
+        for k, v in pairs(MCLCore.regionalFilter[region]) do
             if v == id then
                 return true
             end
@@ -31,9 +31,9 @@ function IsRegionalFiltered(id)
 end
 
 function CountMounts()
-    core.mountList = core.mountList or {}
+    MCLCore.mountList = MCLCore.mountList or {}
     local count = 0
-    for b, n in pairs(core.mountList) do
+    for b, n in pairs(MCLCore.mountList) do
         if type(n) == "table" then
             for h, j in pairs(n) do
                 if type(j) == "table" then
@@ -63,7 +63,7 @@ local totalMountCount = CountMounts()
 local function InitMounts()
     load_check = 0
     totalMountCount = 0
-    for b,n in pairs(core.mountList) do
+    for b,n in pairs(MCLCore.mountList) do
         for h,j in pairs(n) do
             if (type(j) == "table") then
                 for k,v in pairs(j) do
@@ -91,15 +91,13 @@ end
 -- * -----------------------------------------------------
 
 
-core.dataLoaded = false
+MCLCore.dataLoaded = false
 
 function MCL_Load:PreLoad()      
     if load_check >= totalMountCount then
-        -- print("Preload passed:", "totalMountCount", totalMountCount, "load_check", load_check)
-        core.dataLoaded = true
+        MCLCore.dataLoaded = true
         return true
     else   
-        -- print("Preload ongoing:", "totalMountCount", totalMountCount, "load_check", load_check)
         InitMounts()         
         return false
     end
@@ -114,12 +112,12 @@ function MCL_Load:Init(force)
         local retries = 0
         if MCL_Load:PreLoad() then
             -- Initialization steps
-            if core.MCL_MF == nil then
-                core.MCL_MF = core.Frames:CreateMainFrame()
-                core.MCL_MF:SetShown(false)
-                core.Function:initSections()
+            if MCLCore.MCL_MF == nil then
+                MCLCore.MCL_MF = MCLCore.Frames:CreateMainFrame()
+                MCLCore.MCL_MF:SetShown(false)
+                MCLCore.Function:initSections()
             end
-            core.Function:UpdateCollection()
+            MCLCore.Function:UpdateCollection()
             init_load = false -- Ensure that the initialization does not repeat unnecessarily.
         else
             retries = retries + 1
@@ -133,11 +131,11 @@ function MCL_Load:Init(force)
     -- Force reinitialization if specifically requested
     if force then
         load_check = 0
-        core.dataLoaded = false
+        MCLCore.dataLoaded = false
     end
 
     -- Check if we need to attempt initialization
-    if not core.dataLoaded then
+    if not MCLCore.dataLoaded then
         init_load = true
         repeatCheck()
     end
@@ -146,16 +144,16 @@ end
 -- Toggle function
 function MCL_Load:Toggle()
     -- Check preload status and if false, prevent execution.
-    if core.dataLoaded == false then
+    if MCLCore.dataLoaded == false then
         MCL_Load:Init()
         return
     end 
-    if core.MCL_MF == nil then
+    if MCLCore.MCL_MF == nil then
         return -- Immune to function calls before the initialization process is complete, as the frame doesn't exist yet.
     else
-        core.MCL_MF:SetShown(not core.MCL_MF:IsShown()) -- The addon's frame exists and can be toggled.
+        MCLCore.MCL_MF:SetShown(not MCLCore.MCL_MF:IsShown()) -- The addon's frame exists and can be toggled.
     end
-    core.Function:UpdateCollection()
+    MCLCore.Function:UpdateCollection()
 end
 
 local f = CreateFrame("Frame")
@@ -176,7 +174,7 @@ local function onevent(self, event, arg1, ...)
 	    if not C_AddOns.IsAddOnLoaded("Blizzard_Collections") then
 	        C_AddOns.LoadAddOn("Blizzard_Collections")
 	    end
-        core.Function:AddonSettings()
+        MCLCore.Function:AddonSettings()
         
         -- Initiate the addon when the required addon is loaded
         MCL_Load:Init()

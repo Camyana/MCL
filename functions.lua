@@ -1,16 +1,16 @@
-local MCL, core = ...;
+local MCL, MCLcore = ...;
 
-core.Function = {};
-local MCL_functions = core.Function;
-local L = core.L
+MCLcore.Function = {};
+local MCL_functions = MCLcore.Function;
+local L = MCLcore.L
 
-core.mounts = {}
-core.stats= {}
-core.overviewStats = {}
-core.overviewFrames = {}
-core.mountFrames = {}
-core.mountCheck = {}
-core.addon_name = "Mount Collection Log | MCL"
+MCLcore.mounts = {}
+MCLcore.stats= {}
+MCLcore.overviewStats = {}
+MCLcore.overviewFrames = {}
+MCLcore.mountFrames = {}
+MCLcore.mountCheck = {}
+MCLcore.addon_name = "Mount Collection Log | MCL"
 
 
 function MCL_functions:getFaction()
@@ -65,6 +65,7 @@ function MCL_functions:resetToDefault(setting)
     if setting == nil then
         MCL_SETTINGS = {}        
         MCL_SETTINGS.unobtainable = false
+        MCL_SETTINGS.hideCollectedMounts = false
     end
     if setting == "Opacity" or setting == nil then
         MCL_SETTINGS.opacity = 0.95
@@ -100,11 +101,13 @@ function MCL_functions:resetToDefault(setting)
             },
         }
     end
-
+    if setting == "HideCollectedMounts" or setting == nil then
+        MCL_SETTINGS.hideCollectedMounts = false
+    end
 end
 
 if MCL_SETTINGS == nil then
-    core.Function:resetToDefault()
+    MCLcore.Function:resetToDefault()
 end
 
 -- Tables Mounts into Global List
@@ -115,7 +118,7 @@ function MCL_functions:TableMounts(id, frame, section, category)
         section =  section,
         category = category,
     }
-    table.insert(core.mounts, mount)
+    table.insert(MCLcore.mounts, mount)
 end
 
 function MCL_functions:simplearmoryLink()
@@ -218,7 +221,7 @@ function KethoEditBox_Show(text)
         KethoEditBoxEditBox:SetText(text)
     end
     KethoEditBox:Show()
-    core.MCL_MF:Hide()
+    MCLcore.MCL_MF:Hide()
 end
 
 function MCL_functions:initSections()
@@ -227,16 +230,16 @@ function MCL_functions:initSections()
     -- * --------------------------------
 
     local faction = MCL_functions:getFaction()
-    core.sections = {}
+    MCLcore.sections = {}
 
-    for i, v in ipairs(core.sectionNames) do
+    for i, v in ipairs(MCLcore.sectionNames) do
         local success, err = pcall(function()
             if v.name ~= faction then
                 local t = {
                     name = v.name,
                     icon = v.icon
                 }
-                table.insert(core.sections, t)
+                table.insert(MCLcore.sections, t)
             else
                 -- Skip opposite faction
             end
@@ -247,42 +250,42 @@ function MCL_functions:initSections()
         -- end
     end
 
-    core.MCL_MF_Nav = core.Frames:createNavFrame(core.MCL_MF, 'Sections')
+    MCLcore.MCL_MF_Nav = MCLcore.Frames:createNavFrame(MCLcore.MCL_MF, 'Sections')
 
-    local tabFrames, numTabs = core.Frames:SetTabs() 
+    local tabFrames, numTabs = MCLcore.Frames:SetTabs() 
 
     local function OverviewStats(relativeFrame)
-        core.Frames:createOverviewCategory(core.sections, relativeFrame)
-        -- core.Frames:createCategoryFrame(core.sections, relativeFrame)
+        MCLcore.Frames:createOverviewCategory(MCLcore.sections, relativeFrame)
+        -- MCLcore.Frames:createCategoryFrame(MCLcore.sections, relativeFrame)
     end
 
-    core.sectionFrames = {}
+    MCLcore.sectionFrames = {}
     for i=1, numTabs do
         local success, err = pcall(function()
-            local section_frame = core.Frames:createContentFrame(tabFrames[i], core.sections[i].name)
-            table.insert(core.sectionFrames, section_frame)
+            local section_frame = MCLcore.Frames:createContentFrame(tabFrames[i], MCLcore.sections[i].name)
+            table.insert(MCLcore.sectionFrames, section_frame)
 
-            for ii,v in ipairs(core.sectionNames) do
+            for ii,v in ipairs(MCLcore.sectionNames) do
                 if v.name == "Overview" then
-                    core.overview = section_frame        
-                elseif v.name == core.sections[i].name then
+                    MCLcore.overview = section_frame        
+                elseif v.name == MCLcore.sections[i].name then
                     if v.name == "Pinned" then
                         local category = CreateFrame("Frame", "PinnedFrame", section_frame, "BackdropTemplate");
                         category:SetWidth(60);
                         category:SetHeight(60);
                         category:SetPoint("TOPLEFT", section_frame, "TOPLEFT", 0, 0);
-                        local overflow, mountFrame = core.Function:CreateMountsForCategory(MCL_PINNED, category, 30, tabFrames[i], true, true)
-                        table.insert(core.mountFrames, mountFrame)
+                        local overflow, mountFrame = MCLcore.Function:CreateMountsForCategory(MCL_PINNED, category, 30, tabFrames[i], true, true)
+                        table.insert(MCLcore.mountFrames, mountFrame)
                         category.info = category:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
                         category.info:SetPoint("TOP", 450, -0)
-                        category.info:SetText(core.L["Ctrl + Right Click to pin uncollected mounts"])
+                        category.info:SetText(MCLcore.L["Ctrl + Right Click to pin uncollected mounts"])
                     end                   
                     -- ! Create Frame for each category
                     if v.mounts then
                         for k,val in pairs(v.mounts) do
                             if k == 'categories' then
-                                local section = core.Frames:createCategoryFrame(val, section_frame)
-                                table.insert(core.stats, section)
+                                local section = MCLcore.Frames:createCategoryFrame(val, section_frame)
+                                table.insert(MCLcore.stats, section)
                             end
                         end
                     end 
@@ -295,7 +298,7 @@ function MCL_functions:initSections()
         -- end
     end    
 
-    OverviewStats(core.overview)
+    OverviewStats(MCLcore.overview)
 
 
 end
@@ -320,7 +323,7 @@ function MCL_functions:GetCollectedMounts()
     end
     for k,v in pairs(mounts) do
         local exists = false
-        for kk,vv in pairs(core.mountCheck) do
+        for kk,vv in pairs(MCLcore.mountCheck) do
             if v == vv then
                 exists = true
             end
@@ -394,19 +397,19 @@ function MCL_functions:SetMouseClickFunctionalityPin(frame, mountID, mountName, 
                                           
                     table.remove(MCL_PINNED, pin)
                     local index = 0
-                    for k,v in pairs(core.mountFrames[1]) do
+                    for k,v in pairs(MCLcore.mountFrames[1]) do
                         index = index + 1
                         if tostring(v.mountID) == tostring(mountID) then
-                            table.remove(core.mountFrames[1],  index)
-                            for kk,vv in ipairs(core.mountFrames[1]) do
+                            table.remove(MCLcore.mountFrames[1],  index)
+                            for kk,vv in ipairs(MCLcore.mountFrames[1]) do
                                 if kk == 1 then
                                     vv:SetParent(_G["PinnedFrame"])
                                 else
-                                    vv:SetParent(core.mountFrames[1][kk-1])
+                                    vv:SetParent(MCLcore.mountFrames[1][kk-1])
                                 end
                             end
                             frame:Hide()
-                            core.Function:UpdateCollection()
+                            MCLcore.Function:UpdateCollection()
                         end
                     end
                 end
@@ -445,17 +448,17 @@ function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, ite
                         frame.pin:SetAlpha(0)
                         table.remove(MCL_PINNED, pin)
                         local index = 0
-                        for k,v in pairs(core.mountFrames[1]) do
+                        for k,v in pairs(MCLcore.mountFrames[1]) do
                             index = index + 1
                             if tostring(v.mountID) == tostring(mountID) then
-                                core.mountFrames[1][index]:Hide()                                
-                                table.remove(core.mountFrames[1],  index)
-                                for kk,vv in ipairs(core.mountFrames[1]) do
+                                MCLcore.mountFrames[1][index]:Hide()                                
+                                table.remove(MCLcore.mountFrames[1],  index)
+                                for kk,vv in ipairs(MCLcore.mountFrames[1]) do
                                     if kk == 1 then
                                         vv:SetParent(_G["PinnedFrame"])
                                         vv:Show()
                                     else
-                                        vv:SetParent(core.mountFrames[1][kk-1])
+                                        vv:SetParent(MCLcore.mountFrames[1][kk-1])
                                         vv:Show()
                                     end
                                 end                                
@@ -473,7 +476,7 @@ function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, ite
                         else
                             MCL_PINNED[pin_count+1] = t
                         end
-                        core.Function:CreatePinnedMount(mountID, frame.category, frame.section)
+                        MCLcore.Function:CreatePinnedMount(mountID, frame.category, frame.section)
 
                     end
                 end
@@ -522,9 +525,9 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
             GameTooltip:Hide()
         end)
         if pin == true then
-            core.Function:SetMouseClickFunctionalityPin(frame, mountID, mountName, itemLink, spellID, isSteadyFlight)
+            MCLcore.Function:SetMouseClickFunctionalityPin(frame, mountID, mountName, itemLink, spellID, isSteadyFlight)
         else
-            core.Function:SetMouseClickFunctionality(frame, mountID, mountName, itemLink, spellID, isSteadyFlight)
+            MCLcore.Function:SetMouseClickFunctionality(frame, mountID, mountName, itemLink, spellID, isSteadyFlight)
         end  
     else
         local item, itemLink = GetItemInfo(id);
@@ -560,9 +563,9 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
                 GameTooltip:Hide()
             end)
             if pin == true then
-                core.Function:SetMouseClickFunctionalityPin(frame, mountID, mountName, itemLink, _, isSteadyFlight)
+                MCLcore.Function:SetMouseClickFunctionalityPin(frame, mountID, mountName, itemLink, _, isSteadyFlight)
             else
-                core.Function:SetMouseClickFunctionality(frame, mountID, mountName, itemLink, _, isSteadyFlight)
+                MCLcore.Function:SetMouseClickFunctionality(frame, mountID, mountName, itemLink, _, isSteadyFlight)
             end
         end
     end
@@ -576,7 +579,7 @@ function MCL_functions:CompareMountJournal()
     local i = 1
     for k,v in pairs(C_MountJournal.GetMountIDs()) do
         mounts[i] = v
-        for kk,vv in pairs(core.mounts) do
+        for kk,vv in pairs(MCLcore.mounts) do
             if vv.id == mounts[i] then
                 mounts[i] = nil
             end
@@ -638,126 +641,132 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
                 faction = "Horde"
             end
         end
-        if (faction_specific == false) or (faction_specific == true and faction == UnitFactionGroup("player")) then
-            if count == 12 then
-                overflow = overflow + frame_size + 10
-            end            
-            local frame = CreateFrame("Button", nil, relativeFrame, "BackdropTemplate");
-            frame:SetWidth(frame_size);
-            frame:SetHeight(frame_size);
-            frame:SetBackdrop({
-                edgeFile = [[Interface\Buttons\WHITE8x8]],
-                edgeSize = frame_size + 2,
-                bgFile = [[Interface\Buttons\WHITE8x8]],              
-            })
-
-            frame.pin = frame:CreateTexture()
-            frame.pin:SetWidth(24)
-            frame.pin:SetHeight(24)
-            frame.pin:SetTexture("Interface\\AddOns\\MCL\\icons\\pin.blp")
-            frame.pin:SetPoint("TOPLEFT", frame, "TOPLEFT", 20,12)
-            frame.pin:SetAlpha(0)
-
-            frame.category = category.category
-            frame.section = category.section
-
-            frame.dragonRidable = isSteadyFlight
-
-
-            frame:SetBackdropBorderColor(1, 0, 0, 0.03)
-            frame:SetBackdropColor(0, 0, 0, MCL_SETTINGS.opacity)
-
-
-            frame.tex = frame:CreateTexture()
-            frame.tex:SetSize(frame_size, frame_size)
-            frame.tex:SetPoint("LEFT")
-
-            if string.sub(val, 1, 1) == "m" then
-                frame.tex:SetTexture(icon)
-            else
-                frame.tex:SetTexture(GetItemIcon(val))
-            end
-        
-            frame.tex:SetVertexColor(0.75, 0.75, 0.75, 0.3);
-
-            frame.mountID = mount_Id
-            frame.itemID = val            
-
-            local pin_check = core.Function:CheckIfPinned("m"..frame.mountID)
-            if pin_check == true then
-                frame.pin:SetAlpha(1)
-            else
-                frame.pin:SetAlpha(0)
-            end              
-
-            if pin then
-                local y = 30
-                if previous_frame == category then
-                    y = 0
-                end
-
-                frame.sectionName = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-                frame.sectionName:SetPoint("LEFT", 650, 0)
-                frame.sectionName:SetText(vv.section)
-
-                frame.categoryName = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-                frame.categoryName:SetPoint("LEFT", 850, 0)
-                frame.categoryName:SetText(vv.category)  
-                
-                frame.mountName = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-                frame.mountName:SetPoint("LEFT", 50, 0)
-                frame.mountName:SetText(mountName)  
-                
-                frame.sourceText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-                frame.sourceText:SetPoint("LEFT", 250, 0)
-                frame.sourceText:SetText(sourceText)  
-                
-                frame.border = frame:CreateLine(nil, "BACKGROUND", nil, 0)
-                frame.border:SetThickness(3)
-                frame.border:SetColorTexture(1, 1, 1, 0.3)
-                frame.border:SetStartPoint("BOTTOMLEFT")
-                frame.border:SetEndPoint("BOTTOMRIGHT")
-                frame:SetWidth(1000)
-                frame:SetHeight(frame.sourceText:GetStringHeight()+20)
-                
+        -- NEW: Hide collected mounts if setting is enabled
+        if MCL_SETTINGS.hideCollectedMounts and IsMountCollected(mount_Id) then
+            -- skip rendering this mount
+        else
+            if (faction_specific == false) or (faction_specific == true and faction == UnitFactionGroup("player")) then
+                if count == 12 then
+                    overflow = overflow + frame_size + 10
+                end            
+                local frame = CreateFrame("Button", nil, relativeFrame, "BackdropTemplate");
+                frame:SetWidth(frame_size);
+                frame:SetHeight(frame_size);
                 frame:SetBackdrop({
+                    edgeFile = [[Interface\Buttons\WHITE8x8]],
+                    edgeSize = frame_size + 2,
                     bgFile = [[Interface\Buttons\WHITE8x8]],              
                 })
 
-                frame:SetBackdropBorderColor(0, 0, 0, MCL_SETTINGS.opacity)
-                frame:SetBackdropColor(0, 0, 0, MCL_SETTINGS.opacity)
-                frame.tex:SetVertexColor(1, 1, 1, 1)
-
+                frame.pin = frame:CreateTexture()
+                frame.pin:SetWidth(24)
+                frame.pin:SetHeight(24)
+                frame.pin:SetTexture("Interface\\AddOns\\MCL\\icons\\pin.blp")
+                frame.pin:SetPoint("TOPLEFT", frame, "TOPLEFT", 20,12)
                 frame.pin:SetAlpha(0)
 
-                frame:SetPoint("BOTTOMLEFT", previous_frame, "BOTTOMLEFT", 0, -frame.sourceText:GetStringHeight()-y);
-                
-                frame.sourceText:SetJustifyH("LEFT")              
-                
-                previous_frame = frame
-            elseif count == 12 then
-                frame:SetPoint("BOTTOMLEFT", first_frame, "BOTTOMLEFT", 0, -overflow);
-                count = 0           
-            elseif relativeFrame == category then
-                frame:SetPoint("BOTTOMLEFT", category, "BOTTOMLEFT", 0, -35);
-                first_frame = frame
-            else
-                frame:SetPoint("RIGHT", relativeFrame, "RIGHT", frame_size+10, 0);
-            end          
+                frame.category = category.category
+                frame.section = category.section
 
-            core.Function:LinkMountItem(val, frame, pin)
+                frame.dragonRidable = isSteadyFlight
 
-            relativeFrame = frame
-            count = count + 1
-            if skip_total == true then
-            else
-                if tab then
-                    MCL_functions:TableMounts(mount_Id, frame, tab, category)
+
+                frame:SetBackdropBorderColor(1, 0, 0, 0.03)
+                frame:SetBackdropColor(0, 0, 0, MCL_SETTINGS.opacity)
+
+
+                frame.tex = frame:CreateTexture()
+                frame.tex:SetSize(frame_size, frame_size)
+                frame.tex:SetPoint("LEFT")
+
+                if string.sub(val, 1, 1) == "m" then
+                    frame.tex:SetTexture(icon)
+                else
+                    frame.tex:SetTexture(GetItemIcon(val))
                 end
-            end
-            table.insert(mountFrames, frame)
-        end  
-    end   
+        
+                frame.tex:SetVertexColor(0.75, 0.75, 0.75, 0.3);
+
+                frame.mountID = mount_Id
+                frame.itemID = val            
+
+                local pin_check = MCLcore.Function:CheckIfPinned("m"..frame.mountID)
+                if pin_check == true then
+                    frame.pin:SetAlpha(1)
+                else
+                    frame.pin:SetAlpha(0)
+                end              
+
+                if pin then
+                    local y = 30
+                    if previous_frame == category then
+                        y = 0
+                    end
+
+                    frame.sectionName = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+                    frame.sectionName:SetPoint("LEFT", 650, 0)
+                    frame.sectionName:SetText(vv.section)
+
+                    frame.categoryName = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+                    frame.categoryName:SetPoint("LEFT", 850, 0)
+                    frame.categoryName:SetText(vv.category)  
+                    
+                    frame.mountName = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+                    frame.mountName:SetPoint("LEFT", 50, 0)
+                    frame.mountName:SetText(mountName)  
+                    
+                    frame.sourceText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+                    frame.sourceText:SetPoint("LEFT", 250, 0)
+                    frame.sourceText:SetText(sourceText)  
+                    
+                    frame.border = frame:CreateLine(nil, "BACKGROUND", nil, 0)
+                    frame.border:SetThickness(3)
+                    frame.border:SetColorTexture(1, 1, 1, 0.3)
+                    frame.border:SetStartPoint("BOTTOMLEFT")
+                    frame.border:SetEndPoint("BOTTOMRIGHT")
+                    frame:SetWidth(1000)
+                    frame:SetHeight(frame.sourceText:GetStringHeight()+20)
+                    
+                    frame:SetBackdrop({
+                        bgFile = [[Interface\Buttons\WHITE8x8]],              
+                    })
+
+                    frame:SetBackdropBorderColor(0, 0, 0, MCL_SETTINGS.opacity)
+                    frame:SetBackdropColor(0, 0, 0, MCL_SETTINGS.opacity)
+                    frame.tex:SetVertexColor(1, 1, 1, 1)
+
+                    frame.pin:SetAlpha(0)
+
+                    frame:SetPoint("BOTTOMLEFT", previous_frame, "BOTTOMLEFT", 0, -frame.sourceText:GetStringHeight()-y);
+                    
+                    frame.sourceText:SetJustifyH("LEFT")              
+                    
+                    previous_frame = frame
+                elseif count == 12 then
+                    frame:SetPoint("BOTTOMLEFT", first_frame, "BOTTOMLEFT", 0, -overflow);
+                    count = 0           
+                elseif relativeFrame == category then
+                    frame:SetPoint("BOTTOMLEFT", category, "BOTTOMLEFT", 0, -35);
+                    first_frame = frame
+                else
+                    frame:SetPoint("RIGHT", relativeFrame, "RIGHT", frame_size+10, 0);
+                end          
+
+                MCLcore.Function:LinkMountItem(val, frame, pin)
+
+                relativeFrame = frame
+                count = count + 1
+                if skip_total == true then
+                else
+                    if tab then
+                        MCL_functions:TableMounts(mount_Id, frame, tab, category)
+                    end
+                end
+                table.insert(mountFrames, frame)
+            end  
+        end   
+    end
+    
     return overflow, mountFrames
 end
 
@@ -766,12 +775,12 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
 
     local frame_size = 30
     local mountFrames = {}
-    local total_pinned = table.getn(core.mountFrames[1])
+    local total_pinned = table.getn(MCLcore.mountFrames[1])
     if total_pinned == 0 then
-        local overflow, mountFrame = core.Function:CreateMountsForCategory(MCL_PINNED, _G["PinnedFrame"], 30, _G["PinnedTab"], true, true)
-        core.mountFrames[1] = mountFrame
+        local overflow, mountFrame = MCLcore.Function:CreateMountsForCategory(MCL_PINNED, _G["PinnedFrame"], 30, _G["PinnedTab"], true, true)
+        MCLcore.mountFrames[1] = mountFrame
     else
-        local relativeFrame = core.mountFrames[1][total_pinned]
+        local relativeFrame = MCLcore.mountFrames[1][total_pinned]
 
         local mountName, spellID, icon, _, _, sourceType, _, isFactionSpecific, faction, _, isCollected, mountID, _ = C_MountJournal.GetMountInfoByID(mount_Id)
         _,_, sourceText =  C_MountJournal.GetMountInfoExtraByID(mount_Id)
@@ -839,9 +848,9 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
 
         frame.mountID = mount_Id
 
-        core.Function:LinkMountItem("m"..tostring(mount_Id), frame, true)
+        MCLcore.Function:LinkMountItem("m"..tostring(mount_Id), frame, true)
 
-        table.insert(core.mountFrames[1], frame)
+        table.insert(MCLcore.mountFrames[1], frame)
   
     end
 end
@@ -862,7 +871,7 @@ function IsMountCollected(id)
 end
 
 function UpdateBackground(frame)
-    local pinned, pin = core.Function:CheckIfPinned(frame.mountID)
+    local pinned, pin = MCLcore.Function:CheckIfPinned(frame.mountID)
     if pinned == true then
         table.remove(MCL_PINNED, pin)
     end
@@ -905,13 +914,13 @@ function UpdateProgressBarColor(frame)
 end
 
 local function clearOverviewStats()
-    for k in pairs (core.overviewStats) do
-        core.overviewStats[k] = nil
+    for k in pairs (MCLcore.overviewStats) do
+        MCLcore.overviewStats[k] = nil
     end
 end
 
 local function IsMountPinned(id)
-    for k,v in pairs(core.mountFrames[1]) do
+    for k,v in pairs(MCLcore.mountFrames[1]) do
         if v.mountID == id then
             return true 
         end
@@ -919,7 +928,7 @@ local function IsMountPinned(id)
 end
 
 local function UpdatePin(frame)
-    local pinned, pin = core.Function:CheckIfPinned("m"..tostring(frame.mountID))
+    local pinned, pin = MCLcore.Function:CheckIfPinned("m"..tostring(frame.mountID))
     if pinned == true then
         frame.pin:SetAlpha(1)
     else
@@ -930,18 +939,18 @@ end
 
 function MCL_functions:UpdateCollection()
     clearOverviewStats()
-    core.MCL_MF.Bg:SetVertexColor(0, 0, 0, MCL_SETTINGS.opacity)
-    core.total = 0
-    core.collected = 0
+    MCLcore.MCL_MF.Bg:SetVertexColor(0, 0, 0, MCL_SETTINGS.opacity)
+    MCLcore.total = 0
+    MCLcore.collected = 0
 
-    -- Count mounts from core.mounts
-    for k, v in pairs(core.mounts) do
+    -- Count mounts from MCLcore.mounts
+    for k, v in pairs(MCLcore.mounts) do
         local mountID = v.id
-        core.total = core.total + 1
+        MCLcore.total = MCLcore.total + 1
         if IsMountCollected(mountID) then
-            table.insert(core.mountCheck, mountID)
+            table.insert(MCLcore.mountCheck, mountID)
             UpdateBackground(v.frame)
-            core.collected = core.collected + 1
+            MCLcore.collected = MCLcore.collected + 1
             local pin_count = table.getn(MCL_PINNED) or 0
             for i = 1, pin_count do
                 if MCL_PINNED[i].mountID == "m"..v.frame.mountID then
@@ -951,16 +960,16 @@ function MCL_functions:UpdateCollection()
             end
             UpdatePin(v.frame)
             local index = 0
-            for kk, vv in pairs(core.mountFrames[1] or {}) do
+            for kk, vv in pairs(MCLcore.mountFrames[1] or {}) do
                 index = index + 1
                 if tostring(vv.mountID) == tostring(v.frame.mountID) then
-                    local f = core.mountFrames[1][index]
-                    table.remove(core.mountFrames[1], index)
-                    for kkk, vvv in ipairs(core.mountFrames[1]) do
+                    local f = MCLcore.mountFrames[1][index]
+                    table.remove(MCLcore.mountFrames[1], index)
+                    for kkk, vvv in ipairs(MCLcore.mountFrames[1]) do
                         if kkk == 1 then
                             vvv:SetParent(_G["PinnedFrame"])
                         else
-                            vvv:SetParent(core.mountFrames[1][kkk-1])
+                            vvv:SetParent(MCLcore.mountFrames[1][kkk-1])
                         end
                     end
                     f:Hide()
@@ -973,7 +982,7 @@ function MCL_functions:UpdateCollection()
     end
 
     -- Update section stats with validation
-    for k, v in pairs(core.stats) do
+    for k, v in pairs(MCLcore.stats) do
         local section_total = 0
         local section_collected = 0
         local section_name
@@ -1016,7 +1025,7 @@ function MCL_functions:UpdateCollection()
                     vv.pBar = UpdateProgressBar(vv.pBar, section_total, section_collected)
                 end
                 if vv["rel"] then
-                    for q, e in pairs(core.overviewFrames) do
+                    for q, e in pairs(MCLcore.overviewFrames) do
                         if e.name == vv.rel.name then
                             e.frame = UpdateProgressBar(e.frame, section_total, section_collected)
                             section_name = e.name
@@ -1025,32 +1034,32 @@ function MCL_functions:UpdateCollection()
                 end
             end
         end
-        if section_name == core.L["Unobtainable"] then
-            core.total = core.total + section_collected - section_total
+        if section_name == MCLcore.L["Unobtainable"] then
+            MCLcore.total = MCLcore.total + section_collected - section_total
         end
     end
 
     -- Validate and update overall progress
-    if core.total < 0 then
-        print("MCL: Error - core.total is negative:", core.total, "Resetting to 0")
-        core.total = 0
+    if MCLcore.total < 0 then
+        print("MCL: Error - MCLcore.total is negative:", MCLcore.total, "Resetting to 0")
+        MCLcore.total = 0
     end
-    core.overview.pBar = UpdateProgressBar(core.overview.pBar, core.total, core.collected)
+    MCLcore.overview.pBar = UpdateProgressBar(MCLcore.overview.pBar, MCLcore.total, MCLcore.collected)
 end
 
 
 function MCL_functions:updateFromSettings(setting, val)
-    for k,v in pairs(core.statusBarFrames) do
+    for k,v in pairs(MCLcore.statusBarFrames) do
         if setting == "texture" then
-            v:SetStatusBarTexture(core.media:Fetch("statusbar", MCL_SETTINGS.statusBarTexture))
+            v:SetStatusBarTexture(MCLcore.media:Fetch("statusbar", MCL_SETTINGS.statusBarTexture))
         elseif setting == "progressColor" then
             v = UpdateProgressBar(v)
         end
     end
     if setting == "opacity" then
-        core.MCL_MF.Bg:SetVertexColor(0,0,0,MCL_SETTINGS.opacity)
+        MCLcore.MCL_MF.Bg:SetVertexColor(0,0,0,MCL_SETTINGS.opacity)
     elseif setting:lower() == "unobtainable" then
-        for k,v in pairs(core.overviewFrames) do
+        for k,v in pairs(MCLcore.overviewFrames) do
             if v.name:lower() == setting:lower() then
                 if val == true then
                     v.frame:GetParent():Hide()
@@ -1084,7 +1093,7 @@ OnTooltipShow = function(tooltip)
     tooltip:Show()
 end,
 OnClick = function(_, button) 
-	core.Main:Toggle() 
+	MCLcore.Main:Toggle() 
 end,
 })
 local icon = LibStub("LibDBIcon-1.0")
@@ -1108,32 +1117,32 @@ end
 
 
 function MCL_functions:updateFromDefaults(setting)
-    core.Function:resetToDefault(setting)
-    core.Function:updateFromSettings("opacity")
-    core.Function:updateFromSettings("texture")
-    core.Function:updateFromSettings("progressColor")
-    core.Function:updateFromSettings("unobtainable", false)
+    MCLcore.Function:resetToDefault(setting)
+    MCLcore.Function:updateFromSettings("opacity")
+    MCLcore.Function:updateFromSettings("texture")
+    MCLcore.Function:updateFromSettings("progressColor")
+    MCLcore.Function:updateFromSettings("unobtainable", false)
 end
 
 function MCL_functions:AddonSettings()
     local AceConfig = LibStub("AceConfig-3.0");
     local media = LibStub("LibSharedMedia-3.0")
-    core.media = media
+    MCLcore.media = media
     local options = {
         type = "group",
-        name = core.L["Mount Collection Log Settings"],
+        name = MCLcore.L["Mount Collection Log Settings"],
         order = 1,
         args = {
             headerone = {             
                 order = 1,
-                name = core.L["Main Window Options"],
+                name = MCLcore.L["Main Window Options"],
                 type = "header",
                 width = "full",
             },            
             mainWindow = {             
                 order = 2,
-                name = core.L["Main Window Opacity"],
-                desc = core.L["Changes the opacity of the main window"],
+                name = MCLcore.L["Main Window Opacity"],
+                desc = MCLcore.L["Changes the opacity of the main window"],
                 type = "range",
                 width = "normal",
                 min = 0,
@@ -1142,7 +1151,7 @@ function MCL_functions:AddonSettings()
                 softMax = 1,
                 bigStep = 0.05,
                 isPercent = false,
-                set = function(info, val) MCL_SETTINGS.opacity = val; core.Function:updateFromSettings("opacity"); end,
+                set = function(info, val) MCL_SETTINGS.opacity = val; MCLcore.Function:updateFromSettings("opacity"); end,
                 get = function(info) return MCL_SETTINGS.opacity; end,
             },
             spacer1 = {
@@ -1154,29 +1163,29 @@ function MCL_functions:AddonSettings()
             },
             defaultOpacity = {
                 order = 3,
-                name = core.L["Reset Opacity"],
-                desc = core.L["Reset to default opacity"],
+                name = MCLcore.L["Reset Opacity"],
+                desc = MCLcore.L["Reset to default opacity"],
                 width = "normal",
                 type = "execute",
                 func = function()
-                    core.Function:updateFromDefaults("Opacity")
+                    MCLcore.Function:updateFromDefaults("Opacity")
                 end
             },              
             headertwo = {             
                 order = 4,
-                name = core.L["Progress Bar Settings"],
+                name = MCLcore.L["Progress Bar Settings"],
                 type = "header",
                 width = "normal",
             },             
             texture = {              
                 order = 5,
                 type = "select",
-                name = core.L["Statusbar Texture"],
+                name = MCLcore.L["Statusbar Texture"],
                 width = "normal",
-                desc = core.L["Set the statusbar texture."],
+                desc = MCLcore.L["Set the statusbar texture."],
                 values = media:HashTable("statusbar"),
                 -- Removed dialogControl = "LSM30_Statusbar",
-                set = function(info, val) MCL_SETTINGS.statusBarTexture = val; core.Function:updateFromSettings("texture"); end,
+                set = function(info, val) MCL_SETTINGS.statusBarTexture = val; MCLcore.Function:updateFromSettings("texture"); end,
                 get = function(info) return MCL_SETTINGS.statusBarTexture; end,
                 style = "dropdown", -- This ensures it uses a dropdown menu for selection
             },
@@ -1189,12 +1198,12 @@ function MCL_functions:AddonSettings()
             },            
             defaultTexture = {
                 order = 6,
-                name = core.L["Reset Texture"],
-                desc = core.L["Reset to default texture"],
+                name = MCLcore.L["Reset Texture"],
+                desc = MCLcore.L["Reset to default texture"],
                 width = "normal",
                 type = "execute",
                 func = function()
-                    core.Function:updateFromDefaults("Texture")
+                    MCLcore.Function:updateFromDefaults("Texture")
                 end
             },
             spacer3 = {
@@ -1214,10 +1223,10 @@ function MCL_functions:AddonSettings()
             progressColorLow = {
                 order = 7,
                 type = "color",
-                name = core.L["Progress Bar (<33%)"],
+                name = MCLcore.L["Progress Bar (<33%)"],
                 width = "normal",
-                desc = core.L["Set the progress bar colors to be shown when the percentage collected is below 33%"],
-                set = function(info, r, g, b) MCL_SETTINGS.progressColors.low.r = r; MCL_SETTINGS.progressColors.low.g = g; MCL_SETTINGS.progressColors.low.b = b; core.Function:updateFromSettings("progressColor"); end,
+                desc = MCLcore.L["Set the progress bar colors to be shown when the percentage collected is below 33%"],
+                set = function(info, r, g, b) MCL_SETTINGS.progressColors.low.r = r; MCL_SETTINGS.progressColors.low.g = g; MCL_SETTINGS.progressColors.low.b = b; MCLcore.Function:updateFromSettings("progressColor"); end,
                 get = function(info) return MCL_SETTINGS.progressColors.low.r, MCL_SETTINGS.progressColors.low.g, MCL_SETTINGS.progressColors.low.b; end,                
             },
             spacer4 = {
@@ -1230,10 +1239,10 @@ function MCL_functions:AddonSettings()
             progressColorMedium = {
                 order = 8,
                 type = "color",
-                name = core.L["Progress Bar (<66%)"],
+                name = MCLcore.L["Progress Bar (<66%)"],
                 width = "normal",
-                desc = core.L["Set the progress bar colors to be shown when the percentage collected is below 66%"],
-                set = function(info, r, g, b) MCL_SETTINGS.progressColors.medium.r = r; MCL_SETTINGS.progressColors.medium.g = g; MCL_SETTINGS.progressColors.medium.b = b; core.Function:updateFromSettings("progressColor"); end,
+                desc = MCLcore.L["Set the progress bar colors to be shown when the percentage collected is below 66%"],
+                set = function(info, r, g, b) MCL_SETTINGS.progressColors.medium.r = r; MCL_SETTINGS.progressColors.medium.g = g; MCL_SETTINGS.progressColors.medium.b = b; MCLcore.Function:updateFromSettings("progressColor"); end,
                 get = function(info) return MCL_SETTINGS.progressColors.medium.r, MCL_SETTINGS.progressColors.medium.g, MCL_SETTINGS.progressColors.medium.b; end,                
             },
             spacer5 = {
@@ -1246,10 +1255,10 @@ function MCL_functions:AddonSettings()
             progressColorHigh = {
                 order = 9,
                 type = "color",
-                name = core.L["Progress Bar (<100%)"],
+                name = MCLcore.L["Progress Bar (<100%)"],
                 width = "normal",
-                desc = core.L["Set the progress bar colors to be shown when the percentage collected is below 100%"],
-                set = function(info, r, g, b) MCL_SETTINGS.progressColors.high.r = r; MCL_SETTINGS.progressColors.high.g = g; MCL_SETTINGS.progressColors.high.b = b; core.Function:updateFromSettings("progressColor"); end,
+                desc = MCLcore.L["Set the progress bar colors to be shown when the percentage collected is below 100%"],
+                set = function(info, r, g, b) MCL_SETTINGS.progressColors.high.r = r; MCL_SETTINGS.progressColors.high.g = g; MCL_SETTINGS.progressColors.high.b = b; MCLcore.Function:updateFromSettings("progressColor"); end,
                 get = function(info) return MCL_SETTINGS.progressColors.high.r, MCL_SETTINGS.progressColors.high.g, MCL_SETTINGS.progressColors.high.b; end,                
             },
             spacer6 = {
@@ -1262,41 +1271,70 @@ function MCL_functions:AddonSettings()
             progressColorComplete = {
                 order = 10,
                 type = "color",
-                name = core.L["Progress Bar (100%)"],
+                name = MCLcore.L["Progress Bar (100%)"],
                 width = "normal",
-                desc = core.L["Set the progress bar colors to be shown when all mounts are collected"],
-                set = function(info, r, g, b) MCL_SETTINGS.progressColors.complete.r = r; MCL_SETTINGS.progressColors.complete.g = g; MCL_SETTINGS.progressColors.complete.b = b; core.Function:updateFromSettings("progressColor"); end,
+                desc = MCLcore.L["Set the progress bar colors to be shown when all mounts are collected"],
+                set = function(info, r, g, b) MCL_SETTINGS.progressColors.complete.r = r; MCL_SETTINGS.progressColors.complete.g = g; MCL_SETTINGS.progressColors.complete.b = b; MCLcore.Function:updateFromSettings("progressColor"); end,
                 get = function(info) return MCL_SETTINGS.progressColors.complete.r, MCL_SETTINGS.progressColors.complete.g, MCL_SETTINGS.progressColors.complete.b; end,                
             },
             defaultColor = {
                 order = 11,
-                name = core.L["Reset Colors"],
-                desc = core.L["Reset to default colors"],
+                name = MCLcore.L["Reset Colors"],
+                desc = MCLcore.L["Reset to default colors"],
                 width = "normal",
                 type = "execute",
                 func = function()
-                    core.Function:updateFromDefaults("Colors")
+                    MCLcore.Function:updateFromDefaults("Colors")
                 end
             },              
             headerthree = {             
                 order = 12,
-                name = core.L["Unobtainable Settings"],
+                name = MCLcore.L["Unobtainable Settings"],
                 type = "header",
                 width = "full",
             },            
             unobtainable = {             
                 order = 13,
-                name = core.L["Hide Unobtainable from overview"],
-                desc = core.L["Hide Unobtainable mounts from the overview."],
+                name = MCLcore.L["Hide Unobtainable from overview"],
+                desc = MCLcore.L["Hide Unobtainable mounts from the overview."],
                 type = "toggle",
                 width = "full",
-                set = function(info, val) MCL_SETTINGS.unobtainable = val; core.Function:updateFromSettings("unobtainable", val); end,
+                set = function(info, val) MCL_SETTINGS.unobtainable = val; MCLcore.Function:updateFromSettings("unobtainable", val); end,
                 get = function(info) return MCL_SETTINGS.unobtainable; end,
+            },
+            hideCollectedMounts = {
+                order = 13.5,
+                name = "Hide Collected Mounts",
+                desc = "If enabled, collected mounts will not be shown in the list at all. Requires UI reload.",
+                type = "toggle",
+                width = "full",
+                set = function(info, val)
+                    if MCL_SETTINGS.hideCollectedMounts ~= val then
+                        StaticPopupDialogs["MCL_RELOAD_CONFIRM"] = {
+                            text = "Changing this setting requires a UI reload. Reload now?",
+                            button1 = YES,
+                            button2 = NO,
+                            OnAccept = function()
+                                MCL_SETTINGS.hideCollectedMounts = val;
+                                ReloadUI();
+                            end,
+                            OnCancel = function()
+                                -- Do nothing
+                            end,
+                            timeout = 0,
+                            whileDead = true,
+                            hideOnEscape = true,
+                            preferredIndex = 3,
+                        }
+                        StaticPopup_Show("MCL_RELOAD_CONFIRM")
+                    end
+                end,
+                get = function(info) return MCL_SETTINGS.hideCollectedMounts; end,
             },
             minimapIconToggle = {
                 order = 14,
-                name = core.L["Show Minimap Icon"],
-                desc = core.L["Toggle the display of the Minimap Icon."],
+                name = MCLcore.L["Show Minimap Icon"],
+                desc = MCLcore.L["Toggle the display of the Minimap Icon."],
                 type = "toggle",
                 width = "full",
                 set = function(info, val)
@@ -1313,25 +1351,25 @@ function MCL_functions:AddonSettings()
             },            
             headerfour = {             
                 order = 15,
-                name = core.L["Reset Settings"],
+                name = MCLcore.L["Reset Settings"],
                 type = "header",
                 width = "full",
             },             
             defaults = {
                 order = 16,
-                name = core.L["Reset Settings"],
-                desc = core.L["Reset to default settings"],
+                name = MCLcore.L["Reset Settings"],
+                desc = MCLcore.L["Reset to default settings"],
                 width = "normal",
                 type = "execute",
                 func = function()
-                    core.Function:updateFromDefaults()
+                    MCLcore.Function:updateFromDefaults()
                 end
             }                                                                                                       
         }
     }                                                        
 
 
-    AceConfig:RegisterOptionsTable(core.addon_name, options, {});
-    core.AceConfigDialog = LibStub("AceConfigDialog-3.0");
-    core.AceConfigDialog:AddToBlizOptions(core.addon_name, core.addon_name, nil);
+    AceConfig:RegisterOptionsTable(MCLcore.addon_name, options, {});
+    MCLcore.AceConfigDialog = LibStub("AceConfigDialog-3.0");
+    MCLcore.AceConfigDialog:AddToBlizOptions(MCLcore.addon_name, MCLcore.addon_name, nil);
 end

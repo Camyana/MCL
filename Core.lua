@@ -1,5 +1,5 @@
-local _, core = ...;
-local MCL_Load = core.Main;
+local _, MCLCore = ...;
+local MCL_Load = MCLCore.Main;
 
 -- Namespace
 -------------------------------------------------------------
@@ -11,19 +11,19 @@ SlashCmdList["MCL"] = function(msg)
         print("\n|cff00CCFFMount Collection Log\nCommands:\n|cffFF0000Show:|cffFFFFFF Shows your mount collection log\n|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon.\n|cffFF0000Config:|cffFFFFFF Opens the settings..\n|cffFF0000Help:|cffFFFFFF Shows commands")
     end
     if msg:lower() == "show" then
-        core.Main.Toggle();
+        MCLCore.Main.Toggle();
     end
     if msg:lower() == "icon" then
-        core.Function.MCL_MM();
+        MCLCore.Function.MCL_MM();
     end        
     if msg:lower() == "" then
-        core.Main.Toggle();
+        MCLCore.Main.Toggle();
     end
     if msg:lower() == "debug" then
-        core.Function:GetCollectedMounts();
+        MCLCore.Function:GetCollectedMounts();
     end
     if msg:lower() == "conifg" or msg == "settings" then
-        core.Frames:openSettings();
+        MCLCore.Frames:openSettings();
     end
     if msg:lower() == "refresh" then
         if MCL_Load and type(MCL_Load.Init) == "function" then
@@ -32,4 +32,4 @@ SlashCmdList["MCL"] = function(msg)
             print("MCL: Cannot refresh. Initialization function not available.")
         end
     end  
- end 
+ end

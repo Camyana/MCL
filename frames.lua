@@ -1,13 +1,12 @@
+local MCL, MCLCore = ...;
 
-local MCL, core = ...;
+local MCL_Load = MCLCore.Main;
 
-local MCL_Load = core.Main;
+MCLCore.Frames = {};
+local MCL_frames = MCLCore.Frames;
 
-core.Frames = {};
-local MCL_frames = core.Frames;
-
-core.TabTable = {}
-core.statusBarFrames  = {}
+MCLCore.TabTable = {}
+MCLCore.statusBarFrames  = {}
 
 local nav_width = 180
 local main_frame_width = 1250
@@ -15,7 +14,7 @@ local main_frame_height = 640
 
 local r,g,b,a
 
-local L = core.L
+local L = MCLCore.L
 
 
 local function ScrollFrame_OnMouseWheel(self, delta)
@@ -32,7 +31,24 @@ end
 
 
 function MCL_frames:openSettings()
-	Settings.OpenToCategory(core.addon_name)
+	Settings.OpenToCategory(MCLCore.addon_name)
+	-- Add checkbox for hideCollectedIcon if not already present
+	if not MCLCore.hideCollectedIconCheckbox then
+		local panel = SettingsPanel or InterfaceOptionsFrame or _G["SettingsPanel"]
+		if panel then
+			local cb = CreateFrame("CheckButton", nil, panel, "InterfaceOptionsCheckButtonTemplate")
+			cb:SetPoint("TOPLEFT", panel, "TOPLEFT", 30, -60)
+			cb.Text:SetText("Hide icon for collected mounts instead of green border")
+			cb:SetChecked(MCL_SETTINGS.hideCollectedIcon)
+			cb:SetScript("OnClick", function(self)
+				MCL_SETTINGS.hideCollectedIcon = self:GetChecked()
+				MCLCore.Function:updateFromSettings("hideCollectedIcon", self:GetChecked())
+			end)
+			MCLCore.hideCollectedIconCheckbox = cb
+		end
+	else
+		MCLCore.hideCollectedIconCheckbox:SetChecked(MCL_SETTINGS.hideCollectedIcon)
+	end
 end
 
 function MCL_frames:CreateMainFrame()
@@ -61,7 +77,7 @@ function MCL_frames:CreateMainFrame()
 	MCL_mainFrame.sa.text:SetPoint("CENTER", MCL_mainFrame.sa, "CENTER", 0, 0);
 	MCL_mainFrame.sa.text:SetText("SA")
 	MCL_mainFrame.sa.text:SetTextColor(0, 0.7, 0.85)	
-	MCL_mainFrame.sa:SetScript("OnClick", function()core.Function:simplearmoryLink()end)	
+	MCL_mainFrame.sa:SetScript("OnClick", function()MCLCore.Function:simplearmoryLink()end)	
 	
 	MCL_mainFrame.dfa = CreateFrame("Button", nil, MCL_mainFrame);
 	MCL_mainFrame.dfa:SetSize(60, 15)
@@ -74,7 +90,7 @@ function MCL_frames:CreateMainFrame()
 	MCL_mainFrame.dfa.text:SetPoint("CENTER", MCL_mainFrame.dfa, "CENTER", 0, 0);
 	MCL_mainFrame.dfa.text:SetText("DFA")
 	MCL_mainFrame.dfa.text:SetTextColor(0, 0.7, 0.85)	
-	MCL_mainFrame.dfa:SetScript("OnClick", function()core.Function:dfaLink()end)		
+	MCL_mainFrame.dfa:SetScript("OnClick", function()MCLCore.Function:dfaLink()end)		
 
 
 	--MCL Frame settings
@@ -109,7 +125,7 @@ function MCL_frames:CreateMainFrame()
 
 	MCL_mainFrame:SetFrameStrata("HIGH")
 
-	core.Function:CreateFullBorder(MCL_mainFrame)
+	MCLCore.Function:CreateFullBorder(MCL_mainFrame)
 
     tinsert(UISpecialFrames, "MCLFrame")
     return MCL_mainFrame
@@ -131,57 +147,57 @@ end
 
 
 function MCL_frames:SetTabs()
-    local tabFrame = core.MCL_MF_Nav
+    local tabFrame = MCLCore.MCL_MF_Nav
     numTabs = 0
-    for k,v in pairs(core.sections) do
+    for k,v in pairs(MCLCore.sections) do
         numTabs = numTabs + 1
     end
-	local contents = {};
-	local frameName = tabFrame:GetName();
+    local contents = {};
+    local frameName = tabFrame:GetName();
     local i = 1
     tabFrame.numTabs = numTabs;  
-	for k,v in pairs(core.sections) do
-		local tab = CreateFrame("Button", frameName.."Tab"..k, tabFrame, "MCLTabButtonTemplate");
+    for k,v in pairs(MCLCore.sections) do
+        local tab = CreateFrame("Button", frameName.."Tab"..k, tabFrame, "MCLTabButtonTemplate");
         tab:SetID(k);
         tab.title = tab:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         tab.title:SetPoint("LEFT", 0, 0)       
 
-		tab.title:SetText(tostring(L[v.name]));
-		if v.icon ~= nil then
-			tab.icon = CreateFrame("Frame", nil, tab);
-			tab.icon:SetSize(32, 32)
-			tab.icon:SetPoint("RIGHT", tab, "RIGHT", 0, 0)
-			tab.icon.tex = tab.icon:CreateTexture()
-			tab.icon.tex:SetAllPoints(tab.icon)
-			tab.icon.tex:SetTexture(v.icon)
-		end
-		tab:SetScript("OnClick", Tab_OnClick);
+        tab.title:SetText(tostring(L[v.name]));
+        if v.icon ~= nil then
+            tab.icon = CreateFrame("Frame", nil, tab);
+            tab.icon:SetSize(32, 32)
+            tab.icon:SetPoint("RIGHT", tab, "RIGHT", 0, 0)
+            tab.icon.tex = tab.icon:CreateTexture()
+            tab.icon.tex:SetAllPoints(tab.icon)
+            tab.icon.tex:SetTexture(v.icon)
+        end
+        tab:SetScript("OnClick", Tab_OnClick);
         tab:SetWidth(nav_width)
-		if v.name == "Pinned" then
-			tab.content = CreateFrame("Frame", "PinnedTab", tabFrame.ScrollFrame);
-		else
-			tab.content = CreateFrame("Frame", nil, tabFrame.ScrollFrame);
-		end
-		tab.content:SetSize(1100, 550);
-		tab.content:Hide();		
+        if v.name == "Pinned" then
+            tab.content = CreateFrame("Frame", "PinnedTab", tabFrame.ScrollFrame);
+        else
+            tab.content = CreateFrame("Frame", nil, tabFrame.ScrollFrame);
+        end
+        tab.content:SetSize(1100, 550);
+        tab.content:Hide();      
 
-		table.insert(contents, tab.content);
+        table.insert(contents, tab.content);
 
-		if tab.title:GetText() == L["Overview"] then
-			tab:SetPoint("TOPLEFT", tabFrame, "TOPLEFT", 0, 20);
-		elseif (i == 1) or tab.title:GetText() == L["Overview"] then
-			tab:SetPoint("TOPLEFT", tabFrame, "TOPLEFT", 0, -10);
-		else
-			tab:SetPoint("BOTTOM", _G[frameName.."Tab"..(i-1)], "BOTTOM", 0, -30);
-		end
-		core.TabTable[i] = v.name
+        if tab.title:GetText() == L["Overview"] then
+            tab:SetPoint("TOPLEFT", tabFrame, "TOPLEFT", 0, 20);
+        elseif (i == 1) or tab.title:GetText() == L["Overview"] then
+            tab:SetPoint("TOPLEFT", tabFrame, "TOPLEFT", 0, -10);
+        else
+            tab:SetPoint("BOTTOM", _G[frameName.."Tab"..(i-1)], "BOTTOM", 0, -30);
+        end
+        MCLCore.TabTable[i] = v.name
 
         i = i+1
-	end
+    end
 
-	Tab_OnClick(_G[frameName.."Tab20"]);
+    Tab_OnClick(_G[frameName.."Tab20"]);
 
-	return contents, numTabs;
+    return contents, numTabs;
 end
 
 
@@ -200,7 +216,7 @@ end
 
 function MCL_frames:progressBar(relativeFrame, top)
 	MyStatusBar = CreateFrame("StatusBar", nil, relativeFrame, "BackdropTemplate")
-	MyStatusBar:SetStatusBarTexture(core.media:Fetch("statusbar", MCL_SETTINGS.statusBarTexture))
+	MyStatusBar:SetStatusBarTexture(MCLCore.media:Fetch("statusbar", MCL_SETTINGS.statusBarTexture))
 	MyStatusBar:GetStatusBarTexture():SetHorizTile(false)
 	MyStatusBar:SetMinMaxValues(0, 100)
 	MyStatusBar:SetValue(0)
@@ -225,7 +241,7 @@ function MCL_frames:progressBar(relativeFrame, top)
 	-- MyStatusBar.Text:SetJustifyV("CENTER")
 	MyStatusBar.Text:SetText()
 
-	table.insert(core.statusBarFrames, MyStatusBar)
+	table.insert(MCLCore.statusBarFrames, MyStatusBar)
 
 	return MyStatusBar
 end
@@ -242,7 +258,7 @@ function MCL_frames:createContentFrame(relativeFrame, title)
     frame.name = title -- Store non-localized name
 
     if title ~= "Pinned" then
-        frame.pBar = core.Frames:progressBar(frame)
+        frame.pBar = MCLCore.Frames:progressBar(frame)
         frame.pBar:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, -15)
         frame.pBar:SetWidth(880)
         frame.pBar:SetHeight(20)
@@ -281,7 +297,7 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
             frame.title:SetPoint("TOPLEFT", 0, 0)
             frame.title:SetText(L[v.name]) -- Localized for display only
 
-            local pBar = core.Frames:progressBar(frame)
+            local pBar = MCLCore.Frames:progressBar(frame)
             pBar:SetWidth(400)
             pBar:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 30)
 
@@ -301,7 +317,7 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
 
             pBar:SetScript("OnMouseDown", function(self, button)
                 if button == 'LeftButton' then
-                    for i, tab in ipairs(core.TabTable) do
+                    for i, tab in ipairs(MCLCore.TabTable) do
                         if tab == v.name then
                             Tab_OnClick(_G["NavTab"..i])
                         end
@@ -323,7 +339,7 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
                 frame = pBar
             }
 
-            table.insert(core.overviewFrames, t)
+            table.insert(MCLCore.overviewFrames, t)
         end
     end
 end
@@ -334,7 +350,7 @@ end
 ----------------------------------------------------------------
 
 function MCL_frames:createCategoryFrame(set, relativeFrame)
-	--Creating a frame to place expansion content in.
+    --Creating a frame to place expansion content in.
     local first = true
     local frame_size = 30
     local col = 1
@@ -347,7 +363,6 @@ function MCL_frames:createCategoryFrame(set, relativeFrame)
         local category = CreateFrame("Frame", nil, relativeFrame, "BackdropTemplate");
         category:SetWidth(60);
         category:SetHeight(60);
-
 
         if (first == true) then
             category:SetPoint("TOPLEFT", relativeFrame, "TOPLEFT", 0, -60);
@@ -363,22 +378,20 @@ function MCL_frames:createCategoryFrame(set, relativeFrame)
         first = false
         category.title = category:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         category.title:SetPoint("TOPLEFT", 0, 0)
-		local localizedName = L[v.name]
-		if localizedName then
-			category.title:SetText(localizedName)
-		else
-			-- Handle missing translation (e.g., use v.name as a fallback)
-			category.title:SetText(v.name)
-			print("Warning: Missing translation for " .. v.name)
-		end
+        local localizedName = L[v.name]
+        if localizedName then
+            category.title:SetText(localizedName)
+        else
+            category.title:SetText(v.name)
+            print("Warning: Missing translation for " .. v.name)
+        end
 
-		category.section = relativeFrame.title:GetText()
-		category.category = localizedName
+        category.section = relativeFrame.title:GetText()
+        category.category = localizedName
 
-        local pBar = core.Frames:progressBar(category) 
-		local overflow = core.Function:CreateMountsForCategory(v.mounts, category, frame_size, relativeFrame, category, false, false)
+        local pBar = MCLCore.Frames:progressBar(category) 
+        local overflow = MCLCore.Function:CreateMountsForCategory(v.mounts, category, frame_size, relativeFrame, category, false, false)
 
-            
         category:SetSize(((frame_size + 10) * 12),45)
 
         if (col % 2 == 0) then
@@ -390,19 +403,16 @@ function MCL_frames:createCategoryFrame(set, relativeFrame)
         end
         col = col + 1
 
-        -- ! Cosntruct Stats Here
-
         local stats = {
             frame = category,
             mounts = v.mounts,
             collected = 0,
             pBar = pBar,
-			rel = relativeFrame
+            rel = relativeFrame
         }
 
         table.insert(section, stats)
-        total_mounts = total_mounts + core.Function:getTableLength(v.mounts)
-
+        total_mounts = total_mounts + MCLCore.Function:getTableLength(v.mounts)
     end
     table.insert(section, total_mounts)
     table.insert(section, relativeFrame)

@@ -203,5 +203,10 @@ if L then
     L["Toggle the display of the Minimap Icon."] = "切换显示小地图按钮"
     L["Reset Settings"] = "重置设置"
     L["Reset to default settings"] = "重置为默认设置"
+    L["Hide Collected Mounts"] = "隐藏已收集的坐骑"
+    L["If enabled, collected mounts will not be shown in the list at all. Requires UI reload."] = "启用后，已收集的坐骑将不会显示在列表中。需要重载界面。"
+    L["Changing this setting requires a UI reload. Reload now?"] = "更改此设置需要重载界面。现在重载吗？"
+    L["YES"] = "是"
+    L["NO"] = "否"
 end
 

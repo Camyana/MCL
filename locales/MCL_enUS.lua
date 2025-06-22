@@ -202,4 +202,9 @@ if L then
     L["Toggle the display of the Minimap Icon."] = "Toggle the display of the Minimap Icon."
     L["Reset Settings"] = "Reset Settings"
     L["Reset to default settings"] = "Reset to default settings"
+    L["Hide Collected Mounts"] = "Hide Collected Mounts"
+    L["If enabled, collected mounts will not be shown in the list at all. Requires UI reload."] = "If enabled, collected mounts will not be shown in the list at all. Requires UI reload."
+    L["Changing this setting requires a UI reload. Reload now?"] = "Changing this setting requires a UI reload. Reload now?"
+    L["YES"] = "Yes"
+    L["NO"] = "No"
 end
