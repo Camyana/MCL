@@ -28,8 +28,6 @@ SlashCmdList["MCL"] = function(msg)
     if msg:lower() == "refresh" then
         if MCL_Load and type(MCL_Load.Init) == "function" then
             MCL_Load:Init(true)  -- True to force re-initialization.
-        else
-            print("MCL: Cannot refresh. Initialization function not available.")
         end
     end  
  end

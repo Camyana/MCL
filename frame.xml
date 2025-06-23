@@ -40,4 +40,18 @@
 	</Frame>
 	<Frame name="MCLFrameTemplateWithInset" inherits="MCLFrameTemplate" virtual="true">
 	</Frame>	
+	<Frame name="MCLBlizzardFrameTemplate" inherits="UIPanelDialogTemplate" virtual="true">
+		<Layers>
+			<Layer level="BORDER">
+				<Texture parentKey="NineSlice" hidden="true"/>
+			</Layer>
+		</Layers>
+	</Frame>
+	<Frame name="MCLBlizzardNavTemplate" inherits="InsetFrameTemplate" virtual="true">
+		<Layers>
+			<Layer level="BORDER">
+				<Texture parentKey="NineSlice" hidden="true"/>
+			</Layer>
+		</Layers>
+	</Frame>
 </Ui>

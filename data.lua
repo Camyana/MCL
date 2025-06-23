@@ -1,12 +1,12 @@
 --------------------------------------------------------
 -- Namespaces
 --------------------------------------------------------
-local _, core = ...;
+local _, MCLcore = ...;
 
-core.sectionNames = {}
-core.mountList = {}
+MCLcore.sectionNames = {}
+MCLcore.mountList = {}
 
-core.mountList[1] = {
+MCLcore.mountList[1] = {
 	name = "SL",
 	categories = {
 		Achievement = {
@@ -121,7 +121,7 @@ core.mountList[1] = {
 		}
 	}
 }
-core.mountList[2] = {
+MCLcore.mountList[2] = {
 	name = "BFA",
 	categories = {
 		Achievement = {
@@ -231,7 +231,7 @@ core.mountList[2] = {
 		}
 	}
 }
-core.mountList[3] = {
+MCLcore.mountList[3] = {
 	name = "LEGION",
 	categories = {
 		Achievement = {
@@ -286,7 +286,7 @@ core.mountList[3] = {
 		}
 	}																										
 }
-core.mountList[4] = {
+MCLcore.mountList[4] = {
 	name = "WOD",
 	categories = {
 		Achievement = {
@@ -341,7 +341,7 @@ core.mountList[4] = {
 		}		
 	}		
 }
-core.mountList[5] = {
+MCLcore.mountList[5] = {
 	name = "MOP",
 	categories = {
 		Achievement = {
@@ -406,7 +406,7 @@ core.mountList[5] = {
 		}
 	}																																
 }
-core.mountList[6] = {
+MCLcore.mountList[6] = {
 	name = "CATA",
 	categories = {
 		Achievement = {
@@ -441,7 +441,7 @@ core.mountList[6] = {
 		}		
 	}										
 }
-core.mountList[7] = {
+MCLcore.mountList[7] = {
 	name = "WOTLK",
 	categories = {
 		Achievement = {
@@ -486,7 +486,7 @@ core.mountList[7] = {
 		}			
 	}																		
 }
-core.mountList[8] = {
+MCLcore.mountList[8] = {
 	name = "TBC",
 	categories = {
 		CenarionExpedition = {
@@ -526,7 +526,7 @@ core.mountList[8] = {
 		}
 	}
 }
-core.mountList[9] = {
+MCLcore.mountList[9] = {
 	name = "Classic",
 	categories = {	
 		Reputation = {
@@ -546,7 +546,7 @@ core.mountList[9] = {
 		}
 	}						
 }
-core.mountList[10] = {
+MCLcore.mountList[10] = {
 	name = "Alliance",
 	categories = {	
 		Human = {
@@ -596,7 +596,7 @@ core.mountList[10] = {
 		}		
 	}				
 }
-core.mountList[11] = {
+MCLcore.mountList[11] = {
 	name = "Horde",
 	categories = {	
 		Orc = {
@@ -641,7 +641,7 @@ core.mountList[11] = {
 		}
 	}
 }
-core.mountList[12] = {
+MCLcore.mountList[12] = {
 	name = "Professions",
 	categories = {	
 		Alchemy = {
@@ -686,7 +686,7 @@ core.mountList[12] = {
 		}
 	}
 }
-core.mountList[13] = {
+MCLcore.mountList[13] = {
 	name = "PVP",
 	categories = {	
 		Achievement = {
@@ -735,7 +735,7 @@ core.mountList[13] = {
 		}
 	}
 }
-core.mountList[14] = {
+MCLcore.mountList[14] = {
 	name = "WorldEvents",
 	categories = {	
 		Achievement = {
@@ -785,7 +785,7 @@ core.mountList[14] = {
 		}
 	}
 }
-core.mountList[15] = {
+MCLcore.mountList[15] = {
 	name = "Promotion",
 	categories = {	
 		BlizzardStore = {
@@ -853,7 +853,7 @@ core.mountList[15] = {
 		}
 	}	
 }
-core.mountList[16] = {
+MCLcore.mountList[16] = {
 	name = "Other",
 	categories = {	
 		GuildVendor = {
@@ -906,7 +906,7 @@ core.mountList[16] = {
 		},		
 	}
 }
-core.mountList[17] = {
+MCLcore.mountList[17] = {
 	name = "Unobtainable",
 	categories = {	
 		MythicPlus = {
@@ -985,7 +985,7 @@ core.mountList[17] = {
 		}
 	}
 }
-core.mountList[18] = {
+MCLcore.mountList[18] = {
 	name = "Dragonflight",
 	categories = {
 		DragonRiding = {
@@ -1026,7 +1026,7 @@ core.mountList[18] = {
 		},
 	}
 }
-core.mountList[19] = {
+MCLcore.mountList[19] = {
 	name = "The War Within",
 	categories = {
 		RareDrops = {
@@ -1087,112 +1087,133 @@ core.mountList[19] = {
 		}	
 	}
 }
-core.sectionNames[11] = {
+MCLcore.sectionNames[11] = {
 	name = "Vanilla",
-	mounts = core.mountList[9],
+	mounts = MCLcore.mountList[9],
 	icon = "Interface\\AddOns\\MCL\\icons\\classic.blp",
+	isExpansion = true,
 }
-core.sectionNames[10] = {
+MCLcore.sectionNames[10] = {
 	name = "The Burning Crusade",
-	mounts = core.mountList[8],
+	mounts = MCLcore.mountList[8],
 	icon = "Interface\\AddOns\\MCL\\icons\\bc.blp",
+	isExpansion = true,
 }
-core.sectionNames[9] = {
+MCLcore.sectionNames[9] = {
 	name = "Wrath of the Lich King",
-	mounts = core.mountList[7],
+	mounts = MCLcore.mountList[7],
 	icon = "Interface\\AddOns\\MCL\\icons\\wrath.blp",
+	isExpansion = true,
 }
-core.sectionNames[8] = {
+MCLcore.sectionNames[8] = {
 	name = "Cataclysm",
-	mounts = core.mountList[6],
+	mounts = MCLcore.mountList[6],
 	icon = "Interface\\AddOns\\MCL\\icons\\cata.blp",
+	isExpansion = true,
 }
-core.sectionNames[7] = {
+MCLcore.sectionNames[7] = {
 	name = "Mists of Pandaria",
-	mounts = core.mountList[5],
+	mounts = MCLcore.mountList[5],
 	icon = "Interface\\AddOns\\MCL\\icons\\mists.blp",
+	isExpansion = true,
 }
-core.sectionNames[6] = {
+MCLcore.sectionNames[6] = {
 	name = "Warlords of Draenor",
-	mounts = core.mountList[4],
+	mounts = MCLcore.mountList[4],
 	icon = "Interface\\AddOns\\MCL\\icons\\wod.blp",
+	isExpansion = true,
 }
-core.sectionNames[5] = {
+MCLcore.sectionNames[5] = {
 	name = "Legion",
-	mounts = core.mountList[3],
+	mounts = MCLcore.mountList[3],
 	icon = "Interface\\AddOns\\MCL\\icons\\legion.blp",
+	isExpansion = true,
 }
-core.sectionNames[4] = {
+MCLcore.sectionNames[4] = {
 	name = "Battle for Azeroth",
-	mounts = core.mountList[2],
+	mounts = MCLcore.mountList[2],
 	icon = "Interface\\AddOns\\MCL\\icons\\bfa.blp",
+	isExpansion = true,
 }
-core.sectionNames[3] = {
+MCLcore.sectionNames[3] = {
 	name = "Shadowlands",
-	mounts = core.mountList[1],
+	mounts = MCLcore.mountList[1],
 	icon = "Interface\\AddOns\\MCL\\icons\\sl.blp",
+	isExpansion = true,
 }
-core.sectionNames[2] = {
+MCLcore.sectionNames[2] = {
 	name = "Dragonflight",
-	mounts = core.mountList[18],
+	mounts = MCLcore.mountList[18],
 	icon = "Interface\\AddOns\\MCL\\icons\\df.blp",
+	isExpansion = true,
 }
-core.sectionNames[1] = {
+MCLcore.sectionNames[1] = {
 	name = "The War Within",
-	mounts = core.mountList[19],
+	mounts = MCLcore.mountList[19],
 	icon = "Interface\\AddOns\\MCL\\icons\\tww.blp",
+	isExpansion = true,
 }
-core.sectionNames[12] = {
+MCLcore.sectionNames[12] = {
 	name = "Horde",
-	mounts = core.mountList[11],
+	mounts = MCLcore.mountList[11],
 	icon = "Interface\\AddOns\\MCL\\icons\\horde.blp",
+	isExpansion = false,
 }
-core.sectionNames[13] = {
+MCLcore.sectionNames[13] = {
 	name = "Alliance",
-	mounts = core.mountList[10],
+	mounts = MCLcore.mountList[10],
 	icon = "Interface\\AddOns\\MCL\\icons\\alliance.blp",
+	isExpansion = false,
 }
-core.sectionNames[14] = {
+MCLcore.sectionNames[14] = {
 	name = "Professions",
-	mounts = core.mountList[12],
+	mounts = MCLcore.mountList[12],
 	icon = "Interface\\AddOns\\MCL\\icons\\professions.blp",
+	isExpansion = false,
 }
-core.sectionNames[15] = {
+MCLcore.sectionNames[15] = {
 	name = "PVP",
-	mounts = core.mountList[13],
+	mounts = MCLcore.mountList[13],
 	icon = "Interface\\AddOns\\MCL\\icons\\pvp.blp",
+	isExpansion = false,
 }
-core.sectionNames[16] = {
+MCLcore.sectionNames[16] = {
 	name = "World Events",
-	mounts = core.mountList[14],
+	mounts = MCLcore.mountList[14],
 	icon = "Interface\\AddOns\\MCL\\icons\\holiday.blp",
+	isExpansion = false,
 }
-core.sectionNames[17] = {
+MCLcore.sectionNames[17] = {
 	name = "Promotion",
-	mounts = core.mountList[15],
+	mounts = MCLcore.mountList[15],
 	icon = "Interface\\AddOns\\MCL\\icons\\promotion.blp",
+	isExpansion = false,
 }
-core.sectionNames[18] = {
+MCLcore.sectionNames[18] = {
 	name = "Other",
-	mounts = core.mountList[16],
+	mounts = MCLcore.mountList[16],
 	icon = "Interface\\AddOns\\MCL\\icons\\other.blp",
+	isExpansion = false,
 }
-core.sectionNames[19] = {
+MCLcore.sectionNames[19] = {
 	name = "Unobtainable",
-	mounts = core.mountList[17],
+	mounts = MCLcore.mountList[17],
 	icon = "Interface\\AddOns\\MCL\\icons\\unobtainable.blp",
+	isExpansion = false,
 }
-core.sectionNames[20] = {
+MCLcore.sectionNames[20] = {
 	name = "Pinned",
 	mounts = {MCL_PINNED},
-	icon = "Interface\\AddOns\\MCL\\icons\\pin.blp",	
+	icon = "Interface\\AddOns\\MCL\\icons\\pin.blp",
+	isExpansion = false,
 }
-core.sectionNames[21] = {
+MCLcore.sectionNames[21] = {
 	name = "Overview",
 	mounts = {},
-	icon = "Interface\\AddOns\\MCL\\icons\\mcl.blp",	
+	icon = "Interface\\AddOns\\MCL\\icons\\mcl.blp",
+	isExpansion = false,
 }
 
-core.regionalFilter = {
+MCLcore.regionalFilter = {
 	['CN'] = {210077},
 }

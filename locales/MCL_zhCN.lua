@@ -2,7 +2,6 @@ local MCL, core = ...
 local AceLocale = LibStub("AceLocale-3.0")
 local L = AceLocale:NewLocale("MCL", "zhCN")
 if L then
-    print("Loading zhCN locale for MCL")
     L["Achievement"] = "成就"
     L["Adventures"] = "冒险"
     L["Ahead of the Curve"] = "引领潮流"

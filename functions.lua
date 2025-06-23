@@ -104,6 +104,9 @@ function MCL_functions:resetToDefault(setting)
     if setting == "HideCollectedMounts" or setting == nil then
         MCL_SETTINGS.hideCollectedMounts = false
     end
+    if setting == "BlizzardTheme" or setting == nil then
+        MCL_SETTINGS.useBlizzardTheme = false
+    end
 end
 
 if MCL_SETTINGS == nil then
@@ -233,74 +236,35 @@ function MCL_functions:initSections()
     MCLcore.sections = {}
 
     for i, v in ipairs(MCLcore.sectionNames) do
-        local success, err = pcall(function()
-            if v.name ~= faction then
-                local t = {
-                    name = v.name,
-                    icon = v.icon
-                }
-                table.insert(MCLcore.sections, t)
-            else
-                -- Skip opposite faction
-            end
-        end)
-
-        -- if not success then
-        --     print("Error in iteration with section name "..v.name..": "..err)
-        -- end
+        -- Skip opposite faction section
+        if v.name ~= faction then
+            table.insert(MCLcore.sections, v)
+        end
     end
 
     MCLcore.MCL_MF_Nav = MCLcore.Frames:createNavFrame(MCLcore.MCL_MF, 'Sections')
 
-    local tabFrames, numTabs = MCLcore.Frames:SetTabs() 
-
-    local function OverviewStats(relativeFrame)
-        MCLcore.Frames:createOverviewCategory(MCLcore.sections, relativeFrame)
-        -- MCLcore.Frames:createCategoryFrame(MCLcore.sections, relativeFrame)
+    -- Create the overview parent frame before SetTabs
+    if not MCLcore.overview or not MCLcore.overview:IsObjectType("Frame") then
+        -- Use the same width calculations from frames.lua for consistency
+        local main_frame_width = 1250  -- Match the width from frames.lua
+        MCLcore.overview = CreateFrame("Frame", nil, MCL_mainFrame.ScrollChild, "BackdropTemplate")
+        MCLcore.overview:SetSize(main_frame_width - 60, 550)  -- Use consistent width calculation
+        MCLcore.overview:SetPoint("TOPLEFT", MCL_mainFrame.ScrollChild, "TOPLEFT", 30, 0)  -- Consistent with other content frames
+        MCLcore.overview:SetBackdropColor(0, 0, 0, 0)
     end
+    -- Build the overview content into the overview frame
+    MCLcore.Frames:createOverviewCategory(MCLcore.sections, MCLcore.overview)
+
+    local tabFrames, numTabs = MCLcore.Frames:SetTabs() 
 
     MCLcore.sectionFrames = {}
     for i=1, numTabs do
-        local success, err = pcall(function()
-            local section_frame = MCLcore.Frames:createContentFrame(tabFrames[i], MCLcore.sections[i].name)
-            table.insert(MCLcore.sectionFrames, section_frame)
-
-            for ii,v in ipairs(MCLcore.sectionNames) do
-                if v.name == "Overview" then
-                    MCLcore.overview = section_frame        
-                elseif v.name == MCLcore.sections[i].name then
-                    if v.name == "Pinned" then
-                        local category = CreateFrame("Frame", "PinnedFrame", section_frame, "BackdropTemplate");
-                        category:SetWidth(60);
-                        category:SetHeight(60);
-                        category:SetPoint("TOPLEFT", section_frame, "TOPLEFT", 0, 0);
-                        local overflow, mountFrame = MCLcore.Function:CreateMountsForCategory(MCL_PINNED, category, 30, tabFrames[i], true, true)
-                        table.insert(MCLcore.mountFrames, mountFrame)
-                        category.info = category:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-                        category.info:SetPoint("TOP", 450, -0)
-                        category.info:SetText(MCLcore.L["Ctrl + Right Click to pin uncollected mounts"])
-                    end                   
-                    -- ! Create Frame for each category
-                    if v.mounts then
-                        for k,val in pairs(v.mounts) do
-                            if k == 'categories' then
-                                local section = MCLcore.Frames:createCategoryFrame(val, section_frame)
-                                table.insert(MCLcore.stats, section)
-                            end
-                        end
-                    end 
-                end            
-            end
-        end)
-        
-        -- if not success then
-        --     print("Error in iteration "..i..": "..err)
-        -- end
+        -- The section frames are already created in SetTabs, just reference them
+        if tabFrames and tabFrames[i] then
+            table.insert(MCLcore.sectionFrames, tabFrames[i])
+        end
     end    
-
-    OverviewStats(MCLcore.overview)
-
-
 end
 
 
@@ -327,9 +291,6 @@ function MCL_functions:GetCollectedMounts()
             if v == vv then
                 exists = true
             end
-        end
-        if exists == false then
-            print(v)
         end
     end
 end
@@ -574,7 +535,6 @@ end
 
 
 function MCL_functions:CompareMountJournal()
-    print("Comparing Mount Journal to Addon")
     local mounts = {}
     local i = 1
     for k,v in pairs(C_MountJournal.GetMountIDs()) do
@@ -588,7 +548,6 @@ function MCL_functions:CompareMountJournal()
     for x,y in ipairs(mounts) do
         if y ~= nil then
             local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID, _ = C_MountJournal.GetMountInfoByID(y)
-            print(mountName, mountID)
         end
     end
 end
@@ -884,10 +843,16 @@ function UpdateProgressBar(frame, total, collected)
     if not frame then
         return
     end    
+    
     if total == nil and collected == nil then
+        return frame
     else
         if total == 0 then
-            return
+            -- Handle zero total case properly
+            frame:SetValue(0)
+            frame.Text:SetText("0/0 (0%)")
+            frame:SetStatusBarColor(0.3, 0.3, 0.3)  -- Dark gray for no data
+            return frame
         end
         frame.collected = collected
         frame.total = total
@@ -895,17 +860,54 @@ function UpdateProgressBar(frame, total, collected)
         frame.Text:SetText(collected.."/"..total.." ("..math.floor(((collected/total)*100)).."%)")
         frame.val = (collected/total)*100
     end
+    
     if frame.val == nil then
         return frame
     end
+    
+    if not MCL_SETTINGS or not MCL_SETTINGS.progressColors then
+        -- Fallback colors
         if frame.val < 33 then
-            frame:SetStatusBarColor(MCL_SETTINGS.progressColors.low.r, MCL_SETTINGS.progressColors.low.g, MCL_SETTINGS.progressColors.low.b)
+            frame:SetStatusBarColor(1, 0, 0) -- red
         elseif frame.val < 66 then
-            frame:SetStatusBarColor(MCL_SETTINGS.progressColors.medium.r, MCL_SETTINGS.progressColors.medium.g, MCL_SETTINGS.progressColors.medium.b) -- orange
+            frame:SetStatusBarColor(1, 0.65, 0) -- orange
         elseif frame.val < 100 then
-            frame:SetStatusBarColor(MCL_SETTINGS.progressColors.high.r, MCL_SETTINGS.progressColors.high.g, MCL_SETTINGS.progressColors.high.b) -- green
-        elseif frame.val == 100 then frame:SetStatusBarColor(MCL_SETTINGS.progressColors.complete.r, MCL_SETTINGS.progressColors.complete.g, MCL_SETTINGS.progressColors.complete.b)--blue
+            frame:SetStatusBarColor(0, 1, 0) -- green
+        else
+            frame:SetStatusBarColor(0, 0.5, 1) -- blue
         end
+        return frame
+    end
+    
+    if frame.val < 33 then
+        frame:SetStatusBarColor(MCL_SETTINGS.progressColors.low.r, MCL_SETTINGS.progressColors.low.g, MCL_SETTINGS.progressColors.low.b) -- red
+    elseif frame.val < 66 then
+        frame:SetStatusBarColor(MCL_SETTINGS.progressColors.medium.r, MCL_SETTINGS.progressColors.medium.g, MCL_SETTINGS.progressColors.medium.b) -- orange
+    elseif frame.val < 100 then
+        frame:SetStatusBarColor(MCL_SETTINGS.progressColors.high.r, MCL_SETTINGS.progressColors.high.g, MCL_SETTINGS.progressColors.high.b) -- green
+    elseif frame.val == 100 then
+        frame:SetStatusBarColor(MCL_SETTINGS.progressColors.complete.r, MCL_SETTINGS.progressColors.complete.g, MCL_SETTINGS.progressColors.complete.b) -- blue
+    end
+    
+    -- Ensure we have a good texture for coloring
+    local textureToUse = "Interface\\TargetingFrame\\UI-StatusBar"  -- Default fallback
+    
+    -- Try to get the texture from settings first
+    if MCL_SETTINGS and MCL_SETTINGS.statusBarTexture and MCLcore.media then
+        local settingsTexture = MCLcore.media:Fetch("statusbar", MCL_SETTINGS.statusBarTexture)
+        if settingsTexture then
+            textureToUse = settingsTexture
+        end
+    end
+    
+    -- Set the texture
+    frame:SetStatusBarTexture(textureToUse)
+    local texture = frame:GetStatusBarTexture()
+    if texture then
+        texture:SetHorizTile(false)
+        texture:SetVertTile(false)
+    end
+    
     return frame
 end
 
@@ -939,7 +941,9 @@ end
 
 function MCL_functions:UpdateCollection()
     clearOverviewStats()
-    MCLcore.MCL_MF.Bg:SetVertexColor(0, 0, 0, MCL_SETTINGS.opacity)
+    if MCLcore.MCL_MF.Bg then
+        MCLcore.MCL_MF.Bg:SetVertexColor(0, 0, 0, MCL_SETTINGS.opacity)
+    end
     MCLcore.total = 0
     MCLcore.collected = 0
 
@@ -1006,27 +1010,28 @@ function MCL_functions:UpdateCollection()
                             if mountID then
                                 local isCollected = IsMountCollected(mountID)
                                 if isCollected == nil then
-                                    print("MCL: Warning - Mount ID", mountID, "not fully loaded for", vvv, "in section", vv.rel and vv.rel.name or "unknown")
                                     C_Item.RequestLoadItemDataByID(vvv) -- Force load if item-based
                                 end
                                 total = total + 1
                                 if isCollected then
                                     collected = collected + 1
                                 end
-                            else
-                                print("MCL: Warning - No mount ID for", vvv, "in section", vv.rel and vv.rel.name or "unknown")
                             end
                         end
                     end
-                    vv.pBar = UpdateProgressBar(vv.pBar, total, collected)
+                    if vv.pBar then
+                        vv.pBar = UpdateProgressBar(vv.pBar, total, collected)
+                    end
                     section_total = section_total + total
                     section_collected = section_collected + collected
                 else
-                    vv.pBar = UpdateProgressBar(vv.pBar, section_total, section_collected)
+                    if vv.pBar then
+                        vv.pBar = UpdateProgressBar(vv.pBar, section_total, section_collected)
+                    end
                 end
                 if vv["rel"] then
                     for q, e in pairs(MCLcore.overviewFrames) do
-                        if e.name == vv.rel.name then
+                        if e.name == vv.rel.name and e.frame then
                             e.frame = UpdateProgressBar(e.frame, section_total, section_collected)
                             section_name = e.name
                         end
@@ -1041,10 +1046,13 @@ function MCL_functions:UpdateCollection()
 
     -- Validate and update overall progress
     if MCLcore.total < 0 then
-        print("MCL: Error - MCLcore.total is negative:", MCLcore.total, "Resetting to 0")
         MCLcore.total = 0
     end
-    MCLcore.overview.pBar = UpdateProgressBar(MCLcore.overview.pBar, MCLcore.total, MCLcore.collected)
+    
+    -- Only update overview progress bar if it exists
+    if MCLcore.overview and MCLcore.overview.pBar then
+        MCLcore.overview.pBar = UpdateProgressBar(MCLcore.overview.pBar, MCLcore.total, MCLcore.collected)
+    end
 end
 
 
@@ -1053,7 +1061,10 @@ function MCL_functions:updateFromSettings(setting, val)
         if setting == "texture" then
             v:SetStatusBarTexture(MCLcore.media:Fetch("statusbar", MCL_SETTINGS.statusBarTexture))
         elseif setting == "progressColor" then
-            v = UpdateProgressBar(v)
+            -- Call UpdateProgressBar with proper parameters to refresh colors
+            if v.total and v.collected then
+                v = UpdateProgressBar(v, v.total, v.collected)
+            end
         end
     end
     if setting == "opacity" then
@@ -1078,7 +1089,6 @@ end
 --------------------------------------------------
 
 function MCL_functions:test()
-    print("Test")
 end
 
 
@@ -1331,8 +1341,29 @@ function MCL_functions:AddonSettings()
                 end,
                 get = function(info) return MCL_SETTINGS.hideCollectedMounts; end,
             },
+            useBlizzardTheme = {
+                order = 13.6,
+                name = MCLcore.L["Use Blizzard Theme"],
+                desc = MCLcore.L["If enabled, the addon will use Blizzard's default UI theme. Requires UI reload."],
+                type = "toggle",
+                width = "full",
+                set = function(info, val)
+                    if MCL_SETTINGS.useBlizzardTheme ~= val then
+                        StaticPopupDialogs["MCL_RELOADUI"] = {
+                            text = MCLcore.L["Changing this setting requires a UI reload. Reload now?"],
+                            button1 = MCLcore.L["YES"],
+                            button2 = MCLcore.L["NO"],
+                            OnAccept = function() MCL_SETTINGS.useBlizzardTheme = val; ReloadUI(); end,
+                            timeout = 0,
+                            hideOnEscape = true,
+                        }
+                        StaticPopup_Show("MCL_RELOADUI")
+                    end
+                end,
+                get = function(info) return MCL_SETTINGS.useBlizzardTheme; end,
+            },
             minimapIconToggle = {
-                order = 14,
+                order = 13.7,
                 name = MCLcore.L["Show Minimap Icon"],
                 desc = MCLcore.L["Toggle the display of the Minimap Icon."],
                 type = "toggle",
@@ -1348,7 +1379,7 @@ function MCL_functions:AddonSettings()
                 get = function(info)
                     return not MCL_MM.db.profile.minimap.hide
                 end,
-            },            
+            },
             headerfour = {             
                 order = 15,
                 name = MCLcore.L["Reset Settings"],
@@ -1372,4 +1403,32 @@ function MCL_functions:AddonSettings()
     AceConfig:RegisterOptionsTable(MCLcore.addon_name, options, {});
     MCLcore.AceConfigDialog = LibStub("AceConfigDialog-3.0");
     MCLcore.AceConfigDialog:AddToBlizOptions(MCLcore.addon_name, MCLcore.addon_name, nil);
+end
+
+function MCL_functions:CalculateSectionStats()
+    MCLcore.stats = {}
+    
+    for _, section in ipairs(MCLcore.sections or {}) do
+        local sectionTotal = 0
+        local sectionCollected = 0
+        
+        if section.mounts and section.mounts.categories then
+            for categoryName, categoryData in pairs(section.mounts.categories) do
+                local mountList = categoryData.mounts or categoryData.mountID or {}
+                
+                for _, mountId in ipairs(mountList) do
+                    sectionTotal = sectionTotal + 1
+                    local mount_Id = MCLcore.Function:GetMountID(mountId)
+                    if mount_Id and IsMountCollected(mount_Id) then
+                        sectionCollected = sectionCollected + 1
+                    end
+                end
+            end
+        end
+        
+        MCLcore.stats[section.name] = {
+            total = sectionTotal,
+            collected = sectionCollected
+        }
+    end
 end

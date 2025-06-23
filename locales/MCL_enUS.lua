@@ -207,4 +207,6 @@ if L then
     L["Changing this setting requires a UI reload. Reload now?"] = "Changing this setting requires a UI reload. Reload now?"
     L["YES"] = "Yes"
     L["NO"] = "No"
+    L["Use Blizzard Theme"] = "Use Blizzard Theme"
+    L["If enabled, the addon will use Blizzard's default UI theme. Requires UI reload."] = "If enabled, the addon will use Blizzard's default UI theme. Requires UI reload."
 end
