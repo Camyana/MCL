@@ -186,6 +186,11 @@ local function onevent(self, event, arg1, ...)
         
         -- Initiate the addon when the required addon is loaded
         MCL_Load:Init()
+        
+        -- Initialize search functionality
+        if MCLcore.InitializeSearch then
+            MCLcore.InitializeSearch()
+        end
     end
 end
 

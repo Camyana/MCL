@@ -206,7 +206,8 @@ if L then
     L["If enabled, collected mounts will not be shown in the list at all. Requires UI reload."] = "If enabled, collected mounts will not be shown in the list at all. Requires UI reload."
     L["Changing this setting requires a UI reload. Reload now?"] = "Changing this setting requires a UI reload. Reload now?"
     L["YES"] = "Yes"
-    L["NO"] = "No"
-    L["Use Blizzard Theme"] = "Use Blizzard Theme"
+    L["NO"] = "No"    L["Use Blizzard Theme"] = "Use Blizzard Theme"
     L["If enabled, the addon will use Blizzard's default UI theme. Requires UI reload."] = "If enabled, the addon will use Blizzard's default UI theme. Requires UI reload."
+    L["Search Results"] = "Search Results"
+    L["Search mounts..."] = "Search mounts..."
 end

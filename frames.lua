@@ -219,9 +219,9 @@ function MCL_frames:CreateMainFrame()
         MCL_mainFrame.title:ClearAllPoints()
 		-- if blizzard theme
 		if MCL_SETTINGS.useBlizzardTheme then
-			MCL_mainFrame.title:SetPoint("TOPLEFT", MCL_mainFrame, "TOPLEFT", 10, -10)  -- Moved down 10px from the very top
+			MCL_mainFrame.title:SetPoint("TOPLEFT", MCL_mainFrame, "TOPLEFT", 10, -8)  -- Moved down 10px from the very top
 		else
-			MCL_mainFrame.title:SetPoint("TOPLEFT", MCL_mainFrame, "TOPLEFT", 10, -4)  -- Moved down 5px from the very top
+			MCL_mainFrame.title:SetPoint("TOPLEFT", MCL_mainFrame, "TOPLEFT", 10, -2)  -- Moved down 5px from the very top
 		end
         MCL_mainFrame.title:SetText("Mount Collection Log")
 
@@ -378,7 +378,7 @@ function MCL_frames:SetTabs()
     tabFrame.tabs = {}
     MCLcore.sectionFrames = {}
 
-    local navYOffset = -20
+    local navYOffset = -55  -- Adjusted to account for search bar
     local tabIndex = 1
     local selectedTab = nil
 
@@ -399,6 +399,8 @@ function MCL_frames:SetTabs()
         MCL_mainFrame.ScrollFrame:SetScrollChild(tab.content)
         tab.content:Show()
         MCL_mainFrame.ScrollFrame:SetVerticalScroll(0)
+        -- Store the currently selected tab globally for search functionality
+        MCLcore.currentlySelectedTab = tab
     end
 
     -- 1. Overview tab (always first)
@@ -432,6 +434,8 @@ function MCL_frames:SetTabs()
         tabIndex = tabIndex + 1
         navYOffset = navYOffset - 36
         selectedTab = tab
+        -- Store globally for search functionality
+        MCLcore.currentlySelectedTab = tab
     end
     -- 2. Expansion grid (icon-only, 3 per row)
     local gridCols, iconSize, iconPad = 3, 36, 8
@@ -457,10 +461,10 @@ function MCL_frames:SetTabs()
         -- Populate expansion tab content
         if v.mounts then
             if v.mounts.categories then
-                MCLcore.Frames:createCategoryFrame(v.mounts.categories, btn.content)
+                MCLcore.Frames:createCategoryFrame(v.mounts.categories, btn.content, v.name)
             else
                 -- For some sections, mounts might be directly in v.mounts
-                MCLcore.Frames:createCategoryFrame(v.mounts, btn.content)
+                MCLcore.Frames:createCategoryFrame(v.mounts, btn.content, v.name)
             end
         end
         btn.content:Hide()
@@ -494,9 +498,9 @@ function MCL_frames:SetTabs()
         -- Populate other tab content if available
         if v.mounts then
             if v.mounts.categories then
-                MCLcore.Frames:createCategoryFrame(v.mounts.categories, tab.content)
+                MCLcore.Frames:createCategoryFrame(v.mounts.categories, tab.content, v.name)
             else
-                MCLcore.Frames:createCategoryFrame(v.mounts, tab.content)
+                MCLcore.Frames:createCategoryFrame(v.mounts, tab.content, v.name)
             end
         end
         tab.content:Hide()
@@ -527,6 +531,9 @@ function MCL_frames:SetTabs()
         tab.text:SetText(L[pinnedSection.name] or pinnedSection.name)
         tab.section = pinnedSection
         tab.content = MCLcore.Frames:createContentFrame(MCL_mainFrame.ScrollChild, pinnedSection.name)
+        -- Set global reference for pinned content frame (used by functions.lua)
+        _G["PinnedFrame"] = tab.content
+        _G["PinnedTab"] = tab
         -- Optionally, populate pinned tab content if you have a function for it
         tab.content:Hide()
         tab:SetScript("OnClick", function(self)
@@ -564,13 +571,22 @@ function MCL_frames:createNavFrame(relativeFrame, title)
     
     -- Set height to match current main frame height
     local _, currentHeight = MCL_frames:GetCurrentFrameDimensions()
-    frame:SetHeight(currentHeight)
+    frame:SetHeight(currentHeight+1)
     
     frame:ClearAllPoints()
     
     -- Consistent positioning for both themes - account for any frame insets
-    local xOffset = 5
-    local yOffset = 0
+    local xOffset = -1
+    local yOffset = 2
+
+
+    if MCL_SETTINGS.useBlizzardTheme then
+        -- Blizzard theme has a different inset, adjust accordingly
+        xOffset = 3  -- Adjusted for Blizzard theme
+        yOffset = -5
+        frame:SetHeight(currentHeight-9)
+    end
+
     
     -- Get the actual frame dimensions and adjust for any template differences
     if MCL_SETTINGS.useBlizzardTheme then
@@ -620,6 +636,81 @@ function MCL_frames:createNavFrame(relativeFrame, title)
     else
         frame.title:SetTextColor(1, 1, 1, 1)  -- White for default theme
     end
+    
+    -- Create search bar
+    frame.searchContainer = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+    frame.searchContainer:SetSize(nav_width - 10, 25)
+    frame.searchContainer:SetPoint("TOP", frame.title, "BOTTOM", 0, -5)
+    frame.searchContainer:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        edgeSize = 2
+    })
+    frame.searchContainer:SetBackdropColor(0.1, 0.1, 0.1, 0.9)
+    frame.searchContainer:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
+    
+    -- Create search editbox
+    frame.searchBox = CreateFrame("EditBox", nil, frame.searchContainer)
+    frame.searchBox:SetSize(nav_width - 20, 20)
+    frame.searchBox:SetPoint("CENTER", frame.searchContainer, "CENTER", 0, 0)
+    frame.searchBox:SetFontObject("GameFontHighlightSmall")
+    frame.searchBox:SetTextColor(1, 1, 1, 1)
+    frame.searchBox:SetAutoFocus(false)
+    frame.searchBox:SetMaxLetters(50)
+    frame.searchBox:EnableMouse(true)
+    frame.searchBox:SetScript("OnEnterPressed", function(self)
+        self:ClearFocus()
+        MCLcore.Search:PerformSearch(self:GetText())
+    end)
+    frame.searchBox:SetScript("OnEscapePressed", function(self)
+        self:ClearFocus()
+        self:SetText("")
+        MCLcore.Search:ClearSearchAndGoToOverview()
+    end)
+    frame.searchBox:SetScript("OnTextChanged", function(self, userInput)
+        if userInput then
+            local text = self:GetText()
+            if text == "" then
+                MCLcore.Search:ClearSearchAndGoToOverview()
+            end
+        end
+    end)
+    
+    -- Create search placeholder text
+    frame.searchPlaceholder = frame.searchContainer:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    frame.searchPlaceholder:SetPoint("LEFT", frame.searchBox, "LEFT", 5, 0)
+    frame.searchPlaceholder:SetText(L["Search mounts..."])
+    frame.searchPlaceholder:SetTextColor(0.6, 0.6, 0.6, 1)
+    
+    -- Show/hide placeholder based on editbox focus and content
+    frame.searchBox:SetScript("OnEditFocusGained", function(self)
+        frame.searchPlaceholder:Hide()
+    end)
+    frame.searchBox:SetScript("OnEditFocusLost", function(self)
+        if self:GetText() == "" then
+            frame.searchPlaceholder:Show()
+        end
+    end)
+    
+    -- Create clear search button
+    frame.clearButton = CreateFrame("Button", nil, frame.searchContainer)
+    frame.clearButton:SetSize(16, 16)
+    frame.clearButton:SetPoint("RIGHT", frame.searchContainer, "RIGHT", -3, 0)
+    frame.clearButton:SetNormalTexture("Interface\\FriendsFrame\\ClearBroadcastIcon")
+    frame.clearButton:SetScript("OnClick", function()
+        frame.searchBox:SetText("")
+        frame.searchBox:ClearFocus()
+        MCLcore.Search:ClearSearchAndGoToOverview()
+        frame.searchPlaceholder:Show()
+    end)
+    frame.clearButton:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText("Clear Search", 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    frame.clearButton:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
     
     -- Ensure the frame is visible and at the correct strata
     frame:SetFrameStrata("HIGH")
@@ -919,7 +1010,7 @@ end
 -- Creating a placeholder for each category, this is where we attach each mount to.
 ----------------------------------------------------------------
 
-function MCL_frames:createCategoryFrame(set, relativeFrame)
+function MCL_frames:createCategoryFrame(set, relativeFrame, sectionName)
     if not set then
         return
     end
@@ -963,13 +1054,22 @@ function MCL_frames:createCategoryFrame(set, relativeFrame)
             -- Calculate mount stats for this category first (needed for dynamic height)
             local totalMounts = 0
             local collectedMounts = 0
+            local displayedMounts = 0  -- Track mounts that will actually be displayed
             local mountList = categoryData.mounts or categoryData.mountID or {}
             
             for _, mountId in ipairs(mountList) do
-                totalMounts = totalMounts + 1
                 local mount_Id = MCLcore.Function:GetMountID(mountId)
-                if mount_Id and IsMountCollected(mount_Id) then
-                    collectedMounts = collectedMounts + 1
+                if mount_Id then
+                    local isCollected = IsMountCollected(mount_Id)
+                    totalMounts = totalMounts + 1
+                    if isCollected then
+                        collectedMounts = collectedMounts + 1
+                    end
+                    
+                    -- Only count towards displayed mounts if we're not hiding collected mounts, or if it's not collected
+                    if not (MCL_SETTINGS.hideCollectedMounts and isCollected) then
+                        displayedMounts = displayedMounts + 1
+                    end
                 end
             end
             
@@ -993,7 +1093,7 @@ function MCL_frames:createCategoryFrame(set, relativeFrame)
             spacingBetween = math.max(2, spacingBetween)  -- Minimum 2px spacing
             
             -- Calculate dynamic height based on actual mount layout
-            local numRows = math.ceil(totalMounts / mountsPerRow)
+            local numRows = math.ceil(displayedMounts / mountsPerRow)
             local baseHeight = 80  -- Base height (title + progress bar + padding)
             local rowSpacing = 4  -- Minimal Y-axis spacing between rows (reduced)
             local rowHeight = mountSize + rowSpacing  -- Actual row height based on calculated mount size
@@ -1094,13 +1194,19 @@ function MCL_frames:createCategoryFrame(set, relativeFrame)
             -- Y-axis spacing (only affected by height changes)
             local rowSpacing = 4  -- Minimal Y-axis spacing between rows
             
-            local maxDisplayMounts = totalMounts  -- Show all mounts instead of limiting to 24
+            local maxDisplayMounts = displayedMounts  -- Show all displayed mounts instead of limiting to 24
             local mountStartX = 10
+            local displayedIndex = 0  -- Track the actual displayed position
             
             for i, mountId in ipairs(mountList) do
-                if i <= maxDisplayMounts then
-                    local col = ((i-1) % mountsPerRow)
-                    local row = math.floor((i-1) / mountsPerRow)
+                -- Check if we should skip this mount due to hide collected mounts setting
+                local mount_Id = MCLcore.Function:GetMountID(mountId)
+                if not (mount_Id and MCL_SETTINGS.hideCollectedMounts and IsMountCollected(mount_Id)) then
+                    -- Only process this mount if it's not collected or if hideCollectedMounts is disabled
+                    displayedIndex = displayedIndex + 1
+                    if displayedIndex <= maxDisplayMounts then
+                    local col = ((displayedIndex-1) % mountsPerRow)
+                    local row = math.floor((displayedIndex-1) / mountsPerRow)
                     
                     -- Calculate exact position for this icon
                     local iconX = mountStartX + col * (mountSize + spacingBetween)
@@ -1114,20 +1220,41 @@ function MCL_frames:createCategoryFrame(set, relativeFrame)
                         iconX - 1, -- Minimal offset for overhang
                         iconY + 1) -- Minimal offset for overhang
                     
+                    -- Store the mount ID for search functionality
+                    backdropFrame.mountID = mountId
+                    
                     -- Create mount frame (for icon) centered in backdrop
                     local mountFrame = CreateFrame("Button", nil, backdropFrame)
                     mountFrame:SetSize(mountSize, mountSize)
-                    mountFrame:SetPoint("CENTER", backdropFrame, "CENTER", 0, 0)
-                    
-                    -- Get mount info and set icon
-                    local mount_Id = MCLcore.Function:GetMountID(mountId)
-                    if mount_Id then
+                    mountFrame:SetPoint("CENTER", backdropFrame, "CENTER", 0, 0)                            -- Store the mount ID for search functionality
+                            mountFrame.mountID = mountId
+                            
+                            -- Set category and section for pinning functionality
+                            mountFrame.category = categoryData.name or categoryName
+                            mountFrame.section = sectionName or "Unknown"
+                            
+                            -- Get mount info and set icon
                         local mountName, spellID, icon = C_MountJournal.GetMountInfoByID(mount_Id)
                         if icon then
                             -- Create the icon texture
                             mountFrame.tex = mountFrame:CreateTexture(nil, "ARTWORK")
                             mountFrame.tex:SetAllPoints(mountFrame)
                             mountFrame.tex:SetTexture(icon)
+                            
+                            -- Create pin icon for this mount frame
+                            mountFrame.pin = mountFrame:CreateTexture(nil, "OVERLAY")
+                            mountFrame.pin:SetWidth(16)
+                            mountFrame.pin:SetHeight(16)
+                            mountFrame.pin:SetTexture("Interface\\AddOns\\MCL\\icons\\pin.blp")
+                            mountFrame.pin:SetPoint("TOPRIGHT", mountFrame, "TOPRIGHT", 6, 6)
+                            
+                            -- Check if this mount is pinned and set pin visibility
+                            local pin_check = MCLcore.Function:CheckIfPinned("m"..mount_Id)
+                            if pin_check == true then
+                                mountFrame.pin:SetAlpha(1)
+                            else
+                                mountFrame.pin:SetAlpha(0)
+                            end
                             
                             -- Check if mount is collected and style backdrop accordingly
                             if IsMountCollected(mount_Id) then
@@ -1158,7 +1285,7 @@ function MCL_frames:createCategoryFrame(set, relativeFrame)
                             end
                         end
                     end
-                end
+                end  -- Close the if block for non-hidden mounts
             end
             
             -- Update column positions for next category

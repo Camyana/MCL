@@ -346,6 +346,11 @@ function MCL_functions:SetMouseClickFunctionalityPin(frame, mountID, mountName, 
                 DressUpMount(mountID)
             elseif button == 'RightButton' then
                 if IsMountCollected(mountID) == false then
+                    -- Initialize MCL_PINNED if it doesn't exist
+                    if not MCL_PINNED then
+                        MCL_PINNED = {}
+                    end
+                    
                     local pin = false
                     local pin_count = table.getn(MCL_PINNED)
                     if pin_count ~= nil then                     
@@ -358,6 +363,10 @@ function MCL_functions:SetMouseClickFunctionalityPin(frame, mountID, mountName, 
                                           
                     table.remove(MCL_PINNED, pin)
                     local index = 0
+                    -- Initialize MCLcore.mountFrames[1] if it doesn't exist
+                    if not MCLcore.mountFrames[1] then
+                        MCLcore.mountFrames[1] = {}
+                    end
                     for k,v in pairs(MCLcore.mountFrames[1]) do
                         index = index + 1
                         if tostring(v.mountID) == tostring(mountID) then
@@ -376,10 +385,16 @@ function MCL_functions:SetMouseClickFunctionalityPin(frame, mountID, mountName, 
                 end
             end               
         elseif button=='LeftButton' then
-            if (itemLink) then
-                frame:SetScript("OnHyperlinkClick", ChatFrame_OnHyperlinkShow(_, itemLink, itemLink, _))
-            elseif (spellID) then
-                frame:SetScript("OnHyperlinkClick", ChatFrame_OnHyperlinkShow(_, GetSpellLink(spellID), GetSpellLink(spellID), _))
+            if IsShiftKeyDown() then
+                -- Handle shift-click to link mount in chat
+                if itemLink and ChatEdit_GetActiveWindow() then
+                    ChatEdit_InsertLink(itemLink)
+                elseif spellID then
+                    local spellLink = C_Spell.GetSpellLink(spellID)
+                    if spellLink and ChatEdit_GetActiveWindow() then
+                        ChatEdit_InsertLink(spellLink)
+                    end
+                end
             end
         end
         if button == 'RightButton' then
@@ -396,6 +411,11 @@ function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, ite
                 DressUpMount(mountID)
             elseif button == 'RightButton' then
                 if IsMountCollected(mountID) == false then
+                    -- Initialize MCL_PINNED if it doesn't exist
+                    if not MCL_PINNED then
+                        MCL_PINNED = {}
+                    end
+                    
                     local pin = false
                     local pin_count = table.getn(MCL_PINNED)
                     if pin_count ~= nil then                     
@@ -406,9 +426,17 @@ function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, ite
                         end
                     end
                     if pin ~= false then
-                        frame.pin:SetAlpha(0)
+                        if frame.pin then
+                            frame.pin:SetAlpha(0)
+                        end
                         table.remove(MCL_PINNED, pin)
+                        -- Update all pin icons for this mount
+                        MCLcore.Function:UpdateAllPinIcons(mountID)
                         local index = 0
+                        -- Initialize MCLcore.mountFrames[1] if it doesn't exist
+                        if not MCLcore.mountFrames[1] then
+                            MCLcore.mountFrames[1] = {}
+                        end
                         for k,v in pairs(MCLcore.mountFrames[1]) do
                             index = index + 1
                             if tostring(v.mountID) == tostring(mountID) then
@@ -426,7 +454,9 @@ function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, ite
                             end
                         end
                     else	                            
-                        frame.pin:SetAlpha(1)
+                        if frame.pin then
+                            frame.pin:SetAlpha(1)
+                        end
                         local t = {
                             mountID = "m"..mountID,
                             category = frame.category,
@@ -438,25 +468,32 @@ function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, ite
                             MCL_PINNED[pin_count+1] = t
                         end
                         MCLcore.Function:CreatePinnedMount(mountID, frame.category, frame.section)
+                        -- Update all pin icons for this mount
+                        MCLcore.Function:UpdateAllPinIcons(mountID)
 
                     end
                 end
             end               
         elseif button=='LeftButton' then
-            if isSteadyFlight then
+            if IsShiftKeyDown() then
+                -- Handle shift-click to link mount in chat
+                if itemLink and ChatEdit_GetActiveWindow() then
+                    ChatEdit_InsertLink(itemLink)
+                elseif spellID then
+                    local spellLink = C_Spell.GetSpellLink(spellID)
+                    if spellLink and ChatEdit_GetActiveWindow() then
+                        ChatEdit_InsertLink(spellLink)
+                    end
+                end
+            elseif isSteadyFlight then
                 if frame.pop and frame.pop:IsShown() then 
                     frame.pop:Hide()
                 elseif frame.pop then
                     frame.pop:Show()
                 end
             else
-                if (itemLink) then
-                    frame:SetScript("OnHyperlinkClick", function()
-                        ChatFrame_OnHyperlinkShow(nil, itemLink, "LeftButton")
-                    end)
-                elseif (spellID) then
-                    frame:SetScript("OnHyperlinkClick", ChatFrame_OnHyperlinkShow(_, GetSpellLink(spellID), GetSpellLink(spellID), _))
-                end
+                -- Don't add conflicting OnClick handlers here since OnMouseDown is already handling mouse events
+                -- Shift-click functionality is handled in SetMouseClickFunctionality
             end
         end
         if button == 'RightButton' then
@@ -617,15 +654,27 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
                     bgFile = [[Interface\Buttons\WHITE8x8]],              
                 })
 
-                frame.pin = frame:CreateTexture()
-                frame.pin:SetWidth(24)
-                frame.pin:SetHeight(24)
+                frame.pin = frame:CreateTexture(nil, "OVERLAY")
+                frame.pin:SetWidth(16)
+                frame.pin:SetHeight(16)
                 frame.pin:SetTexture("Interface\\AddOns\\MCL\\icons\\pin.blp")
-                frame.pin:SetPoint("TOPLEFT", frame, "TOPLEFT", 20,12)
+                frame.pin:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -2, -2)
                 frame.pin:SetAlpha(0)
 
-                frame.category = category.category
-                frame.section = category.section
+                -- Handle category and section assignment based on context
+                if pin and vv.category and vv.section then
+                    -- For pinned mounts, use the data from the pinned mount entry
+                    frame.category = vv.category
+                    frame.section = vv.section
+                elseif category and category.category and category.section then
+                    -- For regular mounts, use the category data
+                    frame.category = category.category
+                    frame.section = category.section
+                else
+                    -- Fallback to prevent errors
+                    frame.category = "Unknown"
+                    frame.section = "Unknown"
+                end
 
                 frame.dragonRidable = isSteadyFlight
 
@@ -694,7 +743,7 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
                     frame:SetBackdropColor(0, 0, 0, MCL_SETTINGS.opacity)
                     frame.tex:SetVertexColor(1, 1, 1, 1)
 
-                    frame.pin:SetAlpha(0)
+                    -- Pin icon is already set correctly above, don't hide it
 
                     frame:SetPoint("BOTTOMLEFT", previous_frame, "BOTTOMLEFT", 0, -frame.sourceText:GetStringHeight()-y);
                     
@@ -734,8 +783,18 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
 
     local frame_size = 30
     local mountFrames = {}
+    
+    -- Initialize MCLcore.mountFrames[1] if it doesn't exist
+    if not MCLcore.mountFrames[1] then
+        MCLcore.mountFrames[1] = {}
+    end
+    
     local total_pinned = table.getn(MCLcore.mountFrames[1])
     if total_pinned == 0 then
+        -- Initialize MCL_PINNED if it doesn't exist
+        if not MCL_PINNED then
+            MCL_PINNED = {}
+        end
         local overflow, mountFrame = MCLcore.Function:CreateMountsForCategory(MCL_PINNED, _G["PinnedFrame"], 30, _G["PinnedTab"], true, true)
         MCLcore.mountFrames[1] = mountFrame
     else
@@ -744,7 +803,8 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
         local mountName, spellID, icon, _, _, sourceType, _, isFactionSpecific, faction, _, isCollected, mountID, _ = C_MountJournal.GetMountInfoByID(mount_Id)
         _,_, sourceText =  C_MountJournal.GetMountInfoExtraByID(mount_Id)
 
-        local frame = CreateFrame("Button", nil, relativeFrame, "BackdropTemplate");
+        -- Create frame parented to the Pinned section, not to the previous frame
+        local frame = CreateFrame("Button", nil, _G["PinnedFrame"], "BackdropTemplate");
         frame:SetWidth(frame_size);
         frame:SetHeight(frame_size);
         frame:SetBackdrop({
@@ -754,11 +814,11 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
             tileSize = frame_size + 2,    
         })
 
-        frame.pin = frame:CreateTexture()
-        frame.pin:SetWidth(24)
-        frame.pin:SetHeight(24)
+        frame.pin = frame:CreateTexture(nil, "OVERLAY")
+        frame.pin:SetWidth(16)
+        frame.pin:SetHeight(16)
         frame.pin:SetTexture("Interface\\AddOns\\MCL\\icons\\pin.blp")
-        frame.pin:SetPoint("TOPLEFT", frame, "TOPLEFT", 20,12)
+        frame.pin:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -2, -2)
         frame.pin:SetAlpha(1)
 
         frame.tex = frame:CreateTexture()
@@ -930,6 +990,9 @@ local function IsMountPinned(id)
 end
 
 local function UpdatePin(frame)
+    if not frame.pin then
+        return  -- Exit early if pin doesn't exist
+    end
     local pinned, pin = MCLcore.Function:CheckIfPinned("m"..tostring(frame.mountID))
     if pinned == true then
         frame.pin:SetAlpha(1)
@@ -1052,6 +1115,21 @@ function MCL_functions:UpdateCollection()
     -- Only update overview progress bar if it exists
     if MCLcore.overview and MCLcore.overview.pBar then
         MCLcore.overview.pBar = UpdateProgressBar(MCLcore.overview.pBar, MCLcore.total, MCLcore.collected)
+    end
+    
+    -- Initialize pinned section if it doesn't exist yet
+    if _G["PinnedFrame"] and (not MCLcore.mountFrames[1] or #MCLcore.mountFrames[1] == 0) then
+        -- Initialize MCL_PINNED if it doesn't exist
+        if not MCL_PINNED then
+            MCL_PINNED = {}
+        end
+        -- Initialize mountFrames[1] if it doesn't exist
+        if not MCLcore.mountFrames[1] then
+            MCLcore.mountFrames[1] = {}
+        end
+        -- Create the pinned section content even if empty
+        local overflow, mountFrame = MCLcore.Function:CreateMountsForCategory(MCL_PINNED, _G["PinnedFrame"], 30, _G["PinnedTab"], true, true)
+        MCLcore.mountFrames[1] = mountFrame
     end
 end
 
@@ -1430,5 +1508,48 @@ function MCL_functions:CalculateSectionStats()
             total = sectionTotal,
             collected = sectionCollected
         }
+    end
+end
+
+function MCL_functions:UpdateAllPinIcons(mountID)
+    -- Update pin icons for mounts with the given mountID across all frames
+    local mountIDString = "m" .. mountID
+    local isPinned = MCLcore.Function:CheckIfPinned(mountIDString)
+    
+    -- Update pin icons in regular mount frames (CreateMountsForCategory)
+    for k, v in pairs(MCLcore.mounts or {}) do
+        if v.frame and v.frame.mountID and tostring(v.frame.mountID) == tostring(mountID) then
+            if v.frame.pin then
+                if isPinned then
+                    v.frame.pin:SetAlpha(1)
+                else
+                    v.frame.pin:SetAlpha(0)
+                end
+            end
+        end
+    end
+    
+    -- Update pin icons in section page mount frames
+    -- We need to search through all frames in the UI to find matching mount frames
+    local function UpdateFrameRecursively(frame)
+        if frame and frame.mountID and tostring(frame.mountID) == tostring(mountID) and frame.pin then
+            if isPinned then
+                frame.pin:SetAlpha(1)
+            else
+                frame.pin:SetAlpha(0)
+            end
+        end
+        
+        -- Check children
+        if frame.GetChildren then
+            for _, child in ipairs({frame:GetChildren()}) do
+                UpdateFrameRecursively(child)
+            end
+        end
+    end
+    
+    -- Start from the main frame and search all children
+    if MCLcore.MCL_MF then
+        UpdateFrameRecursively(MCLcore.MCL_MF)
     end
 end
