@@ -207,7 +207,10 @@ if L then
     L["Hide Unobtainable from overview"] = "Скрыть недоступное из обзора"
     L["Hide Unobtainable mounts from the overview."] = "Скрыть недоступных маунтов из обзора."
     L["Show Minimap Icon"] = "Показать иконку миникарты"
-    L["Toggle the display of the Minimap Icon."] = "Переключить отображение иконки миникарты."
-    L["Reset Settings"] = "Сбросить настройки"
+    L["Toggle the display of the Minimap Icon."] = "Переключить отображение иконки миникарты."    L["Reset Settings"] = "Сбросить настройки"
     L["Reset to default settings"] = "Сбросить к стандартным настройкам"
+    L["Search Results"] = "Результаты поиска"
+    L["Search mounts..."] = "Поиск маунтов..."
+    L["Mount Collection Log"] = "Журнал коллекции маунтов"
+    L["Clear Search"] = "Очистить поиск"
 end

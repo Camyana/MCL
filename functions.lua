@@ -1392,16 +1392,16 @@ function MCL_functions:AddonSettings()
             },
             hideCollectedMounts = {
                 order = 13.5,
-                name = "Hide Collected Mounts",
-                desc = "If enabled, collected mounts will not be shown in the list at all. Requires UI reload.",
+                name = MCLcore.L["Hide Collected Mounts"],
+                desc = MCLcore.L["If enabled, collected mounts will not be shown in the list at all. Requires UI reload."],
                 type = "toggle",
                 width = "full",
                 set = function(info, val)
                     if MCL_SETTINGS.hideCollectedMounts ~= val then
                         StaticPopupDialogs["MCL_RELOAD_CONFIRM"] = {
-                            text = "Changing this setting requires a UI reload. Reload now?",
-                            button1 = YES,
-                            button2 = NO,
+                            text = MCLcore.L["Changing this setting requires a UI reload. Reload now?"],
+                            button1 = MCLcore.L["YES"],
+                            button2 = MCLcore.L["NO"],
                             OnAccept = function()
                                 MCL_SETTINGS.hideCollectedMounts = val;
                                 ReloadUI();

@@ -207,7 +207,10 @@ if L then
     L["Hide Unobtainable from overview"] = "Ocultar no obtenibles del resumen"
     L["Hide Unobtainable mounts from the overview."] = "Ocultar monturas no obtenibles del resumen."
     L["Show Minimap Icon"] = "Mostrar icono del minimapa"
-    L["Toggle the display of the Minimap Icon."] = "Alternar la visualización del icono del minimapa."
-    L["Reset Settings"] = "Restablecer configuración"
+    L["Toggle the display of the Minimap Icon."] = "Alternar la visualización del icono del minimapa."    L["Reset Settings"] = "Restablecer configuración"
     L["Reset to default settings"] = "Restablecer a la configuración predeterminada"
+    L["Search Results"] = "Resultados de búsqueda"
+    L["Search mounts..."] = "Buscar monturas..."
+    L["Mount Collection Log"] = "Registro de colección de monturas"
+    L["Clear Search"] = "Limpiar búsqueda"
 end

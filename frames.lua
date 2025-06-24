@@ -223,7 +223,7 @@ function MCL_frames:CreateMainFrame()
 		else
 			MCL_mainFrame.title:SetPoint("TOPLEFT", MCL_mainFrame, "TOPLEFT", 10, -2)  -- Moved down 5px from the very top
 		end
-        MCL_mainFrame.title:SetText("Mount Collection Log")
+        MCL_mainFrame.title:SetText(L["Mount Collection Log"])
 
         MCL_mainFrame.title:SetTextColor(0.3, 0.7, 0.9, 1)  -- White text for better visibility
     end
@@ -705,7 +705,7 @@ function MCL_frames:createNavFrame(relativeFrame, title)
     end)
     frame.clearButton:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText("Clear Search", 1, 1, 1)
+        GameTooltip:SetText(L["Clear Search"], 1, 1, 1)
         GameTooltip:Show()
     end)
     frame.clearButton:SetScript("OnLeave", function()

@@ -204,8 +204,10 @@ if L then
     L["Reset to default settings"] = "Auf Standardeinstellungen zurücksetzen"
     L["Hide Collected Mounts"] = "Gesammelte Reittiere ausblenden"
     L["If enabled, collected mounts will not be shown in the list at all. Requires UI reload."] = "Wenn aktiviert, werden gesammelte Reittiere nicht in der Liste angezeigt. UI-Neuladen erforderlich."
-    L["Changing this setting requires a UI reload. Reload now?"] = "Diese Einstellung erfordert ein Neuladen der UI. Jetzt neu laden?"    L["YES"] = "Ja"
-    L["NO"] = "Nein"
-    L["Search Results"] = "Suchergebnisse"
+    L["Changing this setting requires a UI reload. Reload now?"] = "Diese Einstellung erfordert ein Neuladen der UI. Jetzt neu laden?"
+    L["YES"] = "Ja"
+    L["NO"] = "Nein"    L["Search Results"] = "Suchergebnisse"
     L["Search mounts..."] = "Reittiere suchen..."
+    L["Mount Collection Log"] = "Reittier-Sammlungs-Log"
+    L["Clear Search"] = "Suche löschen"
 end

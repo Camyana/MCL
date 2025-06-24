@@ -207,4 +207,8 @@ if L then
     L["Changing this setting requires a UI reload. Reload now?"] = "更改此設定需要重新載入介面。現在重新載入嗎？"
     L["YES"] = "是"
     L["NO"] = "否"
+    L["Search Results"] = "搜尋結果"
+    L["Search mounts..."] = "搜尋坐騎..."
+    L["Mount Collection Log"] = "坐騎收集日誌"
+    L["Clear Search"] = "清除搜尋"
 end

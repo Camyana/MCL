@@ -204,7 +204,10 @@ if L then
     L["Reset to default settings"] = "Reimposta alle impostazioni predefinite"
     L["Hide Collected Mounts"] = "Nascondi cavalcature raccolte"
     L["If enabled, collected mounts will not be shown in the list at all. Requires UI reload."] = "Se abilitato, le cavalcature raccolte non verranno mostrate nell'elenco. Richiede il riavvio dell'interfaccia."
-    L["Changing this setting requires a UI reload. Reload now?"] = "Questa impostazione richiede il riavvio dell'interfaccia. Riavvia ora?"
-    L["YES"] = "Sì"
+    L["Changing this setting requires a UI reload. Reload now?"] = "Questa impostazione richiede il riavvio dell'interfaccia. Riavvia ora?"    L["YES"] = "Sì"
     L["NO"] = "No"
+    L["Search Results"] = "Risultati di ricerca"
+    L["Search mounts..."] = "Cerca cavalcature..."
+    L["Mount Collection Log"] = "Registro collezione cavalcature"
+    L["Clear Search"] = "Cancella ricerca"
 end

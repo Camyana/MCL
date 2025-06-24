@@ -210,4 +210,6 @@ if L then
     L["If enabled, the addon will use Blizzard's default UI theme. Requires UI reload."] = "If enabled, the addon will use Blizzard's default UI theme. Requires UI reload."
     L["Search Results"] = "Search Results"
     L["Search mounts..."] = "Search mounts..."
+    L["Mount Collection Log"] = "Mount Collection Log"
+    L["Clear Search"] = "Clear Search"
 end

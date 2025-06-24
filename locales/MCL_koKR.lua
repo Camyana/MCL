@@ -208,7 +208,10 @@ if L then
     L["Reset Colors"] = "색상 초기화"
     L["Reset to default colors"] = "기본 색상으로 초기화"
     L["Unobtainable Settings"] = "획득 불가 설정"
-    L["Hide Unobtainable from overview"] = "획득 불가 항목 개요에서 숨기기"
-    L["Hide Unobtainable mounts from the overview."] = "획득 불가 탈것을 개요에서 숨깁니다."
+    L["Hide Unobtainable from overview"] = "획득 불가 항목 개요에서 숨기기"    L["Hide Unobtainable mounts from the overview."] = "획득 불가 탈것을 개요에서 숨깁니다."
+    L["Search Results"] = "검색 결과"
+    L["Search mounts..."] = "탈것 검색..."
+    L["Mount Collection Log"] = "탈것 수집 기록"
+    L["Clear Search"] = "검색 지우기"
     -- 이미 번역된 키는 유지, 나머지는 자동 번역
 end
