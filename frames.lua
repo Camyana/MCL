@@ -1036,197 +1036,237 @@ function MCL_frames:createCategoryFrame(set, relativeFrame, sectionName)
     local leftColumnX = 0
     local rightColumnX = leftColumnX + columnWidth + columnSpacing
     
-    local leftColumnY = -10
-    local rightColumnY = -10
+    local leftColumnY = -50
+    local rightColumnY = -50
     local categoryIndex = 0
 
-    for categoryName, categoryData in pairs(set) do
+    -- Get sorted category names
+local sortedCategoryNames = {}
+for k, v in pairs(set) do
+    if type(v) == "table" then
+        table.insert(sortedCategoryNames, k)
+    end
+end
+table.sort(sortedCategoryNames)
+
+local leftColumnY = -50
+local rightColumnY = -50
+local categoryIndex = 0
+
+for _, categoryName in ipairs(sortedCategoryNames) do
+    local categoryData = set[categoryName]
+    -- Calculate mount stats for this category first (needed for dynamic height)
+    local totalMounts = 0
+    local collectedMounts = 0
+    local displayedMounts = 0  -- Track mounts that will actually be displayed
+    local mountList = categoryData.mounts or categoryData.mountID or {}
+    
+    for _, mountId in ipairs(mountList) do
+        local mount_Id = MCLcore.Function:GetMountID(mountId)
+        if mount_Id then
+            -- Faction check: Only count mounts that are not faction-specific or match the player's faction
+            local faction, faction_specific = MCLcore.Function.IsMountFactionSpecific(mountId)
+            local playerFaction = UnitFactionGroup("player")
+            local allowed = false
+            if faction_specific == false then
+                allowed = true
+            elseif faction_specific == true then
+                if faction == 0 then faction = "Horde" elseif faction == 1 then faction = "Alliance" end
+                allowed = (faction == playerFaction)
+            end
+            if allowed then
+                local isCollected = IsMountCollected(mount_Id)
+                totalMounts = totalMounts + 1
+                if isCollected then
+                    collectedMounts = collectedMounts + 1
+                end
+                if not (MCL_SETTINGS.hideCollectedMounts and isCollected) then
+                    displayedMounts = displayedMounts + 1
+                end
+            end
+        end
+    end
+
+    -- Only increment categoryIndex if the category is actually displayed (e.g., displayedMounts > 0)
+    if displayedMounts > 0 then
+        categoryIndex = categoryIndex + 1
+        -- Determine which column to use (alternate left/right)
+        local isLeftColumn = (categoryIndex % 2 == 1)
+        local xPos = isLeftColumn and leftColumnX or rightColumnX
+        local yPos = isLeftColumn and leftColumnY or rightColumnY
         
-        -- Skip if categoryData is not a table
-        if type(categoryData) == "table" then
-            categoryIndex = categoryIndex + 1
-            
-            -- Determine which column to use (alternate left/right)
-            local isLeftColumn = (categoryIndex % 2 == 1)
-            local xPos = isLeftColumn and leftColumnX or rightColumnX
-            local yPos = isLeftColumn and leftColumnY or rightColumnY
-            
-            -- Calculate mount stats for this category first (needed for dynamic height)
-            local totalMounts = 0
-            local collectedMounts = 0
-            local displayedMounts = 0  -- Track mounts that will actually be displayed
-            local mountList = categoryData.mounts or categoryData.mountID or {}
-            
-            for _, mountId in ipairs(mountList) do
-                local mount_Id = MCLcore.Function:GetMountID(mountId)
-                if mount_Id then
-                    local isCollected = IsMountCollected(mount_Id)
-                    totalMounts = totalMounts + 1
-                    if isCollected then
-                        collectedMounts = collectedMounts + 1
-                    end
-                    
-                    -- Only count towards displayed mounts if we're not hiding collected mounts, or if it's not collected
-                    if not (MCL_SETTINGS.hideCollectedMounts and isCollected) then
-                        displayedMounts = displayedMounts + 1
-                    end
-                end
+        -- Calculate optimal mounts per row based on column width (same calculation as later)
+        local categoryPadding = 20  -- Total padding (10px on each side)
+        local availableMountWidth = columnWidth - categoryPadding
+        local minMountSize = 32  -- Minimum reasonable mount icon size
+        local baseSpacing = 4  -- Base spacing between mount icons (reduced from 6)
+        
+        -- Calculate maximum mounts per row that fit comfortably
+        local mountsPerRow = math.floor((availableMountWidth + baseSpacing) / (minMountSize + baseSpacing))
+        mountsPerRow = math.max(8, math.min(mountsPerRow, 12))  -- Between 8-12 mounts per row
+        
+        -- Calculate mount size and spacing based on available width
+        local mountSize = math.floor((availableMountWidth - baseSpacing * (mountsPerRow - 1)) / mountsPerRow)
+        mountSize = math.max(32, math.min(mountSize, 48))  -- Reasonable size bounds
+        
+        -- Calculate actual spacing to distribute remaining width evenly
+        local remainingWidth = availableMountWidth - (mountSize * mountsPerRow)
+        local spacingBetween = mountsPerRow > 1 and math.floor(remainingWidth / (mountsPerRow - 1)) or 0
+        spacingBetween = math.max(2, spacingBetween)  -- Minimum 2px spacing
+        
+        -- Calculate dynamic height based on actual mount layout
+        local numRows = math.ceil(displayedMounts / mountsPerRow)
+        local baseHeight = 80  -- Base height (title + progress bar + padding)
+        local rowSpacing = 4  -- Minimal Y-axis spacing between rows (reduced)
+        local rowHeight = mountSize + rowSpacing  -- Actual row height based on calculated mount size
+        local categoryHeight = baseHeight + (numRows * rowHeight) + 10  -- Reduced bottom padding
+        
+        -- Create category frame with dynamic height
+        local categoryFrame = CreateFrame("Frame", nil, relativeFrame, "BackdropTemplate")
+
+        categoryFrame:SetWidth(columnWidth)
+        categoryFrame:SetHeight(categoryHeight)  -- Dynamic height
+        categoryFrame:SetPoint("TOPLEFT", relativeFrame, "TOPLEFT", xPos, yPos)
+        categoryFrame:SetBackdrop({
+            bgFile = "Interface\\Buttons\\WHITE8x8",
+            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+            edgeSize = 8
+        })
+        categoryFrame:SetBackdropColor(0.05, 0.05, 0.05, 0.9)
+        categoryFrame:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
+        categoryFrame:SetPoint("TOPLEFT", relativeFrame, "TOPLEFT", xPos, yPos)
+        categoryFrame:SetBackdrop({
+            bgFile = "Interface\\Buttons\\WHITE8x8",
+            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+            edgeSize = 8
+        })
+        categoryFrame:SetBackdropColor(0.05, 0.05, 0.05, 0.9)
+        categoryFrame:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
+
+        -- Category title
+        categoryFrame.title = categoryFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+        categoryFrame.title:SetPoint("TOPLEFT", categoryFrame, "TOPLEFT", 10, -8)
+        categoryFrame.title:SetText(categoryData.name or categoryName)
+        categoryFrame.title:SetTextColor(1, 1, 1, 1)
+        
+        -- Create progress bar container
+        local progressContainer = CreateFrame("Frame", nil, categoryFrame)
+        progressContainer:SetWidth(columnWidth - 20)  -- Now 500px wide
+        progressContainer:SetHeight(18)
+        progressContainer:SetPoint("TOPLEFT", categoryFrame.title, "BOTTOMLEFT", 0, -5)
+        
+        -- Create progress bar using proper texture fallback
+        local pBar = CreateFrame("StatusBar", nil, progressContainer, "BackdropTemplate")
+        
+        -- Use settings texture if available, otherwise fallback to TargetingFrame
+        local textureToUse = "Interface\\TargetingFrame\\UI-StatusBar"  -- Good default that colors well
+        if MCL_SETTINGS and MCL_SETTINGS.statusBarTexture and MCLcore.media then
+            local settingsTexture = MCLcore.media:Fetch("statusbar", MCL_SETTINGS.statusBarTexture)
+            if settingsTexture then
+                textureToUse = settingsTexture
             end
-            
-            -- Calculate optimal mounts per row based on column width (same calculation as later)
-            local categoryPadding = 20  -- Total padding (10px on each side)
-            local availableMountWidth = columnWidth - categoryPadding
-            local minMountSize = 32  -- Minimum reasonable mount icon size
-            local baseSpacing = 4  -- Base spacing between mount icons (reduced from 6)
-            
-            -- Calculate maximum mounts per row that fit comfortably
-            local mountsPerRow = math.floor((availableMountWidth + baseSpacing) / (minMountSize + baseSpacing))
-            mountsPerRow = math.max(8, math.min(mountsPerRow, 12))  -- Between 8-12 mounts per row
-            
-            -- Calculate mount size and spacing based on available width
-            local mountSize = math.floor((availableMountWidth - baseSpacing * (mountsPerRow - 1)) / mountsPerRow)
-            mountSize = math.max(32, math.min(mountSize, 48))  -- Reasonable size bounds
-            
-            -- Calculate actual spacing to distribute remaining width evenly
-            local remainingWidth = availableMountWidth - (mountSize * mountsPerRow)
-            local spacingBetween = mountsPerRow > 1 and math.floor(remainingWidth / (mountsPerRow - 1)) or 0
-            spacingBetween = math.max(2, spacingBetween)  -- Minimum 2px spacing
-            
-            -- Calculate dynamic height based on actual mount layout
-            local numRows = math.ceil(displayedMounts / mountsPerRow)
-            local baseHeight = 80  -- Base height (title + progress bar + padding)
-            local rowSpacing = 4  -- Minimal Y-axis spacing between rows (reduced)
-            local rowHeight = mountSize + rowSpacing  -- Actual row height based on calculated mount size
-            local categoryHeight = baseHeight + (numRows * rowHeight) + 10  -- Reduced bottom padding
-            
-            -- Create category frame with dynamic height
-            local categoryFrame = CreateFrame("Frame", nil, relativeFrame, "BackdropTemplate")
-            categoryFrame:SetWidth(columnWidth)
-            categoryFrame:SetHeight(categoryHeight)  -- Dynamic height
-            categoryFrame:SetPoint("TOPLEFT", relativeFrame, "TOPLEFT", xPos, yPos)
-            categoryFrame:SetBackdrop({
-                bgFile = "Interface\\Buttons\\WHITE8x8",
-                edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-                edgeSize = 8
-            })
-            categoryFrame:SetBackdropColor(0.05, 0.05, 0.05, 0.9)
-            categoryFrame:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
-            
-            -- Category title
-            categoryFrame.title = categoryFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
-            categoryFrame.title:SetPoint("TOPLEFT", categoryFrame, "TOPLEFT", 10, -8)
-            categoryFrame.title:SetText(categoryData.name or categoryName)
-            categoryFrame.title:SetTextColor(1, 1, 1, 1)
-            
-            -- Create progress bar container
-            local progressContainer = CreateFrame("Frame", nil, categoryFrame)
-            progressContainer:SetWidth(columnWidth - 20)  -- Now 500px wide
-            progressContainer:SetHeight(18)
-            progressContainer:SetPoint("TOPLEFT", categoryFrame.title, "BOTTOMLEFT", 0, -5)
-            
-            -- Create progress bar using proper texture fallback
-            local pBar = CreateFrame("StatusBar", nil, progressContainer, "BackdropTemplate")
-            
-            -- Use settings texture if available, otherwise fallback to TargetingFrame
-            local textureToUse = "Interface\\TargetingFrame\\UI-StatusBar"  -- Good default that colors well
-            if MCL_SETTINGS and MCL_SETTINGS.statusBarTexture and MCLcore.media then
-                local settingsTexture = MCLcore.media:Fetch("statusbar", MCL_SETTINGS.statusBarTexture)
-                if settingsTexture then
-                    textureToUse = settingsTexture
-                end
+        end
+        
+        pBar:SetStatusBarTexture(textureToUse)
+        pBar:GetStatusBarTexture():SetHorizTile(false)
+        pBar:GetStatusBarTexture():SetVertTile(false)
+        pBar:SetMinMaxValues(0, 100)
+        pBar:SetValue(0)
+        pBar:SetAllPoints(progressContainer)
+        
+        -- Background for progress bar
+        pBar:SetBackdrop({
+            bgFile = "Interface\\Buttons\\WHITE8x8",
+            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+            edgeSize = 1
+        })
+        pBar:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
+        pBar:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
+        
+        -- Text for progress bar
+        pBar.Text = pBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        pBar.Text:SetPoint("CENTER", pBar, "CENTER", 0, 0)
+        pBar.Text:SetTextColor(1, 1, 1, 1)
+        
+        -- Update progress bar
+        local percentage = totalMounts > 0 and (collectedMounts / totalMounts) * 100 or 0
+        pBar:SetValue(percentage)
+        pBar.Text:SetText(string.format("%d/%d (%d%%)", collectedMounts, totalMounts, percentage))
+        
+        -- Use the UpdateProgressBar function for consistent coloring
+        pBar.val = percentage
+        UpdateProgressBar(pBar, totalMounts, collectedMounts)
+        
+        -- Store this progress bar in the statusBarFrames table for settings updates
+        table.insert(MCLcore.statusBarFrames, pBar)
+        
+        -- Mount grid within category - positioned below progress bar
+        local mountStartY = -60  -- More padding below progress bar
+        
+        -- Use the same calculations as in height calculation for consistency
+        local categoryPadding = 20  -- Total padding (10px on each side)
+        local availableMountWidth = columnWidth - categoryPadding
+        local minMountSize = 32  -- Minimum reasonable mount icon size
+        local baseSpacing = 4  -- Base spacing between mount icons (same as height calc)
+        
+        -- Calculate maximum mounts per row that fit comfortably
+        local mountsPerRow = math.floor((availableMountWidth + baseSpacing) / (minMountSize + baseSpacing))
+        mountsPerRow = math.max(8, math.min(mountsPerRow, 12))  -- Between 8-12 mounts per row
+        
+        -- Calculate mount size and spacing based on available width
+        local mountSize = math.floor((availableMountWidth - baseSpacing * (mountsPerRow - 1)) / mountsPerRow)
+        mountSize = math.max(32, math.min(mountSize, 48))  -- Reasonable size bounds
+        
+        -- Calculate actual spacing to distribute remaining width evenly
+        local remainingWidth = availableMountWidth - (mountSize * mountsPerRow)
+        local spacingBetween = mountsPerRow > 1 and math.floor(remainingWidth / (mountsPerRow - 1)) or 0
+        spacingBetween = math.max(2, spacingBetween)  -- Minimum 2px spacing
+        
+        -- Y-axis spacing (only affected by height changes)
+        local rowSpacing = 4  -- Minimal Y-axis spacing between rows
+        
+        local maxDisplayMounts = displayedMounts  -- Show all displayed mounts instead of limiting to 24
+        local mountStartX = 10
+        local displayedIndex = 0  -- Track the actual displayed position
+        
+        for i, mountId in ipairs(mountList) do
+            -- Check if we should skip this mount due to hide collected mounts setting
+            local mount_Id = MCLcore.Function:GetMountID(mountId)
+            -- Faction check: Only display mounts that are not faction-specific or match the player's faction
+            local faction, faction_specific = MCLcore.Function.IsMountFactionSpecific(mountId)
+            local playerFaction = UnitFactionGroup("player")
+            local allowed = false
+            if faction_specific == false then
+                allowed = true
+            elseif faction_specific == true then
+                if faction == 0 then faction = "Horde" elseif faction == 1 then faction = "Alliance" end
+                allowed = (faction == playerFaction)
             end
-            
-            pBar:SetStatusBarTexture(textureToUse)
-            pBar:GetStatusBarTexture():SetHorizTile(false)
-            pBar:GetStatusBarTexture():SetVertTile(false)
-            pBar:SetMinMaxValues(0, 100)
-            pBar:SetValue(0)
-            pBar:SetAllPoints(progressContainer)
-            
-            -- Background for progress bar
-            pBar:SetBackdrop({
-                bgFile = "Interface\\Buttons\\WHITE8x8",
-                edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-                edgeSize = 1
-            })
-            pBar:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
-            pBar:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
-            
-            -- Text for progress bar
-            pBar.Text = pBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            pBar.Text:SetPoint("CENTER", pBar, "CENTER", 0, 0)
-            pBar.Text:SetTextColor(1, 1, 1, 1)
-            
-            -- Update progress bar
-            local percentage = totalMounts > 0 and (collectedMounts / totalMounts) * 100 or 0
-            pBar:SetValue(percentage)
-            pBar.Text:SetText(string.format("%d/%d (%d%%)", collectedMounts, totalMounts, percentage))
-            
-            -- Use the UpdateProgressBar function for consistent coloring
-            pBar.val = percentage
-            UpdateProgressBar(pBar, totalMounts, collectedMounts)
-            
-            -- Store this progress bar in the statusBarFrames table for settings updates
-            table.insert(MCLcore.statusBarFrames, pBar)
-            
-            -- Mount grid within category - positioned below progress bar
-            local mountStartY = -60  -- More padding below progress bar
-            
-            -- Use the same calculations as in height calculation for consistency
-            local categoryPadding = 20  -- Total padding (10px on each side)
-            local availableMountWidth = columnWidth - categoryPadding
-            local minMountSize = 32  -- Minimum reasonable mount icon size
-            local baseSpacing = 4  -- Base spacing between mount icons (same as height calc)
-            
-            -- Calculate maximum mounts per row that fit comfortably
-            local mountsPerRow = math.floor((availableMountWidth + baseSpacing) / (minMountSize + baseSpacing))
-            mountsPerRow = math.max(8, math.min(mountsPerRow, 12))  -- Between 8-12 mounts per row
-            
-            -- Calculate mount size and spacing based on available width
-            local mountSize = math.floor((availableMountWidth - baseSpacing * (mountsPerRow - 1)) / mountsPerRow)
-            mountSize = math.max(32, math.min(mountSize, 48))  -- Reasonable size bounds
-            
-            -- Calculate actual spacing to distribute remaining width evenly
-            local remainingWidth = availableMountWidth - (mountSize * mountsPerRow)
-            local spacingBetween = mountsPerRow > 1 and math.floor(remainingWidth / (mountsPerRow - 1)) or 0
-            spacingBetween = math.max(2, spacingBetween)  -- Minimum 2px spacing
-            
-            -- Y-axis spacing (only affected by height changes)
-            local rowSpacing = 4  -- Minimal Y-axis spacing between rows
-            
-            local maxDisplayMounts = displayedMounts  -- Show all displayed mounts instead of limiting to 24
-            local mountStartX = 10
-            local displayedIndex = 0  -- Track the actual displayed position
-            
-            for i, mountId in ipairs(mountList) do
-                -- Check if we should skip this mount due to hide collected mounts setting
-                local mount_Id = MCLcore.Function:GetMountID(mountId)
-                if not (mount_Id and MCL_SETTINGS.hideCollectedMounts and IsMountCollected(mount_Id)) then
-                    -- Only process this mount if it's not collected or if hideCollectedMounts is disabled
-                    displayedIndex = displayedIndex + 1
-                    if displayedIndex <= maxDisplayMounts then
-                    local col = ((displayedIndex-1) % mountsPerRow)
-                    local row = math.floor((displayedIndex-1) / mountsPerRow)
-                    
-                    -- Calculate exact position for this icon
-                    local iconX = mountStartX + col * (mountSize + spacingBetween)
-                    local iconY = mountStartY - row * (mountSize + rowSpacing)  -- Use rowSpacing for Y
-                    
-                    -- Create backdrop frame first (smaller than spacing to create visual gaps)
-                    local backdropSize = mountSize + 2  -- Only 1px overhang on each side for visual separation
-                    local backdropFrame = CreateFrame("Frame", nil, categoryFrame, "BackdropTemplate")
-                    backdropFrame:SetSize(backdropSize, backdropSize)
-                    backdropFrame:SetPoint("TOPLEFT", categoryFrame, "TOPLEFT", 
-                        iconX - 1, -- Minimal offset for overhang
-                        iconY + 1) -- Minimal offset for overhang
-                    
-                    -- Store the mount ID for search functionality
-                    backdropFrame.mountID = mountId
-                    
-                    -- Create mount frame (for icon) centered in backdrop
-                    local mountFrame = CreateFrame("Button", nil, backdropFrame)
-                    mountFrame:SetSize(mountSize, mountSize)
-                    mountFrame:SetPoint("CENTER", backdropFrame, "CENTER", 0, 0)                            -- Store the mount ID for search functionality
+            if allowed and not (mount_Id and MCL_SETTINGS.hideCollectedMounts and IsMountCollected(mount_Id)) then
+                displayedIndex = displayedIndex + 1
+                if displayedIndex <= maxDisplayMounts then
+                local col = ((displayedIndex-1) % mountsPerRow)
+                local row = math.floor((displayedIndex-1) / mountsPerRow)
+                
+                -- Calculate exact position for this icon
+                local iconX = mountStartX + col * (mountSize + spacingBetween)
+                local iconY = mountStartY - row * (mountSize + rowSpacing)  -- Use rowSpacing for Y
+                
+                -- Create backdrop frame first (smaller than spacing to create visual gaps)
+                local backdropSize = mountSize + 2  -- Only 1px overhang on each side for visual separation
+                local backdropFrame = CreateFrame("Frame", nil, categoryFrame, "BackdropTemplate")
+                backdropFrame:SetSize(backdropSize, backdropSize)
+                backdropFrame:SetPoint("TOPLEFT", categoryFrame, "TOPLEFT", 
+                    iconX - 1, -- Minimal offset for overhang
+                    iconY + 1) -- Minimal offset for overhang
+                
+                -- Store the mount ID for search functionality
+                backdropFrame.mountID = mountId
+                
+                -- Create mount frame (for icon) centered in backdrop
+                local mountFrame = CreateFrame("Button", nil, backdropFrame)
+                mountFrame:SetSize(mountSize, mountSize)
+                mountFrame:SetPoint("CENTER", backdropFrame, "CENTER", 0, 0)                            -- Store the mount ID for search functionality
                             mountFrame.mountID = mountId
                             
                             -- Set category and section for pinning functionality

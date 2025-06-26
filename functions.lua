@@ -61,6 +61,8 @@ local function IsMountFactionSpecific(id)
     end
 end
 
+MCLcore.Function.IsMountFactionSpecific = IsMountFactionSpecific
+
 function MCL_functions:resetToDefault(setting)
     if setting == nil then
         MCL_SETTINGS = {}        
@@ -629,12 +631,16 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
             mount_Id = C_MountJournal.GetMountFromItem(val)
             mountName, spellID, icon, _, _, sourceType, _, isFactionSpecific, faction, _, isCollected, mountID, isSteadyFlight = C_MountJournal.GetMountInfoByID(mount_Id)
         end        
+        print("Processing mount:", val)
         local faction, faction_specific = IsMountFactionSpecific(val)
+        print("IsMountFactionSpecific returned:", faction, faction_specific)
         if faction then
-            if faction == 1 then
-                faction = "Alliance"
-            else
+            if faction == 0 then
                 faction = "Horde"
+                print("Faction: Horde")
+            elseif faction == 1 then
+                faction = "Alliance"
+                print("Faction: Alliance")
             end
         end
         -- NEW: Hide collected mounts if setting is enabled
