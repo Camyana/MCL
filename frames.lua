@@ -1146,7 +1146,7 @@ for _, categoryName in ipairs(sortedCategoryNames) do
         -- Category title
         categoryFrame.title = categoryFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
         categoryFrame.title:SetPoint("TOPLEFT", categoryFrame, "TOPLEFT", 10, -8)
-        categoryFrame.title:SetText(categoryData.name or categoryName)
+        categoryFrame.title:SetText(L[categoryData.name] or L[categoryName] or categoryData.name or categoryName)
         categoryFrame.title:SetTextColor(1, 1, 1, 1)
         
         -- Create progress bar container
