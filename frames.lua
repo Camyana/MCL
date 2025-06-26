@@ -1274,8 +1274,9 @@ for _, categoryName in ipairs(sortedCategoryNames) do
                             mountFrame.section = sectionName or "Unknown"
                             
                             -- Get mount info and set icon
-                        local mountName, spellID, icon = C_MountJournal.GetMountInfoByID(mount_Id)
-                        if icon then
+                            if mount_Id and type(mount_Id) == "number" and mount_Id > 0 then
+                                local mountName, spellID, icon = C_MountJournal.GetMountInfoByID(mount_Id)
+                                if icon then
                             -- Create the icon texture
                             mountFrame.tex = mountFrame:CreateTexture(nil, "ARTWORK")
                             mountFrame.tex:SetAllPoints(mountFrame)
@@ -1324,6 +1325,7 @@ for _, categoryName in ipairs(sortedCategoryNames) do
                                 MCLcore.Function:LinkMountItem(mountId, mountFrame, false, false)
                             end
                         end
+                    end
                     end
                 end  -- Close the if block for non-hidden mounts
             end
