@@ -36,7 +36,21 @@ local function InitializeSearch()
                     local categories = section.mounts.categories or section.mounts
                     if categories then
                         for categoryName, categoryData in pairs(categories) do
-                            if type(categoryData) == "table" and categoryData.mounts then                                for _, mountId in ipairs(categoryData.mounts) do
+                            if type(categoryData) == "table" then
+                                -- Combine both mounts and mountID arrays for search
+                                local mountList = {}
+                                if categoryData.mounts then
+                                    for _, mount in ipairs(categoryData.mounts) do
+                                        table.insert(mountList, mount)
+                                    end
+                                end
+                                if categoryData.mountID then
+                                    for _, mount in ipairs(categoryData.mountID) do
+                                        table.insert(mountList, mount)
+                                    end
+                                end
+                                
+                                for _, mountId in ipairs(mountList) do
                                     local mount_Id = MCLcore.Function:GetMountID(mountId)
                                     if mount_Id then
                                         local mountName, spellID, icon = C_MountJournal.GetMountInfoByID(mount_Id)

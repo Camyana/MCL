@@ -631,16 +631,12 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
             mount_Id = C_MountJournal.GetMountFromItem(val)
             mountName, spellID, icon, _, _, sourceType, _, isFactionSpecific, faction, _, isCollected, mountID, isSteadyFlight = C_MountJournal.GetMountInfoByID(mount_Id)
         end        
-        print("Processing mount:", val)
         local faction, faction_specific = IsMountFactionSpecific(val)
-        print("IsMountFactionSpecific returned:", faction, faction_specific)
         if faction then
             if faction == 0 then
                 faction = "Horde"
-                print("Faction: Horde")
             elseif faction == 1 then
                 faction = "Alliance"
-                print("Faction: Alliance")
             end
         end
         -- NEW: Hide collected mounts if setting is enabled
@@ -882,11 +878,24 @@ end
 
 
 function MCL_functions:GetMountID(id)
-    if string.sub(id, 1, 1) == "m" then
-        mount_Id = string.sub(id, 2, -1)
+    local mount_Id
+    local inputType = type(id)
+    local isStringWithM = (inputType == "string" and string.sub(tostring(id), 1, 1) == "m")
+    local isNumber = (inputType == "number")
+    
+    if isStringWithM then
+        mount_Id = tonumber(string.sub(tostring(id), 2, -1))
+    elseif isNumber and id > 100000 then
+        -- Likely an item ID (large number)
+        mount_Id = C_MountJournal.GetMountFromItem(id)
+    elseif isNumber and id < 10000 then
+        -- Likely a mount ID (small number)
+        mount_Id = id
     else
+        -- Default to item lookup
         mount_Id = C_MountJournal.GetMountFromItem(id)
     end
+    
     return mount_Id
 end
 
@@ -1498,7 +1507,18 @@ function MCL_functions:CalculateSectionStats()
         
         if section.mounts and section.mounts.categories then
             for categoryName, categoryData in pairs(section.mounts.categories) do
-                local mountList = categoryData.mounts or categoryData.mountID or {}
+                -- Combine both mounts and mountID arrays
+                local mountList = {}
+                if categoryData.mounts then
+                    for _, mount in ipairs(categoryData.mounts) do
+                        table.insert(mountList, mount)
+                    end
+                end
+                if categoryData.mountID then
+                    for _, mount in ipairs(categoryData.mountID) do
+                        table.insert(mountList, mount)
+                    end
+                end
                 
                 for _, mountId in ipairs(mountList) do
                     sectionTotal = sectionTotal + 1

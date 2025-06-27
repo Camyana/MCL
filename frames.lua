@@ -1059,7 +1059,19 @@ for _, categoryName in ipairs(sortedCategoryNames) do
     local totalMounts = 0
     local collectedMounts = 0
     local displayedMounts = 0  -- Track mounts that will actually be displayed
-    local mountList = categoryData.mounts or categoryData.mountID or {}
+    
+    -- Combine both mounts and mountID arrays
+    local mountList = {}
+    if categoryData.mounts then
+        for _, mount in ipairs(categoryData.mounts) do
+            table.insert(mountList, mount)
+        end
+    end
+    if categoryData.mountID then
+        for _, mount in ipairs(categoryData.mountID) do
+            table.insert(mountList, mount)
+        end
+    end
     
     for _, mountId in ipairs(mountList) do
         local mount_Id = MCLcore.Function:GetMountID(mountId)
