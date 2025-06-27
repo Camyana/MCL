@@ -2,18 +2,6 @@ local MCL, MCLcore = ...
 local AceLocale = LibStub("AceLocale-3.0")
 local L = AceLocale:NewLocale("MCL", "koKR")
 if L then
-    -- 기존 한국어 번역
-    L["Hide Collected Mounts"] = "수집한 탈것 숨기기"
-    L["If enabled, collected mounts will not be shown in the list at all. Requires UI reload."] = "활성화하면 수집한 탈것이 목록에 표시되지 않습니다. UI를 다시 불러와야 합니다."
-    L["Changing this setting requires a UI reload. Reload now?"] = "이 설정을 변경하려면 UI를 다시 불러와야 합니다. 지금 다시 불러올까요?"
-    L["YES"] = "예"
-    L["NO"] = "아니오"
-    L["Show Minimap Icon"] = "미니맵 아이콘 표시"
-    L["Toggle the display of the Minimap Icon."] = "미니맵 아이콘 표시를 전환합니다."
-    L["Reset Settings"] = "설정 초기화"
-    L["Reset to default settings"] = "기본 설정으로 초기화"
-
-    -- 자동 번역된 새 키
     L["Achievement"] = "업적"
     L["Adventures"] = "모험"
     L["Ahead of the Curve"] = "최전선"
@@ -208,10 +196,24 @@ if L then
     L["Reset Colors"] = "색상 초기화"
     L["Reset to default colors"] = "기본 색상으로 초기화"
     L["Unobtainable Settings"] = "획득 불가 설정"
-    L["Hide Unobtainable from overview"] = "획득 불가 항목 개요에서 숨기기"    L["Hide Unobtainable mounts from the overview."] = "획득 불가 탈것을 개요에서 숨깁니다."
+    L["Hide Unobtainable from overview"] = "획득 불가 항목 개요에서 숨기기"
+    L["Hide Unobtainable mounts from the overview."] = "획득 불가 탈것을 개요에서 숨깁니다."
+    L["Show Minimap Icon"] = "미니맵 아이콘 표시"
+    L["Toggle the display of the Minimap Icon."] = "미니맵 아이콘 표시를 토글합니다."
+    L["Reset Settings"] = "설정 초기화"
+    L["Reset to default settings"] = "기본 설정으로 초기화"
+    L["Hide Collected Mounts"] = "수집된 탈것 숨기기"
+    L["If enabled, collected mounts will not be shown in the list at all. Requires UI reload."] = "활성화하면 수집된 탈것이 목록에 전혀 표시되지 않습니다. UI 재로드가 필요합니다."
+    L["Changing this setting requires a UI reload. Reload now?"] = "이 설정을 변경하려면 UI 재로드가 필요합니다. 지금 재로드하시겠습니까?"
+    L["YES"] = "예"
+    L["NO"] = "아니오"
+    L["Layout Settings"] = "레이아웃 설정"
+    L["Mounts Per Row"] = "행당 탈것 수"
+    L["Set the number of mounts to display per row in the mount grid. Requires UI reload."] = "탈것 그리드에서 행당 표시할 탈것 수를 설정합니다. UI 재로드가 필요합니다."
+    L["Use Blizzard Theme"] = "블리자드 테마 사용"
+    L["If enabled, the addon will use Blizzard's default UI theme. Requires UI reload."] = "활성화하면 애드온이 블리자드의 기본 UI 테마를 사용합니다. UI 재로드가 필요합니다."
     L["Search Results"] = "검색 결과"
     L["Search mounts..."] = "탈것 검색..."
     L["Mount Collection Log"] = "탈것 수집 기록"
     L["Clear Search"] = "검색 지우기"
-    -- 이미 번역된 키는 유지, 나머지는 자동 번역
 end

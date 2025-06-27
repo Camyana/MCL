@@ -2,14 +2,6 @@ local MCL, MCLcore = ...
 local AceLocale = LibStub("AceLocale-3.0")
 local L = AceLocale:NewLocale("MCL", "esES")
 if L then
-    -- Traducciones existentes
-    L["Hide Collected Mounts"] = "Ocultar monturas recogidas"
-    L["If enabled, collected mounts will not be shown in the list at all. Requires UI reload."] = "Si está activado, las monturas recogidas no se mostrarán en la lista. Requiere recargar la IU."
-    L["Changing this setting requires a UI reload. Reload now?"] = "Cambiar esta configuración requiere recargar la IU. ¿Recargar ahora?"
-    L["YES"] = "Sí"
-    L["NO"] = "No"
-
-    -- Traducciones automáticas para nuevas claves
     L["Achievement"] = "Logro"
     L["Adventures"] = "Aventuras"
     L["Ahead of the Curve"] = "Por delante de la curva"
@@ -209,7 +201,18 @@ if L then
     L["Show Minimap Icon"] = "Mostrar icono del minimapa"
     L["Toggle the display of the Minimap Icon."] = "Alternar la visualización del icono del minimapa."
     L["Reset Settings"] = "Restablecer configuración"
-    L["Reset to default settings"] = "Restablecer a la configuración predeterminada"    L["Search Results"] = "Resultados de búsqueda"
+    L["Reset to default settings"] = "Restablecer a la configuración predeterminada"
+    L["Hide Collected Mounts"] = "Ocultar monturas recogidas"
+    L["If enabled, collected mounts will not be shown in the list at all. Requires UI reload."] = "Si está habilitado, las monturas recogidas no se mostrarán en la lista en absoluto. Requiere recarga de UI."
+    L["Changing this setting requires a UI reload. Reload now?"] = "Cambiar esta configuración requiere una recarga de UI. ¿Recargar ahora?"
+    L["YES"] = "Sí"
+    L["NO"] = "No"
+    L["Layout Settings"] = "Configuración de diseño"
+    L["Mounts Per Row"] = "Monturas por fila"
+    L["Set the number of mounts to display per row in the mount grid. Requires UI reload."] = "Establece el número de monturas a mostrar por fila en la cuadrícula de monturas. Requiere recarga de UI."
+    L["Use Blizzard Theme"] = "Usar tema de Blizzard"
+    L["If enabled, the addon will use Blizzard's default UI theme. Requires UI reload."] = "Si está habilitado, el addon usará el tema de UI predeterminado de Blizzard. Requiere recarga de UI."
+    L["Search Results"] = "Resultados de búsqueda"
     L["Search mounts..."] = "Buscar monturas..."
     L["Mount Collection Log"] = "Registro de colección de monturas"
     L["Clear Search"] = "Limpiar búsqueda"

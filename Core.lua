@@ -36,7 +36,21 @@ local function InitializeSearch()
                     local categories = section.mounts.categories or section.mounts
                     if categories then
                         for categoryName, categoryData in pairs(categories) do
-                            if type(categoryData) == "table" and categoryData.mounts then                                for _, mountId in ipairs(categoryData.mounts) do
+                            if type(categoryData) == "table" then
+                                -- Combine both mounts and mountID arrays for search
+                                local mountList = {}
+                                if categoryData.mounts then
+                                    for _, mount in ipairs(categoryData.mounts) do
+                                        table.insert(mountList, mount)
+                                    end
+                                end
+                                if categoryData.mountID then
+                                    for _, mount in ipairs(categoryData.mountID) do
+                                        table.insert(mountList, mount)
+                                    end
+                                end
+                                
+                                for _, mountId in ipairs(mountList) do
                                     local mount_Id = MCLcore.Function:GetMountID(mountId)
                                     if mount_Id then
                                         local mountName, spellID, icon = C_MountJournal.GetMountInfoByID(mount_Id)
@@ -265,9 +279,37 @@ local function InitializeSearch()
             -- Calculate layout dimensions
             local currentWidth, _ = MCLcore.Frames:GetCurrentFrameDimensions()
             local availableWidth = currentWidth - 60
-            local mountsPerRow = math.floor(availableWidth / 50) -- 50px per mount including spacing
-            local mountSize = 40
-            local spacing = math.floor((availableWidth - (mountsPerRow * mountSize)) / (mountsPerRow + 1))
+            
+            -- Start with user's preferred mounts per row
+            local mountsPerRow = MCL_SETTINGS.mountsPerRow or 12  -- Use setting or default to 12
+            -- Ensure it's within bounds
+            mountsPerRow = math.max(6, math.min(mountsPerRow, 24))
+            
+            -- Calculate mount size to fit exactly within available width
+            local desiredSpacing = 4  -- Fixed spacing between mounts
+            local minMountSize = 16  -- Absolute minimum mount size
+            local maxMountSize = 48  -- Maximum mount size
+            
+            -- Try the preferred mounts per row first
+            local totalSpacingWidth = desiredSpacing * (mountsPerRow - 1)
+            local availableForMounts = availableWidth - totalSpacingWidth
+            local mountSize = math.floor(availableForMounts / mountsPerRow)
+            
+            -- If mount size is too small, reduce mounts per row until we get acceptable size
+            while mountSize < minMountSize and mountsPerRow > 6 do
+                mountsPerRow = mountsPerRow - 1
+                totalSpacingWidth = desiredSpacing * (mountsPerRow - 1)
+                availableForMounts = availableWidth - totalSpacingWidth
+                mountSize = math.floor(availableForMounts / mountsPerRow)
+            end
+            
+            -- Ensure mount size is within bounds
+            mountSize = math.max(minMountSize, math.min(mountSize, maxMountSize))
+            
+            -- Recalculate actual spacing to center the grid
+            local actualMountWidth = mountSize * mountsPerRow
+            local spacing = mountsPerRow > 1 and math.floor((availableWidth - actualMountWidth) / (mountsPerRow - 1)) or 0
+            spacing = math.max(1, spacing)  -- Minimum 1px spacing
             
             local currentY = -80 -- Start below title
             local mountIndex = 0

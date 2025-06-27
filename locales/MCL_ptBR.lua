@@ -2,14 +2,6 @@ local MCL, MCLcore = ...
 local AceLocale = LibStub("AceLocale-3.0")
 local L = AceLocale:NewLocale("MCL", "ptBR")
 if L then
-    -- Traduções existentes
-    L["Hide Collected Mounts"] = "Ocultar montarias coletadas"
-    L["If enabled, collected mounts will not be shown in the list at all. Requires UI reload."] = "Se ativado, montarias coletadas não serão exibidas na lista. Requer recarregar a interface."
-    L["Changing this setting requires a UI reload. Reload now?"] = "Alterar esta configuração requer recarregar a interface. Recarregar agora?"
-    L["YES"] = "Sim"
-    L["NO"] = "Não"
-
-    -- Traduções automáticas para novas chaves
     L["Achievement"] = "Conquista"
     L["Adventures"] = "Aventuras"
     L["Ahead of the Curve"] = "À Frente da Curva"
@@ -207,8 +199,19 @@ if L then
     L["Hide Unobtainable from overview"] = "Ocultar inalcançáveis da visão geral"
     L["Hide Unobtainable mounts from the overview."] = "Ocultar montarias inalcançáveis da visão geral."
     L["Show Minimap Icon"] = "Mostrar Ícone do Minimapa"
-    L["Toggle the display of the Minimap Icon."] = "Alternar exibição do ícone do minimapa."    L["Reset Settings"] = "Redefinir Configurações"
+    L["Toggle the display of the Minimap Icon."] = "Alternar exibição do ícone do minimapa."
+    L["Reset Settings"] = "Redefinir Configurações"
     L["Reset to default settings"] = "Redefinir para configurações padrão"
+    L["Hide Collected Mounts"] = "Ocultar Montarias Coletadas"
+    L["If enabled, collected mounts will not be shown in the list at all. Requires UI reload."] = "Se habilitado, montarias coletadas não serão mostradas na lista. Requer recarregamento da UI."
+    L["Changing this setting requires a UI reload. Reload now?"] = "Alterar esta configuração requer um recarregamento da UI. Recarregar agora?"
+    L["YES"] = "Sim"
+    L["NO"] = "Não"
+    L["Layout Settings"] = "Configurações de Layout"
+    L["Mounts Per Row"] = "Montarias por Linha"
+    L["Set the number of mounts to display per row in the mount grid. Requires UI reload."] = "Define o número de montarias a exibir por linha na grade de montarias. Requer recarregamento da UI."
+    L["Use Blizzard Theme"] = "Usar Tema da Blizzard"
+    L["If enabled, the addon will use Blizzard's default UI theme. Requires UI reload."] = "Se habilitado, o addon usará o tema de UI padrão da Blizzard. Requer recarregamento da UI."
     L["Search Results"] = "Resultados da Busca"
     L["Search mounts..."] = "Buscar montarias..."
     L["Mount Collection Log"] = "Registro de Coleção de Montarias"

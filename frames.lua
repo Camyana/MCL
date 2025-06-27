@@ -1059,7 +1059,19 @@ for _, categoryName in ipairs(sortedCategoryNames) do
     local totalMounts = 0
     local collectedMounts = 0
     local displayedMounts = 0  -- Track mounts that will actually be displayed
-    local mountList = categoryData.mounts or categoryData.mountID or {}
+    
+    -- Combine both mounts and mountID arrays
+    local mountList = {}
+    if categoryData.mounts then
+        for _, mount in ipairs(categoryData.mounts) do
+            table.insert(mountList, mount)
+        end
+    end
+    if categoryData.mountID then
+        for _, mount in ipairs(categoryData.mountID) do
+            table.insert(mountList, mount)
+        end
+    end
     
     for _, mountId in ipairs(mountList) do
         local mount_Id = MCLcore.Function:GetMountID(mountId)
@@ -1098,21 +1110,37 @@ for _, categoryName in ipairs(sortedCategoryNames) do
         -- Calculate optimal mounts per row based on column width (same calculation as later)
         local categoryPadding = 20  -- Total padding (10px on each side)
         local availableMountWidth = columnWidth - categoryPadding
-        local minMountSize = 32  -- Minimum reasonable mount icon size
-        local baseSpacing = 4  -- Base spacing between mount icons (reduced from 6)
         
-        -- Calculate maximum mounts per row that fit comfortably
-        local mountsPerRow = math.floor((availableMountWidth + baseSpacing) / (minMountSize + baseSpacing))
-        mountsPerRow = math.max(8, math.min(mountsPerRow, 12))  -- Between 8-12 mounts per row
+        -- Start with user's preferred mounts per row
+        local mountsPerRow = MCL_SETTINGS.mountsPerRow or 12  -- Use setting or default to 12
+        -- Ensure it's within bounds
+        mountsPerRow = math.max(6, math.min(mountsPerRow, 24))
         
-        -- Calculate mount size and spacing based on available width
-        local mountSize = math.floor((availableMountWidth - baseSpacing * (mountsPerRow - 1)) / mountsPerRow)
-        mountSize = math.max(32, math.min(mountSize, 48))  -- Reasonable size bounds
+        -- Calculate mount size to fit exactly within available width
+        local desiredSpacing = 4  -- Fixed spacing between mounts
+        local minMountSize = 16  -- Absolute minimum mount size (reduced from 24)
+        local maxMountSize = 48  -- Maximum mount size
         
-        -- Calculate actual spacing to distribute remaining width evenly
-        local remainingWidth = availableMountWidth - (mountSize * mountsPerRow)
-        local spacingBetween = mountsPerRow > 1 and math.floor(remainingWidth / (mountsPerRow - 1)) or 0
-        spacingBetween = math.max(2, spacingBetween)  -- Minimum 2px spacing
+        -- Try the preferred mounts per row first
+        local totalSpacingWidth = desiredSpacing * (mountsPerRow - 1)
+        local availableForMounts = availableMountWidth - totalSpacingWidth
+        local mountSize = math.floor(availableForMounts / mountsPerRow)
+        
+        -- If mount size is too small, reduce mounts per row until we get acceptable size
+        while mountSize < minMountSize and mountsPerRow > 6 do
+            mountsPerRow = mountsPerRow - 1
+            totalSpacingWidth = desiredSpacing * (mountsPerRow - 1)
+            availableForMounts = availableMountWidth - totalSpacingWidth
+            mountSize = math.floor(availableForMounts / mountsPerRow)
+        end
+        
+        -- Ensure mount size is within bounds
+        mountSize = math.max(minMountSize, math.min(mountSize, maxMountSize))
+        
+        -- Recalculate actual spacing to center the grid
+        local actualMountWidth = mountSize * mountsPerRow
+        local actualSpacing = mountsPerRow > 1 and math.floor((availableMountWidth - actualMountWidth) / (mountsPerRow - 1)) or 0
+        actualSpacing = math.max(1, actualSpacing)  -- Minimum 1px spacing (reduced from 2)
         
         -- Calculate dynamic height based on actual mount layout
         local numRows = math.ceil(displayedMounts / mountsPerRow)
@@ -1206,21 +1234,37 @@ for _, categoryName in ipairs(sortedCategoryNames) do
         -- Use the same calculations as in height calculation for consistency
         local categoryPadding = 20  -- Total padding (10px on each side)
         local availableMountWidth = columnWidth - categoryPadding
-        local minMountSize = 32  -- Minimum reasonable mount icon size
-        local baseSpacing = 4  -- Base spacing between mount icons (same as height calc)
         
-        -- Calculate maximum mounts per row that fit comfortably
-        local mountsPerRow = math.floor((availableMountWidth + baseSpacing) / (minMountSize + baseSpacing))
-        mountsPerRow = math.max(8, math.min(mountsPerRow, 12))  -- Between 8-12 mounts per row
+        -- Start with user's preferred mounts per row
+        local mountsPerRow = MCL_SETTINGS.mountsPerRow or 12  -- Use setting or default to 12
+        -- Ensure it's within bounds
+        mountsPerRow = math.max(6, math.min(mountsPerRow, 24))
         
-        -- Calculate mount size and spacing based on available width
-        local mountSize = math.floor((availableMountWidth - baseSpacing * (mountsPerRow - 1)) / mountsPerRow)
-        mountSize = math.max(32, math.min(mountSize, 48))  -- Reasonable size bounds
+        -- Calculate mount size to fit exactly within available width
+        local desiredSpacing = 4  -- Fixed spacing between mounts
+        local minMountSize = 16  -- Absolute minimum mount size (reduced from 24)
+        local maxMountSize = 48  -- Maximum mount size
         
-        -- Calculate actual spacing to distribute remaining width evenly
-        local remainingWidth = availableMountWidth - (mountSize * mountsPerRow)
-        local spacingBetween = mountsPerRow > 1 and math.floor(remainingWidth / (mountsPerRow - 1)) or 0
-        spacingBetween = math.max(2, spacingBetween)  -- Minimum 2px spacing
+        -- Try the preferred mounts per row first
+        local totalSpacingWidth = desiredSpacing * (mountsPerRow - 1)
+        local availableForMounts = availableMountWidth - totalSpacingWidth
+        local mountSize = math.floor(availableForMounts / mountsPerRow)
+        
+        -- If mount size is too small, reduce mounts per row until we get acceptable size
+        while mountSize < minMountSize and mountsPerRow > 6 do
+            mountsPerRow = mountsPerRow - 1
+            totalSpacingWidth = desiredSpacing * (mountsPerRow - 1)
+            availableForMounts = availableMountWidth - totalSpacingWidth
+            mountSize = math.floor(availableForMounts / mountsPerRow)
+        end
+        
+        -- Ensure mount size is within bounds
+        mountSize = math.max(minMountSize, math.min(mountSize, maxMountSize))
+        
+        -- Recalculate actual spacing to center the grid
+        local actualMountWidth = mountSize * mountsPerRow
+        local actualSpacing = mountsPerRow > 1 and math.floor((availableMountWidth - actualMountWidth) / (mountsPerRow - 1)) or 0
+        actualSpacing = math.max(1, actualSpacing)  -- Minimum 1px spacing (reduced from 2)
         
         -- Y-axis spacing (only affected by height changes)
         local rowSpacing = 4  -- Minimal Y-axis spacing between rows
@@ -1249,7 +1293,7 @@ for _, categoryName in ipairs(sortedCategoryNames) do
                 local row = math.floor((displayedIndex-1) / mountsPerRow)
                 
                 -- Calculate exact position for this icon
-                local iconX = mountStartX + col * (mountSize + spacingBetween)
+                local iconX = mountStartX + col * (mountSize + actualSpacing)
                 local iconY = mountStartY - row * (mountSize + rowSpacing)  -- Use rowSpacing for Y
                 
                 -- Create backdrop frame first (smaller than spacing to create visual gaps)

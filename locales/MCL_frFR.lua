@@ -2,14 +2,6 @@ local MCL, MCLcore = ...
 local AceLocale = LibStub("AceLocale-3.0")
 local L = AceLocale:NewLocale("MCL", "frFR")
 if L then
-    -- Traductions existantes
-    L["Hide Collected Mounts"] = "Masquer les montures collectées"
-    L["If enabled, collected mounts will not be shown in the list at all. Requires UI reload."] = "Si activé, les montures collectées ne seront pas affichées dans la liste. Rechargement de l'interface requis."
-    L["Changing this setting requires a UI reload. Reload now?"] = "Ce paramètre nécessite de recharger l'interface. Recharger maintenant ?"
-    L["YES"] = "Oui"
-    L["NO"] = "Non"
-
-    -- Traductions automatiques pour les nouvelles clés
     L["Achievement"] = "Haut fait"
     L["Adventures"] = "Aventures"
     L["Ahead of the Curve"] = "Avant-garde"
@@ -207,8 +199,20 @@ if L then
     L["Hide Unobtainable from overview"] = "Masquer les inobtenables de l'aperçu"
     L["Hide Unobtainable mounts from the overview."] = "Masquer les montures inobtenables de l'aperçu."
     L["Show Minimap Icon"] = "Afficher l'icône de la mini-carte"
-    L["Toggle the display of the Minimap Icon."] = "Basculer l'affichage de l'icône de la mini-carte."    L["Reset Settings"] = "Réinitialiser les paramètres"
-    L["Reset to default settings"] = "Réinitialiser aux paramètres par défaut"    L["Search Results"] = "Résultats de recherche"
+    L["Toggle the display of the Minimap Icon."] = "Basculer l'affichage de l'icône de la mini-carte."
+    L["Reset Settings"] = "Réinitialiser les paramètres"
+    L["Reset to default settings"] = "Réinitialiser aux paramètres par défaut"
+    L["Hide Collected Mounts"] = "Masquer les montures collectées"
+    L["If enabled, collected mounts will not be shown in the list at all. Requires UI reload."] = "Si activé, les montures collectées ne seront pas affichées dans la liste du tout. Nécessite un rechargement de l'UI."
+    L["Changing this setting requires a UI reload. Reload now?"] = "Changer ce paramètre nécessite un rechargement de l'UI. Recharger maintenant ?"
+    L["YES"] = "Oui"
+    L["NO"] = "Non"
+    L["Layout Settings"] = "Paramètres de mise en page"
+    L["Mounts Per Row"] = "Montures par rangée"
+    L["Set the number of mounts to display per row in the mount grid. Requires UI reload."] = "Définit le nombre de montures à afficher par rangée dans la grille de montures. Nécessite un rechargement de l'UI."
+    L["Use Blizzard Theme"] = "Utiliser le thème Blizzard"
+    L["If enabled, the addon will use Blizzard's default UI theme. Requires UI reload."] = "Si activé, l'addon utilisera le thème UI par défaut de Blizzard. Nécessite un rechargement de l'UI."
+    L["Search Results"] = "Résultats de recherche"
     L["Search mounts..."] = "Rechercher des montures..."
     L["Mount Collection Log"] = "Journal de collection de montures"
     L["Clear Search"] = "Effacer la recherche"
