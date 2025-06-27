@@ -212,4 +212,7 @@ if L then
     L["Search mounts..."] = "Search mounts..."
     L["Mount Collection Log"] = "Mount Collection Log"
     L["Clear Search"] = "Clear Search"
+    L["Sections"] = "Sections"
+    L["MCL | Mount Collection Log"] = "MCL | Mount Collection Log"
+    L["|cff00CCFFMount Collection Log Commands:\n|cffFF0000Show:|cffFFFFFF Shows your mount collection log\n|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon\n|cffFF0000Config:|cffFFFFFF Opens the settings\n|cffFF0000Help:|cffFFFFFF Shows commands"] = "|cff00CCFFMount Collection Log Commands:\n|cffFF0000Show:|cffFFFFFF Shows your mount collection log\n|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon\n|cffFF0000Config:|cffFFFFFF Opens the settings\n|cffFF0000Help:|cffFFFFFF Shows commands"
 end

@@ -10,7 +10,7 @@ MCLcore.overviewStats = {}
 MCLcore.overviewFrames = {}
 MCLcore.mountFrames = {}
 MCLcore.mountCheck = {}
-MCLcore.addon_name = "Mount Collection Log | MCL"
+MCLcore.addon_name = L["MCL | Mount Collection Log"]
 
 
 function MCL_functions:getFaction()
@@ -244,7 +244,7 @@ function MCL_functions:initSections()
         end
     end
 
-    MCLcore.MCL_MF_Nav = MCLcore.Frames:createNavFrame(MCLcore.MCL_MF, 'Sections')
+    MCLcore.MCL_MF_Nav = MCLcore.Frames:createNavFrame(MCLcore.MCL_MF, MCLcore.L["Sections"])
 
     -- Create the overview parent frame before SetTabs
     if not MCLcore.overview or not MCLcore.overview:IsObjectType("Frame") then
@@ -1183,7 +1183,7 @@ text = "MCL!",
 icon = "Interface\\AddOns\\MCL\\mcl-logo-32",
 OnTooltipShow = function(tooltip)
     tooltip:SetText("MCL")
-    tooltip:AddLine("Mount Collection Log", 1, 1, 1)
+    tooltip:AddLine(L["Mount Collection Log"], 1, 1, 1)
     tooltip:Show()
 end,
 OnClick = function(_, button) 
