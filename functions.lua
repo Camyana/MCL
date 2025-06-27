@@ -109,10 +109,18 @@ function MCL_functions:resetToDefault(setting)
     if setting == "BlizzardTheme" or setting == nil then
         MCL_SETTINGS.useBlizzardTheme = false
     end
+    if setting == "MountsPerRow" or setting == nil then
+        MCL_SETTINGS.mountsPerRow = 12
+    end
 end
 
 if MCL_SETTINGS == nil then
     MCLcore.Function:resetToDefault()
+end
+
+-- Ensure mountsPerRow setting exists for existing users
+if MCL_SETTINGS.mountsPerRow == nil then
+    MCL_SETTINGS.mountsPerRow = 12
 end
 
 -- Tables Mounts into Global List
@@ -644,7 +652,8 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
             -- skip rendering this mount
         else
             if (faction_specific == false) or (faction_specific == true and faction == UnitFactionGroup("player")) then
-                if count == 12 then
+                local mountsPerRow = MCL_SETTINGS.mountsPerRow or 12  -- Use setting or default to 12
+                if count == mountsPerRow then
                     overflow = overflow + frame_size + 10
                 end            
                 local frame = CreateFrame("Button", nil, relativeFrame, "BackdropTemplate");
@@ -752,7 +761,7 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
                     frame.sourceText:SetJustifyH("LEFT")              
                     
                     previous_frame = frame
-                elseif count == 12 then
+                elseif count == (MCL_SETTINGS.mountsPerRow or 12) then
                     frame:SetPoint("BOTTOMLEFT", first_frame, "BOTTOMLEFT", 0, -overflow);
                     count = 0           
                 elseif relativeFrame == category then
@@ -1392,12 +1401,56 @@ function MCL_functions:AddonSettings()
             },              
             headerthree = {             
                 order = 12,
+                name = MCLcore.L["Layout Settings"],
+                type = "header",
+                width = "full",
+            },
+            mountsPerRow = {
+                order = 12.5,
+                name = MCLcore.L["Mounts Per Row"],
+                desc = MCLcore.L["Set the number of mounts to display per row in the mount grid. Requires UI reload."],
+                type = "range",
+                width = "normal",
+                min = 6,
+                max = 24,
+                softMin = 6,
+                softMax = 24,
+                step = 1,
+                bigStep = 1,
+                set = function(info, val)
+                    if MCL_SETTINGS.mountsPerRow ~= val then
+                        -- Save the setting first
+                        MCL_SETTINGS.mountsPerRow = val;
+                        
+                        -- Then ask if they want to reload
+                        StaticPopupDialogs["MCL_MOUNTS_PER_ROW_RELOAD"] = {
+                            text = MCLcore.L["Changing this setting requires a UI reload. Reload now?"],
+                            button1 = MCLcore.L["YES"],
+                            button2 = MCLcore.L["NO"],
+                            OnAccept = function()
+                                ReloadUI();
+                            end,
+                            OnCancel = function()
+                                -- Setting is already saved, so just do nothing
+                            end,
+                            timeout = 0,
+                            whileDead = true,
+                            hideOnEscape = true,
+                            preferredIndex = 3,
+                        }
+                        StaticPopup_Show("MCL_MOUNTS_PER_ROW_RELOAD")
+                    end
+                end,
+                get = function(info) return MCL_SETTINGS.mountsPerRow; end,
+            },
+            headerfour = {             
+                order = 13,
                 name = MCLcore.L["Unobtainable Settings"],
                 type = "header",
                 width = "full",
             },            
             unobtainable = {             
-                order = 13,
+                order = 14,
                 name = MCLcore.L["Hide Unobtainable from overview"],
                 desc = MCLcore.L["Hide Unobtainable mounts from the overview."],
                 type = "toggle",
@@ -1406,7 +1459,7 @@ function MCL_functions:AddonSettings()
                 get = function(info) return MCL_SETTINGS.unobtainable; end,
             },
             hideCollectedMounts = {
-                order = 13.5,
+                order = 14.5,
                 name = MCLcore.L["Hide Collected Mounts"],
                 desc = MCLcore.L["If enabled, collected mounts will not be shown in the list at all. Requires UI reload."],
                 type = "toggle",
@@ -1435,7 +1488,7 @@ function MCL_functions:AddonSettings()
                 get = function(info) return MCL_SETTINGS.hideCollectedMounts; end,
             },
             useBlizzardTheme = {
-                order = 13.6,
+                order = 14.6,
                 name = MCLcore.L["Use Blizzard Theme"],
                 desc = MCLcore.L["If enabled, the addon will use Blizzard's default UI theme. Requires UI reload."],
                 type = "toggle",
@@ -1456,7 +1509,7 @@ function MCL_functions:AddonSettings()
                 get = function(info) return MCL_SETTINGS.useBlizzardTheme; end,
             },
             minimapIconToggle = {
-                order = 13.7,
+                order = 14.7,
                 name = MCLcore.L["Show Minimap Icon"],
                 desc = MCLcore.L["Toggle the display of the Minimap Icon."],
                 type = "toggle",
@@ -1473,7 +1526,7 @@ function MCL_functions:AddonSettings()
                     return not MCL_MM.db.profile.minimap.hide
                 end,
             },
-            headerfour = {             
+            headerfive = {             
                 order = 15,
                 name = MCLcore.L["Reset Settings"],
                 type = "header",

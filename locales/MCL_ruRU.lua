@@ -2,14 +2,6 @@ local MCL, MCLcore = ...
 local AceLocale = LibStub("AceLocale-3.0")
 local L = AceLocale:NewLocale("MCL", "ruRU")
 if L then
-    -- Существующие русские переводы
-    L["Hide Collected Mounts"] = "Скрыть полученных маунтов"
-    L["If enabled, collected mounts will not be shown in the list at all. Requires UI reload."] = "Если включено, полученные маунты не будут отображаться в списке. Требуется перезагрузка интерфейса."
-    L["Changing this setting requires a UI reload. Reload now?"] = "Изменение этой настройки требует перезагрузки интерфейса. Перезагрузить сейчас?"
-    L["YES"] = "Да"
-    L["NO"] = "Нет"
-
-    -- Автоматические переводы для новых ключей
     L["Achievement"] = "Достижение"
     L["Adventures"] = "Приключения"
     L["Ahead of the Curve"] = "Впереди кривой"
@@ -207,8 +199,19 @@ if L then
     L["Hide Unobtainable from overview"] = "Скрыть недоступное из обзора"
     L["Hide Unobtainable mounts from the overview."] = "Скрыть недоступных маунтов из обзора."
     L["Show Minimap Icon"] = "Показать иконку миникарты"
-    L["Toggle the display of the Minimap Icon."] = "Переключить отображение иконки миникарты."    L["Reset Settings"] = "Сбросить настройки"
+    L["Toggle the display of the Minimap Icon."] = "Переключить отображение иконки миникарты."
+    L["Reset Settings"] = "Сбросить настройки"
     L["Reset to default settings"] = "Сбросить к стандартным настройкам"
+    L["Hide Collected Mounts"] = "Скрыть собранных маунтов"
+    L["If enabled, collected mounts will not be shown in the list at all. Requires UI reload."] = "Если включено, собранные маунты не будут отображаться в списке вообще. Требует перезагрузки UI."
+    L["Changing this setting requires a UI reload. Reload now?"] = "Изменение этой настройки требует перезагрузки UI. Перезагрузить сейчас?"
+    L["YES"] = "Да"
+    L["NO"] = "Нет"
+    L["Layout Settings"] = "Настройки макета"
+    L["Mounts Per Row"] = "Маунтов в ряду"
+    L["Set the number of mounts to display per row in the mount grid. Requires UI reload."] = "Установить количество маунтов для отображения в ряду в сетке маунтов. Требует перезагрузки UI."
+    L["Use Blizzard Theme"] = "Использовать тему Blizzard"
+    L["If enabled, the addon will use Blizzard's default UI theme. Requires UI reload."] = "Если включено, аддон будет использовать стандартную тему UI Blizzard. Требует перезагрузки UI."
     L["Search Results"] = "Результаты поиска"
     L["Search mounts..."] = "Поиск маунтов..."
     L["Mount Collection Log"] = "Журнал коллекции маунтов"
