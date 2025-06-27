@@ -607,7 +607,7 @@ SLASH_MCL1 = "/mcl";
 
 SlashCmdList["MCL"] = function(msg)
     if msg:lower() == "help" then
-        print("\n|cff00CCFFMount Collection Log\nCommands:\n|cffFF0000Show:|cffFFFFFF Shows your mount collection log\n|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon.\n|cffFF0000Config:|cffFFFFFF Opens the settings..\n|cffFF0000Help:|cffFFFFFF Shows commands")
+        print(MCLcore.L["|cff00CCFFMount Collection Log Commands:\n|cffFF0000Show:|cffFFFFFF Shows your mount collection log\n|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon\n|cffFF0000Config:|cffFFFFFF Opens the settings\n|cffFF0000Help:|cffFFFFFF Shows commands"])
     end
     if msg:lower() == "show" then
         MCLcore.Main.Toggle();
@@ -621,7 +621,7 @@ SlashCmdList["MCL"] = function(msg)
     if msg:lower() == "debug" then
         MCLcore.Function:GetCollectedMounts();
     end
-    if msg:lower() == "conifg" or msg == "settings" then
+    if msg:lower() == "config" or msg == "settings" then
         MCLcore.Frames:openSettings();
     end
     if msg:lower() == "refresh" then
