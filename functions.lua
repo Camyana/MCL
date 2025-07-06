@@ -557,6 +557,31 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
             local mountID = C_MountJournal.GetMountFromItem(id)
             local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID, isSteadyFlight = C_MountJournal.GetMountInfoByID(mountID)
         
+            -- Special handling for fallback cases (negative IDs)
+            if not mountID and type(id) == "number" and id < 0 then
+                local originalItemId = -id
+                local itemName, itemLink = GetItemInfo(originalItemId)
+                
+                frame:HookScript("OnEnter", function()
+                    GameTooltip:SetOwner(frame, "ANCHOR_TOP")
+                    if itemLink then
+                        GameTooltip:SetHyperlink(itemLink)
+                        GameTooltip:AddLine("|cFFFF0000[MCL] Mount data not fully loaded|r")
+                        GameTooltip:AddLine("|cFFFFFF00Try reloading UI or restarting game|r")
+                        GameTooltip:Show()
+                        frame:SetHyperlinksEnabled(true)
+                    else
+                        GameTooltip:SetText(string.format("Item ID: %d", originalItemId))
+                        GameTooltip:AddLine("|cFFFF0000[MCL] Mount data not available|r")
+                        GameTooltip:Show()
+                    end
+                end)
+                frame:HookScript("OnLeave", function()
+                    GameTooltip:Hide()
+                end)
+                return
+            end
+            
             frame:HookScript("OnEnter", function()
                 GameTooltip:SetOwner(frame, "ANCHOR_TOP")
                 if (itemLink) then
@@ -885,8 +910,59 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
     end
 end
 
+-- Function to force load mount data and handle delayed mount journal loading
+function MCL_functions:ForceLoadMountData(itemId)
+    -- First try to get the item info to ensure it's cached
+    local itemName, itemLink = GetItemInfo(itemId)
+    
+    -- If item info isn't available, request it and return false to retry later
+    if not itemName then
+        -- This will cache the item data for future calls
+        C_Item.RequestLoadItemDataByID(itemId)
+        -- For persistent debugging, create a delayed retry
+        C_Timer.After(0.1, function()
+            local retryItemName = GetItemInfo(itemId)
+            if retryItemName then
+                -- Force a mount journal update if item becomes available
+                C_MountJournal.GetMountFromItem(itemId)
+            end
+        end)
+        return false, "Item data not cached yet"
+    end
+    
+    -- Try to get mount from item
+    local mountId = C_MountJournal.GetMountFromItem(itemId)
+    
+    if not mountId then
+        -- For some old items, they might not be directly associated with mounts
+        -- but still exist in the game. Try a different approach.
+        return false, "No mount associated with item"
+    end
+    
+    -- Try to get mount info
+    local mountName, spellID, icon = C_MountJournal.GetMountInfoByID(mountId)
+    
+    if not mountName then
+        -- Try to force refresh the mount journal
+        C_MountJournal.ClearSearchFilters()
+        C_Timer.After(0.1, function()
+            local retryMountName = C_MountJournal.GetMountInfoByID(mountId)
+        end)
+        return false, "Mount data not available yet"
+    end
+    
+    return true, {
+        mountId = mountId,
+        mountName = mountName,
+        spellID = spellID,
+        icon = icon,
+        itemId = itemId,
+        itemName = itemName
+    }
+end
 
-function MCL_functions:GetMountID(id)
+-- Enhanced GetMountID function with force loading
+function MCL_functions:GetMountIDWithForceLoad(id)
     local mount_Id
     local inputType = type(id)
     local isStringWithM = (inputType == "string" and string.sub(tostring(id), 1, 1) == "m")
@@ -896,12 +972,71 @@ function MCL_functions:GetMountID(id)
         mount_Id = tonumber(string.sub(tostring(id), 2, -1))
     elseif isNumber and id > 100000 then
         -- Likely an item ID (large number)
-        mount_Id = C_MountJournal.GetMountFromItem(id)
+        local success, result = MCLcore.Function:ForceLoadMountData(id)
+        if success then
+            mount_Id = result.mountId
+        else
+            -- Fallback to original method
+            mount_Id = C_MountJournal.GetMountFromItem(id)
+        end
     elseif isNumber and id < 10000 then
-        -- Likely a mount ID (small number)
-        mount_Id = id
+        -- Could be either a mount ID or an old item ID
+        -- First try as direct mount ID
+        local mountName = C_MountJournal.GetMountInfoByID(id)
+        if mountName then
+            mount_Id = id
+        else
+            -- Try as item ID
+            local success, result = MCLcore.Function:ForceLoadMountData(id)
+            if success then
+                mount_Id = result.mountId
+            else
+                -- Last resort - try original item lookup
+                mount_Id = C_MountJournal.GetMountFromItem(id)
+            end
+        end
     else
-        -- Default to item lookup
+        -- Default to item lookup with force loading
+        local success, result = MCLcore.Function:ForceLoadMountData(id)
+        if success then
+            mount_Id = result.mountId
+        else
+            mount_Id = C_MountJournal.GetMountFromItem(id)
+        end
+    end
+    
+    return mount_Id
+end
+
+-- Main GetMountID function that uses force-load logic for problematic item IDs
+function MCL_functions:GetMountID(id)
+    local problematicItemIds = {8563, 8595}  -- Add more IDs here as needed
+    
+    -- Check if this is one of the problematic item IDs that need force loading
+    if type(id) == "number" then
+        for _, problematicId in ipairs(problematicItemIds) do
+            if id == problematicId then
+                local mount_Id = MCLcore.Function:GetMountIDWithForceLoad(id)
+                if mount_Id then
+                    return mount_Id
+                else
+                    -- If force loading fails, still return the item ID
+                    -- This allows the mount to be processed even if the API can't find it
+                    -- Use a negative ID to indicate this is a fallback case
+                    return -id
+                end
+            end
+        end
+    end
+    
+    -- For non-problematic IDs, use the standard logic
+    local mount_Id
+    local inputType = type(id)
+    local isStringWithM = (inputType == "string" and string.sub(tostring(id), 1, 1) == "m")
+    
+    if isStringWithM then
+        mount_Id = tonumber(string.sub(tostring(id), 2, -1))
+    else
         mount_Id = C_MountJournal.GetMountFromItem(id)
     end
     
@@ -909,6 +1044,13 @@ function MCL_functions:GetMountID(id)
 end
 
 function IsMountCollected(id)
+    -- Handle negative IDs (fallback cases for problematic items)
+    if id and id < 0 then
+        -- For fallback cases, we can't determine collection status from the API
+        -- so we'll return false (not collected) to show them in the UI
+        return false
+    end
+    
     local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID = C_MountJournal.GetMountInfoByID(id)
     return isCollected
 end

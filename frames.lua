@@ -1121,6 +1121,7 @@ for _, categoryName in ipairs(sortedCategoryNames) do
                 if not (MCL_SETTINGS.hideCollectedMounts and isCollected) then
                     displayedMounts = displayedMounts + 1
                 end
+                
             end
         end
     end
@@ -1396,19 +1397,32 @@ for _, categoryName in ipairs(sortedCategoryNames) do
                             end
                         end
                     end
-                    end
-                end  -- Close the if block for non-hidden mounts
-            end
-            
-            -- Update column positions for next category
-            if isLeftColumn then
-                leftColumnY = leftColumnY - (categoryHeight + 8)  -- Reduced spacing between categories
+                end  -- Close the if block for displayedIndex <= maxDisplayMounts
             else
-                rightColumnY = rightColumnY - (categoryHeight + 8)  -- Reduced spacing between categories
+                -- Debug logging for skipped mounts
+                if MCLcore.Debug then
+                    local isCollected = mount_Id and IsMountCollected(mount_Id)
+                    local reason = ""
+                    if not allowed then
+                        reason = "Faction restriction"
+                    elseif mount_Id and MCL_SETTINGS.hideCollectedMounts and isCollected then
+                        reason = "Hidden collected mount"
+                    else
+                        reason = "Unknown reason"
+                    end
+                end
             end
-            
+        end  -- Close the for loop
+        
+        -- Update column positions for next category
+        if isLeftColumn then
+            leftColumnY = leftColumnY - (categoryHeight + 8)  -- Reduced spacing between categories
+        else
+            rightColumnY = rightColumnY - (categoryHeight + 8)  -- Reduced spacing between categories
         end
+        
     end
+end
     
     -- Adjust parent frame height to accommodate all categories with proper padding
     local maxY = math.min(leftColumnY, rightColumnY)
