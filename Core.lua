@@ -59,16 +59,39 @@ local function InitializeSearch()
                                         -- Skip collected mounts if the setting is enabled
                                         if MCL_SETTINGS.hideCollectedMounts and isCollected then
                                             -- Skip this mount entirely
-                                        elseif mountName and mountName:lower():find(self.currentSearchTerm, 1, true) then
-                                            table.insert(self.searchResults, {
-                                                mountId = mountId,
-                                                mountName = mountName,
-                                                icon = icon,
-                                                spellID = spellID,
-                                                section = section.name,
-                                                category = categoryData.name or categoryName,
-                                                isCollected = isCollected
-                                            })
+                                        else
+                                            -- Search both mount name and item name (if applicable)
+                                            local matchFound = false
+                                            local matchedName = nil
+                                            local searchTerm = self.currentSearchTerm
+                                            
+                                            -- Check mount name
+                                            if mountName and mountName:lower():find(searchTerm, 1, true) then
+                                                matchFound = true
+                                                matchedName = mountName
+                                            end
+                                            
+                                            -- If mount has an item ID, also check the item name
+                                            if not matchFound and type(mountId) == "number" then
+                                                local itemName = GetItemInfo(mountId)
+                                                if itemName and itemName:lower():find(searchTerm, 1, true) then
+                                                    matchFound = true
+                                                    matchedName = itemName
+                                                end
+                                            end
+                                            
+                                            if matchFound then
+                                                table.insert(self.searchResults, {
+                                                    mountId = mountId,
+                                                    mountName = mountName,
+                                                    matchedName = matchedName,
+                                                    icon = icon,
+                                                    spellID = spellID,
+                                                    section = section.name,
+                                                    category = categoryData.name or categoryName,
+                                                    isCollected = isCollected
+                                                })
+                                            end
                                         end
                                     end
                                 end
@@ -88,9 +111,15 @@ local function InitializeSearch()
             -- Clear any highlighting
             self:ClearHighlighting()
             
-            -- Hide search results if they exist
-            if MCLcore.searchResultsContent then
-                MCLcore.searchResultsContent:Hide()
+            -- Properly destroy search results content frame
+            self:DestroySearchResultsFrame()
+            
+            -- Clear search text in navigation frame
+            if MCLcore.MCL_MF_Nav and MCLcore.MCL_MF_Nav.searchBox then
+                MCLcore.MCL_MF_Nav.searchBox:SetText("")
+                if MCLcore.MCL_MF_Nav.searchPlaceholder then
+                    MCLcore.MCL_MF_Nav.searchPlaceholder:Show()
+                end
             end
             
             -- Restore the previously selected tab using the proper SelectTab function
@@ -115,7 +144,8 @@ local function InitializeSearch()
                         self.previouslySelectedTab:SetBackdropBorderColor(1, 0.82, 0, 1)
                     end
                     if self.previouslySelectedTab.content and MCL_mainFrame.ScrollFrame then
-                        MCL_mainFrame.ScrollFrame:SetScrollChild(self.previouslySelectedTab.content)
+                        -- Always keep the main scroll child as the scroll child
+                        MCL_mainFrame.ScrollFrame:SetScrollChild(MCL_mainFrame.ScrollChild)
                         self.previouslySelectedTab.content:Show()
                         MCL_mainFrame.ScrollFrame:SetVerticalScroll(0)
                     end
@@ -134,9 +164,15 @@ local function InitializeSearch()
             -- Clear any highlighting
             self:ClearHighlighting()
             
-            -- Hide search results if they exist
-            if MCLcore.searchResultsContent then
-                MCLcore.searchResultsContent:Hide()
+            -- Properly destroy search results content frame
+            self:DestroySearchResultsFrame()
+            
+            -- Clear search text in navigation frame
+            if MCLcore.MCL_MF_Nav and MCLcore.MCL_MF_Nav.searchBox then
+                MCLcore.MCL_MF_Nav.searchBox:SetText("")
+                if MCLcore.MCL_MF_Nav.searchPlaceholder then
+                    MCLcore.MCL_MF_Nav.searchPlaceholder:Show()
+                end
             end
             
             -- Always go to Overview tab regardless of previous selection
@@ -157,10 +193,15 @@ local function InitializeSearch()
                             t:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
                         end
                     end
-                    -- Hide all tab contents
-                    for _, t in ipairs(MCLcore.MCL_MF_Nav.tabs) do
-                        if t.content then
-                            t.content:Hide()
+                    -- Hide all tab contents using the proper HideAllTabContents function
+                    if MCLcore.HideAllTabContents then
+                        MCLcore.HideAllTabContents()
+                    else
+                        -- Fallback: Hide all tab contents manually
+                        for _, t in ipairs(MCLcore.MCL_MF_Nav.tabs) do
+                            if t.content then
+                                t.content:Hide()
+                            end
                         end
                     end
                     -- Select the Overview tab
@@ -168,7 +209,8 @@ local function InitializeSearch()
                         overviewTab:SetBackdropBorderColor(1, 0.82, 0, 1)
                     end
                     if overviewTab.content and MCL_mainFrame.ScrollFrame then
-                        MCL_mainFrame.ScrollFrame:SetScrollChild(overviewTab.content)
+                        -- Always keep the main scroll child as the scroll child
+                        MCL_mainFrame.ScrollFrame:SetScrollChild(MCL_mainFrame.ScrollChild)
                         overviewTab.content:Show()
                         MCL_mainFrame.ScrollFrame:SetVerticalScroll(0)
                     end
@@ -203,9 +245,26 @@ local function InitializeSearch()
                 end
             end
             
+            -- Hide all section frames that might be stored globally
+            if MCLcore.sectionFrames then
+                for _, contentFrame in ipairs(MCLcore.sectionFrames) do
+                    if contentFrame and contentFrame.Hide then
+                        contentFrame:Hide()
+                    end
+                end
+            end
+            
+            -- Hide overview frame specifically
+            if MCLcore.overview then
+                MCLcore.overview:Hide()
+            end
+            
             -- Create or get search results content frame
             if not MCLcore.searchResultsContent then
                 MCLcore.searchResultsContent = MCLcore.Frames:createContentFrame(MCL_mainFrame.ScrollChild, "Search Results")
+                -- Ensure search results content is properly layered
+                MCLcore.searchResultsContent:SetFrameStrata("MEDIUM")
+                MCLcore.searchResultsContent:SetFrameLevel(10)
             end
             
             -- Update search results content
@@ -213,7 +272,8 @@ local function InitializeSearch()
             
             -- Show search results in main frame
             if MCL_mainFrame.ScrollFrame then
-                MCL_mainFrame.ScrollFrame:SetScrollChild(MCLcore.searchResultsContent)
+                -- Always keep the main scroll child as the scroll child
+                MCL_mainFrame.ScrollFrame:SetScrollChild(MCL_mainFrame.ScrollChild)
                 MCLcore.searchResultsContent:Show()
                 MCL_mainFrame.ScrollFrame:SetVerticalScroll(0)
             end
@@ -389,12 +449,28 @@ local function InitializeSearch()
                             })
                             mountFrame:SetBackdropColor(0.8, 0, 0, 0.4)
                             mountFrame:SetBackdropBorderColor(0.8, 0.2, 0.2, 1)
-                        end-- Add tooltip and click functionality
+                        end                        -- Add tooltip and click functionality
                         mountFrame:SetScript("OnEnter", function(self)
                             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                            GameTooltip:SetMountBySpellID(result.spellID)
+                            
+                            -- Check if this mount has an item ID (number) vs mount ID (string starting with "m")
+                            -- If it's an item ID, show the item tooltip; otherwise show the mount spell tooltip
+                            if type(result.mountId) == "number" then
+                                -- This is an item ID, show item tooltip
+                                GameTooltip:SetItemByID(result.mountId)
+                            else
+                                -- This is a mount ID or spell ID, show mount spell tooltip
+                                GameTooltip:SetMountBySpellID(result.spellID)
+                            end
+                            
                             GameTooltip:AddLine(" ")
                             GameTooltip:AddLine("Found in: " .. result.section .. " > " .. result.category, 0.7, 0.7, 1, 1)
+                            
+                            -- Show what was matched if it's different from the mount name
+                            if result.matchedName and result.matchedName ~= result.mountName then
+                                GameTooltip:AddLine("Matched: " .. result.matchedName, 0.7, 1, 0.7, 1)
+                            end
+                            
                             GameTooltip:AddLine("Click to navigate to this mount's location", 1, 1, 0, 1)
                             GameTooltip:AddLine("Ctrl+Right-Click to pin/unpin this mount", 1, 1, 0, 1)
                             GameTooltip:Show()
@@ -406,13 +482,24 @@ local function InitializeSearch()
                         -- Set up proper mouse click functionality including pinning
                         MCLcore.Function:SetMouseClickFunctionality(mountFrame, result.mountId, result.mountName, nil, result.spellID, false)
                         
-                        -- Add left-click navigation functionality (OnClick doesn't conflict with OnMouseDown)
-                        mountFrame:SetScript("OnClick", function(self, button)
-                            if button == "LeftButton" and not IsControlKeyDown() then
-                                -- Navigate to the mount's location
+                        -- Override the OnMouseDown handler to include navigation for search results
+                        local originalOnMouseDown = mountFrame:GetScript("OnMouseDown")
+                        mountFrame:SetScript("OnMouseDown", function(self, button)
+                            if button == "LeftButton" and not IsControlKeyDown() and not IsShiftKeyDown() then
+                                -- Navigate to the mount's location for search results
                                 MCLcore.Search:NavigateToMount(result)
+                            else
+                                -- Call the original OnMouseDown handler for other functionality
+                                if originalOnMouseDown then
+                                    originalOnMouseDown(self, button)
+                                end
                             end
                         end)
+                        
+                        -- Ensure mouse interaction is enabled
+                        mountFrame:EnableMouse(true)
+                        mountFrame:SetFrameStrata("HIGH")
+                        mountFrame:SetFrameLevel(10)
                         
                         categoryMountIndex = categoryMountIndex + 1
                     end
@@ -430,12 +517,31 @@ local function InitializeSearch()
             -- Store the target section for navigation
             local targetSection = result.section
             
-            -- Clear search first (this will restore the previous tab)
-            self:ClearSearch()
+            -- Clear search state without restoring previous tab
+            self.currentSearchTerm = ""
+            self.isSearchActive = false
+            self.searchResults = {}
             
-            -- Now find and select the correct tab for this section
+            -- Clear any highlighting
+            self:ClearHighlighting()
+            
+            -- Properly destroy search results content frame
+            self:DestroySearchResultsFrame()
+            
+            -- Clear search box text
+            if MCLcore.MCL_MF_Nav and MCLcore.MCL_MF_Nav.searchBox then
+                MCLcore.MCL_MF_Nav.searchBox:SetText("")
+                if MCLcore.MCL_MF_Nav.searchPlaceholder then
+                    MCLcore.MCL_MF_Nav.searchPlaceholder:Show()
+                end
+            end
+            
+            -- Clear the previously selected tab reference
+            self.previouslySelectedTab = nil
+            
+            -- Find and select the correct tab for this section
             if MCLcore.MCL_MF_Nav and MCLcore.MCL_MF_Nav.tabs then
-                for _, tab in ipairs(MCLcore.MCL_MF_Nav.tabs) do
+                for i, tab in ipairs(MCLcore.MCL_MF_Nav.tabs) do
                     if tab.section and tab.section.name == targetSection then
                         -- Use the proper tab selection logic (same as SelectTab function)
                         -- Deselect all tabs first
@@ -444,18 +550,19 @@ local function InitializeSearch()
                                 t:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
                             end
                         end
-                        -- Hide all tab contents
-                        for _, t in ipairs(MCLcore.MCL_MF_Nav.tabs) do
-                            if t.content then
-                                t.content:Hide()
-                            end
+                        
+                        -- Hide all tab contents using the proper HideAllTabContents function
+                        if MCLcore.HideAllTabContents then
+                            MCLcore.HideAllTabContents()
                         end
+                        
                         -- Select the target tab
                         if tab.SetBackdropBorderColor then
                             tab:SetBackdropBorderColor(1, 0.82, 0, 1)
                         end
                         if tab.content and MCL_mainFrame.ScrollFrame then
-                            MCL_mainFrame.ScrollFrame:SetScrollChild(tab.content)
+                            -- Always keep the main scroll child as the scroll child
+                            MCL_mainFrame.ScrollFrame:SetScrollChild(MCL_mainFrame.ScrollChild)
                             tab.content:Show()
                             MCL_mainFrame.ScrollFrame:SetVerticalScroll(0)
                         end
@@ -590,6 +697,43 @@ local function InitializeSearch()
                         targetScroll = math.max(0, math.min(targetScroll, scrollHeight))
                         scrollFrame:SetVerticalScroll(targetScroll)
                     end
+                end
+            end
+        end
+        
+        function MCLcore.Search:RecreateSearchResultsFrame()
+            if not MCLcore.searchResultsContent then return end
+            
+            -- Hide and remove the old search results content frame
+            MCLcore.searchResultsContent:Hide()
+            MCLcore.searchResultsContent:SetParent(nil)
+            MCLcore.searchResultsContent = nil
+            
+            -- Create new search results content frame with updated dimensions
+            MCLcore.searchResultsContent = MCLcore.Frames:createContentFrame(MCL_mainFrame.ScrollChild, "Search Results")
+            
+            -- Update the content
+            self:UpdateSearchResultsContent()
+            
+            -- Show the new frame
+            if MCL_mainFrame.ScrollFrame then
+                -- Always keep the main scroll child as the scroll child
+                MCL_mainFrame.ScrollFrame:SetScrollChild(MCL_mainFrame.ScrollChild)
+                MCLcore.searchResultsContent:Show()
+                MCL_mainFrame.ScrollFrame:SetVerticalScroll(0)
+            end
+        end
+        
+        function MCLcore.Search:DestroySearchResultsFrame()
+            if MCLcore.searchResultsContent then
+                -- Hide and remove the search results content frame
+                MCLcore.searchResultsContent:Hide()
+                MCLcore.searchResultsContent:SetParent(nil)
+                MCLcore.searchResultsContent = nil
+                
+                -- Ensure the main scroll child is set as the scroll child
+                if MCL_mainFrame.ScrollFrame and MCL_mainFrame.ScrollChild then
+                    MCL_mainFrame.ScrollFrame:SetScrollChild(MCL_mainFrame.ScrollChild)
                 end
             end
         end

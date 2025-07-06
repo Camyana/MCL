@@ -383,10 +383,35 @@ function MCL_frames:SetTabs()
     local selectedTab = nil
 
     local function HideAllTabContents()
+        -- Hide all tab content frames
         for _, t in ipairs(tabFrame.tabs) do
-            if t.content then t.content:Hide() end
+            if t.content then 
+                t.content:Hide() 
+            end
+        end
+        
+        -- Hide all section frames that might be stored globally
+        if MCLcore.sectionFrames then
+            for _, contentFrame in ipairs(MCLcore.sectionFrames) do
+                if contentFrame and contentFrame.Hide then
+                    contentFrame:Hide()
+                end
+            end
+        end
+        
+        -- Hide overview frame specifically
+        if MCLcore.overview then
+            MCLcore.overview:Hide()
+        end
+        
+        -- Also properly destroy search results content if it exists
+        if MCLcore.Search and MCLcore.Search.DestroySearchResultsFrame then
+            MCLcore.Search:DestroySearchResultsFrame()
         end
     end
+    
+    -- Expose HideAllTabContents globally for access from other files
+    MCLcore.HideAllTabContents = HideAllTabContents
     local function DeselectAllTabs()
         for _, t in ipairs(tabFrame.tabs) do
             t:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
@@ -395,9 +420,48 @@ function MCL_frames:SetTabs()
     local function SelectTab(tab)
         DeselectAllTabs()
         HideAllTabContents()
+        
+        -- Clear any active search when switching tabs manually
+        if MCLcore.Search and MCLcore.Search.isSearchActive then
+            -- Clear search state without restoring previous tab
+            MCLcore.Search.currentSearchTerm = ""
+            MCLcore.Search.isSearchActive = false
+            MCLcore.Search.searchResults = {}
+            
+            -- Clear any highlighting
+            if MCLcore.Search.ClearHighlighting then
+                MCLcore.Search:ClearHighlighting()
+            end
+            
+            -- Properly destroy search results content frame
+            if MCLcore.Search.DestroySearchResultsFrame then
+                MCLcore.Search:DestroySearchResultsFrame()
+            end
+            
+            -- Clear search box text
+            if MCLcore.MCL_MF_Nav and MCLcore.MCL_MF_Nav.searchBox then
+                MCLcore.MCL_MF_Nav.searchBox:SetText("")
+                if MCLcore.MCL_MF_Nav.searchPlaceholder then
+                    MCLcore.MCL_MF_Nav.searchPlaceholder:Show()
+                end
+            end
+            
+            -- Clear the previously selected tab reference
+            MCLcore.Search.previouslySelectedTab = nil
+        end
+        
         tab:SetBackdropBorderColor(1, 0.82, 0, 1)
-        MCL_mainFrame.ScrollFrame:SetScrollChild(tab.content)
-        tab.content:Show()
+        
+        -- Always ensure the main scroll child is the scroll child
+        if MCL_mainFrame.ScrollChild then
+            MCL_mainFrame.ScrollFrame:SetScrollChild(MCL_mainFrame.ScrollChild)
+        end
+        
+        -- Show only the selected tab's content
+        if tab.content then
+            tab.content:Show()
+        end
+        
         MCL_mainFrame.ScrollFrame:SetVerticalScroll(0)
         -- Store the currently selected tab globally for search functionality
         MCLcore.currentlySelectedTab = tab
@@ -762,14 +826,28 @@ function MCL_frames:createContentFrame(relativeFrame, title)
     frame:SetWidth(availableWidth)  -- Use current available width
     frame:SetHeight(50)  -- Increased height to accommodate title padding
     frame:SetPoint("TOPLEFT", relativeFrame, "TOPLEFT", 30, 0)  -- Remove nav_width since nav is outside
-    frame:SetBackdropColor(0, 0, 0, 0)  -- Transparent background
+    
+    -- Set opaque background for search results to prevent bleed-through
+    if title == "Search Results" then
+        frame:SetBackdrop({
+            bgFile = "Interface\\Buttons\\WHITE8x8",
+            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+            edgeSize = 8,
+            insets = { left = 4, right = 4, top = 4, bottom = 4 }
+        })
+        frame:SetBackdropColor(0.05, 0.05, 0.05, 1)  -- Opaque dark background
+        frame:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
+    else
+        frame:SetBackdropColor(0, 0, 0, 0)  -- Transparent background for other content
+    end
+    
     frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     frame.title:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -15)  -- Added padding: 15px from left and top
     frame.title:SetText(L[title]) -- Localized for display
     frame.name = title -- Store non-localized name
 
     -- Add pin instructions for all sections except Overview
-    if title ~= "Overview" and title ~= "Pinned" then
+    if title == "Pinned" then
         local instructionsFrame = CreateFrame("Frame", nil, frame, "BackdropTemplate")
         instructionsFrame:SetSize(availableWidth - 30, 20)  -- Smaller height for compact display
         instructionsFrame:SetPoint("TOPLEFT", frame, "TOPLEFT", 10, -30)  -- Position below title
@@ -979,7 +1057,8 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
                                     tab:SetBackdropBorderColor(1, 0.82, 0, 1)
                                 end
                                 if MCL_mainFrame and MCL_mainFrame.ScrollFrame then
-                                    MCL_mainFrame.ScrollFrame:SetScrollChild(tab.content)
+                                    -- Always keep the main scroll child as the scroll child
+                                    MCL_mainFrame.ScrollFrame:SetScrollChild(MCL_mainFrame.ScrollChild)
                                     if tab.content then
                                         tab.content:Show()
                                     end
@@ -1446,6 +1525,7 @@ function MCL_frames:RefreshLayout()
     
     -- Remember which tab was selected before refresh
     local selectedTabName = nil
+    local wasShowingSearchResults = false
     local navFrame = MCLcore.MCL_MF_Nav
     if navFrame and navFrame.tabs then
         for _, tab in ipairs(navFrame.tabs) do
@@ -1453,6 +1533,10 @@ function MCL_frames:RefreshLayout()
                 selectedTabName = tab.section and tab.section.name
                 break
             end
+        end
+        -- Check if search results are currently being shown
+        if MCLcore.searchResultsContent and MCLcore.searchResultsContent:IsShown() then
+            wasShowingSearchResults = true
         end
     end
     
@@ -1476,6 +1560,16 @@ function MCL_frames:RefreshLayout()
     -- Recreate tabs with new dimensions
     if MCL_frames.SetTabs then
         MCL_frames:SetTabs()
+        
+        -- Recreate search results content frame if it exists and is currently showing
+        if MCLcore.searchResultsContent and wasShowingSearchResults then
+            -- If search is active, recreate the search results with new dimensions
+            if MCLcore.Search and MCLcore.Search.isSearchActive then
+                C_Timer.After(0.1, function()
+                    MCLcore.Search:RecreateSearchResultsFrame()
+                end)
+            end
+        end
         
         -- If we're on the overview page, we need to refresh it since it has dynamic content
         if selectedTabName == "Overview" and MCLcore.overview then
@@ -1501,8 +1595,8 @@ function MCL_frames:RefreshLayout()
             end
         end
         
-        -- Restore the previously selected tab
-        if selectedTabName and navFrame and navFrame.tabs then
+        -- Restore the previously selected tab (unless we're showing search results)
+        if selectedTabName and navFrame and navFrame.tabs and not wasShowingSearchResults then
             for _, tab in ipairs(navFrame.tabs) do
                 if tab.section and tab.section.name == selectedTabName then
                     -- Use the same selection logic as in SetTabs
@@ -1512,11 +1606,16 @@ function MCL_frames:RefreshLayout()
                             t:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
                         end
                     end
+                    -- Also properly destroy search results content if it exists
+                    if MCLcore.Search and MCLcore.Search.DestroySearchResultsFrame then
+                        MCLcore.Search:DestroySearchResultsFrame()
+                    end
                     if tab.SetBackdropBorderColor then
                         tab:SetBackdropBorderColor(1, 0.82, 0, 1)
                     end
                     if MCL_mainFrame and MCL_mainFrame.ScrollFrame then
-                        MCL_mainFrame.ScrollFrame:SetScrollChild(tab.content)
+                        -- Always keep the main scroll child as the scroll child
+                        MCL_mainFrame.ScrollFrame:SetScrollChild(MCL_mainFrame.ScrollChild)
                         if tab.content then
                             tab.content:Show()
                         end
