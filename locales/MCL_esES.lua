@@ -216,4 +216,5 @@ if L then
     L["Search mounts..."] = "Buscar monturas..."
     L["Mount Collection Log"] = "Registro de colección de monturas"
     L["Clear Search"] = "Limpiar búsqueda"
+    L["Pin Instructions Text"] = "|cffFF8800|TInterface\\GossipFrame\\AvailableQuestIcon:0:0:0:0:32:32:0:32:0:32|t Ctrl + Clic derecho|r para marcar monturas no obtenidas"
 end

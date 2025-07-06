@@ -216,4 +216,5 @@ if L then
     L["Search mounts..."] = "Cerca cavalcature..."
     L["Mount Collection Log"] = "Registro collezione cavalcature"
     L["Clear Search"] = "Cancella ricerca"
+    L["Pin Instructions Text"] = "|cffFF8800|TInterface\\GossipFrame\\AvailableQuestIcon:0:0:0:0:32:32:0:32:0:32|t Ctrl + Clic destro|r per fissare cavalcature non ottenute"
 end

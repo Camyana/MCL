@@ -219,4 +219,7 @@ if L then
     L["Sections"] = "Sections"
     L["MCL | Mount Collection Log"] = "MCL | Mount Collection Log"
     L["|cff00CCFFMount Collection Log Commands:\n|cffFF0000Show:|cffFFFFFF Shows your mount collection log\n|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon\n|cffFF0000Config:|cffFFFFFF Opens the settings\n|cffFF0000Help:|cffFFFFFF Shows commands"] = "|cff00CCFFMount Collection Log Commands:\n|cffFF0000Show:|cffFFFFFF Shows your mount collection log\n|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon\n|cffFF0000Config:|cffFFFFFF Opens the settings\n|cffFF0000Help:|cffFFFFFF Shows commands"
+    L["How to Use Pinned Mounts"] = "How to Use Pinned Mounts"
+    L["Pin Instructions"] = "• Right-click any mount icon to pin/unpin it\n• Pinned mounts will appear in this tab for quick access\n• Use pinned mounts to track your favorites or goals\n• Pin icon appears on mount when pinned\n• Pinned mounts are saved across sessions"
+    L["Pin Instructions Text"] = "|cffFF8800|TInterface\\GossipFrame\\AvailableQuestIcon:0:0:0:0:32:32:0:32:0:32|t Ctrl + Right Click|r to pin uncollected mounts"
 end

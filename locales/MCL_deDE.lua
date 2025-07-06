@@ -216,4 +216,5 @@ if L then
     L["Search mounts..."] = "Reittiere suchen..."
     L["Mount Collection Log"] = "Reittier-Sammlungs-Log"
     L["Clear Search"] = "Suche löschen"
+    L["Pin Instructions Text"] = "|cffFF8800|TInterface\\GossipFrame\\AvailableQuestIcon:0:0:0:0:32:32:0:32:0:32|t Strg + Rechtsklick|r um nicht gesammelte Reittiere zu merken"
 end

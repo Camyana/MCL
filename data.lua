@@ -1079,7 +1079,7 @@ MCLcore.mountList[19] = {
 		},
 		HorrificVisions = {
 			name = "Horrific Visions",
-			mounts = {235711,235709,235705,235700,235706,235707,211089}
+			mounts = {235711,235709,235705,235700,235706,235707,211089,223265}
 		},
 		Delves = {
 			name = "Delves",

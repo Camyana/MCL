@@ -221,4 +221,5 @@ if L then
     L["Sections"] = "分類"
     L["MCL | Mount Collection Log"] = "MCL | 坐騎收集日誌"
     L["|cff00CCFFMount Collection Log Commands:\n|cffFF0000Show:|cffFFFFFF Shows your mount collection log\n|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon\n|cffFF0000Config:|cffFFFFFF Opens the settings\n|cffFF0000Help:|cffFFFFFF Shows commands"] = "|cff00CCFF坐騎收集日誌指令:\n|cffFF0000Show:|cffFFFFFF 顯示你的坐騎收集日誌\n|cffFF0000Icon:|cffFFFFFF 切換小地圖按鈕\n|cffFF0000Config:|cffFFFFFF 開啟設定選項\n|cffFF0000Help:|cffFFFFFF 顯示指令"
+    L["Pin Instructions Text"] = "|cffFF8800|TInterface\\GossipFrame\\AvailableQuestIcon:0:0:0:0:32:32:0:32:0:32|t Ctrl + 右鍵|r 收藏未獲得的坐騎"
 end

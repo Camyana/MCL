@@ -216,4 +216,5 @@ if L then
     L["Search mounts..."] = "Поиск маунтов..."
     L["Mount Collection Log"] = "Журнал коллекции маунтов"
     L["Clear Search"] = "Очистить поиск"
+    L["Pin Instructions Text"] = "|cffFF8800|TInterface\\GossipFrame\\AvailableQuestIcon:0:0:0:0:32:32:0:32:0:32|t Ctrl + Правый клик|r для закрепления не собранных маунтов"
 end

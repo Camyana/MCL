@@ -216,5 +216,6 @@ if L then
     L["Search mounts..."] = "搜索坐骑..."
     L["Mount Collection Log"] = "坐骑收集日志"
     L["Clear Search"] = "清除搜索"
+    L["Pin Instructions Text"] = "|cffFF8800|TInterface\\GossipFrame\\AvailableQuestIcon:0:0:0:0:32:32:0:32:0:32|t Ctrl + 右键|r 收藏未获得的坐骑"
 end
 

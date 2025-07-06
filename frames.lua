@@ -531,6 +531,7 @@ function MCL_frames:SetTabs()
         tab.text:SetText(L[pinnedSection.name] or pinnedSection.name)
         tab.section = pinnedSection
         tab.content = MCLcore.Frames:createContentFrame(MCL_mainFrame.ScrollChild, pinnedSection.name)
+                
         -- Set global reference for pinned content frame (used by functions.lua)
         _G["PinnedFrame"] = tab.content
         _G["PinnedTab"] = tab
@@ -767,9 +768,34 @@ function MCL_frames:createContentFrame(relativeFrame, title)
     frame.title:SetText(L[title]) -- Localized for display
     frame.name = title -- Store non-localized name
 
+    -- Add pin instructions for all sections except Overview
+    if title ~= "Overview" and title ~= "Pinned" then
+        local instructionsFrame = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+        instructionsFrame:SetSize(availableWidth - 30, 20)  -- Smaller height for compact display
+        instructionsFrame:SetPoint("TOPLEFT", frame, "TOPLEFT", 10, -30)  -- Position below title
+        instructionsFrame:SetBackdrop({
+            bgFile = "Interface\\Buttons\\WHITE8x8",
+            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+            edgeSize = 2
+        })
+        instructionsFrame:SetBackdropColor(0.1, 0.1, 0.2, 0.6)  -- Subtle background
+        instructionsFrame:SetBackdropBorderColor(0.4, 0.4, 0.6, 0.8)  -- Subtle border
+        
+        -- Create the instruction text with color formatting
+        local instructionsText = instructionsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        instructionsText:SetPoint("LEFT", instructionsFrame, "LEFT", 10, 0)
+        -- Use color codes to make "Ctrl + Right Click" bold and orange
+        instructionsText:SetText(L["Pin Instructions Text"] or "|cffFF8800|TInterface\\GossipFrame\\AvailableQuestIcon:0:0:0:0:32:32:0:32:0:32|t Ctrl + Right Click|r to pin uncollected mounts")
+        instructionsText:SetTextColor(0.9, 0.9, 1, 1)  -- Light blue-white for the rest of the text
+        
+        -- Adjust frame height to accommodate instructions
+        frame:SetHeight(85)  -- Increased to make room for instructions
+    end
+
     if title ~= "Pinned" then
         frame.pBar = MCLcore.Frames:progressBar(frame)
-        frame.pBar:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 15, -15)  -- Aligned with title padding
+        local yOffset = title == "Overview" and -15 or -55  -- Adjust based on whether instructions are present
+        frame.pBar:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 15, yOffset)  -- Aligned with title padding
         frame.pBar:SetWidth(availableWidth - 30)  -- Account for padding on both sides
         frame.pBar:SetHeight(20)
     end
@@ -1489,6 +1515,8 @@ function MCL_frames:RefreshLayout()
     end
 end
 
+
+
 -- Function to save frame size to settings
 function MCL_frames:SaveFrameSize()
     if MCL_mainFrame and MCL_SETTINGS then
@@ -1501,6 +1529,7 @@ end
 function MCL_frames:RestoreFrameSize()
     if MCL_mainFrame and MCL_SETTINGS then
         local width = MCL_SETTINGS.frameWidth or main_frame_width
+       
         local height = MCL_SETTINGS.frameHeight or main_frame_height
         MCL_mainFrame:SetSize(width, height)
     end
