@@ -173,7 +173,7 @@ if L then
     L["Ashran"] = "Ashran"
 
     ------ Einstellungen ----
-    L["Ctrl + Right Click to pin uncollected mounts"] = "Strg + Rechtsklick, um nicht gesammelte Reittiere anzuheften"
+    L["Ctrl + Right Click to pin uncollected mounts"] = "Strg + Rechtsklick, um Reittiere anzuheften/zu lösen"
     L["Mount Collection Log Settings"] = "Reittiersammlungsprotokoll-Einstellungen"
     L["Main Window Options"] = "Hauptfensteroptionen"
     L["Main Window Opacity"] = "Hauptfenster-Transparenz"
@@ -221,5 +221,5 @@ if L then
     L["|cff00CCFFMount Collection Log Commands:\n|cffFF0000Show:|cffFFFFFF Shows your mount collection log\n|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon\n|cffFF0000Config:|cffFFFFFF Opens the settings\n|cffFF0000Help:|cffFFFFFF Shows commands"] = "|cff00CCFFReittier-Sammlungs-Log Befehle:\n|cffFF0000Show:|cffFFFFFF Zeigt Ihr Reittier-Sammlungs-Log\n|cffFF0000Icon:|cffFFFFFF Schaltet das Minikartensymbol um\n|cffFF0000Config:|cffFFFFFF Öffnet die Einstellungen\n|cffFF0000Help:|cffFFFFFF Zeigt Befehle"
     L["How to Use Pinned Mounts"] = "So verwenden Sie angeheftete Reittiere"
     L["Pin Instructions"] = "• Rechtsklick auf ein Reittier-Symbol zum Anheften/Lösen\n• Angeheftete Reittiere erscheinen in diesem Tab für schnellen Zugriff\n• Verwenden Sie angeheftete Reittiere um Ihre Favoriten oder Ziele zu verfolgen\n• Anheft-Symbol erscheint auf dem Reittier wenn angeheftet\n• Angeheftete Reittiere werden zwischen Sitzungen gespeichert"
-    L["Pin Instructions Text"] = "|cffFF8800|TInterface\\GossipFrame\\AvailableQuestIcon:0:0:0:0:32:32:0:32:0:32|t Strg + Rechtsklick|r um nicht gesammelte Reittiere zu merken"
+    L["Pin Instructions Text"] = "|cffFF8800|TInterface\\GossipFrame\\AvailableQuestIcon:0:0:0:0:32:32:0:32:0:32|t Strg + Rechtsklick|r um Reittiere zu merken/zu lösen"
 end

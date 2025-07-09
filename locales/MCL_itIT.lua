@@ -173,7 +173,7 @@ if L then
     L["Ashran"] = "Ashran"
 
     ------ pannello impostazioni ----
-    L["Ctrl + Right Click to pin uncollected mounts"] = "Ctrl + Click destro per fissare le cavalcature non raccolte"
+    L["Ctrl + Right Click to pin uncollected mounts"] = "Ctrl + Click destro per fissare/rimuovere le cavalcature"
     L["Mount Collection Log Settings"] = "Impostazioni Registro Collezione Cavalcature"
     L["Main Window Options"] = "Opzioni Finestra Principale"
     L["Main Window Opacity"] = "Opacità Finestra Principale"

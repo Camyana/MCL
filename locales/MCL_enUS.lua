@@ -173,7 +173,7 @@ if L then
     L["Ashran"] = "Ashran"
 
     ------ setting panel ------
-    L["Ctrl + Right Click to pin uncollected mounts"] = "Ctrl + Right Click to pin uncollected mounts"
+    L["Ctrl + Right Click to pin uncollected mounts"] = "Ctrl + Right Click to pin/unpin mounts"
     L["Mount Collection Log Settings"] = "Mount Collection Log Settings"
     L["Main Window Options"] = "Main Window Options"
     L["Main Window Opacity"] = "Main Window Opacity"
@@ -221,5 +221,5 @@ if L then
     L["|cff00CCFFMount Collection Log Commands:\n|cffFF0000Show:|cffFFFFFF Shows your mount collection log\n|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon\n|cffFF0000Config:|cffFFFFFF Opens the settings\n|cffFF0000Help:|cffFFFFFF Shows commands"] = "|cff00CCFFMount Collection Log Commands:\n|cffFF0000Show:|cffFFFFFF Shows your mount collection log\n|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon\n|cffFF0000Config:|cffFFFFFF Opens the settings\n|cffFF0000Help:|cffFFFFFF Shows commands"
     L["How to Use Pinned Mounts"] = "How to Use Pinned Mounts"
     L["Pin Instructions"] = "• Right-click any mount icon to pin/unpin it\n• Pinned mounts will appear in this tab for quick access\n• Use pinned mounts to track your favorites or goals\n• Pin icon appears on mount when pinned\n• Pinned mounts are saved across sessions"
-    L["Pin Instructions Text"] = "|cffFF8800|TInterface\\GossipFrame\\AvailableQuestIcon:0:0:0:0:32:32:0:32:0:32|t Ctrl + Right Click|r to pin uncollected mounts"
+    L["Pin Instructions Text"] = "|cffFF8800|TInterface\\GossipFrame\\AvailableQuestIcon:0:0:0:0:32:32:0:32:0:32|t Ctrl + Right Click|r to pin/unpin mounts"
 end

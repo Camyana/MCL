@@ -275,6 +275,12 @@ end
 
 
 local function Tab_OnClick(self)
+	-- Check if we need to refresh layout when switching away from pinned section
+	if MCLcore.Function and MCLcore.Function.CheckAndRefreshAfterPinnedChanges then
+		local newSectionName = self.section and self.section.name or "Unknown"
+		MCLcore.Function:CheckAndRefreshAfterPinnedChanges(newSectionName)
+	end
+	
 	PanelTemplates_SetTab(self:GetParent(), self:GetID());
 
 	local scrollChild = MCL_mainFrame.ScrollFrame:GetScrollChild();
@@ -418,6 +424,12 @@ function MCL_frames:SetTabs()
         end
     end
     local function SelectTab(tab)
+        -- Check if we need to refresh layout when switching away from pinned section
+        if MCLcore.Function and MCLcore.Function.CheckAndRefreshAfterPinnedChanges then
+            local newSectionName = tab.section and tab.section.name or "Unknown"
+            MCLcore.Function:CheckAndRefreshAfterPinnedChanges(newSectionName)
+        end
+        
         DeselectAllTabs()
         HideAllTabContents()
         
@@ -599,7 +611,23 @@ function MCL_frames:SetTabs()
         -- Set global reference for pinned content frame (used by functions.lua)
         _G["PinnedFrame"] = tab.content
         _G["PinnedTab"] = tab
-        -- Optionally, populate pinned tab content if you have a function for it
+        
+        -- Populate pinned tab content after creating the frame
+        -- Initialize MCL_PINNED if it doesn't exist
+        if not MCL_PINNED then
+            MCL_PINNED = {}
+        end
+        
+        if MCL_PINNED and next(MCL_PINNED) then
+            -- Clear any existing mount frames for pinned section
+            if MCLcore.mountFrames[1] then
+                MCLcore.mountFrames[1] = {}
+            end
+            -- Create the pinned section content
+            local overflow, mountFrame = MCLcore.Function:CreateMountsForCategory(MCL_PINNED, _G["PinnedFrame"], 30, _G["PinnedTab"], true, true)
+            MCLcore.mountFrames[1] = mountFrame
+        end
+        
         tab.content:Hide()
         tab:SetScript("OnClick", function(self)
             SelectTab(self)
@@ -863,7 +891,7 @@ function MCL_frames:createContentFrame(relativeFrame, title)
         local instructionsText = instructionsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         instructionsText:SetPoint("LEFT", instructionsFrame, "LEFT", 10, 0)
         -- Use color codes to make "Ctrl + Right Click" bold and orange
-        instructionsText:SetText(L["Pin Instructions Text"] or "|cffFF8800|TInterface\\GossipFrame\\AvailableQuestIcon:0:0:0:0:32:32:0:32:0:32|t Ctrl + Right Click|r to pin uncollected mounts")
+        instructionsText:SetText(L["Pin Instructions Text"] or "|cffFF8800|TInterface\\GossipFrame\\AvailableQuestIcon:0:0:0:0:32:32:0:32:0:32|t Ctrl + Right Click|r to pin/unpin mounts")
         instructionsText:SetTextColor(0.9, 0.9, 1, 1)  -- Light blue-white for the rest of the text
         
         -- Adjust frame height to accommodate instructions

@@ -173,7 +173,7 @@ if L then
     L["Ashran"] = "Ashran"
 
     ------ panneau de configuration ----
-    L["Ctrl + Right Click to pin uncollected mounts"] = "Ctrl + clic droit pour épingler les montures non collectées"
+    L["Ctrl + Right Click to pin uncollected mounts"] = "Ctrl + clic droit pour épingler/désépingler les montures"
     L["Mount Collection Log Settings"] = "Paramètres du journal de collection de montures"
     L["Main Window Options"] = "Options de la fenêtre principale"
     L["Main Window Opacity"] = "Opacité de la fenêtre principale"

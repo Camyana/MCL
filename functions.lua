@@ -11,6 +11,7 @@ MCLcore.overviewFrames = {}
 MCLcore.mountFrames = {}
 MCLcore.mountCheck = {}
 MCLcore.addon_name = L["MCL | Mount Collection Log"]
+MCLcore.pinnedMountsChanged = false  -- Flag to track if pinned mounts have been modified
 
 
 function MCL_functions:getFaction()
@@ -355,42 +356,59 @@ function MCL_functions:SetMouseClickFunctionalityPin(frame, mountID, mountName, 
             if button == 'LeftButton' then
                 DressUpMount(mountID)
             elseif button == 'RightButton' then
-                if IsMountCollected(mountID) == false then
-                    -- Initialize MCL_PINNED if it doesn't exist
-                    if not MCL_PINNED then
-                        MCL_PINNED = {}
-                    end
-                    
-                    local pin = false
-                    local pin_count = table.getn(MCL_PINNED)
-                    if pin_count ~= nil then                     
-                        for i=1, pin_count do                      
-                            if MCL_PINNED[i].mountID == "m"..mountID then
-                                pin = i
-                            end
+                -- Allow pinning of both collected and uncollected mounts
+                -- Initialize MCL_PINNED if it doesn't exist
+                if not MCL_PINNED then
+                    MCL_PINNED = {}
+                end
+                
+                local pin = false
+                local pin_count = table.getn(MCL_PINNED)
+                if pin_count ~= nil then                     
+                    for i=1, pin_count do                      
+                        if MCL_PINNED[i].mountID == "m"..mountID then
+                            pin = i
+                            break
                         end
                     end
-                                          
+                end
+                
+                -- Only remove if we found a valid pin index
+                if pin ~= false then
                     table.remove(MCL_PINNED, pin)
-                    local index = 0
-                    -- Initialize MCLcore.mountFrames[1] if it doesn't exist
-                    if not MCLcore.mountFrames[1] then
-                        MCLcore.mountFrames[1] = {}
-                    end
-                    for k,v in pairs(MCLcore.mountFrames[1]) do
-                        index = index + 1
-                        if tostring(v.mountID) == tostring(mountID) then
-                            table.remove(MCLcore.mountFrames[1],  index)
-                            for kk,vv in ipairs(MCLcore.mountFrames[1]) do
-                                if kk == 1 then
-                                    vv:SetParent(_G["PinnedFrame"])
-                                else
-                                    vv:SetParent(MCLcore.mountFrames[1][kk-1])
+                    
+                    -- Set flag to indicate pinned mounts have been modified
+                    MCLcore.pinnedMountsChanged = true
+                    
+                    -- Update all pin icons for this mount
+                    MCLcore.Function:UpdateAllPinIcons(mountID)
+                    
+                    -- Refresh the pinned section by recreating it
+                    if _G["PinnedFrame"] then
+                        -- Clear existing mount frames more thoroughly
+                        if MCLcore.mountFrames[1] then
+                            for _, oldFrame in ipairs(MCLcore.mountFrames[1]) do
+                                if oldFrame and oldFrame:GetParent() then
+                                    oldFrame:Hide()
+                                    oldFrame:SetParent(nil)
                                 end
                             end
-                            frame:Hide()
-                            MCLcore.Function:UpdateCollection()
                         end
+                        
+                        -- Also clear any untracked children of PinnedFrame
+                        local children = {_G["PinnedFrame"]:GetChildren()}
+                        for _, child in ipairs(children) do
+                            if child and child:IsObjectType("Button") and child.mountID then
+                                child:Hide()
+                                child:SetParent(nil)
+                            end
+                        end
+                        
+                        MCLcore.mountFrames[1] = {}
+                        
+                        -- Recreate the pinned section content
+                        local overflow, mountFrame = MCLcore.Function:CreateMountsForCategory(MCL_PINNED, _G["PinnedFrame"], 30, _G["PinnedTab"], true, true)
+                        MCLcore.mountFrames[1] = mountFrame
                     end
                 end
             end               
@@ -407,8 +425,11 @@ function MCL_functions:SetMouseClickFunctionalityPin(frame, mountID, mountName, 
                 end
             end
         end
-        if button == 'RightButton' then
-            CastSpellByName(mountName);
+        if button == 'MiddleButton' then
+            -- Middle click to cast mount if it's collected
+            if IsMountCollected(mountID) then
+                CastSpellByName(mountName);
+            end
         end
     end)
 end
@@ -420,68 +441,121 @@ function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, ite
             if button == 'LeftButton' then
                 DressUpMount(mountID)
             elseif button == 'RightButton' then
-                if IsMountCollected(mountID) == false then
-                    -- Initialize MCL_PINNED if it doesn't exist
-                    if not MCL_PINNED then
-                        MCL_PINNED = {}
+                -- Allow pinning of both collected and uncollected mounts
+                -- Initialize MCL_PINNED if it doesn't exist
+                if not MCL_PINNED then
+                    MCL_PINNED = {}
+                end
+                
+                local pin = false
+                local pin_count = table.getn(MCL_PINNED)
+                if pin_count ~= nil then                     
+                    for i=1, pin_count do
+                        if MCL_PINNED[i].mountID == "m"..mountID then
+                            pin = i
+                        end
+                    end
+                end
+                if pin ~= false then
+                    if frame.pin then
+                        frame.pin:SetAlpha(0)
+                    end
+                    table.remove(MCL_PINNED, pin)
+                    
+                    -- Set flag to indicate pinned mounts have been modified
+                    MCLcore.pinnedMountsChanged = true
+                    
+                    -- Update all pin icons for this mount
+                    MCLcore.Function:UpdateAllPinIcons(mountID)
+                    local index = 0
+                    -- Initialize MCLcore.mountFrames[1] if it doesn't exist
+                    if not MCLcore.mountFrames[1] then
+                        MCLcore.mountFrames[1] = {}
+                    end
+                    for k,v in pairs(MCLcore.mountFrames[1]) do
+                        index = index + 1
+                        if tostring(v.mountID) == tostring(mountID) then
+                            MCLcore.mountFrames[1][index]:Hide()                                
+                            table.remove(MCLcore.mountFrames[1],  index)
+                            for kk,vv in ipairs(MCLcore.mountFrames[1]) do
+                                if kk == 1 then
+                                    vv:SetParent(_G["PinnedFrame"])
+                                    vv:Show()
+                                else
+                                    vv:SetParent(MCLcore.mountFrames[1][kk-1])
+                                    vv:Show()
+                                end
+                            end                                
+                        end
                     end
                     
-                    local pin = false
-                    local pin_count = table.getn(MCL_PINNED)
-                    if pin_count ~= nil then                     
-                        for i=1, pin_count do                      
-                            if MCL_PINNED[i].mountID == "m"..mountID then
-                                pin = i
+                    -- Refresh the pinned tab layout after unpinning
+                    if MCL_frames and MCL_frames.RefreshLayout then
+                        -- Check if we're currently viewing the Pinned tab
+                        local isPinnedTabActive = false
+                        if MCLcore.currentlySelectedTab and MCLcore.currentlySelectedTab.section and MCLcore.currentlySelectedTab.section.name == "Pinned" then
+                            isPinnedTabActive = true
+                        end
+                        
+                        -- Refresh the layout to update the pinned content
+                        MCLcore.Frames:RefreshLayout()
+                        
+                        -- If we were on the Pinned tab, reselect it
+                        if isPinnedTabActive and MCLcore.MCL_MF_Nav and MCLcore.MCL_MF_Nav.tabs then
+                            for _, tab in ipairs(MCLcore.MCL_MF_Nav.tabs) do
+                                if tab.section and tab.section.name == "Pinned" then
+                                    tab:GetScript("OnClick")(tab)
+                                    break
+                                end
                             end
                         end
                     end
-                    if pin ~= false then
-                        if frame.pin then
-                            frame.pin:SetAlpha(0)
-                        end
-                        table.remove(MCL_PINNED, pin)
-                        -- Update all pin icons for this mount
-                        MCLcore.Function:UpdateAllPinIcons(mountID)
-                        local index = 0
-                        -- Initialize MCLcore.mountFrames[1] if it doesn't exist
-                        if not MCLcore.mountFrames[1] then
-                            MCLcore.mountFrames[1] = {}
-                        end
-                        for k,v in pairs(MCLcore.mountFrames[1]) do
-                            index = index + 1
-                            if tostring(v.mountID) == tostring(mountID) then
-                                MCLcore.mountFrames[1][index]:Hide()                                
-                                table.remove(MCLcore.mountFrames[1],  index)
-                                for kk,vv in ipairs(MCLcore.mountFrames[1]) do
-                                    if kk == 1 then
-                                        vv:SetParent(_G["PinnedFrame"])
-                                        vv:Show()
-                                    else
-                                        vv:SetParent(MCLcore.mountFrames[1][kk-1])
-                                        vv:Show()
-                                    end
-                                end                                
-                            end
-                        end
-                    else	                            
-                        if frame.pin then
-                            frame.pin:SetAlpha(1)
-                        end
-                        local t = {
-                            mountID = "m"..mountID,
-                            category = frame.category,
-                            section = frame.section
-                        }
-                        if pin_count == nil then
-                            MCL_PINNED[1] = t
-                        else
-                            MCL_PINNED[pin_count+1] = t
-                        end
-                        MCLcore.Function:CreatePinnedMount(mountID, frame.category, frame.section)
-                        -- Update all pin icons for this mount
-                        MCLcore.Function:UpdateAllPinIcons(mountID)
+                else	                            
+                    if frame.pin then
+                        frame.pin:SetAlpha(1)
+                    end
+                    local t = {
+                        mountID = "m"..mountID,
+                        category = frame.category,
+                        section = frame.section
+                    }
+                    if pin_count == nil then
+                        MCL_PINNED[1] = t
+                    else
+                        MCL_PINNED[pin_count+1] = t
+                    end
+                    
+                    -- Set flag to indicate pinned mounts have been modified
+                    MCLcore.pinnedMountsChanged = true
+                    
+                    MCLcore.Function:CreatePinnedMount(mountID, frame.category, frame.section)
+                    -- Update all pin icons for this mount
+                    MCLcore.Function:UpdateAllPinIcons(mountID)
 
-                    end
+                    -- Refresh the pinned tab layout after pinning
+                    C_Timer.After(0.1, function()
+                        if MCL_frames and MCL_frames.SetTabs then
+                            -- Check if we're currently viewing the Pinned tab
+                            local isPinnedTabActive = false
+                            if MCLcore.currentlySelectedTab and MCLcore.currentlySelectedTab.section and MCLcore.currentlySelectedTab.section.name == "Pinned" then
+                                isPinnedTabActive = true
+                            end
+                            
+                            -- Refresh the tabs to update the pinned content
+                            MCLcore.Frames:SetTabs()
+                            
+                            -- If we were on the Pinned tab, reselect it
+                            if isPinnedTabActive and MCLcore.MCL_MF_Nav and MCLcore.MCL_MF_Nav.tabs then
+                                for _, tab in ipairs(MCLcore.MCL_MF_Nav.tabs) do
+                                    if tab.section and tab.section.name == "Pinned" then
+                                        tab:GetScript("OnClick")(tab)
+                                        break
+                                    end
+                                end
+                            end
+                        end
+                    end)
+
                 end
             end               
         elseif button=='LeftButton' then
@@ -506,8 +580,11 @@ function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, ite
                 -- Shift-click functionality is handled in SetMouseClickFunctionality
             end
         end
-        if button == 'RightButton' then
-            CastSpellByName(mountName);
+        if button == 'MiddleButton' then
+            -- Middle click to cast mount if it's collected
+            if IsMountCollected(mountID) then
+                CastSpellByName(mountName);
+            end
         end
     end)
 end
@@ -684,6 +761,9 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
                 local frame = CreateFrame("Button", nil, relativeFrame, "BackdropTemplate");
                 frame:SetWidth(frame_size);
                 frame:SetHeight(frame_size);
+
+                
+
                 frame:SetBackdrop({
                     edgeFile = [[Interface\Buttons\WHITE8x8]],
                     edgeSize = frame_size + 2,
@@ -721,7 +801,7 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
 
                 frame.tex = frame:CreateTexture()
                 frame.tex:SetSize(frame_size, frame_size)
-                frame.tex:SetPoint("LEFT")
+                frame.tex:SetPoint("LEFT", frame, "LEFT", 8, 0)  -- Added 8px left padding for icon
 
                 if string.sub(val, 1, 1) == "m" then
                     frame.tex:SetTexture(icon)
@@ -747,50 +827,127 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
                         y = 0
                     end
 
-                    frame.sectionName = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-                    frame.sectionName:SetPoint("LEFT", 650, 0)
-                    frame.sectionName:SetText(vv.section)
+                    -- Mount Name - Primary text (aligned to frame edge, not icon)
+                    frame.mountName = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+                    frame.mountName:SetPoint("TOPLEFT", frame, "TOPLEFT", 46, -8)  -- Aligned to frame edge with padding
+                    frame.mountName:SetText(mountName)
+                    
+                    -- Section line (below pin icon on the right)
+                    frame.sectionLine = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+                    frame.sectionLine:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -30, -8)  -- Below pin icon area
+                    frame.sectionLine:SetText(vv.section)
 
-                    frame.categoryName = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-                    frame.categoryName:SetPoint("LEFT", 850, 0)
-                    frame.categoryName:SetText(vv.category)  
+                    -- Category line (under section on the right)
+                    frame.categoryLine = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+                    frame.categoryLine:SetPoint("TOPRIGHT", frame.sectionLine, "BOTTOMRIGHT", 0, -2)  -- Under section
+                    frame.categoryLine:SetText(vv.category)
                     
-                    frame.mountName = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-                    frame.mountName:SetPoint("LEFT", 50, 0)
-                    frame.mountName:SetText(mountName)  
+                    -- Acquisition line (under mount name, full width)
+                    frame.acquisitionLine = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+                    frame.acquisitionLine:SetPoint("TOPLEFT", frame.mountName, "BOTTOMLEFT", 0, -4)
+                    frame.acquisitionLine:SetText(sourceText or "Unknown")  -- Removed "Acquisition:" label
+                    frame.acquisitionLine:SetJustifyH("LEFT")
+                    frame.acquisitionLine:SetWordWrap(true)  -- Allow wrapping to show full text
+                    frame.acquisitionLine:SetWidth(600)  -- Adjust width to not overlap with category section
                     
-                    frame.sourceText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-                    frame.sourceText:SetPoint("LEFT", 250, 0)
-                    frame.sourceText:SetText(sourceText)  
-                    
-                    frame.border = frame:CreateLine(nil, "BACKGROUND", nil, 0)
-                    frame.border:SetThickness(3)
-                    frame.border:SetColorTexture(1, 1, 1, 0.3)
-                    frame.border:SetStartPoint("BOTTOMLEFT")
-                    frame.border:SetEndPoint("BOTTOMRIGHT")
-                    frame:SetWidth(1000)
-                    frame:SetHeight(frame.sourceText:GetStringHeight()+20)
-                    
+                    -- Use WoW standard tooltip border and background
                     frame:SetBackdrop({
-                        bgFile = [[Interface\Buttons\WHITE8x8]],              
+                        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+                        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+                        edgeSize = 16,
+                        insets = { left = 4, right = 4, top = 4, bottom = 4 }
                     })
+                    
+                    -- Bottom border line for separation
+                    frame.border = frame:CreateLine(nil, "BACKGROUND", nil, 0)
+                    frame.border:SetThickness(1)
+                    frame.border:SetColorTexture(0.5, 0.5, 0.5, 0.5)
+                    frame.border:SetStartPoint("BOTTOMLEFT", 4, 4)
+                    frame.border:SetEndPoint("BOTTOMRIGHT", -4, 4)
+                    
+                    frame:SetWidth(815)  -- Increased width to match pinned instruction bar
+                    
+                    -- Set a reasonable minimum height first so text can be laid out
+                    frame:SetHeight(75)  -- Start with minimum height
+                    
+                    -- Store the reference frame for positioning (before previous_frame gets updated)
+                    local positionRelativeTo = previous_frame
+                    local isFirstFrame = (previous_frame == category)
+                    
+                    -- Force text layout by getting dimensions after initial setup
+                    C_Timer.After(0, function()
+                        -- Calculate height based on actual rendered content
+                        local mountNameHeight = frame.mountName:GetStringHeight()
+                        local acquisitionHeight = frame.acquisitionLine:GetStringHeight()
+                        
+                        local contentHeight = 8 + -- Top padding to mount name
+                                            mountNameHeight + 4 + -- Mount name + spacing
+                                            acquisitionHeight + -- Acquisition text (can be multiple lines)
+                                            20  -- Bottom padding - increased for better spacing
+                        
+                        local finalHeight = math.max(contentHeight, 75)  -- Minimum height of 75 for better padding
+                        frame:SetHeight(finalHeight)
+                        
+                        -- Position the frame after height is finalized
+                        if isFirstFrame then
+                            -- First frame in pinned section gets x-offset to align with instruction bar
+                            frame:SetPoint("BOTTOMLEFT", positionRelativeTo, "BOTTOMLEFT", 10, -finalHeight + 20)
+                        else
+                            -- Subsequent frames don't get x-offset to prevent compounding
+                            frame:SetPoint("BOTTOMLEFT", positionRelativeTo, "BOTTOMLEFT", 0, -finalHeight - 10)
+                        end
+                    end)
+                    
+                    -- Apply collection status styling - more subtle approach
+                    if IsMountCollected(mount_Id) then
+                        -- Collected mount styling
+                        frame:SetBackdropBorderColor(0, 0.8, 0, 0.8)  -- Green border
+                        frame:SetBackdropColor(0, 0.2, 0, 0.15)       -- Subtle green background
+                        frame.tex:SetVertexColor(1, 1, 1, 1)          -- Full color icon
+                        frame.mountName:SetTextColor(0, 1, 0)         -- Green mount name
+                    else
+                        -- Uncollected mount styling
+                        frame:SetBackdropBorderColor(0.8, 0.3, 0.3, 0.8)  -- Red border
+                        frame:SetBackdropColor(0.2, 0.05, 0.05, 0.15)     -- Subtle red background
+                        frame.tex:SetVertexColor(0.6, 0.6, 0.6, 0.8)      -- Slightly dimmed icon
+                        frame.mountName:SetTextColor(0.9, 0.9, 0.9)       -- Light gray mount name
+                    end
 
-                    frame:SetBackdropBorderColor(0, 0, 0, MCL_SETTINGS.opacity)
-                    frame:SetBackdropColor(0, 0, 0, MCL_SETTINGS.opacity)
-                    frame.tex:SetVertexColor(1, 1, 1, 1)
+                    -- Enhance pin icon
+                    frame.pin:SetSize(20, 20)  -- Slightly larger
+                    frame.pin:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -8, -8)
+                    
+                    -- Add hover effects
+                    frame:SetScript("OnEnter", function(self)
+                        self:SetBackdropColor(1, 1, 1, 0.1)  -- Subtle white highlight on hover
+                        if self.mountName then
+                            self.mountName:SetTextColor(1, 1, 1)  -- White text on hover
+                        end
+                    end)
+                    
+                    frame:SetScript("OnLeave", function(self)
+                        -- Restore original colors based on collection status
+                        if IsMountCollected(mount_Id) then
+                            self:SetBackdropColor(0, 0.2, 0, 0.15)
+                            if self.mountName then
+                                self.mountName:SetTextColor(0, 1, 0)
+                            end
+                        else
+                            self:SetBackdropColor(0.2, 0.05, 0.05, 0.15)
+                            if self.mountName then
+                                self.mountName:SetTextColor(0.9, 0.9, 0.9)
+                            end
+                        end
+                    end)
 
                     -- Pin icon is already set correctly above, don't hide it
-
-                    frame:SetPoint("BOTTOMLEFT", previous_frame, "BOTTOMLEFT", 0, -frame.sourceText:GetStringHeight()-y);
-                    
-                    frame.sourceText:SetJustifyH("LEFT")              
                     
                     previous_frame = frame
                 elseif count == (MCL_SETTINGS.mountsPerRow or 12) then
                     frame:SetPoint("BOTTOMLEFT", first_frame, "BOTTOMLEFT", 0, -overflow);
                     count = 0           
                 elseif relativeFrame == category then
-                    frame:SetPoint("BOTTOMLEFT", category, "BOTTOMLEFT", 0, -35);
+                    frame:SetPoint("BOTTOMLEFT", category, "BOTTOMLEFT", 10, -35);  -- 10px x-offset to align with instruction bar
                     first_frame = frame
                 else
                     frame:SetPoint("RIGHT", relativeFrame, "RIGHT", frame_size+10, 0);
@@ -857,9 +1014,10 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
         frame.pin:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -2, -2)
         frame.pin:SetAlpha(1)
 
+        -- Icon with horizontal padding
         frame.tex = frame:CreateTexture()
         frame.tex:SetSize(frame_size, frame_size)
-        frame.tex:SetPoint("LEFT")
+        frame.tex:SetPoint("LEFT", frame, "LEFT", 8, 0)  -- 8px horizontal padding from left edge
         local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID, _ = C_MountJournal.GetMountInfoByID(mount_Id)
         frame.tex:SetTexture(icon)
 
@@ -868,38 +1026,110 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
         frame.category = category
         frame.section = section
 
-        frame.sectionName = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-        frame.sectionName:SetPoint("LEFT", 650, 0)
-        frame.sectionName:SetText(section)
-
-        frame.categoryName = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-        frame.categoryName:SetPoint("LEFT", 850, 0)
-        frame.categoryName:SetText(category)
+        -- Mount Name - Primary text (aligned to frame edge, not icon)
+        frame.mountName = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+        frame.mountName:SetPoint("TOPLEFT", frame, "TOPLEFT", 46, -8)  -- Aligned to frame edge with padding
+        frame.mountName:SetText(mountName)
         
-        frame.mountName = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-        frame.mountName:SetPoint("LEFT", 50, 0)
-        frame.mountName:SetText(mountName)  
-        
-        frame.sourceText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-        frame.sourceText:SetPoint("LEFT", 250, 0)
-        frame.sourceText:SetText(sourceText)          
+        -- Section line (below pin icon on the right)
+        frame.sectionLine = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        frame.sectionLine:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -30, -8)  -- Below pin icon area
+        frame.sectionLine:SetText(section)
 
+        -- Category line (under section on the right)
+        frame.categoryLine = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        frame.categoryLine:SetPoint("TOPRIGHT", frame.sectionLine, "BOTTOMRIGHT", 0, -2)  -- Under section
+        frame.categoryLine:SetText(category)
+        
+        -- Acquisition line (under mount name, full width)
+        frame.acquisitionLine = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        frame.acquisitionLine:SetPoint("TOPLEFT", frame.mountName, "BOTTOMLEFT", 0, -4)
+        frame.acquisitionLine:SetText(sourceText or "Unknown")  -- Removed "Acquisition:" label
+        frame.acquisitionLine:SetJustifyH("LEFT")
+        frame.acquisitionLine:SetWordWrap(true)  -- Allow wrapping to show full text
+        frame.acquisitionLine:SetWidth(600)  -- Adjust width to not overlap with category section
+
+        -- Use WoW standard tooltip border and background
+        frame:SetBackdrop({
+            bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+            edgeSize = 16,
+            insets = { left = 4, right = 4, top = 4, bottom = 4 }
+        })
+        
+        -- Bottom border line for separation
         frame.border = frame:CreateLine(nil, "BACKGROUND", nil, 0)
         frame.border:SetThickness(1)
-        frame.border:SetColorTexture(1, 1, 1, 0.8)
-        frame.border:SetStartPoint("BOTTOMLEFT")
-        frame.border:SetEndPoint("BOTTOMRIGHT")
-        frame:SetWidth(1000)
-        frame:SetHeight(frame.sourceText:GetStringHeight()+20)
-        frame:SetBackdropBorderColor(0, 0, 0, MCL_SETTINGS.opacity)
-        frame:SetBackdropColor(0, 0, 0, MCL_SETTINGS.opacity)
-        frame.tex:SetVertexColor(1, 1, 1, 1)
+        frame.border:SetColorTexture(0.5, 0.5, 0.5, 0.5)
+        frame.border:SetStartPoint("BOTTOMLEFT", 4, 4)
+        frame.border:SetEndPoint("BOTTOMRIGHT", -4, 4)
+        
+        frame:SetWidth(800)  -- Increased width to match pinned instruction bar
+        
+        -- Set a reasonable minimum height first so text can be laid out
+        frame:SetHeight(75)  -- Start with minimum height
+        
+        -- Force text layout by getting dimensions after initial setup
+        C_Timer.After(0, function()
+            -- Calculate height based on actual rendered content
+            local mountNameHeight = frame.mountName:GetStringHeight()
+            local acquisitionHeight = frame.acquisitionLine:GetStringHeight()
+            
+            local contentHeight = 8 + -- Top padding to mount name
+                                mountNameHeight + 4 + -- Mount name + spacing
+                                acquisitionHeight + -- Acquisition text (can be multiple lines)
+                                20  -- Bottom padding - increased for better spacing
+            
+            local finalHeight = math.max(contentHeight, 75)  -- Minimum height of 75 for better padding
+            -- Set the final calculated height
+            frame:SetHeight(finalHeight)
+            
+            -- Position the frame after height is finalized
+            frame:SetPoint("BOTTOMLEFT", relativeFrame, "BOTTOMLEFT", 0, -finalHeight - 10)  -- No x-offset since this is not the first frame
+        end)
+        
+        -- Apply collection status styling - more subtle approach
+        if IsMountCollected(mount_Id) then
+            -- Collected mount styling
+            frame:SetBackdropBorderColor(0, 0.8, 0, 0.8)  -- Green border
+            frame:SetBackdropColor(0, 0.2, 0, 0.15)       -- Subtle green background
+            frame.tex:SetVertexColor(1, 1, 1, 1)          -- Full color icon
+            frame.mountName:SetTextColor(0, 1, 0)         -- Green mount name
+        else
+            -- Uncollected mount styling
+            frame:SetBackdropBorderColor(0.8, 0.3, 0.3, 0.8)  -- Red border
+            frame:SetBackdropColor(0.2, 0.05, 0.05, 0.15)     -- Subtle red background
+            frame.tex:SetVertexColor(0.6, 0.6, 0.6, 0.8)      -- Slightly dimmed icon
+            frame.mountName:SetTextColor(0.9, 0.9, 0.9)       -- Light gray mount name
+        end
 
+        -- Enhance pin icon
+        frame.pin:SetSize(20, 20)  -- Slightly larger
+        frame.pin:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -8, -8)
         frame.pin:SetAlpha(0)
 
-        frame:SetPoint("BOTTOMLEFT", relativeFrame, "BOTTOMLEFT", 0, -frame.sourceText:GetStringHeight()-30);
-
-        frame.sourceText:SetJustifyH("LEFT") 
+        -- Add hover effects
+        frame:SetScript("OnEnter", function(self)
+            self:SetBackdropColor(1, 1, 1, 0.1)  -- Subtle white highlight on hover
+            if self.mountName then
+                self.mountName:SetTextColor(1, 1, 1)  -- White text on hover
+            end
+        end)
+        
+        frame:SetScript("OnLeave", function(self)
+            -- Restore original colors based on collection status
+            if IsMountCollected(mount_Id) then
+                self:SetBackdropColor(0, 0.2, 0, 0.15)
+                if self.mountName then
+                    self.mountName:SetTextColor(0, 1, 0)
+                end
+            else
+                self:SetBackdropColor(0.2, 0.05, 0.05, 0.15)
+                if self.mountName then
+                    self.mountName:SetTextColor(0.9, 0.9, 0.9)
+                end
+            end
+        end)
 
         frame.mountID = mount_Id
 
@@ -1045,7 +1275,8 @@ end
 
 function IsMountCollected(id)
     -- Handle negative IDs (fallback cases for problematic items)
-    if id and id < 0 then
+    local numericId = tonumber(id)
+    if numericId and numericId < 0 then
         -- For fallback cases, we can't determine collection status from the API
         -- so we'll return false (not collected) to show them in the UI
         return false
@@ -1056,7 +1287,7 @@ function IsMountCollected(id)
 end
 
 function UpdateBackground(frame)
-    local pinned, pin = MCLcore.Function:CheckIfPinned(frame.mountID)
+    local pinned, pin = MCLcore.Function:CheckIfPinned("m"..tostring(frame.mountID))
     if pinned == true then
         table.remove(MCL_PINNED, pin)
     end
@@ -1184,31 +1415,9 @@ function MCL_functions:UpdateCollection()
             table.insert(MCLcore.mountCheck, mountID)
             UpdateBackground(v.frame)
             MCLcore.collected = MCLcore.collected + 1
-            local pin_count = table.getn(MCL_PINNED) or 0
-            for i = 1, pin_count do
-                if MCL_PINNED[i].mountID == "m"..v.frame.mountID then
-                    table.remove(MCL_PINNED, i)
-                    break
-                end
-            end
+            -- Note: No longer automatically removing collected mounts from pinned list
+            -- as users should be able to pin collected mounts for favorites/tracking
             UpdatePin(v.frame)
-            local index = 0
-            for kk, vv in pairs(MCLcore.mountFrames[1] or {}) do
-                index = index + 1
-                if tostring(vv.mountID) == tostring(v.frame.mountID) then
-                    local f = MCLcore.mountFrames[1][index]
-                    table.remove(MCLcore.mountFrames[1], index)
-                    for kkk, vvv in ipairs(MCLcore.mountFrames[1]) do
-                        if kkk == 1 then
-                            vvv:SetParent(_G["PinnedFrame"])
-                        else
-                            vvv:SetParent(MCLcore.mountFrames[1][kkk-1])
-                        end
-                    end
-                    f:Hide()
-                    break
-                end
-            end
         else
             UpdatePin(v.frame)
         end
@@ -1281,21 +1490,6 @@ function MCL_functions:UpdateCollection()
     -- Only update overview progress bar if it exists
     if MCLcore.overview and MCLcore.overview.pBar then
         MCLcore.overview.pBar = UpdateProgressBar(MCLcore.overview.pBar, MCLcore.total, MCLcore.collected)
-    end
-    
-    -- Initialize pinned section if it doesn't exist yet
-    if _G["PinnedFrame"] and (not MCLcore.mountFrames[1] or #MCLcore.mountFrames[1] == 0) then
-        -- Initialize MCL_PINNED if it doesn't exist
-        if not MCL_PINNED then
-            MCL_PINNED = {}
-        end
-        -- Initialize mountFrames[1] if it doesn't exist
-        if not MCLcore.mountFrames[1] then
-            MCLcore.mountFrames[1] = {}
-        end
-        -- Create the pinned section content even if empty
-        local overflow, mountFrame = MCLcore.Function:CreateMountsForCategory(MCL_PINNED, _G["PinnedFrame"], 30, _G["PinnedTab"], true, true)
-        MCLcore.mountFrames[1] = mountFrame
     end
 end
 
@@ -1732,45 +1926,78 @@ function MCL_functions:CalculateSectionStats()
     end
 end
 
+-- Function to update pin icons for a specific mount across all frames
 function MCL_functions:UpdateAllPinIcons(mountID)
-    -- Update pin icons for mounts with the given mountID across all frames
-    local mountIDString = "m" .. mountID
-    local isPinned = MCLcore.Function:CheckIfPinned(mountIDString)
+    local isPinned = MCLcore.Function:CheckIfPinned("m"..mountID)
     
-    -- Update pin icons in regular mount frames (CreateMountsForCategory)
-    for k, v in pairs(MCLcore.mounts or {}) do
-        if v.frame and v.frame.mountID and tostring(v.frame.mountID) == tostring(mountID) then
-            if v.frame.pin then
+    -- Update pin icons in all mount frames
+    for k, v in pairs(MCLcore.mounts) do
+        if v.frame and v.frame.pin and tostring(v.id) == tostring(mountID) then
+            if isPinned then
+                v.frame.pin:SetAlpha(1)
+            else
+                v.frame.pin:SetAlpha(0)
+            end
+        end
+    end
+    
+    -- Also update pin icons in pinned section frames
+    if MCLcore.mountFrames[1] then
+        for k, v in pairs(MCLcore.mountFrames[1]) do
+            if v.pin and tostring(v.mountID) == tostring(mountID) then
                 if isPinned then
-                    v.frame.pin:SetAlpha(1)
+                    v.pin:SetAlpha(1)
                 else
-                    v.frame.pin:SetAlpha(0)
+                    v.pin:SetAlpha(0)
                 end
             end
         end
     end
-    
-    -- Update pin icons in section page mount frames
-    -- We need to search through all frames in the UI to find matching mount frames
-    local function UpdateFrameRecursively(frame)
-        if frame and frame.mountID and tostring(frame.mountID) == tostring(mountID) and frame.pin then
-            if isPinned then
-                frame.pin:SetAlpha(1)
-            else
-                frame.pin:SetAlpha(0)
-            end
-        end
-        
-        -- Check children
-        if frame.GetChildren then
-            for _, child in ipairs({frame:GetChildren()}) do
-                UpdateFrameRecursively(child)
-            end
-        end
+end
+
+function MCL_functions:UpdatePinnedMountStyling(mountID)
+    -- Update styling for a specific pinned mount when its collection status changes
+    if not MCLcore.mountFrames[1] then
+        return
     end
     
-    -- Start from the main frame and search all children
-    if MCLcore.MCL_MF then
-        UpdateFrameRecursively(MCLcore.MCL_MF)
+    for k, frame in pairs(MCLcore.mountFrames[1]) do
+        if frame.mountID and tostring(frame.mountID) == tostring(mountID) then
+            if IsMountCollected(mountID) then
+                -- Collected mount styling
+                frame:SetBackdropBorderColor(0, 0.8, 0, 0.8)  -- Green border
+                frame:SetBackdropColor(0, 0.2, 0, 0.15)       -- Subtle green background
+                frame.tex:SetVertexColor(1, 1, 1, 1)          -- Full color icon
+                if frame.mountName then
+                    frame.mountName:SetTextColor(0, 1, 0)     -- Green mount name
+                end
+            else
+                -- Uncollected mount styling
+                frame:SetBackdropBorderColor(0.8, 0.3, 0.3, 0.8)  -- Red border
+                frame:SetBackdropColor(0.2, 0.05, 0.05, 0.15)     -- Subtle red background
+                frame.tex:SetVertexColor(0.6, 0.6, 0.6, 0.8)      -- Slightly dimmed icon
+                if frame.mountName then
+                    frame.mountName:SetTextColor(0.9, 0.9, 0.9)   -- Light gray mount name
+                end
+            end
+            break
+        end
+    end
+end
+
+-- Function to check if we need to refresh layout after pinned mount changes
+function MCL_functions:CheckAndRefreshAfterPinnedChanges(newSectionName)
+    -- If we're switching away from the Pinned section and pinned mounts were modified
+    if MCLcore.pinnedMountsChanged and newSectionName ~= "Pinned" then
+        MCLcore.pinnedMountsChanged = false  -- Reset the flag
+        
+        -- Use a small delay to ensure the new section is fully loaded before refreshing
+        C_Timer.After(0.1, function()
+            if MCL_frames and MCL_frames.RefreshLayout then
+                MCL_frames:RefreshLayout()
+            elseif MCLcore.Frames and MCLcore.Frames.RefreshLayout then
+                MCLcore.Frames:RefreshLayout()
+            end
+        end)
     end
 end

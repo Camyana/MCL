@@ -173,7 +173,7 @@ if L then
     L["Ashran"] = "阿什兰"
     
     ------ setting panel ------
-    L["Ctrl + Right Click to pin uncollected mounts"] = "Ctrl + 右键 标记未收集的坐骑"
+    L["Ctrl + Right Click to pin uncollected mounts"] = "Ctrl + 右键 标记/取消标记坐骑"
     L["Mount Collection Log Settings"] = "Mount Collection Log 设置"
     L["Main Window Options"] = "主界面选项"
     L["Main Window Opacity"] = "主界面透明度"
@@ -216,6 +216,6 @@ if L then
     L["Search mounts..."] = "搜索坐骑..."
     L["Mount Collection Log"] = "坐骑收集日志"
     L["Clear Search"] = "清除搜索"
-    L["Pin Instructions Text"] = "|cffFF8800|TInterface\\GossipFrame\\AvailableQuestIcon:0:0:0:0:32:32:0:32:0:32|t Ctrl + 右键|r 收藏未获得的坐骑"
+    L["Pin Instructions Text"] = "|cffFF8800|TInterface\\GossipFrame\\AvailableQuestIcon:0:0:0:0:32:32:0:32:0:32|t Ctrl + 右键|r 收藏/取消收藏坐骑"
 end
 
