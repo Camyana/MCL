@@ -171,6 +171,7 @@ if L then
     L["Incursion"] = "Übergriff"
     L["Horrific Visions"] = "Schreckliche Visionen"
     L["Ashran"] = "Ashran"
+    L["Mists of Pandaria Remix"] = "Nebel von Pandaria Remix"
 
     ------ Einstellungen ----
     L["Ctrl + Right Click to pin uncollected mounts"] = "Strg + Rechtsklick, um Reittiere anzuheften/zu lösen"

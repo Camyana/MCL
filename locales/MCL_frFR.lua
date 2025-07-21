@@ -171,6 +171,7 @@ if L then
     L["Incursion"] = "Incursion"
     L["Horrific Visions"] = "Visions horrifiques"
     L["Ashran"] = "Ashran"
+    L["Mists of Pandaria Remix"] = "Mists of Pandaria Remix"
 
     ------ panneau de configuration ----
     L["Ctrl + Right Click to pin uncollected mounts"] = "Ctrl + clic droit pour épingler/désépingler les montures"

@@ -157,7 +157,6 @@ function MCL_Load:Toggle()
     else
         MCLcore.MCL_MF:SetShown(not MCLcore.MCL_MF:IsShown()) -- The addon's frame exists and can be toggled.
     end
-    MCLcore.Function:UpdateCollection()
 end
 
 local f = CreateFrame("Frame")

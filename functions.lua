@@ -714,7 +714,6 @@ function MCL_functions:CheckIfPinned(mountID)
     return false, nil
 end
 
-
 function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, tab, skip_total, pin)
     print("|cffFFFF00[MCL Debug]|r CreateMountsForCategory called with", #set, "mounts")
     local category = relativeFrame
@@ -1307,8 +1306,20 @@ function IsMountCollected(id)
         return false
     end
     
-    local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID = C_MountJournal.GetMountInfoByID(id)
-    return isCollected
+    -- Ensure we have a valid mount ID
+    if not id or id == 0 then
+        return false
+    end
+    
+    -- Use pcall to safely get mount info
+    local success, mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID = pcall(C_MountJournal.GetMountInfoByID, id)
+    
+    if not success or not mountName then
+        -- Mount data not available yet, return false but don't cache this result
+        return false
+    end
+    
+    return isCollected or false
 end
 
 function UpdateBackground(frame)
@@ -1517,7 +1528,6 @@ function MCL_functions:UpdateCollection()
         MCLcore.overview.pBar = UpdateProgressBar(MCLcore.overview.pBar, MCLcore.total, MCLcore.collected)
     end
 end
-
 
 function MCL_functions:updateFromSettings(setting, val)
     for k,v in pairs(MCLcore.statusBarFrames) do

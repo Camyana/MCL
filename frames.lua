@@ -141,13 +141,41 @@ function MCL_frames:CreateMainFrame()
     MCL_mainFrame.settings.tex:SetTexture("Interface\\AddOns\\MCL\\icons\\settings.blp")
     MCL_mainFrame.settings:SetScript("OnClick", function()MCL_frames:openSettings()end)
 
+    -- Refresh button
+    MCL_mainFrame.refresh = CreateFrame("Button", nil, MCL_mainFrame);
+    MCL_mainFrame.refresh:SetSize(14, 14)
+    if MCL_SETTINGS.useBlizzardTheme then
+        MCL_mainFrame.refresh:SetPoint("TOPRIGHT", MCL_mainFrame.settings, "TOPLEFT", -5, 0)
+    else
+        MCL_mainFrame.refresh:SetPoint("TOPRIGHT", MCL_mainFrame.settings, "TOPLEFT", -5, 0)
+    end
+    MCL_mainFrame.refresh.tex = MCL_mainFrame.refresh:CreateTexture()
+    MCL_mainFrame.refresh.tex:SetAllPoints(MCL_mainFrame.refresh)
+    MCL_mainFrame.refresh.tex:SetTexture("Interface\\Buttons\\UI-RefreshButton")
+    MCL_mainFrame.refresh:SetScript("OnClick", function()
+        if MCL_frames and MCL_frames.RefreshLayout then
+            MCL_frames:RefreshLayout()
+        end
+    end)
+    
+    -- Add tooltip for refresh button
+    MCL_mainFrame.refresh:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText("Refresh Layout", 1, 1, 1)
+        GameTooltip:AddLine("Refreshes the mount collection display", 0.8, 0.8, 0.8)
+        GameTooltip:Show()
+    end)
+    MCL_mainFrame.refresh:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+
     -- SA button
     MCL_mainFrame.sa = CreateFrame("Button", nil, MCL_mainFrame);
     MCL_mainFrame.sa:SetSize(60, 15)
     if MCL_SETTINGS.useBlizzardTheme then
-        MCL_mainFrame.sa:SetPoint("TOPRIGHT", MCL_mainFrame, "TOPRIGHT", -60, -8)
+        MCL_mainFrame.sa:SetPoint("TOPRIGHT", MCL_mainFrame, "TOPRIGHT", -80, -8)
     else
-        MCL_mainFrame.sa:SetPoint("TOPRIGHT", MCL_mainFrame, "TOPRIGHT", -60, -1)
+        MCL_mainFrame.sa:SetPoint("TOPRIGHT", MCL_mainFrame, "TOPRIGHT", -80, -1)
     end
     MCL_mainFrame.sa.tex = MCL_mainFrame.sa:CreateTexture()
     MCL_mainFrame.sa.tex:SetAllPoints(MCL_mainFrame.sa)
@@ -1654,6 +1682,7 @@ function MCL_frames:RefreshLayout()
             end
         end
     end
+    collectgarbage("collect")    
 end
 
 

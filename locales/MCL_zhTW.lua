@@ -171,6 +171,7 @@ if L then
     L["Incursion"] = "突襲"
     L["Horrific Visions"] = "恐怖幻象"
     L["Ashran"] = "阿斯蘭"
+    L["Mists of Pandaria Remix"] = "潘達利亞之謎重制版"
 
     ------ setting panel ------
     L["Ctrl + Right Click to pin uncollected mounts"] = "Ctrl + 右鍵 標記未收藏的坐騎"

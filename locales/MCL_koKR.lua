@@ -171,6 +171,7 @@ if L then
     L["Incursion"] = "침공"
     L["Horrific Visions"] = "공포의 환영"
     L["Ashran"] = "아슈란"
+    L["Mists of Pandaria Remix"] = "판다리아의 안개 리믹스"
 
     ------ 설정 패널 ----
     L["Ctrl + Right Click to pin uncollected mounts"] = "Ctrl + 우클릭으로 미수집 탈것 고정"
