@@ -2072,10 +2072,26 @@ function MCL_functions:CalculateSectionStats()
                 end
                 
                 for _, mountId in ipairs(mountList) do
-                    sectionTotal = sectionTotal + 1
                     local mount_Id = MCLcore.Function:GetMountID(mountId)
-                    if mount_Id and IsMountCollected(mount_Id) then
-                        sectionCollected = sectionCollected + 1
+                    if mount_Id then
+                        -- Apply the same faction filtering as the display logic
+                        local faction, faction_specific = MCLcore.Function.IsMountFactionSpecific(mountId)
+                        local playerFaction = UnitFactionGroup("player")
+                        local allowed = false
+                        if faction_specific == false then
+                            allowed = true
+                        elseif faction_specific == true then
+                            if faction == 0 then faction = "Horde" elseif faction == 1 then faction = "Alliance" end
+                            allowed = (faction == playerFaction)
+                        end
+                        
+                        -- Only count mounts that pass faction restrictions
+                        if allowed then
+                            sectionTotal = sectionTotal + 1
+                            if IsMountCollected(mount_Id) then
+                                sectionCollected = sectionCollected + 1
+                            end
+                        end
                     end
                 end
             end
