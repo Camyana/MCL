@@ -406,6 +406,9 @@ function MCL_functions:SetMouseClickFunctionalityPin(frame, mountID, mountName, 
                         
                         MCLcore.mountFrames[1] = {}
                         
+                        -- Clean up invalid pinned mounts before recreating
+                        MCLcore.Function:CleanupInvalidPinnedMounts()
+                        
                         -- Recreate the pinned section content
                         local overflow, mountFrame = MCLcore.Function:CreateMountsForCategory(MCL_PINNED, _G["PinnedFrame"], 30, _G["PinnedTab"], true, true)
                         MCLcore.mountFrames[1] = mountFrame
@@ -598,10 +601,29 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
         frame:HookScript("OnEnter", function()
             GameTooltip:SetOwner(frame, "ANCHOR_TOPLEFT")
             if (spellID) then
-                _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(id) 
-
                 GameTooltip:SetSpellByID(spellID)
-                GameTooltip:AddLine(source) 
+                
+                -- Use MCL's category/section information if available
+                local sourceText = "Unknown"
+                if frame.section and frame.category then
+                    if frame.section ~= "Unknown" and frame.category ~= "Unknown" then
+                        sourceText = frame.section .. " - " .. frame.category
+                    elseif frame.section ~= "Unknown" then
+                        sourceText = frame.section
+                    elseif frame.category ~= "Unknown" then
+                        sourceText = frame.category
+                    end
+                end
+                
+                -- Fallback to Blizzard's source if MCL info is not available
+                if sourceText == "Unknown" then
+                    _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(id)
+                    if source and source ~= "" then
+                        sourceText = source
+                    end
+                end
+                
+                GameTooltip:AddLine(sourceText)
                 GameTooltip:Show()
                 frame:SetHyperlinksEnabled(true)
             end
@@ -621,7 +643,25 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
                 GameTooltip:SetOwner(frame, "ANCHOR_TOPLEFT")
                 if (id) then
                     GameTooltip:SetItemByID(id)
-                    GameTooltip:AddLine(frame.source)
+                    
+                    -- Use MCL's category/section information if available
+                    local sourceText = "Unknown"
+                    if frame.section and frame.category then
+                        if frame.section ~= "Unknown" and frame.category ~= "Unknown" then
+                            sourceText = frame.section .. " - " .. frame.category
+                        elseif frame.section ~= "Unknown" then
+                            sourceText = frame.section
+                        elseif frame.category ~= "Unknown" then
+                            sourceText = frame.category
+                        end
+                    end
+                    
+                    -- If still unknown, use the passed source parameter
+                    if sourceText == "Unknown" and frame.source then
+                        sourceText = frame.source
+                    end
+                    
+                    GameTooltip:AddLine(sourceText)
                     GameTooltip:Show()
                     frame:SetHyperlinksEnabled(true)
                 end
@@ -663,9 +703,29 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
                 GameTooltip:SetOwner(frame, "ANCHOR_TOP")
                 if (itemLink) then
                     frame:SetHyperlinksEnabled(true)
-                    _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(mountID)                     
                     GameTooltip:SetHyperlink(itemLink)
-                    GameTooltip:AddLine(source)
+                    
+                    -- Use MCL's category/section information if available
+                    local sourceText = "Unknown"
+                    if frame.section and frame.category then
+                        if frame.section ~= "Unknown" and frame.category ~= "Unknown" then
+                            sourceText = frame.section .. " - " .. frame.category
+                        elseif frame.section ~= "Unknown" then
+                            sourceText = frame.section
+                        elseif frame.category ~= "Unknown" then
+                            sourceText = frame.category
+                        end
+                    end
+                    
+                    -- Fallback to Blizzard's source if MCL info is not available
+                    if sourceText == "Unknown" then
+                        _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(mountID)
+                        if source and source ~= "" then
+                            sourceText = source
+                        end
+                    end
+                    
+                    GameTooltip:AddLine(sourceText)
                     GameTooltip:Show()
                 end
             end)
@@ -714,8 +774,60 @@ function MCL_functions:CheckIfPinned(mountID)
     return false, nil
 end
 
+function MCL_functions:CleanupInvalidPinnedMounts()
+    if not MCL_PINNED then
+        MCL_PINNED = {}
+        return
+    end
+    
+    local validPinnedMounts = {}
+    local removedCount = 0
+    
+    for k, v in pairs(MCL_PINNED) do
+        if v and v.mountID then
+            local mountId = v.mountID
+            local mount_Id = nil
+            
+            -- Extract numeric ID from string format (e.g., "m517" -> 517)
+            if string.sub(tostring(mountId), 1, 1) == "m" then
+                mount_Id = tonumber(string.sub(tostring(mountId), 2, -1))
+            else
+                mount_Id = tonumber(mountId)
+            end
+            
+            -- Check if this mount ID is valid by trying to get mount info
+            if mount_Id then
+                local mountName, spellID, icon = C_MountJournal.GetMountInfoByID(mount_Id)
+                
+                if mountName and mountName ~= "" then
+                    -- Mount is valid, keep it
+                    table.insert(validPinnedMounts, v)
+                else
+                    -- Mount is invalid, remove it
+                    removedCount = removedCount + 1
+                end
+            else
+                -- Invalid format, remove it
+                removedCount = removedCount + 1
+            end
+        else
+            -- Invalid entry structure, remove it
+            removedCount = removedCount + 1
+        end
+    end
+    
+    -- Replace MCL_PINNED with cleaned version
+    MCL_PINNED = validPinnedMounts
+end
+
 function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, tab, skip_total, pin)
-    print("|cffFFFF00[MCL Debug]|r CreateMountsForCategory called with", #set, "mounts")
+    -- Clean up invalid pinned mounts if this is for the pinned section
+    if pin and set == MCL_PINNED then
+        MCLcore.Function:CleanupInvalidPinnedMounts()
+        -- Update the set to use the cleaned pinned mounts
+        set = MCL_PINNED
+    end
+    
     local category = relativeFrame
     local previous_frame = relativeFrame
     local count = 0
@@ -736,8 +848,19 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
             val = vv
         end
 
-        -- Use the safe mount ID function
-        mount_Id = MCLcore.Function:GetMountIDSafe(val, "CreateMountsForCategory")
+        -- Use a simpler mount ID extraction
+        if pin then
+            val = vv.mountID
+            -- For pinned mounts, extract the numeric ID
+            if string.sub(tostring(val), 1, 1) == "m" then
+                mount_Id = tonumber(string.sub(tostring(val), 2, -1))
+            else
+                mount_Id = tonumber(val)
+            end
+        else
+            val = vv
+            mount_Id = MCLcore.Function:GetMountID(val)
+        end
         
         if not mount_Id then
             -- Mount is invalid, skip it and track for debugging
@@ -749,14 +872,12 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
             local success = false
             
             if string.sub(tostring(val), 1, 1) == "m" then
-                mount_Id = string.sub(val, 2, -1)
-                local mountInfoSuccess, mountInfo = pcall(C_MountJournal.GetMountInfoByID, mount_Id)
-                if mountInfoSuccess and mountInfo then
-                    mountName, spellID, icon, _, _, sourceType, _, isFactionSpecific, faction, _, isCollected, mountID, isSteadyFlight = mountInfo
-                    local extraSuccess, extraInfo = pcall(C_MountJournal.GetMountInfoExtraByID, mount_Id)
-                    if extraSuccess and extraInfo then
-                        _,_, sourceText = extraInfo
-                    end
+                -- mount_Id was already extracted above, don't override it
+                mountName, spellID, icon, _, _, sourceType, _, isFactionSpecific, faction, _, isCollected, mountID, isSteadyFlight = C_MountJournal.GetMountInfoByID(mount_Id)
+                if mountName then
+                    -- Get the source text from the extra info
+                    local _, description, source = C_MountJournal.GetMountInfoExtraByID(mount_Id)
+                    sourceText = source or "Unknown"
                     success = true
                 else
                     table.insert(invalidMounts, {id = val, context = "Mount info retrieval failed"})
@@ -765,9 +886,11 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
             else
                 mount_Id = C_MountJournal.GetMountFromItem(val)
                 if mount_Id then
-                    local mountInfoSuccess, mountInfo = pcall(C_MountJournal.GetMountInfoByID, mount_Id)
-                    if mountInfoSuccess and mountInfo then
-                        mountName, spellID, icon, _, _, sourceType, _, isFactionSpecific, faction, _, isCollected, mountID, isSteadyFlight = mountInfo
+                    mountName, spellID, icon, _, _, sourceType, _, isFactionSpecific, faction, _, isCollected, mountID, isSteadyFlight = C_MountJournal.GetMountInfoByID(mount_Id)
+                    if mountName then
+                        -- Get the source text from the extra info
+                        local _, description, source = C_MountJournal.GetMountInfoExtraByID(mount_Id)
+                        sourceText = source or "Unknown"
                         success = true
                     else
                         table.insert(invalidMounts, {id = val, context = "Item-based mount info retrieval failed"})
@@ -790,209 +913,206 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
                 end
             end
             
-            -- NEW: Hide collected mounts if setting is enabled
-            local shouldHideCollected = MCL_SETTINGS.hideCollectedMounts and IsMountCollected(mount_Id)
+            -- For pinned mounts, don't apply hiding filters since user specifically wants to see them
+            local shouldHideCollected = false
+            local factionAllowed = true
             
-            if not shouldHideCollected then
-                if (faction_specific == false) or (faction_specific == true and faction == UnitFactionGroup("player")) then
-                    local mountsPerRow = MCL_SETTINGS.mountsPerRow or 12
-                    if count == mountsPerRow then
-                        overflow = overflow + frame_size + 10
-                    end            
-                    local frame = CreateFrame("Button", nil, relativeFrame, "BackdropTemplate");
-                    frame:SetWidth(frame_size);
-                    frame:SetHeight(frame_size);
-
-                    frame:SetBackdrop({
-                        edgeFile = [[Interface\Buttons\WHITE8x8]],
-                        edgeSize = frame_size + 2,
-                        bgFile = [[Interface\Buttons\WHITE8x8]],              
-                    })
-
-                    frame.pin = frame:CreateTexture(nil, "OVERLAY")
-                    frame.pin:SetWidth(16)
-                    frame.pin:SetHeight(16)
-                    frame.pin:SetTexture("Interface\\AddOns\\MCL\\icons\\pin.blp")
-                    frame.pin:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -2, -2)
-                    frame.pin:SetAlpha(0)
-
-                    -- Handle category and section assignment based on context
-                    if pin and vv.category and vv.section then
-                        frame.category = vv.category
-                        frame.section = vv.section
-                    elseif category and category.category and category.section then
-                        frame.category = category.category
-                        frame.section = category.section
-                    else
-                        frame.category = "Unknown"
-                        frame.section = "Unknown"
-                    end
-
-                    frame.dragonRidable = isSteadyFlight
-
-                    frame:SetBackdropBorderColor(1, 0, 0, 0.03)
-                    frame:SetBackdropColor(0, 0, 0, MCL_SETTINGS.opacity)
-
-                    frame.tex = frame:CreateTexture()
-                    frame.tex:SetSize(frame_size, frame_size)
-                    frame.tex:SetPoint("LEFT", frame, "LEFT", 8, 0)
-
-                    if string.sub(tostring(val), 1, 1) == "m" then
-                        frame.tex:SetTexture(icon)
-                    else
-                        frame.tex:SetTexture(GetItemIcon(val))
-                    end
-            
-                    frame.tex:SetVertexColor(0.75, 0.75, 0.75, 0.3);
-
-                    frame.mountID = mount_Id
-                    frame.itemID = val            
-
-                    local pin_check = MCLcore.Function:CheckIfPinned("m"..frame.mountID)
-                    if pin_check == true then
-                        frame.pin:SetAlpha(1)
-                    else
-                        frame.pin:SetAlpha(0)
-                    end              
-
-                    if pin then
-                        local y = 30
-                        if previous_frame == category then
-                            y = 0
-                        end
-
-                        -- Mount Name - Primary text (aligned to frame edge, not icon)
-                        frame.mountName = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-                        frame.mountName:SetPoint("TOPLEFT", frame, "TOPLEFT", 46, -8)
-                        frame.mountName:SetText(mountName)
-                        
-                        -- Section line (below pin icon on the right)
-                        frame.sectionLine = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-                        frame.sectionLine:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -30, -8)
-                        frame.sectionLine:SetText(vv.section)
-
-                        -- Category line (under section on the right)
-                        frame.categoryLine = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-                        frame.categoryLine:SetPoint("TOPRIGHT", frame.sectionLine, "BOTTOMRIGHT", 0, -2)
-                        frame.categoryLine:SetText(vv.category)
-                        
-                        -- Acquisition line (under mount name, full width)
-                        frame.acquisitionLine = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-                        frame.acquisitionLine:SetPoint("TOPLEFT", frame.mountName, "BOTTOMLEFT", 0, -4)
-                        frame.acquisitionLine:SetText(sourceText or "Unknown")
-                        frame.acquisitionLine:SetJustifyH("LEFT")
-                        frame.acquisitionLine:SetWordWrap(true)
-                        frame.acquisitionLine:SetWidth(600)
-                        
-                        -- Use WoW standard tooltip border and background
-                        frame:SetBackdrop({
-                            bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-                            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-                            edgeSize = 16,
-                            insets = { left = 4, right = 4, top = 4, bottom = 4 }
-                        })
-                        
-                        -- Bottom border line for separation
-                        frame.border = frame:CreateLine(nil, "BACKGROUND", nil, 0)
-                        frame.border:SetThickness(1)
-                        frame.border:SetColorTexture(0.5, 0.5, 0.5, 0.5)
-                        frame.border:SetStartPoint("BOTTOMLEFT", 4, 4)
-                        frame.border:SetEndPoint("BOTTOMRIGHT", -4, 4)
-                        
-                        frame:SetWidth(815)
-                        frame:SetHeight(75)
-                        
-                        local positionRelativeTo = previous_frame
-                        local isFirstFrame = (previous_frame == category)
-                        
-                        C_Timer.After(0, function()
-                            local mountNameHeight = frame.mountName:GetStringHeight()
-                            local acquisitionHeight = frame.acquisitionLine:GetStringHeight()
-                            
-                            local contentHeight = 8 + mountNameHeight + 4 + acquisitionHeight + 20
-                            local finalHeight = math.max(contentHeight, 75)
-                            frame:SetHeight(finalHeight)
-                            
-                            if isFirstFrame then
-                                frame:SetPoint("BOTTOMLEFT", positionRelativeTo, "BOTTOMLEFT", 10, -finalHeight + 20)
-                            else
-                                frame:SetPoint("BOTTOMLEFT", positionRelativeTo, "BOTTOMLEFT", 0, -finalHeight - 10)
-                            end
-                        end)
-                        
-                        -- Apply collection status styling
-                        if IsMountCollected(mount_Id) then
-                            frame:SetBackdropBorderColor(0, 0.8, 0, 0.8)
-                            frame:SetBackdropColor(0, 0.2, 0, 0.15)
-                            frame.tex:SetVertexColor(1, 1, 1, 1)
-                            frame.mountName:SetTextColor(0, 1, 0)
-                        else
-                            frame:SetBackdropBorderColor(0.8, 0.3, 0.3, 0.8)
-                            frame:SetBackdropColor(0.2, 0.05, 0.05, 0.15)
-                            frame.tex:SetVertexColor(0.6, 0.6, 0.6, 0.8)
-                            frame.mountName:SetTextColor(0.9, 0.9, 0.9)
-                        end
-
-                        frame.pin:SetSize(20, 20)
-                        frame.pin:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -8, -8)
-                        
-                        -- Add hover effects
-                        frame:SetScript("OnEnter", function(self)
-                            self:SetBackdropColor(1, 1, 1, 0.1)
-                            if self.mountName then
-                                self.mountName:SetTextColor(1, 1, 1)
-                            end
-                        end)
-                        
-                        frame:SetScript("OnLeave", function(self)
-                            if IsMountCollected(mount_Id) then
-                                self:SetBackdropColor(0, 0.2, 0, 0.15)
-                                if self.mountName then
-                                    self.mountName:SetTextColor(0, 1, 0)
-                                end
-                            else
-                                self:SetBackdropColor(0.2, 0.05, 0.05, 0.15)
-                                if self.mountName then
-                                    self.mountName:SetTextColor(0.9, 0.9, 0.9)
-                                end
-                            end
-                        end)
-
-                        previous_frame = frame
-                    elseif count == (MCL_SETTINGS.mountsPerRow or 12) then
-                        frame:SetPoint("BOTTOMLEFT", first_frame, "BOTTOMLEFT", 0, -overflow);
-                        count = 0           
-                    elseif relativeFrame == category then
-                        frame:SetPoint("BOTTOMLEFT", category, "BOTTOMLEFT", 10, -35);
-                        first_frame = frame
-                    else
-                        frame:SetPoint("RIGHT", relativeFrame, "RIGHT", frame_size+10, 0);
-                    end          
-
-                    MCLcore.Function:LinkMountItem(val, frame, pin)
-
-                    relativeFrame = frame
-                    count = count + 1
-                    if skip_total == true then
-                    else
-                        if tab then
-                            MCL_functions:TableMounts(mount_Id, frame, tab, category)
-                        end
-                    end
-                    table.insert(mountFrames, frame)
-                end  
+            if not pin then
+                -- Only apply filters for non-pinned mounts
+                shouldHideCollected = MCL_SETTINGS.hideCollectedMounts and IsMountCollected(mount_Id)
+                factionAllowed = (faction_specific == false) or (faction_specific == true and faction == UnitFactionGroup("player"))
             end
-        end
+            
+            if not shouldHideCollected and factionAllowed then
+                local mountsPerRow = MCL_SETTINGS.mountsPerRow or 12
+                if count == mountsPerRow then
+                    overflow = overflow + frame_size + 10
+                end            
+                local frame = CreateFrame("Button", nil, relativeFrame, "BackdropTemplate");
+                frame:SetWidth(frame_size);
+                frame:SetHeight(frame_size);
+
+                frame:SetBackdrop({
+                    edgeFile = [[Interface\Buttons\WHITE8x8]],
+                    edgeSize = frame_size + 2,
+                    bgFile = [[Interface\Buttons\WHITE8x8]],              
+                })
+
+                frame.pin = frame:CreateTexture(nil, "OVERLAY")
+                frame.pin:SetWidth(16)
+                frame.pin:SetHeight(16)
+                frame.pin:SetTexture("Interface\\AddOns\\MCL\\icons\\pin.blp")
+                frame.pin:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -2, -2)
+                frame.pin:SetAlpha(0)
+
+                -- Handle category and section assignment based on context
+                if pin and vv.category and vv.section then
+                    frame.category = vv.category
+                    frame.section = vv.section
+                elseif category and category.category and category.section then
+                    frame.category = category.category
+                    frame.section = category.section
+                else
+                    frame.category = "Unknown"
+                    frame.section = "Unknown"
+                end
+
+                frame.dragonRidable = isSteadyFlight
+
+                frame:SetBackdropBorderColor(1, 0, 0, 0.03)
+                frame:SetBackdropColor(0, 0, 0, MCL_SETTINGS.opacity)
+
+                frame.tex = frame:CreateTexture()
+                frame.tex:SetSize(frame_size, frame_size)
+                frame.tex:SetPoint("LEFT", frame, "LEFT", 8, 0)
+
+                if string.sub(tostring(val), 1, 1) == "m" then
+                    frame.tex:SetTexture(icon)
+                else
+                    frame.tex:SetTexture(GetItemIcon(val))
+                end
+        
+                frame.tex:SetVertexColor(0.75, 0.75, 0.75, 0.3);
+
+                frame.mountID = mount_Id
+                frame.itemID = val            
+
+                local pin_check = MCLcore.Function:CheckIfPinned("m"..frame.mountID)
+                if pin_check == true then
+                    frame.pin:SetAlpha(1)
+                else
+                    frame.pin:SetAlpha(0)
+                end              
+
+                if pin then
+                    local y = 30
+                    if previous_frame == category then
+                        y = 0
+                    end
+
+                    -- Mount Name - Primary text (aligned to frame edge, not icon)
+                    frame.mountName = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+                    frame.mountName:SetPoint("TOPLEFT", frame, "TOPLEFT", 46, -8)
+                    frame.mountName:SetText(mountName)
+                    
+                    -- Section line (below pin icon on the right)
+                    frame.sectionLine = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+                    frame.sectionLine:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -30, -8)
+                    frame.sectionLine:SetText(vv.section)
+
+                    -- Category line (under section on the right)
+                    frame.categoryLine = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+                    frame.categoryLine:SetPoint("TOPRIGHT", frame.sectionLine, "BOTTOMRIGHT", 0, -2)
+                    frame.categoryLine:SetText(vv.category)
+                    
+                    -- Acquisition line (under mount name, full width)
+                    frame.acquisitionLine = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+                    frame.acquisitionLine:SetPoint("TOPLEFT", frame.mountName, "BOTTOMLEFT", 0, -4)
+                    frame.acquisitionLine:SetText(sourceText or "Unknown")
+                    frame.acquisitionLine:SetJustifyH("LEFT")
+                    frame.acquisitionLine:SetWordWrap(true)
+                    frame.acquisitionLine:SetWidth(600)
+                    
+                    -- Use WoW standard tooltip border and background
+                    frame:SetBackdrop({
+                        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+                        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+                        edgeSize = 16,
+                        insets = { left = 4, right = 4, top = 4, bottom = 4 }
+                    })
+                    
+                    -- Bottom border line for separation
+                    frame.border = frame:CreateLine(nil, "BACKGROUND", nil, 0)
+                    frame.border:SetThickness(1)
+                    frame.border:SetColorTexture(0.5, 0.5, 0.5, 0.5)
+                    frame.border:SetStartPoint("BOTTOMLEFT", 4, 4)
+                    frame.border:SetEndPoint("BOTTOMRIGHT", -4, 4)
+                    
+                    frame:SetWidth(815)
+                    frame:SetHeight(75)
+                    
+                    local positionRelativeTo = previous_frame
+                    local isFirstFrame = (previous_frame == category)
+                    
+                    C_Timer.After(0, function()
+                        local mountNameHeight = frame.mountName:GetStringHeight()
+                        local acquisitionHeight = frame.acquisitionLine:GetStringHeight()
+                        
+                        local contentHeight = 8 + mountNameHeight + 4 + acquisitionHeight + 20
+                        local finalHeight = math.max(contentHeight, 75)
+                        frame:SetHeight(finalHeight)
+                        
+                        if isFirstFrame then
+                            frame:SetPoint("BOTTOMLEFT", positionRelativeTo, "BOTTOMLEFT", 10, -finalHeight + 20)
+                        else
+                            frame:SetPoint("BOTTOMLEFT", positionRelativeTo, "BOTTOMLEFT", 0, -finalHeight - 10)
+                        end
+                    end)
+                    
+                    -- Apply collection status styling
+                    if IsMountCollected(mount_Id) then
+                        frame:SetBackdropBorderColor(0, 0.8, 0, 0.8)
+                        frame:SetBackdropColor(0, 0.2, 0, 0.15)
+                        frame.tex:SetVertexColor(1, 1, 1, 1)
+                        frame.mountName:SetTextColor(0, 1, 0)
+                    else
+                        frame:SetBackdropBorderColor(0.8, 0.3, 0.3, 0.8)
+                        frame:SetBackdropColor(0.2, 0.05, 0.05, 0.15)
+                        frame.tex:SetVertexColor(0.6, 0.6, 0.6, 0.8)
+                        frame.mountName:SetTextColor(0.9, 0.9, 0.9)
+                    end
+
+                    frame.pin:SetSize(20, 20)
+                    frame.pin:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -8, -8)
+                    
+                    -- Add hover effects
+                    frame:SetScript("OnEnter", function(self)
+                        self:SetBackdropColor(1, 1, 1, 0.1)
+                        if self.mountName then
+                            self.mountName:SetTextColor(1, 1, 1)
+                        end
+                    end)
+                    
+                    frame:SetScript("OnLeave", function(self)
+                        if IsMountCollected(mount_Id) then
+                            self:SetBackdropColor(0, 0.2, 0, 0.15)
+                            if self.mountName then
+                                self.mountName:SetTextColor(0, 1, 0)
+                            end
+                        else
+                            self:SetBackdropColor(0.2, 0.05, 0.05, 0.15)
+                            if self.mountName then
+                                self.mountName:SetTextColor(0.9, 0.9, 0.9)
+                            end
+                        end
+                    end)
+
+                    previous_frame = frame
+                elseif count == (MCL_SETTINGS.mountsPerRow or 12) then
+                    frame:SetPoint("BOTTOMLEFT", first_frame, "BOTTOMLEFT", 0, -overflow);
+                    count = 0           
+                elseif relativeFrame == category then
+                    frame:SetPoint("BOTTOMLEFT", category, "BOTTOMLEFT", 10, -35);
+                    first_frame = frame
+                else
+                    frame:SetPoint("RIGHT", relativeFrame, "RIGHT", frame_size+10, 0);
+                end          
+
+                MCLcore.Function:LinkMountItem(val, frame, pin)
+
+                relativeFrame = frame
+                count = count + 1
+                if skip_total == true then
+                else
+                    if tab then
+                        MCL_functions:TableMounts(mount_Id, frame, tab, category)
+                    end
+                end
+                table.insert(mountFrames, frame)
+            end  
+        end  -- End of shouldProcessMount condition
     end
-    
-    -- Report invalid mounts at the end
-    if #invalidMounts > 0 then
-        print(string.format("|cffFF8800[MCL Debug]|r Found %d invalid mounts in this category:", #invalidMounts))
-        for i, invalidMount in ipairs(invalidMounts) do
-            print(string.format("  %d. ID: %s (Context: %s)", i, tostring(invalidMount.id), invalidMount.context))
-        end
-    end
-    
+        
     return overflow, mountFrames
 end
 
@@ -1013,13 +1133,20 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
         if not MCL_PINNED then
             MCL_PINNED = {}
         end
+        
+        -- Clean up invalid pinned mounts before creating
+        MCLcore.Function:CleanupInvalidPinnedMounts()
+        
         local overflow, mountFrame = MCLcore.Function:CreateMountsForCategory(MCL_PINNED, _G["PinnedFrame"], 30, _G["PinnedTab"], true, true)
         MCLcore.mountFrames[1] = mountFrame
     else
         local relativeFrame = MCLcore.mountFrames[1][total_pinned]
 
         local mountName, spellID, icon, _, _, sourceType, _, isFactionSpecific, faction, _, isCollected, mountID, _ = C_MountJournal.GetMountInfoByID(mount_Id)
-        _,_, sourceText =  C_MountJournal.GetMountInfoExtraByID(mount_Id)
+        
+        -- Get the actual source from the game API
+        local _, _, sourceText = C_MountJournal.GetMountInfoExtraByID(mount_Id)
+        sourceText = sourceText or "Unknown"
 
         -- Create frame parented to the Pinned section, not to the previous frame
         local frame = CreateFrame("Button", nil, _G["PinnedFrame"], "BackdropTemplate");

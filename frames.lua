@@ -185,7 +185,11 @@ function MCL_frames:CreateMainFrame()
     MCL_mainFrame.sa.text:SetPoint("CENTER", MCL_mainFrame.sa, "CENTER", 0, 0);
     MCL_mainFrame.sa.text:SetText("SA")
     MCL_mainFrame.sa.text:SetTextColor(0, 0.7, 0.85)	
-    MCL_mainFrame.sa:SetScript("OnClick", function()MCLcore.Function:simplearmoryLink()end)	
+    MCL_mainFrame.sa:SetScript("OnClick", function()
+        if MCLcore.Function and MCLcore.Function.simplearmoryLink then
+            MCLcore.Function:simplearmoryLink()
+        end
+    end)	
 	
     -- DFA button
     MCL_mainFrame.dfa = CreateFrame("Button", nil, MCL_mainFrame);
@@ -203,7 +207,11 @@ function MCL_frames:CreateMainFrame()
     MCL_mainFrame.dfa.text:SetPoint("CENTER", MCL_mainFrame.dfa, "CENTER", 0, 0);
     MCL_mainFrame.dfa.text:SetText("DFA")
     MCL_mainFrame.dfa.text:SetTextColor(0, 0.7, 0.85)	
-    MCL_mainFrame.dfa:SetScript("OnClick", function()MCLcore.Function:dfaLink()end)		
+    MCL_mainFrame.dfa:SetScript("OnClick", function()
+        if MCLcore.Function and MCLcore.Function.dfaLink then
+            MCLcore.Function:dfaLink()
+        end
+    end)		
 
 
 	--MCL Frame settings
@@ -279,7 +287,9 @@ function MCL_frames:CreateMainFrame()
 
 	MCL_mainFrame:SetFrameStrata("HIGH")
     if not MCL_SETTINGS.useBlizzardTheme then
-        MCLcore.Function:CreateFullBorder(MCL_mainFrame)
+        if MCLcore.Function and MCLcore.Function.CreateFullBorder then
+            MCLcore.Function:CreateFullBorder(MCL_mainFrame)
+        end
     end
 
     tinsert(UISpecialFrames, "MCLFrame")
@@ -646,14 +656,21 @@ function MCL_frames:SetTabs()
             MCL_PINNED = {}
         end
         
+        -- Clean up any invalid pinned mounts before creating the content
+        if MCLcore.Function and MCLcore.Function.CleanupInvalidPinnedMounts then
+            MCLcore.Function:CleanupInvalidPinnedMounts()
+        end
+        
         if MCL_PINNED and next(MCL_PINNED) then
             -- Clear any existing mount frames for pinned section
             if MCLcore.mountFrames[1] then
                 MCLcore.mountFrames[1] = {}
             end
             -- Create the pinned section content
-            local overflow, mountFrame = MCLcore.Function:CreateMountsForCategory(MCL_PINNED, _G["PinnedFrame"], 30, _G["PinnedTab"], true, true)
-            MCLcore.mountFrames[1] = mountFrame
+            if MCLcore.Function and MCLcore.Function.CreateMountsForCategory then
+                local overflow, mountFrame = MCLcore.Function:CreateMountsForCategory(MCL_PINNED, _G["PinnedFrame"], 30, _G["PinnedTab"], true, true)
+                MCLcore.mountFrames[1] = mountFrame
+            end
         end
         
         tab.content:Hide()

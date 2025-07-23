@@ -772,5 +772,40 @@ SlashCmdList["MCL"] = function(msg)
         if MCLcore.Main and type(MCLcore.Main.Init) == "function" then
             MCLcore.Main:Init(true)  -- True to force re-initialization.
         end
-    end  
+    end
+    if msg:lower() == "cleanup" or msg:lower() == "cleanpinned" then
+        if MCLcore.Function and MCLcore.Function.CleanupInvalidPinnedMounts then
+            print("|cff00CCFF[MCL]|r Starting cleanup of invalid pinned mounts...")
+            MCLcore.Function:CleanupInvalidPinnedMounts()
+            print("|cff00CCFF[MCL]|r Cleanup complete. Try viewing the Pinned tab now.")
+        else
+            print("|cffFF0000[MCL]|r Cleanup function not available.")
+        end
+    end
+    if msg:lower() == "testmount" then
+        -- Test a known mount ID to see what the API returns
+        local testId = 230  -- Swift Palomino - a basic mount that should exist
+        print("|cff00CCFF[MCL Debug]|r Testing mount ID", testId)
+        local mountName, spellID, icon = C_MountJournal.GetMountInfoByID(testId)
+        print(string.format("|cff00CCFF[MCL Debug]|r Result: mountName='%s', spellID=%s, icon=%s", 
+            tostring(mountName), tostring(spellID), tostring(icon)))
+            
+        -- Also test one of the problematic IDs if MCL_PINNED exists
+        if MCL_PINNED and #MCL_PINNED > 0 then
+            local firstPinned = MCL_PINNED[1]
+            if firstPinned and firstPinned.mountID then
+                local mountId = firstPinned.mountID
+                local mount_Id = nil
+                if string.sub(tostring(mountId), 1, 1) == "m" then
+                    mount_Id = tonumber(string.sub(tostring(mountId), 2, -1))
+                end
+                if mount_Id then
+                    print("|cff00CCFF[MCL Debug]|r Testing pinned mount ID", mount_Id, "from", mountId)
+                    local pMountName, pSpellID, pIcon = C_MountJournal.GetMountInfoByID(mount_Id)
+                    print(string.format("|cff00CCFF[MCL Debug]|r Pinned Result: mountName='%s', spellID=%s, icon=%s", 
+                        tostring(pMountName), tostring(pSpellID), tostring(pIcon)))
+                end
+            end
+        end
+    end
  end

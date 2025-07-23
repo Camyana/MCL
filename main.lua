@@ -119,9 +119,22 @@ function MCL_Load:Init(force)
                 end
                 MCLcore.MCL_MF = MCLcore.Frames:CreateMainFrame()
                 MCLcore.MCL_MF:SetShown(false)
-                MCLcore.Function:initSections()
+                
+                -- Ensure Function module is available before calling methods
+                if MCLcore.Function and MCLcore.Function.initSections then
+                    MCLcore.Function:initSections()
+                end
+                
+                -- Clean up any invalid pinned mounts during initialization
+                if MCLcore.Function and MCLcore.Function.CleanupInvalidPinnedMounts then
+                    MCLcore.Function:CleanupInvalidPinnedMounts()
+                end
             end
-            MCLcore.Function:UpdateCollection()
+            
+            -- Ensure Function module is available before updating collection
+            if MCLcore.Function and MCLcore.Function.UpdateCollection then
+                MCLcore.Function:UpdateCollection()
+            end
             init_load = false -- Ensure that the initialization does not repeat unnecessarily.
         else
             retries = retries + 1
