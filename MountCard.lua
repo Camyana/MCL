@@ -449,7 +449,6 @@ function MountCard:CreateMountCard()
                 end
             end)
             MCL_mainFrame.mountCardHooked = true
-            print("MCL Debug: Main frame hook established for mount card")
             return true
         end
         return false
@@ -462,7 +461,7 @@ function MountCard:CreateMountCard()
         eventFrame:RegisterEvent("ADDON_LOADED")
         eventFrame:RegisterEvent("PLAYER_LOGIN")
         eventFrame:SetScript("OnEvent", function(self, event, addonName)
-            if (event == "ADDON_LOADED" and (addonName == "MCL" or addonName == GetAddOnMetadata("MCL", "Title"))) or 
+            if (event == "ADDON_LOADED" and addonName == "MCL") or 
                event == "PLAYER_LOGIN" or MCL_mainFrame then
                 if setupMainFrameHook() then
                     self:UnregisterEvent("ADDON_LOADED")
