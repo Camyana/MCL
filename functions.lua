@@ -52,7 +52,7 @@ local function IsMountFactionSpecific(id)
     end
 
     -- Use pcall to execute GetMountInfoByIDChecked and capture any error
-    ok, faction, isFactionSpecific = pcall(GetMountInfoByIDChecked, mount_Id)
+    local ok, faction, isFactionSpecific = pcall(GetMountInfoByIDChecked, mount_Id)
 
     -- If an error occurred, print the error message along with the id that caused the error
     if not ok then
@@ -427,6 +427,18 @@ function MCL_functions:SetMouseClickFunctionalityPin(frame, mountID, mountName, 
                     end
                 end
             end
+        elseif button == 'RightButton' and not IsControlKeyDown() then
+            -- Right-click to show/hide mount card
+            if MCLcore and MCLcore.MountCard then
+                local mountData = {
+                    mountID = mountID,
+                    id = mountID,
+                    name = mountName,
+                    category = frame.category,
+                    section = frame.section
+                }
+                MCLcore.MountCard.Toggle(mountData, frame)
+            end
         end
         if button == 'MiddleButton' then
             -- Middle click to cast mount if it's collected
@@ -582,6 +594,18 @@ function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, ite
                 -- Don't add conflicting OnClick handlers here since OnMouseDown is already handling mouse events
                 -- Shift-click functionality is handled in SetMouseClickFunctionality
             end
+        elseif button == 'RightButton' and not IsControlKeyDown() then
+            -- Right-click to show/hide mount card
+            if MCLcore and MCLcore.MountCard then
+                local mountData = {
+                    mountID = mountID,
+                    id = mountID,
+                    name = mountName,
+                    category = frame.category,
+                    section = frame.section
+                }
+                MCLcore.MountCard.Toggle(mountData, frame)
+            end
         end
         if button == 'MiddleButton' then
             -- Middle click to cast mount if it's collected
@@ -627,9 +651,22 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
                 GameTooltip:Show()
                 frame:SetHyperlinksEnabled(true)
             end
+            
+            -- Show MountCard on hover
+            if MCLcore and MCLcore.MountCard then
+                local mountData = {
+                    mountID = mountID,
+                    id = mountID,
+                    name = mountName,
+                    category = frame.category,
+                    section = frame.section
+                }
+                MCLcore.MountCard.ShowOnHover(mountData, frame, 0.2)  -- Reduced from 0.8 to 0.2
+            end
         end)
         frame:HookScript("OnLeave", function()
             GameTooltip:Hide()
+            -- Note: MountCard is now persistent, so we don't hide it on hover end
         end)
         if pin == true then
             MCLcore.Function:SetMouseClickFunctionalityPin(frame, mountID, mountName, itemLink, spellID, isSteadyFlight)
@@ -665,9 +702,22 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
                     GameTooltip:Show()
                     frame:SetHyperlinksEnabled(true)
                 end
+                
+                -- Show MountCard on hover for dragonriding mounts
+                if MCLcore and MCLcore.MountCard then
+                    local mountData = {
+                        mountID = id,
+                        id = id,
+                        name = item or "Unknown Mount",
+                        category = frame.category,
+                        section = frame.section
+                    }
+                    MCLcore.MountCard.ShowOnHover(mountData, frame, 0.2)  -- Reduced from 0.8 to 0.2
+                end
             end)
             frame:HookScript("OnLeave", function()
                 GameTooltip:Hide()
+                -- Note: MountCard is now persistent, so we don't hide it on hover end
             end)
 
         else
@@ -728,9 +778,22 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
                     GameTooltip:AddLine(sourceText)
                     GameTooltip:Show()
                 end
+                
+                -- Show MountCard on hover for item-based mounts
+                if MCLcore and MCLcore.MountCard and mountID then
+                    local mountData = {
+                        mountID = mountID,
+                        id = mountID,
+                        name = mountName,
+                        category = frame.category,
+                        section = frame.section
+                    }
+                    MCLcore.MountCard.ShowOnHover(mountData, frame, 0.2)  -- Reduced from 0.8 to 0.2
+                end
             end)
             frame:HookScript("OnLeave", function()
                 GameTooltip:Hide()
+                -- Note: MountCard is now persistent, so we don't hide it on hover end
             end)
             if pin == true then
                 MCLcore.Function:SetMouseClickFunctionalityPin(frame, mountID, mountName, itemLink, _, isSteadyFlight)
@@ -2196,9 +2259,8 @@ function MCL_functions:DebugMountLoading(id, context)
         errorInfo.processedId = mount_Id
         
         if mount_Id then
-            local success, result = pcall(C_MountJournal.GetMountInfoByID, mount_Id)
-            if success and result then
-                mountName = result
+            local success, mountName, spellID, icon = pcall(C_MountJournal.GetMountInfoByID, mount_Id)
+            if success and mountName then
                 errorInfo.status = "Valid"
             else
                 errorInfo.status = "Invalid Mount ID"
@@ -2229,9 +2291,8 @@ function MCL_functions:DebugMountLoading(id, context)
             -- Item exists, check if it has an associated mount
             mount_Id = C_MountJournal.GetMountFromItem(id)
             if mount_Id then
-                local success, result = pcall(C_MountJournal.GetMountInfoByID, mount_Id)
-                if success and result then
-                    mountName = result
+                local success, mountName, spellID, icon = pcall(C_MountJournal.GetMountInfoByID, mount_Id)
+                if success and mountName then
                     errorInfo.status = "Valid"
                     errorInfo.mountId = mount_Id
                 else
@@ -2262,18 +2323,13 @@ end
 
 -- Enhanced GetMountID function with better error handling
 function MCL_functions:GetMountIDSafe(id, context)
-    local success, result = pcall(function()
+    local success, isValid, data = pcall(function()
         return MCLcore.Function:DebugMountLoading(id, context)
     end)
     
     if not success then
-        print(string.format("|cffFF0000[MCL Debug]|r Critical error processing mount %s: %s", tostring(id), tostring(result)))
+        print(string.format("|cffFF0000[MCL Debug]|r Critical error processing mount %s: %s", tostring(id), tostring(isValid)))
         return nil
-    end
-    
-    local isValid, data = result, nil
-    if type(result) == "table" then
-        isValid, data = result[1], result[2]
     end
     
     if isValid and data and data.mountId then

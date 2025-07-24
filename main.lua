@@ -203,6 +203,11 @@ local function onevent(self, event, arg1, ...)
         if MCLcore.InitializeSearch then
             MCLcore.InitializeSearch()
         end
+        
+        -- Initialize MountCard functionality
+        if MCLcore.MountCard then
+            MCLcore.MountCard:CreateMountCard()
+        end
     end
 end
 
