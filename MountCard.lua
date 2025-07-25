@@ -601,153 +601,24 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
     
     local detailsYOffset = -5
     
-    -- Determine appropriate labels based on mount source/method
-    local sourceLabel, expansionLabel, requirementLabel = "Source:", "Expansion:", "Requirement:"
-    
-    if sourceDetails.method == "Reputation" or sourceDetails.method == "Paragon Reputation" then
-        requirementLabel = "Other:"
-    elseif sourceDetails.method == "Vendor" or sourceDetails.method == "Guild Vendor" then
-        requirementLabel = "Cost:"
-    elseif sourceDetails.method == "Achievement" then
-        requirementLabel = "Progress:"
-    elseif sourceDetails.method == "Dungeon" then
-        requirementLabel = "Drop Rate:"
-    elseif sourceDetails.method == "Raid" then
-        requirementLabel = "Drop Rate:"
-    elseif sourceDetails.method == "Rare Spawn" then
-        requirementLabel = "Drop Rate:"
-    elseif sourceDetails.method == "Treasure" then
-        requirementLabel = "Location:"
-    elseif sourceDetails.method == "Quest" then
-        requirementLabel = "Completion:"
-    elseif sourceDetails.method == "Covenant" then
-        requirementLabel = "Requirement:"
-    elseif sourceDetails.method == "Event" then
-        requirementLabel = "Requirement:"
+    -- Get Blizzard source information and display it as the primary source
+    local blizzardSourceText = "Unknown"
+    if mountInfo and mountInfo.mountID then
+        local _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(mountInfo.mountID)
+        if source and source ~= "" then
+            blizzardSourceText = source
+        end
     end
     
-    -- Source/Faction/Achievement etc.
-    local sourceDisplayLabel = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    sourceDisplayLabel:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
-    sourceDisplayLabel:SetText(sourceLabel)
-    sourceDisplayLabel:SetTextColor(0.8, 0.8, 0.8, 1)
-    
-    local sourceText = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    sourceText:SetPoint("TOPLEFT", sourceDisplayLabel, "TOPRIGHT", 5, 0)
-    sourceText:SetPoint("TOPRIGHT", detailsFrame, "TOPRIGHT", 0, detailsYOffset)
-    sourceText:SetText(sourceDetails.vendor)
-    sourceText:SetTextColor(1, 0.9, 0.7, 1)
-    sourceText:SetJustifyH("LEFT")
-    sourceText:SetWordWrap(true)
-    
-    detailsYOffset = detailsYOffset - 18
-    
-    -- Expansion
-    local expansionDisplayLabel = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    expansionDisplayLabel:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
-    expansionDisplayLabel:SetText(expansionLabel)
-    expansionDisplayLabel:SetTextColor(0.8, 0.8, 0.8, 1)
-    
-    local expansionText = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    expansionText:SetPoint("TOPLEFT", expansionDisplayLabel, "TOPRIGHT", 5, 0)
-    expansionText:SetPoint("TOPRIGHT", detailsFrame, "TOPRIGHT", 0, detailsYOffset)
-    expansionText:SetText(sourceDetails.zone)
-    expansionText:SetTextColor(0.7, 0.9, 0.7, 1)
-    expansionText:SetJustifyH("LEFT")
-    expansionText:SetWordWrap(true)
-    
-    detailsYOffset = detailsYOffset - 18
-    
-    -- Requirement/Cost/Level etc. (if available)
-    if sourceDetails.cost and sourceDetails.cost ~= "" then
-        local requirementDisplayLabel = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        requirementDisplayLabel:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
-        requirementDisplayLabel:SetText(requirementLabel)
-        requirementDisplayLabel:SetTextColor(0.8, 0.8, 0.8, 1)
-        
-        -- Parse cost string for icon and text
-        local costText = sourceDetails.cost
-        local iconPath = nil
-        local iconID = nil
-        
-        -- Check if cost contains | separator for icon data or texture markup
-        if string.find(costText, "|T") then
-            -- Handle WoW texture format: |TTexture:size:size:xOffset:yOffset|t
-            iconPath = string.match(costText, "|T([^:]+)")
-            -- Remove the entire texture markup from the text
-            costText = string.gsub(costText, "|T.-|t", "")
-        elseif string.find(costText, "|") then
-            local parts = {strsplit("|", costText)}
-            local textParts = {}
-            
-            for i, part in ipairs(parts) do
-                -- Look for texture paths or icon IDs
-                if string.find(part, "Interface\\") or string.find(part, "INTERFACE\\") then
-                    iconPath = part
-                elseif tonumber(part) and tonumber(part) > 0 then
-                    -- Numeric icon ID
-                    iconID = tonumber(part)
-                else
-                    -- This is likely the text part - but double check it's not an interface path
-                    if part and part ~= "" and 
-                       not string.find(string.upper(part), "INTERFACE\\") and 
-                       not string.find(string.upper(part), "INTERFACE/") then
-                        table.insert(textParts, part)
-                    end
-                end
-            end
-            
-            -- Join the text parts together
-            if #textParts > 0 then
-                costText = table.concat(textParts, " ")
-            else
-                costText = ""
-            end
-        end
-        
-        -- Additional cleanup - remove any remaining interface paths that might have slipped through
-        costText = string.gsub(costText, "%s*[Ii][Nn][Tt][Ee][Rr][Ff][Aa][Cc][Ee]\\[^%s]*", "")
-        costText = string.gsub(costText, "%s*[Ii][Nn][Tt][Ee][Rr][Ff][Aa][Cc][Ee]/[^%s]*", "")
-        
-        -- Remove any remaining |T markup (with or without closing |t)
-        costText = string.gsub(costText, "|T[^|]*", "")
-        costText = string.gsub(costText, "|t", "")
-        
-        -- Clean up the cost text (remove any remaining markup)
-        costText = string.gsub(costText, "|c.-|r", function(s) return string.gsub(s, "|c%x%x%x%x%x%x%x%x(.-)|r", "%1") end)
-        costText = strtrim(costText or "")
-        
-        -- Create a frame to hold both icon and text
-        local costFrame = CreateFrame("Frame", nil, detailsFrame)
-        costFrame:SetPoint("TOPLEFT", requirementDisplayLabel, "TOPRIGHT", 5, 0)
-        costFrame:SetPoint("TOPRIGHT", detailsFrame, "TOPRIGHT", 0, detailsYOffset)
-        costFrame:SetHeight(16)
-        
-        local xOffset = 0
-        
-        -- Add icon if we found one
-        if iconPath or iconID then
-            local costIcon = costFrame:CreateTexture(nil, "ARTWORK")
-            costIcon:SetSize(16, 16)
-            costIcon:SetPoint("LEFT", costFrame, "LEFT", xOffset, 0)
-            
-            if iconID then
-                costIcon:SetTexture(iconID)
-            elseif iconPath then
-                costIcon:SetTexture(iconPath)
-            end
-            
-            xOffset = xOffset + 20  -- Make room for the icon
-        end
-        
-        -- Add the cost text
-        local requirementText = costFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        requirementText:SetPoint("LEFT", costFrame, "LEFT", xOffset, 0)
-        requirementText:SetPoint("RIGHT", costFrame, "RIGHT", 0, 0)
-        requirementText:SetText(costText)
-        requirementText:SetTextColor(0.9, 0.7, 0.9, 1)
-        requirementText:SetJustifyH("LEFT")
-        requirementText:SetWordWrap(true)
+    -- Display Blizzard source information without label
+    if blizzardSourceText ~= "Unknown" then
+        local sourceText = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        sourceText:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
+        sourceText:SetPoint("TOPRIGHT", detailsFrame, "TOPRIGHT", 0, detailsYOffset)
+        sourceText:SetText(blizzardSourceText)
+        sourceText:SetTextColor(0.7, 0.9, 1, 1)  -- Light blue color
+        sourceText:SetJustifyH("LEFT")
+        sourceText:SetWordWrap(true)
         
         detailsYOffset = detailsYOffset - 18
     end

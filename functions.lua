@@ -623,33 +623,55 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
         local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID, isSteadyFlight = C_MountJournal.GetMountInfoByID(id)
 
         frame:HookScript("OnEnter", function()
-            GameTooltip:SetOwner(frame, "ANCHOR_TOPLEFT")
-            if (spellID) then
-                GameTooltip:SetSpellByID(spellID)
-                
-                -- Use MCL's category/section information if available
-                local sourceText = "Unknown"
-                if frame.section and frame.category then
-                    if frame.section ~= "Unknown" and frame.category ~= "Unknown" then
-                        sourceText = frame.section .. " - " .. frame.category
-                    elseif frame.section ~= "Unknown" then
-                        sourceText = frame.section
-                    elseif frame.category ~= "Unknown" then
-                        sourceText = frame.category
-                    end
+            -- Pre-check if mount data is available before showing tooltip
+            local function isSourceDataReady()
+                local _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(id)
+                return source and source ~= ""
+            end
+            
+            -- If source data is ready, show tooltip immediately
+            if isSourceDataReady() then
+                GameTooltip:SetOwner(frame, "ANCHOR_TOPLEFT")
+                if (spellID) then
+                    GameTooltip:SetSpellByID(spellID)
+                    
+                    local _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(id)
+                    GameTooltip:AddLine(source)
+                    GameTooltip:Show()
+                    frame:SetHyperlinksEnabled(true)
                 end
+            else
+                -- Force load mount data and delay tooltip
+                C_MountJournal.GetMountInfoByID(id) -- Ensure data is loaded
                 
-                -- Fallback to Blizzard's source if MCL info is not available
-                if sourceText == "Unknown" then
-                    _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(id)
-                    if source and source ~= "" then
-                        sourceText = source
+                C_Timer.After(0.15, function()
+                    -- Only show delayed tooltip if mouse is still over the frame
+                    if frame:IsMouseOver() then
+                        local _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(id)
+                        local sourceText = source and source ~= "" and source or "Unknown"
+                        
+                        -- If still no Blizzard source, use MCL fallback
+                        if sourceText == "Unknown" then
+                            if frame.section and frame.category then
+                                if frame.section ~= "Unknown" and frame.category ~= "Unknown" then
+                                    sourceText = frame.section .. " - " .. frame.category
+                                elseif frame.section ~= "Unknown" then
+                                    sourceText = frame.section
+                                elseif frame.category ~= "Unknown" then
+                                    sourceText = frame.category
+                                end
+                            end
+                        end
+                        
+                        GameTooltip:SetOwner(frame, "ANCHOR_TOPLEFT")
+                        if (spellID) then
+                            GameTooltip:SetSpellByID(spellID)
+                            GameTooltip:AddLine(sourceText)
+                            GameTooltip:Show()
+                            frame:SetHyperlinksEnabled(true)
+                        end
                     end
-                end
-                
-                GameTooltip:AddLine(sourceText)
-                GameTooltip:Show()
-                frame:SetHyperlinksEnabled(true)
+                end)
             end
             
             -- Show MountCard on hover
@@ -677,30 +699,74 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
         local item, itemLink = GetItemInfo(id);
         if dragonriding then
             frame:HookScript("OnEnter", function()
-                GameTooltip:SetOwner(frame, "ANCHOR_TOPLEFT")
-                if (id) then
-                    GameTooltip:SetItemByID(id)
+                -- Pre-check if dragonriding mount source data is available
+                local function isDragonridingSourceReady()
+                    local mountID = C_MountJournal.GetMountFromItem(id)
+                    if mountID then
+                        local _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(mountID)
+                        return source and source ~= "", mountID
+                    end
+                    return false, nil
+                end
+                
+                local isReady, mountID = isDragonridingSourceReady()
+                
+                if isReady then
+                    -- Source data is ready, show tooltip immediately
+                    GameTooltip:SetOwner(frame, "ANCHOR_TOPLEFT")
+                    if (id) then
+                        GameTooltip:SetItemByID(id)
+                        local _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(mountID)
+                        GameTooltip:AddLine(source)
+                        GameTooltip:Show()
+                        frame:SetHyperlinksEnabled(true)
+                    end
+                else
+                    -- Force load data and delay tooltip
+                    if mountID then
+                        C_MountJournal.GetMountInfoByID(mountID) -- Ensure data is loaded
+                    end
                     
-                    -- Use MCL's category/section information if available
-                    local sourceText = "Unknown"
-                    if frame.section and frame.category then
-                        if frame.section ~= "Unknown" and frame.category ~= "Unknown" then
-                            sourceText = frame.section .. " - " .. frame.category
-                        elseif frame.section ~= "Unknown" then
-                            sourceText = frame.section
-                        elseif frame.category ~= "Unknown" then
-                            sourceText = frame.category
+                    C_Timer.After(0.15, function()
+                        -- Only show delayed tooltip if mouse is still over the frame
+                        if frame:IsMouseOver() then
+                            local retryMountID = C_MountJournal.GetMountFromItem(id)
+                            local sourceText = "Unknown"
+                            
+                            if retryMountID then
+                                local _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(retryMountID)
+                                if source and source ~= "" then
+                                    sourceText = source
+                                end
+                            end
+                            
+                            -- Fallback to MCL's category/section information if still no source
+                            if sourceText == "Unknown" then
+                                if frame.section and frame.category then
+                                    if frame.section ~= "Unknown" and frame.category ~= "Unknown" then
+                                        sourceText = frame.section .. " - " .. frame.category
+                                    elseif frame.section ~= "Unknown" then
+                                        sourceText = frame.section
+                                    elseif frame.category ~= "Unknown" then
+                                        sourceText = frame.category
+                                    end
+                                end
+                            end
+                            
+                            -- Final fallback to the passed source parameter
+                            if sourceText == "Unknown" and frame.source then
+                                sourceText = frame.source
+                            end
+                            
+                            GameTooltip:SetOwner(frame, "ANCHOR_TOPLEFT")
+                            if (id) then
+                                GameTooltip:SetItemByID(id)
+                                GameTooltip:AddLine(sourceText)
+                                GameTooltip:Show()
+                                frame:SetHyperlinksEnabled(true)
+                            end
                         end
-                    end
-                    
-                    -- If still unknown, use the passed source parameter
-                    if sourceText == "Unknown" and frame.source then
-                        sourceText = frame.source
-                    end
-                    
-                    GameTooltip:AddLine(sourceText)
-                    GameTooltip:Show()
-                    frame:SetHyperlinksEnabled(true)
+                    end)
                 end
                 
                 -- Show MountCard on hover for dragonriding mounts
@@ -750,33 +816,54 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
             end
             
             frame:HookScript("OnEnter", function()
-                GameTooltip:SetOwner(frame, "ANCHOR_TOP")
-                if (itemLink) then
-                    frame:SetHyperlinksEnabled(true)
-                    GameTooltip:SetHyperlink(itemLink)
-                    
-                    -- Use MCL's category/section information if available
-                    local sourceText = "Unknown"
-                    if frame.section and frame.category then
-                        if frame.section ~= "Unknown" and frame.category ~= "Unknown" then
-                            sourceText = frame.section .. " - " .. frame.category
-                        elseif frame.section ~= "Unknown" then
-                            sourceText = frame.section
-                        elseif frame.category ~= "Unknown" then
-                            sourceText = frame.category
-                        end
+                -- Pre-check if item-based mount source data is available
+                local function isItemMountSourceReady()
+                    local _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(mountID)
+                    return source and source ~= ""
+                end
+                
+                if isItemMountSourceReady() then
+                    -- Source data is ready, show tooltip immediately
+                    GameTooltip:SetOwner(frame, "ANCHOR_TOP")
+                    if (itemLink) then
+                        frame:SetHyperlinksEnabled(true)
+                        GameTooltip:SetHyperlink(itemLink)
+                        local _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(mountID)
+                        GameTooltip:AddLine(source)
+                        GameTooltip:Show()
                     end
+                else
+                    -- Force load data and delay tooltip
+                    C_MountJournal.GetMountInfoByID(mountID) -- Ensure data is loaded
                     
-                    -- Fallback to Blizzard's source if MCL info is not available
-                    if sourceText == "Unknown" then
-                        _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(mountID)
-                        if source and source ~= "" then
-                            sourceText = source
+                    C_Timer.After(0.15, function()
+                        -- Only show delayed tooltip if mouse is still over the frame
+                        if frame:IsMouseOver() then
+                            local _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(mountID)
+                            local sourceText = source and source ~= "" and source or "Unknown"
+                            
+                            -- Fallback to MCL's category/section information if still no source
+                            if sourceText == "Unknown" then
+                                if frame.section and frame.category then
+                                    if frame.section ~= "Unknown" and frame.category ~= "Unknown" then
+                                        sourceText = frame.section .. " - " .. frame.category
+                                    elseif frame.section ~= "Unknown" then
+                                        sourceText = frame.section
+                                    elseif frame.category ~= "Unknown" then
+                                        sourceText = frame.category
+                                    end
+                                end
+                            end
+                            
+                            GameTooltip:SetOwner(frame, "ANCHOR_TOP")
+                            if (itemLink) then
+                                frame:SetHyperlinksEnabled(true)
+                                GameTooltip:SetHyperlink(itemLink)
+                                GameTooltip:AddLine(sourceText)
+                                GameTooltip:Show()
+                            end
                         end
-                    end
-                    
-                    GameTooltip:AddLine(sourceText)
-                    GameTooltip:Show()
+                    end)
                 end
                 
                 -- Show MountCard on hover for item-based mounts
