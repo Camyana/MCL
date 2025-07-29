@@ -217,5 +217,7 @@ if L then
     L["Search mounts..."] = "Поиск маунтов..."
     L["Mount Collection Log"] = "Журнал коллекции маунтов"
     L["Clear Search"] = "Очистить поиск"
+    L["Enable Mount Card on Hover"] = "Включить карту маунта при наведении"
+    L["If enabled, the mount card will automatically appear when hovering over mounts."] = "Если включено, карта маунта будет автоматически появляться при наведении на маунтов."
     L["Pin Instructions Text"] = "|cffFF8800|TInterface\\GossipFrame\\AvailableQuestIcon:0:0:0:0:32:32:0:32:0:32|t Ctrl + Правый клик|r для закрепления не собранных маунтов"
 end

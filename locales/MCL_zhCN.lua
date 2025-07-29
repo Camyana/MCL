@@ -217,6 +217,8 @@ if L then
     L["Search mounts..."] = "搜索坐骑..."
     L["Mount Collection Log"] = "坐骑收集日志"
     L["Clear Search"] = "清除搜索"
+    L["Enable Mount Card on Hover"] = "鼠标悬停时启用坐骑卡片"
+    L["If enabled, the mount card will automatically appear when hovering over mounts."] = "启用后，鼠标悬停在坐骑上时会自动显示坐骑卡片。"
     L["Pin Instructions Text"] = "|cffFF8800|TInterface\\GossipFrame\\AvailableQuestIcon:0:0:0:0:32:32:0:32:0:32|t Ctrl + 右键|r 收藏/取消收藏坐骑"
 end
 

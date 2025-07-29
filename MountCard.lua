@@ -7,9 +7,24 @@ MCLcore.MountCard = {};
 local MountCard = MCLcore.MountCard;
 local MCL_functions = MCLcore.Functions or {};
 
--- Constants
-local MOUNT_CARD_WIDTH = 400;
-local MOUNT_CARD_HEIGHT = 600;
+-- Helper function to get mount card dimensions - fixed width, dynamic height matching main frame
+local function GetMountCardDimensions()
+    local width = 400  -- Fixed mount card width (original size)
+    local height
+    
+    -- Try to get height from main frame if it exists
+    if MCL_mainFrame then
+        height = MCL_mainFrame:GetHeight()
+    -- Fall back to settings if main frame doesn't exist yet
+    elseif MCL_SETTINGS and MCL_SETTINGS.frameHeight then
+        height = MCL_SETTINGS.frameHeight
+    -- Final fallback to default height
+    else
+        height = 600  -- default main_frame_height
+    end
+    
+    return width, height
+end
 
 -- Global frame reference
 local MCL_MountCard = nil
@@ -301,9 +316,12 @@ end
 --[[
   Create section header with MCL navigation frame styling (matching PetCard)
 ]]
-local function CreateSectionHeader(parent, text, yOffset, currentOpacity)
+local function CreateSectionHeader(parent, text, yOffset, currentOpacity, parentWidth)
+    -- Use provided width or fallback to fixed mount card width
+    local headerWidth = parentWidth and (parentWidth - 40) or (400 - 40)  -- Fixed width instead of dynamic
+    
     local header = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    header:SetSize(MOUNT_CARD_WIDTH - 40, 25)
+    header:SetSize(headerWidth, 25)
     header:SetPoint("TOP", parent, "TOP", 0, yOffset)
     
     -- Use current opacity if provided, otherwise fallback
@@ -349,12 +367,12 @@ function MountCard:CreateMountCard()
         return MCL_MountCard  -- Already exists
     end
     
-    -- Get the main addon height
-    local addonHeight = (MCL_SETTINGS and MCL_SETTINGS.frameHeight) or main_frame_height or 500
+    -- Get current frame dimensions (matches main frame size)
+    local cardWidth, cardHeight = GetMountCardDimensions()
     
     -- Create main frame with MCL styling (matching PetCard)
     local f = CreateFrame("Frame", "MCL_MountCard", UIParent, "BackdropTemplate")
-    f:SetSize(MOUNT_CARD_WIDTH, addonHeight)  -- Match main window height
+    f:SetSize(cardWidth, cardHeight)  -- Use dynamic dimensions
     f:SetFrameStrata("HIGH")
     f:SetFrameLevel(100)
     f:SetMovable(false)  -- Disable moving since it's anchored
@@ -385,7 +403,7 @@ function MountCard:CreateMountCard()
     
     -- Title bar with mount icon and name (no "Mount Information" title)
     f.titleFrame = CreateFrame("Frame", nil, f)
-    f.titleFrame:SetSize(MOUNT_CARD_WIDTH - 20, 30)
+    f.titleFrame:SetSize(cardWidth - 20, 30)
     f.titleFrame:SetPoint("TOP", f, "TOP", 0, -10)
     f.titleFrame:EnableMouse(false)  -- Disable dragging since frame is anchored
     
@@ -405,7 +423,7 @@ function MountCard:CreateMountCard()
     
     -- Header frame for additional mount info (below title)
     f.headerFrame = CreateFrame("Frame", nil, f)
-    f.headerFrame:SetSize(MOUNT_CARD_WIDTH - 20, 1)
+    f.headerFrame:SetSize(cardWidth - 20, 1)
     f.headerFrame:SetPoint("TOP", f.titleFrame, "BOTTOM", 0, -5)
     f.headerFrame:EnableMouse(false)
     
@@ -416,7 +434,7 @@ function MountCard:CreateMountCard()
     
     -- Scroll child
     f.scrollChild = CreateFrame("Frame", nil, f.scrollFrame)
-    f.scrollChild:SetSize(MOUNT_CARD_WIDTH - 20, addonHeight - 80)
+    f.scrollChild:SetSize(cardWidth - 20, cardHeight - 80)
     f.scrollFrame:SetScrollChild(f.scrollChild)
     
     -- Initialize properties
@@ -796,6 +814,34 @@ function MountCard:HideMountCard()
 end
 
 --[[
+  Resize mount card to match main frame dimensions
+]]
+function MountCard:ResizeMountCard()
+    if not MCL_MountCard then
+        return
+    end
+    
+    -- Get new dimensions (fixed width, dynamic height)
+    local cardWidth, cardHeight = GetMountCardDimensions()
+    
+    -- Resize the main card frame
+    MCL_MountCard:SetSize(cardWidth, cardHeight)
+    
+    -- Resize child frames with fixed width
+    if MCL_MountCard.titleFrame then
+        MCL_MountCard.titleFrame:SetSize(cardWidth - 20, 30)
+    end
+    
+    if MCL_MountCard.headerFrame then
+        MCL_MountCard.headerFrame:SetSize(cardWidth - 20, 1)
+    end
+    
+    if MCL_MountCard.scrollChild then
+        MCL_MountCard.scrollChild:SetSize(cardWidth - 20, cardHeight - 80)
+    end
+end
+
+--[[
   Check if mount card is visible
 ]]
 function MountCard:IsMountCardVisible()
@@ -806,6 +852,11 @@ end
   Show mount card on hover with delay
 ]]
 function MountCard:ShowMountCardOnHover(mountData, anchorFrame, delay)
+    -- Check if mount card hover is enabled in settings
+    if not MCL_SETTINGS or not MCL_SETTINGS.enableMountCardHover then
+        return
+    end
+    
     -- Cancel any existing hover timer
     if hoverTimer then
         hoverTimer:Cancel()
@@ -893,6 +944,10 @@ end
 
 MCLcore.MountCard.HideOnHover = function()
     return MountCard:HideMountCardOnHover()
+end
+
+MCLcore.MountCard.Resize = function()
+    return MountCard:ResizeMountCard()
 end
 
 MCLcore.MountCard.IsVisible = function()

@@ -217,5 +217,7 @@ if L then
     L["Search mounts..."] = "탈것 검색..."
     L["Mount Collection Log"] = "탈것 수집 기록"
     L["Clear Search"] = "검색 지우기"
+    L["Enable Mount Card on Hover"] = "마우스 오버 시 탈것 카드 활성화"
+    L["If enabled, the mount card will automatically appear when hovering over mounts."] = "활성화하면 탈것 위로 마우스를 올릴 때 탈것 카드가 자동으로 나타납니다."
     L["Pin Instructions Text"] = "|cffFF8800|TInterface\\GossipFrame\\AvailableQuestIcon:0:0:0:0:32:32:0:32:0:32|t Ctrl + 오른쪽 클릭|r으로 미수집 탈것 고정"
 end

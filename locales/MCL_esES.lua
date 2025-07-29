@@ -217,5 +217,7 @@ if L then
     L["Search mounts..."] = "Buscar monturas..."
     L["Mount Collection Log"] = "Registro de colección de monturas"
     L["Clear Search"] = "Limpiar búsqueda"
+    L["Enable Mount Card on Hover"] = "Activar tarjeta de montura al pasar el cursor"
+    L["If enabled, the mount card will automatically appear when hovering over mounts."] = "Si está activado, la tarjeta de montura aparecerá automáticamente al pasar el cursor sobre las monturas."
     L["Pin Instructions Text"] = "|cffFF8800|TInterface\\GossipFrame\\AvailableQuestIcon:0:0:0:0:32:32:0:32:0:32|t Ctrl + Clic derecho|r para marcar monturas no obtenidas"
 end

@@ -219,6 +219,8 @@ if L then
     L["Clear Search"] = "Clear Search"
     L["Sections"] = "Sections"
     L["MCL | Mount Collection Log"] = "MCL | Mount Collection Log"
+    L["Enable Mount Card on Hover"] = "Enable Mount Card on Hover"
+    L["If enabled, the mount card will automatically appear when hovering over mounts."] = "If enabled, the mount card will automatically appear when hovering over mounts."
     L["|cff00CCFFMount Collection Log Commands:\n|cffFF0000Show:|cffFFFFFF Shows your mount collection log\n|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon\n|cffFF0000Config:|cffFFFFFF Opens the settings\n|cffFF0000Cleanup:|cffFFFFFF Cleans up invalid pinned mounts\n|cffFF0000Help:|cffFFFFFF Shows commands"] = "|cff00CCFFMount Collection Log Commands:\n|cffFF0000Show:|cffFFFFFF Shows your mount collection log\n|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon\n|cffFF0000Config:|cffFFFFFF Opens the settings\n|cffFF0000Cleanup:|cffFFFFFF Cleans up invalid pinned mounts\n|cffFF0000Help:|cffFFFFFF Shows commands"
     L["How to Use Pinned Mounts"] = "How to Use Pinned Mounts"
     L["Pin Instructions"] = "• Right-click any mount icon to pin/unpin it\n• Pinned mounts will appear in this tab for quick access\n• Use pinned mounts to track your favorites or goals\n• Pin icon appears on mount when pinned\n• Pinned mounts are saved across sessions"

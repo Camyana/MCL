@@ -217,5 +217,7 @@ if L then
     L["Search mounts..."] = "Buscar montarias..."
     L["Mount Collection Log"] = "Registro de Coleção de Montarias"
     L["Clear Search"] = "Limpar Busca"
+    L["Enable Mount Card on Hover"] = "Ativar Cartão de Montaria ao Passar o Mouse"
+    L["If enabled, the mount card will automatically appear when hovering over mounts."] = "Se habilitado, o cartão da montaria aparecerá automaticamente ao passar o mouse sobre as montarias."
     L["Pin Instructions Text"] = "|cffFF8800|TInterface\\GossipFrame\\AvailableQuestIcon:0:0:0:0:32:32:0:32:0:32|t Ctrl + Clique direito|r para fixar montarias não obtidas"
 end

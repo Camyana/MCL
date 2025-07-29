@@ -10,8 +10,8 @@ MCLcore.statusBarFrames  = {}
 
 MCLcore.nav_width = 180
 local nav_width = MCLcore.nav_width
-local main_frame_width = 900
-local main_frame_height = 500
+local main_frame_width = 800
+local main_frame_height = 600
 
 local r,g,b,a
 
@@ -1699,6 +1699,12 @@ function MCL_frames:RefreshLayout()
             end
         end
     end
+    
+    -- Resize mount card if it exists to match new frame dimensions
+    if MCLcore.MountCard and MCLcore.MountCard.Resize then
+        MCLcore.MountCard.Resize()
+    end
+    
     collectgarbage("collect")    
 end
 
@@ -1709,6 +1715,11 @@ function MCL_frames:SaveFrameSize()
     if MCL_mainFrame and MCL_SETTINGS then
         MCL_SETTINGS.frameWidth = MCL_mainFrame:GetWidth()
         MCL_SETTINGS.frameHeight = MCL_mainFrame:GetHeight()
+        
+        -- Also resize mount card to match new dimensions
+        if MCLcore.MountCard and MCLcore.MountCard.Resize then
+            MCLcore.MountCard.Resize()
+        end
     end
 end
 

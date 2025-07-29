@@ -113,6 +113,9 @@ function MCL_functions:resetToDefault(setting)
     if setting == "MountsPerRow" or setting == nil then
         MCL_SETTINGS.mountsPerRow = 12
     end
+    if setting == "MountCardHover" or setting == nil then
+        MCL_SETTINGS.enableMountCardHover = true
+    end
 end
 
 if MCL_SETTINGS == nil then
@@ -122,6 +125,11 @@ end
 -- Ensure mountsPerRow setting exists for existing users
 if MCL_SETTINGS.mountsPerRow == nil then
     MCL_SETTINGS.mountsPerRow = 12
+end
+
+-- Ensure enableMountCardHover setting exists for existing users
+if MCL_SETTINGS.enableMountCardHover == nil then
+    MCL_SETTINGS.enableMountCardHover = true
 end
 
 -- Tables Mounts into Global List
@@ -674,8 +682,8 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
                 end)
             end
             
-            -- Show MountCard on hover
-            if MCLcore and MCLcore.MountCard then
+            -- Show MountCard on hover (only if enabled in settings)
+            if MCLcore and MCLcore.MountCard and MCL_SETTINGS.enableMountCardHover then
                 local mountData = {
                     mountID = mountID,
                     id = mountID,
@@ -769,8 +777,8 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
                     end)
                 end
                 
-                -- Show MountCard on hover for dragonriding mounts
-                if MCLcore and MCLcore.MountCard then
+                -- Show MountCard on hover for dragonriding mounts (only if enabled in settings)
+                if MCLcore and MCLcore.MountCard and MCL_SETTINGS.enableMountCardHover then
                     local mountData = {
                         mountID = id,
                         id = id,
@@ -866,8 +874,8 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
                     end)
                 end
                 
-                -- Show MountCard on hover for item-based mounts
-                if MCLcore and MCLcore.MountCard and mountID then
+                -- Show MountCard on hover for item-based mounts (only if enabled in settings)
+                if MCLcore and MCLcore.MountCard and mountID and MCL_SETTINGS.enableMountCardHover then
                     local mountData = {
                         mountID = mountID,
                         id = mountID,
@@ -2172,6 +2180,19 @@ function MCL_functions:AddonSettings()
                 end,
                 get = function(info)
                     return not MCL_MM.db.profile.minimap.hide
+                end,
+            },
+            mountCardHoverToggle = {
+                order = 14.8,
+                name = MCLcore.L["Enable Mount Card on Hover"],
+                desc = MCLcore.L["If enabled, the mount card will automatically appear when hovering over mounts."],
+                type = "toggle",
+                width = "full",
+                set = function(info, val)
+                    MCL_SETTINGS.enableMountCardHover = val
+                end,
+                get = function(info)
+                    return MCL_SETTINGS.enableMountCardHover
                 end,
             },
             headerfive = {             
