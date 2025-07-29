@@ -1026,7 +1026,7 @@ MCLcore.mountList[18] = {
 		},
 		Raid = {
 			name = "Raid",
-			mounts = {"m1818", 210061}
+			mounts = {210061}
 		},
 	}
 }
