@@ -765,6 +765,12 @@ SlashCmdList["MCL"] = function(msg)
     if msg:lower() == "debug" then
         MCLcore.Function:GetCollectedMounts();
     end
+    if msg:lower() == "debugmounts" then
+        -- Re-run mount validation with debug enabled
+        if MCLcore.Main then
+            MCLcore.Main:Init(true)  -- Force re-initialization with debug
+        end
+    end
     if msg:lower() == "config" or msg == "settings" then
         MCLcore.Frames:openSettings();
     end
@@ -785,10 +791,7 @@ SlashCmdList["MCL"] = function(msg)
     if msg:lower() == "testmount" then
         -- Test a known mount ID to see what the API returns
         local testId = 230  -- Swift Palomino - a basic mount that should exist
-        print("|cff00CCFF[MCL Debug]|r Testing mount ID", testId)
         local mountName, spellID, icon = C_MountJournal.GetMountInfoByID(testId)
-        print(string.format("|cff00CCFF[MCL Debug]|r Result: mountName='%s', spellID=%s, icon=%s", 
-            tostring(mountName), tostring(spellID), tostring(icon)))
             
         -- Also test one of the problematic IDs if MCL_PINNED exists
         if MCL_PINNED and #MCL_PINNED > 0 then
@@ -800,10 +803,7 @@ SlashCmdList["MCL"] = function(msg)
                     mount_Id = tonumber(string.sub(tostring(mountId), 2, -1))
                 end
                 if mount_Id then
-                    print("|cff00CCFF[MCL Debug]|r Testing pinned mount ID", mount_Id, "from", mountId)
                     local pMountName, pSpellID, pIcon = C_MountJournal.GetMountInfoByID(mount_Id)
-                    print(string.format("|cff00CCFF[MCL Debug]|r Pinned Result: mountName='%s', spellID=%s, icon=%s", 
-                        tostring(pMountName), tostring(pSpellID), tostring(pIcon)))
                 end
             end
         end

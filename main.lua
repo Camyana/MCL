@@ -60,9 +60,21 @@ end
 -- Save total mount count
 local totalMountCount = CountMounts()
 
+-- Debugging variables
+local debugMode = true -- Set to false to disable debugging
+local invalidMounts = {}
+local validMounts = {}
+
 local function InitMounts()
     load_check = 0
     totalMountCount = 0
+    
+    -- Reset debug tracking
+    if debugMode then
+        invalidMounts = {}
+        validMounts = {}
+    end
+    
     for b,n in pairs(MCLcore.mountList) do
         for h,j in pairs(n) do
             if (type(j) == "table") then
@@ -72,16 +84,46 @@ local function InitMounts()
                             if not string.match(vv, "^m") then
                                 totalMountCount = totalMountCount + 1
                                 C_Item.RequestLoadItemDataByID(vv)
-                                local mountName = C_MountJournal.GetMountFromItem(vv)
-                                if mountName ~= nil then
+                                local mountID = C_MountJournal.GetMountFromItem(vv)
+                                
+                                if mountID ~= nil then
                                     load_check = load_check + 1
+                                    if debugMode then
+                                        table.insert(validMounts, {itemID = vv, mountID = mountID, expansion = n.name, category = v.name})
+                                    end
+                                else
+                                    -- Mount doesn't exist in game, but we'll count it as "loaded" to prevent infinite waiting
+                                    load_check = load_check + 1
+                                    if debugMode then
+                                        local itemName = GetItemInfo(vv) or "Unknown Item"
+                                        table.insert(invalidMounts, {itemID = vv, itemName = itemName, expansion = n.name, category = v.name})
+                                    end
                                 end                            
+                            else
+                                -- Handle mountID entries (strings starting with "m")
+                                totalMountCount = totalMountCount + 1
+                                load_check = load_check + 1
+                                if debugMode then
+                                    local mountIDNum = tonumber(string.sub(vv, 2))
+                                    local mountName = C_MountJournal.GetMountInfoByID(mountIDNum)
+                                    if not mountName then
+                                        table.insert(invalidMounts, {mountID = mountIDNum, expansion = n.name, category = v.name, type = "mountID"})
+                                    else
+                                        table.insert(validMounts, {mountID = mountIDNum, mountName = mountName, expansion = n.name, category = v.name, type = "mountID"})
+                                    end
+                                end
                             end
                         end                                     
                     end
                 end
             end
         end
+    end
+    
+    -- Debug summary (silent tracking only)
+    if debugMode then
+        -- Data is collected but not printed to chat
+        -- invalidMounts and validMounts tables are populated for debugging if needed
     end
 end
 
@@ -107,9 +149,9 @@ end
 local MAX_INIT_RETRIES = 3
 
 -- Initialization function
-function MCL_Load:Init(force)
+function MCL_Load:Init(force, showOnComplete)
+    local retries = 0
     local function repeatCheck()
-        local retries = 0
         if MCL_Load:PreLoad() then
             -- Initialization steps
             if MCLcore.MCL_MF == nil then
@@ -135,6 +177,12 @@ function MCL_Load:Init(force)
             if MCLcore.Function and MCLcore.Function.UpdateCollection then
                 MCLcore.Function:UpdateCollection()
             end
+            
+            -- If we should show the window after initialization, do so
+            if showOnComplete and MCLcore.MCL_MF then
+                MCLcore.MCL_MF:Show()
+            end
+            
             init_load = false -- Ensure that the initialization does not repeat unnecessarily.
         else
             retries = retries + 1
@@ -160,9 +208,9 @@ end
 
 -- Toggle function
 function MCL_Load:Toggle()
-    -- Check preload status and if false, prevent execution.
+    -- Check preload status and if false, attempt initialization
     if MCLcore.dataLoaded == false then
-        MCL_Load:Init()
+        MCL_Load:Init(false, true) -- Initialize and show when complete
         return
     end 
     if MCLcore.MCL_MF == nil then
@@ -183,7 +231,7 @@ local login = true
 
 
 local function onevent(self, event, arg1, ...)
-    if(login and ((event == "ADDON_LOADED" and name == arg1) or (event == "PLAYER_LOGIN"))) then
+    if(login and ((event == "ADDON_LOADED" and MCL == arg1) or (event == "PLAYER_LOGIN"))) then
         login = nil
         f:UnregisterEvent("ADDON_LOADED")
         f:UnregisterEvent("PLAYER_LOGIN")
