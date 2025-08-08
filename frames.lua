@@ -341,26 +341,13 @@ function MCL_frames:CreateMainFrame()
     -- Create the main frame title
     MCL_mainFrame.title = MCL_mainFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
     
-    -- Settings button
-    MCL_mainFrame.settings = CreateFrame("Button", nil, MCL_mainFrame);
-    MCL_mainFrame.settings:SetSize(14, 14)
-    if MCL_SETTINGS.useBlizzardTheme then
-        MCL_mainFrame.settings:SetPoint("TOPRIGHT", MCL_mainFrame, "TOPRIGHT", -40, -8)
-    else
-        MCL_mainFrame.settings:SetPoint("TOPRIGHT", MCL_mainFrame, "TOPRIGHT", -30, 0)
-    end
-    MCL_mainFrame.settings.tex = MCL_mainFrame.settings:CreateTexture()
-    MCL_mainFrame.settings.tex:SetAllPoints(MCL_mainFrame.settings)
-    MCL_mainFrame.settings.tex:SetTexture("Interface\\AddOns\\MCL\\icons\\settings.blp")
-    MCL_mainFrame.settings:SetScript("OnClick", function()MCL_frames:openSettings()end)
-
     -- Refresh button
     MCL_mainFrame.refresh = CreateFrame("Button", nil, MCL_mainFrame);
     MCL_mainFrame.refresh:SetSize(14, 14)
     if MCL_SETTINGS.useBlizzardTheme then
-        MCL_mainFrame.refresh:SetPoint("TOPRIGHT", MCL_mainFrame.settings, "TOPLEFT", -5, 0)
+        MCL_mainFrame.refresh:SetPoint("TOPRIGHT", MCL_mainFrame, "TOPRIGHT", -40, -8)
     else
-        MCL_mainFrame.refresh:SetPoint("TOPRIGHT", MCL_mainFrame.settings, "TOPLEFT", -5, 0)
+        MCL_mainFrame.refresh:SetPoint("TOPRIGHT", MCL_mainFrame, "TOPRIGHT", -30, 0)
     end
     MCL_mainFrame.refresh.tex = MCL_mainFrame.refresh:CreateTexture()
     MCL_mainFrame.refresh.tex:SetAllPoints(MCL_mainFrame.refresh)
@@ -903,6 +890,36 @@ function MCL_frames:SetTabs()
         tabIndex = tabIndex + 1
         navYOffset = navYOffset - 28
     end
+    
+    -- 5. Settings tab (always last)
+    do
+        local tab = CreateFrame("Button", nil, tabFrame, "BackdropTemplate")
+        tab:SetSize(nav_width + 8, 32)  -- Use nav width for sidebar tabs
+        tab:SetPoint("TOPLEFT", tabFrame, "TOPLEFT", 1, navYOffset)
+        StyleNavButton(tab, false)  -- Use our styling function
+        tab.text = tab:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        tab.text:SetPoint("LEFT", 10, 0)
+        tab.text:SetText(L["Settings"] or "Settings")
+        tab.section = {name = "Settings"}  -- Create a fake section for consistency
+        tab.content = MCLcore.Frames:createSettingsFrame(MCL_mainFrame.ScrollChild)
+        tab.content:Hide()
+        tab:SetScript("OnClick", function(self)
+            SelectTab(self)
+        end)
+        tab:EnableMouse(true)
+        tab:SetFrameStrata("HIGH")
+        tab:SetFrameLevel(100)
+        tab:Show()
+        table.insert(tabFrame.tabs, tab)
+        -- Also store in navigation frame for settings navigation
+        if MCLcore.MCL_MF_Nav then
+            table.insert(MCLcore.MCL_MF_Nav.tabs, tab)
+        end
+        table.insert(MCLcore.sectionFrames, tab.content)
+        tabIndex = tabIndex + 1
+        navYOffset = navYOffset - 28
+    end
+    
     -- Select Overview by default
     if selectedTab then
         SelectTab(selectedTab)
@@ -1174,6 +1191,754 @@ function MCL_frames:createContentFrame(relativeFrame, title)
         frame.pBar:SetHeight(20)
     end
 
+    return frame
+end
+
+function MCL_frames:createSettingsFrame(relativeFrame)
+    -- Calculate dynamic width based on current main frame width
+    local currentWidth, _ = MCL_frames:GetCurrentFrameDimensions()
+    local availableWidth = currentWidth - 60  -- 60px for padding
+    
+    local frame = CreateFrame("Frame", nil, relativeFrame, "BackdropTemplate")
+    frame:SetWidth(availableWidth)
+    frame:SetHeight(750)  -- Increased height for better spacing
+    frame:SetPoint("TOPLEFT", relativeFrame, "TOPLEFT", 30, 0)
+    
+    -- Set background for settings
+    frame:SetBackdropColor(0, 0, 0, 0)  -- Transparent background
+    
+    frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    frame.title:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -15)
+    frame.title:SetText(L["Settings"] or "Settings")
+    frame.name = "Settings"
+    
+    -- Create two-column layout
+    local leftColumn = CreateFrame("Frame", nil, frame)
+    leftColumn:SetSize(math.floor(availableWidth / 2) - 20, 700)
+    leftColumn:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -50)
+    
+    local rightColumn = CreateFrame("Frame", nil, frame)
+    rightColumn:SetSize(math.floor(availableWidth / 2) - 20, 700)
+    rightColumn:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -15, -50)
+    
+    local leftYOffset = 0
+    local rightYOffset = 0
+    local sectionSpacing = 45  -- Increased spacing between sections
+    
+    -- Custom styling function for checkboxes
+    local function styleCheckbox(checkbox)
+        -- Remove default template visuals
+        checkbox:SetNormalTexture("")
+        checkbox:SetPushedTexture("")
+        checkbox:SetHighlightTexture("")
+        checkbox:SetCheckedTexture("")
+        
+        -- Create custom background
+        local bg = checkbox:CreateTexture(nil, "BACKGROUND")
+        bg:SetAllPoints()
+        bg:SetColorTexture(0.1, 0.1, 0.1, 0.8)
+        bg:SetSize(20, 20)
+        
+        -- Create custom border
+        local border = checkbox:CreateTexture(nil, "BORDER")
+        border:SetAllPoints()
+        border:SetColorTexture(0.4, 0.4, 0.4, 1)
+        border:SetSize(22, 22)
+        
+        checkbox.customBg = bg
+        checkbox.customBorder = border
+        
+        -- Update visuals based on state
+        local function updateVisuals()
+            if checkbox:GetChecked() then
+                bg:SetColorTexture(0.2, 0.6, 1, 0.9)  -- Solid blue when checked
+                border:SetColorTexture(0.4, 0.8, 1, 1)
+            else
+                bg:SetColorTexture(0.1, 0.1, 0.1, 0.8)
+                border:SetColorTexture(0.4, 0.4, 0.4, 1)
+            end
+        end
+        
+        checkbox:SetScript("OnClick", function(self)
+            updateVisuals()
+            if self.originalOnClick then
+                self.originalOnClick(self)
+            end
+        end)
+        
+        -- Hover effects
+        checkbox:SetScript("OnEnter", function(self)
+            if self:GetChecked() then
+                border:SetColorTexture(0.5, 0.9, 1, 1)
+                bg:SetColorTexture(0.3, 0.7, 1, 0.95)
+            else
+                border:SetColorTexture(0.6, 0.6, 0.6, 1)
+            end
+        end)
+        
+        checkbox:SetScript("OnLeave", function(self)
+            if self:GetChecked() then
+                border:SetColorTexture(0.4, 0.8, 1, 1)
+                bg:SetColorTexture(0.2, 0.6, 1, 0.9)
+            else
+                border:SetColorTexture(0.4, 0.4, 0.4, 1)
+            end
+        end)
+        
+        updateVisuals()
+        return updateVisuals
+    end
+    
+    -- Custom styling function for sliders
+    local function styleSlider(slider, showInputBox, isPercentage)
+        -- Style the thumb with horizontal texture
+        local thumb = slider:GetThumbTexture()
+        if thumb then
+            thumb:SetTexture("Interface\\Buttons\\UI-SliderBar-Button-Horizontal")
+            thumb:SetSize(16, 16)
+        else
+            -- Create a custom thumb if none exists
+            thumb = slider:CreateTexture(nil, "OVERLAY")
+            thumb:SetTexture("Interface\\Buttons\\UI-SliderBar-Button-Horizontal")
+            thumb:SetSize(16, 16)
+            slider:SetThumbTexture(thumb)
+        end
+        
+        -- Enable mouse interaction
+        slider:EnableMouse(true)
+        slider:EnableMouseWheel(true)
+        
+        -- Create custom track background
+        local trackBg = slider:CreateTexture(nil, "BACKGROUND")
+        trackBg:SetColorTexture(0.1, 0.1, 0.1, 0.8)
+        trackBg:SetHeight(4)
+        trackBg:SetPoint("LEFT", slider, "LEFT", 10, 0)
+        trackBg:SetPoint("RIGHT", slider, "RIGHT", -10, 0)
+        
+        -- Create progress indicator
+        local progress = slider:CreateTexture(nil, "ARTWORK")
+        progress:SetColorTexture(0.2, 0.6, 0.8, 1)
+        progress:SetHeight(4)
+        progress:SetPoint("LEFT", trackBg, "LEFT")
+        
+        local function updateProgress()
+            local value = slider:GetValue()
+            local min, max = slider:GetMinMaxValues()
+            if max > min then
+                local percent = (value - min) / (max - min)
+                progress:SetWidth(trackBg:GetWidth() * percent)
+            end
+        end
+        
+        -- Create input box if requested
+        if showInputBox then
+            local inputBox = CreateFrame("EditBox", nil, slider:GetParent(), "BackdropTemplate")
+            inputBox:SetSize(50, 20)
+            inputBox:SetPoint("LEFT", slider, "RIGHT", 10, 0)
+            
+            -- Input box styling
+            inputBox:SetBackdrop({
+                bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+                edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+                tile = true, tileSize = 8, edgeSize = 8,
+                insets = { left = 2, right = 2, top = 2, bottom = 2 }
+            })
+            inputBox:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
+            inputBox:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
+            
+            inputBox:SetFontObject(GameFontHighlightSmall)
+            inputBox:SetTextColor(1, 1, 1, 1)
+            inputBox:SetAutoFocus(false)
+            inputBox:SetNumeric(true)
+            
+            local function getDisplayValue(sliderValue)
+                if isPercentage then
+                    return tostring(math.floor(sliderValue * 100))
+                else
+                    return tostring(math.floor(sliderValue))
+                end
+            end
+            
+            local function getSliderValue(displayValue)
+                local value = tonumber(displayValue)
+                if not value then return nil end
+                
+                if isPercentage then
+                    return value / 100
+                else
+                    return value
+                end
+            end
+            
+            inputBox:SetText(getDisplayValue(slider:GetValue()))
+            
+            -- Input box scripts
+            inputBox:SetScript("OnEnterPressed", function(self)
+                local sliderValue = getSliderValue(self:GetText())
+                if sliderValue then
+                    local min, max = slider:GetMinMaxValues()
+                    sliderValue = math.max(min, math.min(max, sliderValue))
+                    slider:SetValue(sliderValue)
+                    self:SetText(getDisplayValue(sliderValue))
+                end
+                self:ClearFocus()
+            end)
+            
+            inputBox:SetScript("OnEscapePressed", function(self)
+                self:SetText(getDisplayValue(slider:GetValue()))
+                self:ClearFocus()
+            end)
+            
+            inputBox:SetScript("OnEditFocusLost", function(self)
+                self:SetText(getDisplayValue(slider:GetValue()))
+            end)
+            
+            slider.inputBox = inputBox
+            slider.getDisplayValue = getDisplayValue
+        end
+        
+        slider:SetScript("OnValueChanged", function(self, value)
+            updateProgress()
+            if self.inputBox and self.getDisplayValue then
+                self.inputBox:SetText(self.getDisplayValue(value))
+            end
+            if self.originalOnValueChanged then
+                self.originalOnValueChanged(self, value)
+            end
+        end)
+        
+        -- Mouse wheel support for horizontal scrolling
+        slider:SetScript("OnMouseWheel", function(self, delta)
+            local step = self:GetValueStep()
+            local value = self:GetValue()
+            local min, max = self:GetMinMaxValues()
+            local newValue = value + (delta * step)
+            self:SetValue(math.max(min, math.min(max, newValue)))
+        end)
+        
+        updateProgress()
+    end
+    
+    -- LEFT COLUMN: Theme Selection Section
+    local themeTitle = leftColumn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    themeTitle:SetPoint("TOPLEFT", leftColumn, "TOPLEFT", 0, leftYOffset)
+    themeTitle:SetText(L["Theme"] or "Theme:")
+    themeTitle:SetTextColor(0.2, 0.8, 1, 1)  -- MCL blue color
+    themeTitle:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
+    leftYOffset = leftYOffset - 30
+    
+    -- Blizzard Theme Checkbox
+    local blizzardThemeCheck = CreateFrame("CheckButton", nil, leftColumn)
+    blizzardThemeCheck:SetSize(20, 20)
+    blizzardThemeCheck:SetPoint("TOPLEFT", leftColumn, "TOPLEFT", 5, leftYOffset)
+    blizzardThemeCheck:SetChecked(MCL_SETTINGS.useBlizzardTheme or false)
+    
+    local blizzardThemeText = leftColumn:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    blizzardThemeText:SetPoint("LEFT", blizzardThemeCheck, "RIGHT", 8, 0)
+    blizzardThemeText:SetText(L["Use Blizzard Theme"] or "Use Blizzard Theme")
+    
+    blizzardThemeCheck.originalOnClick = function(self)
+        MCL_SETTINGS.useBlizzardTheme = self:GetChecked()
+        StaticPopup_Show("MCL_RELOAD_WARNING")
+    end
+    
+    styleCheckbox(blizzardThemeCheck)
+    leftYOffset = leftYOffset - sectionSpacing
+    
+    -- Display Options Section (Left Column)
+    local displayTitle = leftColumn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    displayTitle:SetPoint("TOPLEFT", leftColumn, "TOPLEFT", 0, leftYOffset)
+    displayTitle:SetText(L["Display Options"] or "Display Options:")
+    displayTitle:SetTextColor(0.2, 0.8, 1, 1)
+    displayTitle:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
+    leftYOffset = leftYOffset - 30
+    
+    -- Hide Collected Mounts Checkbox
+    local hideCollectedCheck = CreateFrame("CheckButton", nil, leftColumn)
+    hideCollectedCheck:SetSize(20, 20)
+    hideCollectedCheck:SetPoint("TOPLEFT", leftColumn, "TOPLEFT", 5, leftYOffset)
+    hideCollectedCheck:SetChecked(MCL_SETTINGS.hideCollectedMounts or false)
+    
+    local hideCollectedText = leftColumn:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    hideCollectedText:SetPoint("LEFT", hideCollectedCheck, "RIGHT", 8, 0)
+    hideCollectedText:SetText(L["Hide Collected Mounts"] or "Hide Collected Mounts")
+    
+    hideCollectedCheck.originalOnClick = function(self)
+        MCL_SETTINGS.hideCollectedMounts = self:GetChecked()
+    end
+    
+    styleCheckbox(hideCollectedCheck)
+    leftYOffset = leftYOffset - 35
+    
+    -- Show Unobtainable Mounts Checkbox
+    local showUnobtainableCheck = CreateFrame("CheckButton", nil, leftColumn)
+    showUnobtainableCheck:SetSize(20, 20)
+    showUnobtainableCheck:SetPoint("TOPLEFT", leftColumn, "TOPLEFT", 5, leftYOffset)
+    showUnobtainableCheck:SetChecked(not MCL_SETTINGS.unobtainable)
+    
+    local showUnobtainableText = leftColumn:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    showUnobtainableText:SetPoint("LEFT", showUnobtainableCheck, "RIGHT", 8, 0)
+    showUnobtainableText:SetText(L["Show Unobtainable Mounts"] or "Show Unobtainable Mounts")
+    
+    showUnobtainableCheck.originalOnClick = function(self)
+        MCL_SETTINGS.unobtainable = not self:GetChecked()
+    end
+    
+    styleCheckbox(showUnobtainableCheck)
+    leftYOffset = leftYOffset - 35
+    
+    -- Enable Mount Card Hover Checkbox
+    local enableMountCardCheck = CreateFrame("CheckButton", nil, leftColumn)
+    enableMountCardCheck:SetSize(20, 20)
+    enableMountCardCheck:SetPoint("TOPLEFT", leftColumn, "TOPLEFT", 5, leftYOffset)
+    enableMountCardCheck:SetChecked(not (MCL_SETTINGS.enableMountCardHover == false))
+    
+    local enableMountCardText = leftColumn:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    enableMountCardText:SetPoint("LEFT", enableMountCardCheck, "RIGHT", 8, 0)
+    enableMountCardText:SetText(L["Enable Mount Card on Hover"] or "Enable Mount Card on Hover")
+    
+    enableMountCardCheck.originalOnClick = function(self)
+        MCL_SETTINGS.enableMountCardHover = self:GetChecked()
+    end
+    
+    styleCheckbox(enableMountCardCheck)
+    leftYOffset = leftYOffset - sectionSpacing
+    
+    -- Layout Options Section (Left Column)
+    local layoutTitle = leftColumn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    layoutTitle:SetPoint("TOPLEFT", leftColumn, "TOPLEFT", 0, leftYOffset)
+    layoutTitle:SetText(L["Layout Options"] or "Layout Options:")
+    layoutTitle:SetTextColor(0.2, 0.8, 1, 1)
+    layoutTitle:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
+    leftYOffset = leftYOffset - 30
+    
+    -- Mounts Per Row Slider
+    local mountsPerRowLabel = leftColumn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    mountsPerRowLabel:SetPoint("TOPLEFT", leftColumn, "TOPLEFT", 5, leftYOffset)
+    mountsPerRowLabel:SetText((L["Mounts Per Row"] or "Mounts Per Row") .. ": " .. (MCL_SETTINGS.mountsPerRow or 12))
+    mountsPerRowLabel:SetTextColor(0.9, 0.9, 0.9, 1)
+    leftYOffset = leftYOffset - 25
+    
+    local mountsPerRowSlider = CreateFrame("Slider", nil, leftColumn)
+    mountsPerRowSlider:SetPoint("TOPLEFT", leftColumn, "TOPLEFT", 5, leftYOffset)
+    mountsPerRowSlider:SetOrientation("HORIZONTAL")
+    mountsPerRowSlider:SetMinMaxValues(6, 24)
+    mountsPerRowSlider:SetValue(MCL_SETTINGS.mountsPerRow or 12)
+    mountsPerRowSlider:SetValueStep(1)
+    mountsPerRowSlider:SetObeyStepOnDrag(true)
+    mountsPerRowSlider:SetWidth(200)
+    mountsPerRowSlider:SetHeight(20)
+    
+    -- Add min/max labels for the slider
+    local minLabel = leftColumn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    minLabel:SetPoint("LEFT", mountsPerRowSlider, "LEFT", 0, -20)
+    minLabel:SetText("6")
+    minLabel:SetTextColor(0.7, 0.7, 0.7, 1)
+    
+    local maxLabel = leftColumn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    maxLabel:SetPoint("RIGHT", mountsPerRowSlider, "RIGHT", 0, -20)
+    maxLabel:SetText("24")
+    maxLabel:SetTextColor(0.7, 0.7, 0.7, 1)
+    
+    mountsPerRowSlider.originalOnValueChanged = function(self, value)
+        MCL_SETTINGS.mountsPerRow = math.floor(value)
+        mountsPerRowLabel:SetText((L["Mounts Per Row"] or "Mounts Per Row") .. ": " .. MCL_SETTINGS.mountsPerRow)
+        
+        -- Show reload warning
+        if not self.reloadWarning then
+            self.reloadWarning = leftColumn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            self.reloadWarning:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -45)
+            self.reloadWarning:SetText("|cFFFF6B6BReload UI required (/reload)|r")
+        end
+        self.reloadWarning:Show()
+    end
+    
+    styleSlider(mountsPerRowSlider, true)  -- Enable input box for mounts per row
+    
+    -- RIGHT COLUMN: Progress Bar Options Section
+    local progressTitle = rightColumn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    progressTitle:SetPoint("TOPLEFT", rightColumn, "TOPLEFT", 0, rightYOffset)
+    progressTitle:SetText(L["Progress Bar Options"] or "Progress Bar Options:")
+    progressTitle:SetTextColor(0.2, 0.8, 1, 1)
+    progressTitle:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
+    rightYOffset = rightYOffset - 30
+    
+    -- Initialize LibSharedMedia if not already done
+    if not MCLcore.media then
+        local success, media = pcall(LibStub, "LibSharedMedia-3.0")
+        if success and media then
+            MCLcore.media = media
+        end
+    end
+    
+    -- Enhanced Texture Selector with Full-Width Previews
+    if MCLcore.media then
+        local textureLabel = rightColumn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        textureLabel:SetPoint("TOPLEFT", rightColumn, "TOPLEFT", 5, rightYOffset)
+        textureLabel:SetText(L["Progress Bar Texture"] or "Progress Bar Texture:")
+        textureLabel:SetTextColor(0.9, 0.9, 0.9, 1)
+        rightYOffset = rightYOffset - 25
+        
+        -- Create custom dropdown container
+        local dropdownContainer = CreateFrame("Frame", nil, rightColumn, "BackdropTemplate")
+        local containerWidth = rightColumn:GetWidth() - 10
+        dropdownContainer:SetSize(containerWidth, 35)
+        dropdownContainer:SetPoint("TOPLEFT", rightColumn, "TOPLEFT", 5, rightYOffset)
+        dropdownContainer:SetBackdrop({
+            bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+            tile = true, tileSize = 16, edgeSize = 16,
+            insets = { left = 4, right = 4, top = 4, bottom = 4 }
+        })
+        dropdownContainer:SetBackdropColor(0.1, 0.1, 0.1, 0.9)
+        dropdownContainer:SetBackdropBorderColor(0.4, 0.6, 0.8, 1)
+        
+        -- Selected texture preview (full width)
+        local selectedPreview = dropdownContainer:CreateTexture(nil, "ARTWORK")
+        selectedPreview:SetSize(containerWidth - 30, 12)
+        selectedPreview:SetPoint("LEFT", dropdownContainer, "LEFT", 8, 0)
+        
+        -- Selected texture name overlay
+        local selectedText = dropdownContainer:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        selectedText:SetPoint("CENTER", selectedPreview, "CENTER", 0, 0)
+        selectedText:SetTextColor(1, 1, 1, 1)
+        selectedText:SetJustifyH("CENTER")
+        
+        -- Text shadow for better readability
+        local selectedTextShadow = dropdownContainer:CreateFontString(nil, "BACKGROUND", "GameFontHighlight")
+        selectedTextShadow:SetPoint("CENTER", selectedPreview, "CENTER", 1, -1)
+        selectedTextShadow:SetTextColor(0, 0, 0, 0.8)
+        selectedTextShadow:SetJustifyH("CENTER")
+        
+        -- Dropdown arrow
+        local dropdownArrow = dropdownContainer:CreateTexture(nil, "OVERLAY")
+        dropdownArrow:SetTexture("Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Up")
+        dropdownArrow:SetSize(16, 16)
+        dropdownArrow:SetPoint("RIGHT", dropdownContainer, "RIGHT", -8, 0)
+        
+        -- Dropdown list frame (initially hidden)
+        local dropdownList = CreateFrame("Frame", nil, rightColumn, "BackdropTemplate")
+        dropdownList:SetSize(containerWidth, 250)  -- Increased height
+        dropdownList:SetPoint("TOPLEFT", dropdownContainer, "BOTTOMLEFT", 0, -2)
+        dropdownList:SetBackdrop({
+            bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+            tile = true, tileSize = 16, edgeSize = 16,
+            insets = { left = 4, right = 4, top = 4, bottom = 4 }
+        })
+        dropdownList:SetBackdropColor(0.05, 0.05, 0.05, 0.95)
+        dropdownList:SetBackdropBorderColor(0.4, 0.6, 0.8, 1)
+        dropdownList:SetFrameStrata("DIALOG")
+        dropdownList:Hide()
+        
+        -- Scroll frame for the texture list
+        local scrollFrame = CreateFrame("ScrollFrame", nil, dropdownList)
+        scrollFrame:SetSize(containerWidth - 20, 230)
+        scrollFrame:SetPoint("TOPLEFT", dropdownList, "TOPLEFT", 10, -10)
+        
+        local scrollChild = CreateFrame("Frame", nil, scrollFrame)
+        scrollFrame:SetScrollChild(scrollChild)
+        
+        -- Get textures and create preview buttons
+        local textures = MCLcore.media:List("statusbar") or {}
+        table.sort(textures)
+        
+        local textureButtons = {}
+        local buttonHeight = 30  -- Increased height for better preview
+        local totalHeight = #textures * buttonHeight + 10
+        scrollChild:SetSize(containerWidth - 40, math.max(totalHeight, 230))
+        
+        -- Enable mouse wheel scrolling
+        scrollFrame:EnableMouseWheel(true)
+        scrollFrame:SetScript("OnMouseWheel", function(self, delta)
+            local current = self:GetVerticalScroll()
+            local maxScroll = math.max(0, scrollChild:GetHeight() - self:GetHeight())
+            local newScroll = math.max(0, math.min(maxScroll, current - (delta * 30)))
+            self:SetVerticalScroll(newScroll)
+        end)
+        
+        -- Create scroll bar
+        local scrollBar = CreateFrame("Slider", nil, scrollFrame, "UIPanelScrollBarTemplate")
+        scrollBar:SetPoint("TOPLEFT", scrollFrame, "TOPRIGHT", 4, -16)
+        scrollBar:SetPoint("BOTTOMLEFT", scrollFrame, "BOTTOMRIGHT", 4, 16)
+        scrollBar:SetWidth(16)
+        
+        -- Function to update scrollbar after content is created
+        local function updateScrollBar()
+            local maxScroll = math.max(0, scrollChild:GetHeight() - scrollFrame:GetHeight())
+            if maxScroll > 0 then
+                scrollBar:Show()
+                scrollBar:SetMinMaxValues(0, maxScroll)
+                scrollBar:SetValueStep(buttonHeight)
+            else
+                scrollBar:Hide()
+            end
+        end
+        
+        -- Scrollbar functionality
+        scrollBar:SetScript("OnValueChanged", function(self, value)
+            if scrollFrame:GetVerticalScroll() ~= value then
+                scrollFrame:SetVerticalScroll(value)
+            end
+        end)
+        
+        -- Update scrollbar when content scrolls
+        scrollFrame:SetScript("OnVerticalScroll", function(self, offset)
+            scrollBar:SetValue(offset)
+        end)
+        
+        for i, textureName in ipairs(textures) do
+            local button = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
+            button:SetSize(containerWidth - 30, buttonHeight - 2)
+            button:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 5, -(i-1) * buttonHeight - 5)
+            
+            -- Button background
+            button:SetBackdrop({
+                bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+                tile = true, tileSize = 16,
+            })
+            button:SetBackdropColor(0.1, 0.1, 0.1, 0.3)
+            
+            -- Full-width texture preview
+            local preview = button:CreateTexture(nil, "ARTWORK")
+            preview:SetSize(containerWidth - 40, 18)  -- Full width minus padding
+            preview:SetPoint("CENTER", button, "CENTER", 0, 0)
+            
+            -- Set the texture safely
+            local textureFile = MCLcore.media:Fetch("statusbar", textureName)
+            if textureFile then
+                preview:SetTexture(textureFile)
+            end
+            
+            -- Texture name overlay on the preview
+            local nameText = button:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+            nameText:SetPoint("CENTER", preview, "CENTER", 0, 0)
+            nameText:SetText(textureName)
+            nameText:SetTextColor(1, 1, 1, 1)
+            nameText:SetJustifyH("CENTER")
+            
+            -- Text shadow for better readability
+            local nameShadow = button:CreateFontString(nil, "BACKGROUND", "GameFontHighlight")
+            nameShadow:SetPoint("CENTER", preview, "CENTER", 1, -1)
+            nameShadow:SetText(textureName)
+            nameShadow:SetTextColor(0, 0, 0, 0.8)
+            nameShadow:SetJustifyH("CENTER")
+            
+            -- Button scripts
+            button:SetScript("OnEnter", function(self)
+                self:SetBackdropColor(0.2, 0.4, 0.6, 0.5)
+                nameText:SetTextColor(1, 1, 1, 1)
+            end)
+            
+            button:SetScript("OnLeave", function(self)
+                if MCL_SETTINGS.statusBarTexture == textureName then
+                    self:SetBackdropColor(0.2, 0.6, 1, 0.4)
+                    nameText:SetTextColor(1, 1, 1, 1)
+                else
+                    self:SetBackdropColor(0.1, 0.1, 0.1, 0.3)
+                    nameText:SetTextColor(1, 1, 1, 1)
+                end
+            end)
+            
+            button:SetScript("OnClick", function(self)
+                MCL_SETTINGS.statusBarTexture = textureName
+                selectedText:SetText(textureName)
+                selectedTextShadow:SetText(textureName)
+                if textureFile then
+                    selectedPreview:SetTexture(textureFile)
+                end
+                dropdownList:Hide()
+                
+                -- Update all button states
+                for _, btn in ipairs(textureButtons) do
+                    if btn.textureName == textureName then
+                        btn:SetBackdropColor(0.2, 0.6, 1, 0.4)
+                    else
+                        btn:SetBackdropColor(0.1, 0.1, 0.1, 0.3)
+                    end
+                end
+            end)
+            
+            button.textureName = textureName
+            button.nameText = nameText
+            table.insert(textureButtons, button)
+            
+            -- Set initial selection state
+            if MCL_SETTINGS.statusBarTexture == textureName then
+                button:SetBackdropColor(0.2, 0.6, 1, 0.4)
+            end
+        end
+        
+        -- Update scrollbar after content is created
+        updateScrollBar()
+        
+        -- Set current selection
+        local currentTexture = MCL_SETTINGS.statusBarTexture or "Blizzard"
+        selectedText:SetText(currentTexture)
+        selectedTextShadow:SetText(currentTexture)
+        local currentTextureFile = MCLcore.media:Fetch("statusbar", currentTexture)
+        if currentTextureFile then
+            selectedPreview:SetTexture(currentTextureFile)
+        end
+        
+        -- Dropdown toggle functionality
+        dropdownContainer:SetScript("OnMouseDown", function(self)
+            if dropdownList:IsShown() then
+                dropdownList:Hide()
+            else
+                dropdownList:Show()
+            end
+        end)
+        
+        -- Close dropdown when clicking outside
+        local function closeDropdown()
+            dropdownList:Hide()
+        end
+        
+        frame:SetScript("OnMouseDown", closeDropdown)
+        
+        rightYOffset = rightYOffset - 60
+    else
+        -- Fallback when LibSharedMedia is not available
+        local textureNote = rightColumn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        textureNote:SetPoint("TOPLEFT", rightColumn, "TOPLEFT", 5, rightYOffset)
+        textureNote:SetText(L["Progress Bar Texture: Default (LibSharedMedia not available)"] or "Progress Bar Texture: Default (LibSharedMedia not available)")
+        textureNote:SetTextColor(0.8, 0.4, 0.4, 1)
+        rightYOffset = rightYOffset - 40
+    end
+    
+    -- Window Opacity Section (Right Column)
+    local opacityTitle = rightColumn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    opacityTitle:SetPoint("TOPLEFT", rightColumn, "TOPLEFT", 0, rightYOffset)
+    opacityTitle:SetText(L["Window Opacity"] or "Window Opacity:")
+    opacityTitle:SetTextColor(0.2, 0.8, 1, 1)
+    opacityTitle:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
+    rightYOffset = rightYOffset - 30
+    
+    -- Opacity Slider
+    local opacityValue = MCL_SETTINGS.opacity or 0.85
+    local opacityLabel = rightColumn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    opacityLabel:SetPoint("TOPLEFT", rightColumn, "TOPLEFT", 5, rightYOffset)
+    opacityLabel:SetText((L["Opacity"] or "Opacity") .. ": " .. math.floor(opacityValue * 100) .. "%")
+    opacityLabel:SetTextColor(0.9, 0.9, 0.9, 1)
+    rightYOffset = rightYOffset - 25
+    
+    local opacitySlider = CreateFrame("Slider", nil, rightColumn)
+    opacitySlider:SetPoint("TOPLEFT", rightColumn, "TOPLEFT", 5, rightYOffset)
+    opacitySlider:SetOrientation("HORIZONTAL")
+    opacitySlider:SetMinMaxValues(0.1, 1.0)
+    opacitySlider:SetValue(opacityValue)
+    opacitySlider:SetValueStep(0.05)
+    opacitySlider:SetObeyStepOnDrag(true)
+    opacitySlider:SetWidth(200)
+    opacitySlider:SetHeight(20)
+    
+    -- Add min/max labels for the opacity slider
+    local opacityMinLabel = rightColumn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    opacityMinLabel:SetPoint("LEFT", opacitySlider, "LEFT", 0, -20)
+    opacityMinLabel:SetText("10%")
+    opacityMinLabel:SetTextColor(0.7, 0.7, 0.7, 1)
+    
+    local opacityMaxLabel = rightColumn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    opacityMaxLabel:SetPoint("RIGHT", opacitySlider, "RIGHT", 0, -20)
+    opacityMaxLabel:SetText("100%")
+    opacityMaxLabel:SetTextColor(0.7, 0.7, 0.7, 1)
+    
+    opacitySlider.originalOnValueChanged = function(self, value)
+        MCL_SETTINGS.opacity = value
+        opacityLabel:SetText((L["Opacity"] or "Opacity") .. ": " .. math.floor(value * 100) .. "%")
+        
+        -- Apply opacity change immediately to main frame background
+        if MCL_mainFrame and MCL_mainFrame.Bg then
+            MCL_mainFrame.Bg:SetVertexColor(0, 0, 0, value)
+        end
+    end
+    
+    styleSlider(opacitySlider, true, true)  -- Enable input box for opacity with percentage
+    rightYOffset = rightYOffset - 60
+    
+    -- Custom Reset Button (Right Column)
+    local resetButton = CreateFrame("Button", nil, rightColumn, "BackdropTemplate")
+    resetButton:SetSize(140, 35)
+    resetButton:SetPoint("TOPLEFT", rightColumn, "TOPLEFT", 5, rightYOffset)
+    
+    -- Button backdrop
+    resetButton:SetBackdrop({
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true, tileSize = 16, edgeSize = 16,
+        insets = { left = 4, right = 4, top = 4, bottom = 4 }
+    })
+    resetButton:SetBackdropColor(0.6, 0.1, 0.1, 0.8)
+    resetButton:SetBackdropBorderColor(0.8, 0.2, 0.2, 1)
+    
+    -- Button text
+    local resetText = resetButton:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    resetText:SetPoint("CENTER", resetButton, "CENTER")
+    resetText:SetText(L["Reset Settings"] or "Reset Settings")
+    resetText:SetTextColor(1, 1, 1, 1)
+    
+    -- Button hover effects
+    resetButton:SetScript("OnEnter", function(self)
+        self:SetBackdropColor(0.8, 0.2, 0.2, 0.9)
+        self:SetBackdropBorderColor(1, 0.4, 0.4, 1)
+        resetText:SetTextColor(1, 1, 1, 1)
+    end)
+    
+    resetButton:SetScript("OnLeave", function(self)
+        self:SetBackdropColor(0.6, 0.1, 0.1, 0.8)
+        self:SetBackdropBorderColor(0.8, 0.2, 0.2, 1)
+        resetText:SetTextColor(1, 1, 1, 1)
+    end)
+    
+    resetButton:SetScript("OnMouseDown", function(self)
+        self:SetBackdropColor(0.4, 0.1, 0.1, 0.9)
+    end)
+    
+    resetButton:SetScript("OnMouseUp", function(self)
+        self:SetBackdropColor(0.8, 0.2, 0.2, 0.9)
+    end)
+    
+    resetButton:SetScript("OnClick", function()
+        StaticPopup_Show("MCL_RESET_SETTINGS")
+    end)
+    
+    -- Create reset confirmation popup
+    StaticPopupDialogs["MCL_RESET_SETTINGS"] = {
+        text = L["Are you sure you want to reset all MCL settings?"] or "Are you sure you want to reset all MCL settings?",
+        button1 = L["Yes"] or "Yes",
+        button2 = L["No"] or "No",
+        OnAccept = function()
+            -- Reset to defaults
+            MCL_SETTINGS.useBlizzardTheme = false
+            MCL_SETTINGS.hideCollectedMounts = false
+            MCL_SETTINGS.unobtainable = false
+            MCL_SETTINGS.mountsPerRow = 12
+            MCL_SETTINGS.statusBarTexture = "Blizzard"
+            MCL_SETTINGS.opacity = 0.85
+            MCL_SETTINGS.enableMountCardHover = true
+            ReloadUI()
+        end,
+        timeout = 0,
+        whileDead = true,
+        hideOnEscape = true,
+        preferredIndex = 3,
+    }
+    
+    -- Create reload warning popup
+    StaticPopupDialogs["MCL_RELOAD_WARNING"] = {
+        text = L["This setting requires a UI reload to take effect. Reload now?"] or "This setting requires a UI reload to take effect. Reload now?",
+        button1 = L["Reload Now"] or "Reload Now",
+        button2 = L["Later"] or "Later",
+        OnAccept = function()
+            ReloadUI()
+        end,
+        timeout = 0,
+        whileDead = true,
+        hideOnEscape = true,
+        preferredIndex = 3,
+    }
+    
     return frame
 end
 

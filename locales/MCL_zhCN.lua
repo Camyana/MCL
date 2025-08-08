@@ -220,5 +220,28 @@ if L then
     L["Enable Mount Card on Hover"] = "鼠标悬停时启用坐骑卡片"
     L["If enabled, the mount card will automatically appear when hovering over mounts."] = "启用后，鼠标悬停在坐骑上时会自动显示坐骑卡片。"
     L["Pin Instructions Text"] = "|cffFF8800|TInterface\\GossipFrame\\AvailableQuestIcon:0:0:0:0:32:32:0:32:0:32|t Ctrl + 右键|r 收藏/取消收藏坐骑"
+    
+    -- Settings Interface Strings (English placeholders for translation)
+    L["Settings"] = "Settings"
+    L["Theme"] = "Theme"
+    L["Display Options"] = "Display Options"
+    L["General Options"] = "General Options"
+    L["Use Blizzard Theme"] = "Use Blizzard Theme"
+    L["Hide Collected Mounts"] = "Hide Collected Mounts"
+    L["Show Unobtainable Mounts"] = "Show Unobtainable Mounts"
+    L["Layout Options"] = "Layout Options"
+    L["Mounts Per Row"] = "Mounts Per Row"
+    L["Progress Bar Options"] = "Progress Bar Options"
+    L["Progress Bar Texture"] = "Progress Bar Texture"
+    L["Progress Bar Texture: Default (LibSharedMedia not available)"] = "Progress Bar Texture: Default (LibSharedMedia not available)"
+    L["Window Opacity"] = "Window Opacity"
+    L["Opacity"] = "Opacity"
+    L["Reset Settings"] = "Reset Settings"
+    L["Are you sure you want to reset all MCL settings?"] = "Are you sure you want to reset all MCL settings?"
+    L["Yes"] = "Yes"
+    L["No"] = "No"
+    L["This setting requires a UI reload to take effect. Reload now?"] = "This setting requires a UI reload to take effect. Reload now?"
+    L["Reload Now"] = "Reload Now"
+    L["Later"] = "Later"
 end
 
