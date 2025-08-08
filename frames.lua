@@ -17,6 +17,219 @@ local r,g,b,a
 
 local L = MCLcore.L
 
+-- Performance Throttling Helper Function
+local function ThrottledFrameCreation(categoryData, callback)
+    if not categoryData or type(categoryData) ~= "table" then
+        return
+    end
+    
+    -- Convert categoryData to array if it's not already
+    local dataArray = {}
+    for k, v in pairs(categoryData) do
+        if type(v) == "table" then
+            table.insert(dataArray, {key = k, data = v})
+        end
+    end
+    
+    if #dataArray == 0 then
+        return
+    end
+    
+    local index = 1
+    local batchSize = 5  -- Process 5 categories at a time
+    local batchDelay = 0.02  -- 20ms delay between batches
+    
+    local function processNextBatch()
+        local processed = 0
+        while index <= #dataArray and processed < batchSize do
+            local success, error = pcall(callback, dataArray[index].key, dataArray[index].data)
+            if not success then
+                print("MCL Error processing category:", error)
+            end
+            index = index + 1
+            processed = processed + 1
+        end
+        
+        if index <= #dataArray then
+            C_Timer.After(batchDelay, processNextBatch)
+        end
+    end
+    
+    processNextBatch()
+end
+
+-- Throttled Mount Creation Helper
+local function ThrottledMountCreation(mountList, categoryFrame, config, callback)
+    if not mountList or #mountList == 0 then
+        if callback then callback() end
+        return
+    end
+    
+    -- Validate input data
+    if not categoryFrame or not config then
+        print("MCL Error: Invalid parameters passed to ThrottledMountCreation")
+        if callback then callback() end
+        return
+    end
+    
+    -- Validate config structure
+    local requiredConfigFields = {"maxDisplayMounts", "mountsPerRow", "mountSize", "actualSpacing", "rowSpacing", "mountStartX", "mountStartY"}
+    for _, field in ipairs(requiredConfigFields) do
+        if not config[field] then
+            print("MCL Error: Missing config field: " .. field)
+            if callback then callback() end
+            return
+        end
+    end
+    
+    local index = 1
+    local displayedIndex = 0
+    local batchSize = 20  -- Process 20 mounts at a time to prevent timeout
+    local batchDelay = 0.05  -- 50ms delay between batches
+    local processedCount = 0
+    local maxMounts = 2000  -- Safety limit to prevent runaway processing
+    
+    local function processNextBatch()
+        local processed = 0
+        local startIndex = index
+        
+        while index <= #mountList and processed < batchSize and processedCount < maxMounts do
+            local mountId = mountList[index]
+            local shouldProcess = true
+            
+            -- Validate mount data
+            if not mountId or (type(mountId) ~= "number" and type(mountId) ~= "string") then
+                print("MCL Warning: Invalid mount ID at index " .. index .. ": " .. tostring(mountId))
+                shouldProcess = false
+            end
+            
+            local mount_Id = nil
+            if shouldProcess then
+                mount_Id = MCLcore.Function and MCLcore.Function.GetMountID and MCLcore.Function:GetMountID(mountId)
+                
+                -- Skip invalid mount IDs
+                if not mount_Id or type(mount_Id) ~= "number" or mount_Id <= 0 then
+                    shouldProcess = false
+                end
+            end
+            
+            if shouldProcess then
+                -- Faction check: Only display mounts that are not faction-specific or match the player's faction
+                local allowed = false
+                if MCLcore.Function and MCLcore.Function.IsMountFactionSpecific then
+                    local faction, faction_specific = MCLcore.Function.IsMountFactionSpecific(mountId)
+                    local playerFaction = UnitFactionGroup("player")
+                    if faction_specific == false then
+                        allowed = true
+                    elseif faction_specific == true then
+                        if faction == 0 then faction = "Horde" elseif faction == 1 then faction = "Alliance" end
+                        allowed = (faction == playerFaction)
+                    end
+                else
+                    allowed = true  -- Allow if faction check function is not available
+                end
+                
+                if allowed and not (mount_Id and MCL_SETTINGS.hideCollectedMounts and IsMountCollected(mount_Id)) then
+                displayedIndex = displayedIndex + 1
+                if displayedIndex <= config.maxDisplayMounts then
+                    -- Create mount frame using the existing logic
+                    local success, error = pcall(function()
+                        local col = ((displayedIndex-1) % config.mountsPerRow)
+                        local row = math.floor((displayedIndex-1) / config.mountsPerRow)
+                        
+                        local iconX = config.mountStartX + col * (config.mountSize + config.actualSpacing)
+                        local iconY = config.mountStartY - row * (config.mountSize + config.rowSpacing)
+                        
+                        -- Create backdrop frame first
+                        local backdropSize = config.mountSize + 2
+                        local backdropFrame = CreateFrame("Frame", nil, categoryFrame, "BackdropTemplate")
+                        backdropFrame:SetSize(backdropSize, backdropSize)
+                        backdropFrame:SetPoint("TOPLEFT", categoryFrame, "TOPLEFT", iconX - 1, iconY + 1)
+                        backdropFrame.mountID = mountId
+                        
+                        -- Create mount frame
+                        local mountFrame = CreateFrame("Button", nil, backdropFrame)
+                        mountFrame:SetSize(config.mountSize, config.mountSize)
+                        mountFrame:SetPoint("CENTER", backdropFrame, "CENTER", 0, 0)
+                        mountFrame.mountID = mountId
+                        mountFrame.category = config.categoryName
+                        mountFrame.section = config.sectionName
+                        
+                        -- Set mount icon and styling
+                        if mount_Id and type(mount_Id) == "number" and mount_Id > 0 then
+                            local mountName, spellID, icon = C_MountJournal.GetMountInfoByID(mount_Id)
+                            if icon then
+                                mountFrame.tex = mountFrame:CreateTexture(nil, "ARTWORK")
+                                mountFrame.tex:SetAllPoints(mountFrame)
+                                mountFrame.tex:SetTexture(icon)
+                                
+                                mountFrame.pin = mountFrame:CreateTexture(nil, "OVERLAY")
+                                mountFrame.pin:SetWidth(16)
+                                mountFrame.pin:SetHeight(16)
+                                mountFrame.pin:SetTexture("Interface\\AddOns\\MCL\\icons\\pin.blp")
+                                mountFrame.pin:SetPoint("TOPRIGHT", mountFrame, "TOPRIGHT", 6, 6)
+                                
+                                local pin_check = MCLcore.Function and MCLcore.Function.CheckIfPinned and MCLcore.Function:CheckIfPinned("m"..mount_Id)
+                                mountFrame.pin:SetAlpha(pin_check and 1 or 0)
+                                
+                                if IsMountCollected(mount_Id) then
+                                    mountFrame.tex:SetVertexColor(1, 1, 1, 1)
+                                    backdropFrame:SetBackdrop({
+                                        bgFile = "Interface\\Buttons\\WHITE8x8",
+                                        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+                                        edgeSize = 3
+                                    })
+                                    backdropFrame:SetBackdropColor(0, 0.8, 0, 0.6)
+                                    backdropFrame:SetBackdropBorderColor(0, 1, 0, 1)
+                                else
+                                    mountFrame.tex:SetVertexColor(0.4, 0.4, 0.4, 0.7)
+                                    backdropFrame:SetBackdrop({
+                                        bgFile = "Interface\\Buttons\\WHITE8x8",
+                                        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+                                        edgeSize = 2
+                                    })
+                                    backdropFrame:SetBackdropColor(0.3, 0.1, 0.1, 0.4)
+                                    backdropFrame:SetBackdropBorderColor(0.6, 0.2, 0.2, 0.8)
+                                end
+                                
+                                if MCLcore.Function and MCLcore.Function.LinkMountItem then
+                                    MCLcore.Function:LinkMountItem(mountId, mountFrame, false, false)
+                                end
+                            end
+                        end
+                    end)
+                    
+                    if not success then
+                        print("MCL Error creating mount frame for ID " .. tostring(mountId) .. ": " .. tostring(error))
+                    end
+                end
+            end
+            end -- Close the shouldProcess if block
+            
+            index = index + 1
+            processed = processed + 1
+            processedCount = processedCount + 1
+        end
+        
+        -- Safety check for runaway processing
+        if processedCount >= maxMounts then
+            print("MCL Warning: Reached maximum mount processing limit (" .. maxMounts .. "), stopping to prevent performance issues")
+            if callback then callback() end
+            return
+        end
+        
+        -- Continue with next batch if there are more mounts to process
+        if index <= #mountList then
+            C_Timer.After(batchDelay, processNextBatch)
+        else
+            -- All mounts processed, call completion callback
+            if callback then callback() end
+        end
+    end
+    
+    processNextBatch()
+end
+
 -- Helper function to style navigation buttons for both themes
 local function StyleNavButton(button, isExpansionIcon)
     if not button then return end
@@ -861,7 +1074,17 @@ end
 
 function MCL_frames:progressBar(relativeFrame, top)
     MyStatusBar = CreateFrame("StatusBar", nil, relativeFrame, "BackdropTemplate")
-    MyStatusBar:SetStatusBarTexture(MCLcore.media:Fetch("statusbar", MCL_SETTINGS.statusBarTexture))
+    
+    -- Safe texture handling with fallback
+    local textureToUse = "Interface\\TargetingFrame\\UI-StatusBar"  -- Good default that colors well
+    if MCLcore.media and MCL_SETTINGS and MCL_SETTINGS.statusBarTexture then
+        local settingsTexture = MCLcore.media:Fetch("statusbar", MCL_SETTINGS.statusBarTexture)
+        if settingsTexture then
+            textureToUse = settingsTexture
+        end
+    end
+    
+    MyStatusBar:SetStatusBarTexture(textureToUse)
     MyStatusBar:GetStatusBarTexture():SetHorizTile(false)
     MyStatusBar:SetMinMaxValues(0, 100)
     MyStatusBar:SetValue(0)
@@ -1204,6 +1427,18 @@ function MCL_frames:createCategoryFrame(set, relativeFrame, sectionName)
         return
     end
 
+    -- Add loop protection and debugging
+    local debugCounter = 0
+    local maxIterations = 10000  -- Reasonable limit for mount processing
+    local maxCategories = 50     -- Reasonable limit for categories per section
+    
+    local function safeLoopCheck(operation)
+        debugCounter = debugCounter + 1
+        if debugCounter > maxIterations then
+            error("MCL: Infinite loop detected in createCategoryFrame during " .. (operation or "unknown operation"))
+        end
+    end
+
     -- Dynamic layout calculation based on current frame width
     local currentWidth, _ = MCL_frames:GetCurrentFrameDimensions()
     local availableWidth = currentWidth - 60  -- Total content width
@@ -1218,13 +1453,25 @@ function MCL_frames:createCategoryFrame(set, relativeFrame, sectionName)
     local rightColumnY = -50
     local categoryIndex = 0
 
-    -- Get sorted category names
+    -- Get sorted category names with loop protection
 local sortedCategoryNames = {}
 for k, v in pairs(set) do
+    safeLoopCheck("building category list")
     if type(v) == "table" then
         table.insert(sortedCategoryNames, k)
     end
 end
+
+-- Validate category count
+if #sortedCategoryNames > maxCategories then
+    print("MCL Warning: Too many categories (" .. #sortedCategoryNames .. "), limiting to " .. maxCategories)
+    local truncatedList = {}
+    for i = 1, maxCategories do
+        table.insert(truncatedList, sortedCategoryNames[i])
+    end
+    sortedCategoryNames = truncatedList
+end
+
 table.sort(sortedCategoryNames)
 
 local leftColumnY = -50
@@ -1232,6 +1479,7 @@ local rightColumnY = -50
 local categoryIndex = 0
 
 for _, categoryName in ipairs(sortedCategoryNames) do
+    safeLoopCheck("processing category: " .. tostring(categoryName))
     local categoryData = set[categoryName]
     -- Calculate mount stats for this category first (needed for dynamic height)
     local totalMounts = 0
@@ -1252,6 +1500,7 @@ for _, categoryName in ipairs(sortedCategoryNames) do
     end
     
     for _, mountId in ipairs(mountList) do
+        safeLoopCheck("counting mounts in category: " .. tostring(categoryName))
         local mount_Id = MCLcore.Function:GetMountID(mountId)
         if mount_Id then
             -- Faction check: Only count mounts that are not faction-specific or match the player's faction
@@ -1333,14 +1582,6 @@ for _, categoryName in ipairs(sortedCategoryNames) do
 
         categoryFrame:SetWidth(columnWidth)
         categoryFrame:SetHeight(categoryHeight)  -- Dynamic height
-        categoryFrame:SetPoint("TOPLEFT", relativeFrame, "TOPLEFT", xPos, yPos)
-        categoryFrame:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-            edgeSize = 8
-        })
-        categoryFrame:SetBackdropColor(0.05, 0.05, 0.05, 0.9)
-        categoryFrame:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
         categoryFrame:SetPoint("TOPLEFT", relativeFrame, "TOPLEFT", xPos, yPos)
         categoryFrame:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8x8",
@@ -1450,128 +1691,29 @@ for _, categoryName in ipairs(sortedCategoryNames) do
         
         local maxDisplayMounts = displayedMounts  -- Show all displayed mounts instead of limiting to 24
         local mountStartX = 10
-        local displayedIndex = 0  -- Track the actual displayed position
         
-        for i, mountId in ipairs(mountList) do
-            -- Check if we should skip this mount due to hide collected mounts setting
-            local mount_Id = MCLcore.Function:GetMountID(mountId)
-            -- Faction check: Only display mounts that are not faction-specific or match the player's faction
-            local faction, faction_specific = MCLcore.Function.IsMountFactionSpecific(mountId)
-            local playerFaction = UnitFactionGroup("player")
-            local allowed = false
-            if faction_specific == false then
-                allowed = true
-            elseif faction_specific == true then
-                if faction == 0 then faction = "Horde" elseif faction == 1 then faction = "Alliance" end
-                allowed = (faction == playerFaction)
-            end
-            if allowed and not (mount_Id and MCL_SETTINGS.hideCollectedMounts and IsMountCollected(mount_Id)) then
-                displayedIndex = displayedIndex + 1
-                if displayedIndex <= maxDisplayMounts then
-                local col = ((displayedIndex-1) % mountsPerRow)
-                local row = math.floor((displayedIndex-1) / mountsPerRow)
-                
-                -- Calculate exact position for this icon
-                local iconX = mountStartX + col * (mountSize + actualSpacing)
-                local iconY = mountStartY - row * (mountSize + rowSpacing)  -- Use rowSpacing for Y
-                
-                -- Create backdrop frame first (smaller than spacing to create visual gaps)
-                local backdropSize = mountSize + 2  -- Only 1px overhang on each side for visual separation
-                local backdropFrame = CreateFrame("Frame", nil, categoryFrame, "BackdropTemplate")
-                backdropFrame:SetSize(backdropSize, backdropSize)
-                backdropFrame:SetPoint("TOPLEFT", categoryFrame, "TOPLEFT", 
-                    iconX - 1, -- Minimal offset for overhang
-                    iconY + 1) -- Minimal offset for overhang
-                
-                -- Store the mount ID for search functionality
-                backdropFrame.mountID = mountId
-                
-                -- Create mount frame (for icon) centered in backdrop
-                local mountFrame = CreateFrame("Button", nil, backdropFrame)
-                mountFrame:SetSize(mountSize, mountSize)
-                mountFrame:SetPoint("CENTER", backdropFrame, "CENTER", 0, 0)                            -- Store the mount ID for search functionality
-                            mountFrame.mountID = mountId
-                            
-                            -- Set category and section for pinning functionality
-                            mountFrame.category = categoryData.name or categoryName
-                            mountFrame.section = sectionName or "Unknown"
-                            
-                            -- Get mount info and set icon
-                            if mount_Id and type(mount_Id) == "number" and mount_Id > 0 then
-                                local mountName, spellID, icon = C_MountJournal.GetMountInfoByID(mount_Id)
-                                if icon then
-                            -- Create the icon texture
-                            mountFrame.tex = mountFrame:CreateTexture(nil, "ARTWORK")
-                            mountFrame.tex:SetAllPoints(mountFrame)
-                            mountFrame.tex:SetTexture(icon)
-                            
-                            -- Create pin icon for this mount frame
-                            mountFrame.pin = mountFrame:CreateTexture(nil, "OVERLAY")
-                            mountFrame.pin:SetWidth(16)
-                            mountFrame.pin:SetHeight(16)
-                            mountFrame.pin:SetTexture("Interface\\AddOns\\MCL\\icons\\pin.blp")
-                            mountFrame.pin:SetPoint("TOPRIGHT", mountFrame, "TOPRIGHT", 6, 6)
-                            
-                            -- Check if this mount is pinned and set pin visibility
-                            local pin_check = MCLcore.Function:CheckIfPinned("m"..mount_Id)
-                            if pin_check == true then
-                                mountFrame.pin:SetAlpha(1)
-                            else
-                                mountFrame.pin:SetAlpha(0)
-                            end
-                            
-                            -- Check if mount is collected and style backdrop accordingly
-                            if IsMountCollected(mount_Id) then
-                                -- Collected mount styling - green background with thick border
-                                mountFrame.tex:SetVertexColor(1, 1, 1, 1)
-                                backdropFrame:SetBackdrop({
-                                    bgFile = "Interface\\Buttons\\WHITE8x8",
-                                    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-                                    edgeSize = 3  -- Thicker border
-                                })
-                                backdropFrame:SetBackdropColor(0, 0.8, 0, 0.6)  -- Brighter green background
-                                backdropFrame:SetBackdropBorderColor(0, 1, 0, 1)  -- Bright green border
-                            else
-                                -- Uncollected mount styling - red/dark background
-                                mountFrame.tex:SetVertexColor(0.4, 0.4, 0.4, 0.7)
-                                backdropFrame:SetBackdrop({
-                                    bgFile = "Interface\\Buttons\\WHITE8x8",
-                                    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-                                    edgeSize = 2  -- Slightly thinner border for uncollected
-                                })
-                                backdropFrame:SetBackdropColor(0.3, 0.1, 0.1, 0.4)  -- Reddish background
-                                backdropFrame:SetBackdropBorderColor(0.6, 0.2, 0.2, 0.8)  -- Red border
-                            end
-                            
-                            -- Add mount interaction to the mount frame
-                            if MCLcore.Function and MCLcore.Function.LinkMountItem then
-                                MCLcore.Function:LinkMountItem(mountId, mountFrame, false, false)
-                            end
-                        end
-                    end
-                end  -- Close the if block for displayedIndex <= maxDisplayMounts
+        -- Use throttled mount creation to prevent "script ran too long" errors
+        local mountConfig = {
+            maxDisplayMounts = maxDisplayMounts,
+            mountsPerRow = mountsPerRow,
+            mountSize = mountSize,
+            actualSpacing = actualSpacing,
+            rowSpacing = rowSpacing,
+            mountStartX = mountStartX,
+            mountStartY = mountStartY,
+            categoryName = categoryData.name or categoryName,
+            sectionName = sectionName or "Unknown"
+        }
+        
+        ThrottledMountCreation(mountList, categoryFrame, mountConfig, function()
+            -- This callback runs when all mounts are created
+            -- Update column positions for next category
+            if isLeftColumn then
+                leftColumnY = leftColumnY - (categoryHeight + 8)  -- Reduced spacing between categories
             else
-                -- Debug logging for skipped mounts
-                if MCLcore.Debug then
-                    local isCollected = mount_Id and IsMountCollected(mount_Id)
-                    local reason = ""
-                    if not allowed then
-                        reason = "Faction restriction"
-                    elseif mount_Id and MCL_SETTINGS.hideCollectedMounts and isCollected then
-                        reason = "Hidden collected mount"
-                    else
-                        reason = "Unknown reason"
-                    end
-                end
+                rightColumnY = rightColumnY - (categoryHeight + 8)  -- Reduced spacing between categories
             end
-        end  -- Close the for loop
-        
-        -- Update column positions for next category
-        if isLeftColumn then
-            leftColumnY = leftColumnY - (categoryHeight + 8)  -- Reduced spacing between categories
-        else
-            rightColumnY = rightColumnY - (categoryHeight + 8)  -- Reduced spacing between categories
-        end
+        end)
         
     end
 end

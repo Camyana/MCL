@@ -159,12 +159,67 @@ function MCL_Load:Init(force, showOnComplete)
                 if not MCLcore.Frames then
                     return false
                 end
+                
+                -- Ensure Frames module is properly loaded before creating main frame
+                if not MCLcore.Frames or not MCLcore.Frames.CreateMainFrame then
+                    print("MCL Error: Frames module not properly loaded")
+                    return false
+                end
+                
                 MCLcore.MCL_MF = MCLcore.Frames:CreateMainFrame()
                 MCLcore.MCL_MF:SetShown(false)
                 
                 -- Ensure Function module is available before calling methods
                 if MCLcore.Function and MCLcore.Function.initSections then
-                    MCLcore.Function:initSections()
+                    -- Data validation before initialization
+                    local validationPassed = true
+                    
+                    -- Validate saved variables
+                    if not MCL_DB or type(MCL_DB) ~= "table" then
+                        print("MCL: Corrupted database detected, resetting...")
+                        MCL_DB = {}
+                        validationPassed = false
+                    end
+                    
+                    if not MOUNTLIST or type(MOUNTLIST) ~= "table" then
+                        print("MCL: Corrupted mount list detected, resetting...")
+                        MOUNTLIST = {}
+                        validationPassed = false
+                    end
+                    
+                    if not MCL_PINNED or type(MCL_PINNED) ~= "table" then
+                        print("MCL: Corrupted pinned list detected, resetting...")
+                        MCL_PINNED = {}
+                        validationPassed = false
+                    end
+                    
+                    if not MCL_SETTINGS or type(MCL_SETTINGS) ~= "table" then
+                        print("MCL: Corrupted settings detected, resetting...")
+                        MCL_SETTINGS = {}
+                        validationPassed = false
+                    end
+                    
+                    -- Wrap initialization in protected call
+                    local success, error = pcall(MCLcore.Function.initSections, MCLcore.Function)
+                    if not success then
+                        print("MCL Error during initialization: " .. tostring(error))
+                        print("MCL: Attempting recovery...")
+                        
+                        -- Try to recover by resetting data and trying again
+                        MCL_DB = {}
+                        MOUNTLIST = {}
+                        MCL_PINNED = {}
+                        
+                        local retrySuccess, retryError = pcall(MCLcore.Function.initSections, MCLcore.Function)
+                        if not retrySuccess then
+                            print("MCL Error: Recovery failed - " .. tostring(retryError))
+                            return false
+                        else
+                            print("MCL: Recovery successful")
+                        end
+                    end
+                else
+                    print("MCL Error: Function module or initSections not available")
                 end
                 
                 -- Clean up any invalid pinned mounts during initialization
