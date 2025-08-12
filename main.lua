@@ -12,6 +12,70 @@ local init_load = true
 local load_check = 0
 local region = GetCVar('portal')
 
+-- New mount readiness tracking (Option A implementation)
+local mountInit = {
+    attempts = 0,
+    maxAttempts = 40,          -- up to ~40 seconds worst case
+    stableChecks = 0,
+    requiredStableChecks = 2,   -- need two identical consecutive snapshots
+    lastCount = 0,
+    lastIDsHash = nil,
+    initialized = false,
+}
+
+local function HashIDs(ids)
+    if not ids then return 0 end
+    table.sort(ids) -- safe; GetMountIDs returns a copy
+    local acc = 0
+    for i=1,#ids do
+        acc = (acc * 33 + ids[i]) % 2147483647
+    end
+    return acc
+end
+
+local function IsMountAPIPartiallyReady()
+    local ids = C_MountJournal.GetMountIDs()
+    if not ids or #ids == 0 then return false end
+    -- Sample one mount to see if we get full info (name + spellID)
+    local testId = ids[1]
+    local name, spellID = C_MountJournal.GetMountInfoByID(testId)
+    return (name ~= nil and spellID ~= nil)
+end
+
+local function PollMountJournalReadiness(callback)
+    if mountInit.initialized then return end
+    mountInit.attempts = mountInit.attempts + 1
+
+    local ready = IsMountAPIPartiallyReady()
+    local ids = C_MountJournal.GetMountIDs() or {}
+    local count = #ids
+    local hash = HashIDs({unpack(ids)})
+
+    if ready then
+        if count == mountInit.lastCount and hash == mountInit.lastIDsHash then
+            mountInit.stableChecks = mountInit.stableChecks + 1
+        else
+            mountInit.stableChecks = 0
+        end
+        mountInit.lastCount = count
+        mountInit.lastIDsHash = hash
+
+        if mountInit.stableChecks >= mountInit.requiredStableChecks then
+            mountInit.initialized = true
+            if callback then callback(true) end
+            return
+        end
+    end
+
+    if mountInit.attempts >= mountInit.maxAttempts then
+        -- Give up waiting for perfect stability; proceed to avoid addon appearing broken.
+        mountInit.initialized = true
+        if callback then callback(false) end
+        return
+    end
+
+    C_Timer.After(1, function() PollMountJournalReadiness(callback) end)
+end
 
 -- * -------------------------------------------------
 -- * Initialise Database
@@ -127,11 +191,9 @@ local function InitMounts()
     end
 end
 
-
 -- * -----------------------------------------------------
 -- * Toggle the main window
 -- * -----------------------------------------------------
-
 
 MCLcore.dataLoaded = false
 
@@ -150,114 +212,125 @@ local MAX_INIT_RETRIES = 3
 
 -- Initialization function
 function MCL_Load:Init(force, showOnComplete)
-    local retries = 0
-    local function repeatCheck()
-        if MCL_Load:PreLoad() then
-            -- Initialization steps
-            if MCLcore.MCL_MF == nil then
-                -- Ensure Frames module is available
-                if not MCLcore.Frames then
-                    return false
-                end
-                
-                -- Ensure Frames module is properly loaded before creating main frame
-                if not MCLcore.Frames or not MCLcore.Frames.CreateMainFrame then
-                    print("MCL Error: Frames module not properly loaded")
-                    return false
-                end
-                
-                MCLcore.MCL_MF = MCLcore.Frames:CreateMainFrame()
-                MCLcore.MCL_MF:SetShown(false)
-                
-                -- Ensure Function module is available before calling methods
-                if MCLcore.Function and MCLcore.Function.initSections then
-                    -- Data validation before initialization
-                    local validationPassed = true
-                    
-                    -- Validate saved variables
-                    if not MCL_DB or type(MCL_DB) ~= "table" then
-                        print("MCL: Corrupted database detected, resetting...")
-                        MCL_DB = {}
-                        validationPassed = false
+    local function proceed()
+        local retries = 0
+        local function repeatCheck()
+            if MCL_Load:PreLoad() then
+                -- Initialization steps
+                if MCLcore.MCL_MF == nil then
+                    -- Ensure Frames module is available
+                    if not MCLcore.Frames then
+                        return false
                     end
                     
-                    if not MOUNTLIST or type(MOUNTLIST) ~= "table" then
-                        print("MCL: Corrupted mount list detected, resetting...")
-                        MOUNTLIST = {}
-                        validationPassed = false
+                    -- Ensure Frames module is properly loaded before creating main frame
+                    if not MCLcore.Frames or not MCLcore.Frames.CreateMainFrame then
+                        print("MCL Error: Frames module not properly loaded")
+                        return false
                     end
                     
-                    if not MCL_PINNED or type(MCL_PINNED) ~= "table" then
-                        print("MCL: Corrupted pinned list detected, resetting...")
-                        MCL_PINNED = {}
-                        validationPassed = false
-                    end
+                    MCLcore.MCL_MF = MCLcore.Frames:CreateMainFrame()
+                    MCLcore.MCL_MF:SetShown(false)
                     
-                    if not MCL_SETTINGS or type(MCL_SETTINGS) ~= "table" then
-                        print("MCL: Corrupted settings detected, resetting...")
-                        MCL_SETTINGS = {}
-                        validationPassed = false
-                    end
-                    
-                    -- Wrap initialization in protected call
-                    local success, error = pcall(MCLcore.Function.initSections, MCLcore.Function)
-                    if not success then
-                        print("MCL Error during initialization: " .. tostring(error))
-                        print("MCL: Attempting recovery...")
+                    -- Ensure Function module is available before calling methods
+                    if MCLcore.Function and MCLcore.Function.initSections then
+                        -- Data validation before initialization
+                        local validationPassed = true
                         
-                        -- Try to recover by resetting data and trying again
-                        MCL_DB = {}
-                        MOUNTLIST = {}
-                        MCL_PINNED = {}
-                        
-                        local retrySuccess, retryError = pcall(MCLcore.Function.initSections, MCLcore.Function)
-                        if not retrySuccess then
-                            print("MCL Error: Recovery failed - " .. tostring(retryError))
-                            return false
-                        else
-                            print("MCL: Recovery successful")
+                        -- Validate saved variables
+                        if not MCL_DB or type(MCL_DB) ~= "table" then
+                            print("MCL: Corrupted database detected, resetting...")
+                            MCL_DB = {}
+                            validationPassed = false
                         end
+                        
+                        if not MOUNTLIST or type(MOUNTLIST) ~= "table" then
+                            print("MCL: Corrupted mount list detected, resetting...")
+                            MOUNTLIST = {}
+                            validationPassed = false
+                        end
+                        
+                        if not MCL_PINNED or type(MCL_PINNED) ~= "table" then
+                            print("MCL: Corrupted pinned list detected, resetting...")
+                            MCL_PINNED = {}
+                            validationPassed = false
+                        end
+                        
+                        if not MCL_SETTINGS or type(MCL_SETTINGS) ~= "table" then
+                            print("MCL: Corrupted settings detected, resetting...")
+                            MCL_SETTINGS = {}
+                            validationPassed = false
+                        end
+                        
+                        -- Wrap initialization in protected call
+                        local success, error = pcall(MCLcore.Function.initSections, MCLcore.Function)
+                        if not success then
+                            print("MCL Error during initialization: " .. tostring(error))
+                            print("MCL: Attempting recovery...")
+                            
+                            -- Try to recover by resetting data and trying again
+                            MCL_DB = {}
+                            MOUNTLIST = {}
+                            MCL_PINNED = {}
+                            
+                            local retrySuccess, retryError = pcall(MCLcore.Function.initSections, MCLcore.Function)
+                            if not retrySuccess then
+                                print("MCL Error: Recovery failed - " .. tostring(retryError))
+                                return false
+                            else
+                                print("MCL: Recovery successful")
+                            end
+                        end
+                    else
+                        print("MCL Error: Function module or initSections not available")
                     end
-                else
-                    print("MCL Error: Function module or initSections not available")
+                    
+                    -- Clean up any invalid pinned mounts during initialization
+                    if MCLcore.Function and MCLcore.Function.CleanupInvalidPinnedMounts then
+                        MCLcore.Function:CleanupInvalidPinnedMounts()
+                    end
                 end
                 
-                -- Clean up any invalid pinned mounts during initialization
-                if MCLcore.Function and MCLcore.Function.CleanupInvalidPinnedMounts then
-                    MCLcore.Function:CleanupInvalidPinnedMounts()
+                -- Ensure Function module is available before updating collection
+                if MCLcore.Function and MCLcore.Function.UpdateCollection then
+                    MCLcore.Function:UpdateCollection()
+                end
+                
+                -- If we should show the window after initialization, do so
+                if showOnComplete and MCLcore.MCL_MF then
+                    MCLcore.MCL_MF:Show()
+                end
+                
+                init_load = false -- Ensure that the initialization does not repeat unnecessarily.
+            else
+                retries = retries + 1
+                if retries < MAX_INIT_RETRIES then
+                    -- Retry the initialization process after a delay
+                    C_Timer.After(1, repeatCheck)
                 end
             end
-            
-            -- Ensure Function module is available before updating collection
-            if MCLcore.Function and MCLcore.Function.UpdateCollection then
-                MCLcore.Function:UpdateCollection()
-            end
-            
-            -- If we should show the window after initialization, do so
-            if showOnComplete and MCLcore.MCL_MF then
-                MCLcore.MCL_MF:Show()
-            end
-            
-            init_load = false -- Ensure that the initialization does not repeat unnecessarily.
-        else
-            retries = retries + 1
-            if retries < MAX_INIT_RETRIES then
-                -- Retry the initialization process after a delay
-                C_Timer.After(1, repeatCheck)
-            end
+        end
+        
+        -- Force reinitialization if specifically requested
+        if force then
+            load_check = 0
+            MCLcore.dataLoaded = false
+        end
+        
+        -- Check if we need to attempt initialization
+        if not MCLcore.dataLoaded then
+            init_load = true
+            repeatCheck()
         end
     end
 
-    -- Force reinitialization if specifically requested
-    if force then
-        load_check = 0
-        MCLcore.dataLoaded = false
-    end
-
-    -- Check if we need to attempt initialization
-    if not MCLcore.dataLoaded then
-        init_load = true
-        repeatCheck()
+    -- Begin with polling readiness (only once)
+    if not mountInit.initialized then
+        PollMountJournalReadiness(function(stable)
+            proceed()
+        end)
+    else
+        proceed()
     end
 end
 
@@ -278,28 +351,55 @@ end
 local f = CreateFrame("Frame")
 local login = true
 
-
-
 -- * -------------------------------------------------
 -- * Loads addon once Blizzard_Collections has loaded in.
 -- * -------------------------------------------------
 
+local function EnsureCollectionsLoaded()
+    if not C_AddOns.IsAddOnLoaded("Blizzard_Collections") then
+        local ok = pcall(C_AddOns.LoadAddOn, "Blizzard_Collections")
+        if not ok then
+            -- Retry shortly if load failed (can happen very early on some clients)
+            C_Timer.After(2, EnsureCollectionsLoaded)
+            return false
+        end
+    end
+    return true
+end
+
+local function ClearMountFilters()
+    if C_MountJournal.SetCollectedFilterSetting then
+        -- Show both collected and not collected
+        pcall(C_MountJournal.SetCollectedFilterSetting, LE_MOUNT_JOURNAL_FILTER_COLLECTED, true)
+        pcall(C_MountJournal.SetCollectedFilterSetting, LE_MOUNT_JOURNAL_FILTER_NOT_COLLECTED, true)
+    end
+    if C_MountJournal.SetSearch then
+        pcall(C_MountJournal.SetSearch, "")
+    end
+    if C_MountJournal.SetAllFactionFilters then
+        pcall(C_MountJournal.SetAllFactionFilters, true)
+    end
+    if C_MountJournal.SetAllTypeFilters then
+        pcall(C_MountJournal.SetAllTypeFilters, true)
+    end
+end
 
 local function onevent(self, event, arg1, ...)
     if(login and ((event == "ADDON_LOADED" and MCL == arg1) or (event == "PLAYER_LOGIN"))) then
         login = nil
         f:UnregisterEvent("ADDON_LOADED")
         f:UnregisterEvent("PLAYER_LOGIN")
-	    if not C_AddOns.IsAddOnLoaded("Blizzard_Collections") then
-	        C_AddOns.LoadAddOn("Blizzard_Collections")
-	    end
+        
+        -- Force load Blizzard_Collections early (Option A)
+        EnsureCollectionsLoaded()
+        ClearMountFilters()
         
         -- Ensure Function module is available before calling AddonSettings
         if MCLcore.Function and MCLcore.Function.AddonSettings then
             MCLcore.Function:AddonSettings()
         end
         
-        -- Initiate the addon when the required addon is loaded
+        -- Start initialization after readiness polling handled inside :Init
         MCL_Load:Init()
         
         -- Initialize search functionality
@@ -314,8 +414,23 @@ local function onevent(self, event, arg1, ...)
     end
 end
 
+-- Listen for late mount data (item info) to trigger re-scan if needed
+local itemListener = CreateFrame("Frame")
+local pendingRescan
+itemListener:RegisterEvent("GET_ITEM_INFO_RECEIVED")
+itemListener:SetScript("OnEvent", function()
+    if not MCLcore.dataLoaded then return end
+    if pendingRescan then return end
+    pendingRescan = true
+    C_Timer.After(2, function()
+        pendingRescan = nil
+        if MCLcore.Function and MCLcore.Function.UpdateCollection then
+            MCLcore.Function:UpdateCollection()
+        end
+    end)
+end)
 
--- function addon:MCL_MM() self.db.profile.minimap.hide = not self.db.profile.minimap.hide if self.db.profile.minimap.hide then icon:Hide("MCL-icon") else icon:Show("MCL-icon") end end
+-- Events
 f:RegisterEvent("ADDON_LOADED")
 f:RegisterEvent("PLAYER_LOGIN")
 f:SetScript("OnEvent", onevent)
