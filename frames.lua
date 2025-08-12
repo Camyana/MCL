@@ -2362,6 +2362,15 @@ for _, categoryName in ipairs(sortedCategoryNames) do
         categoryFrame.title:SetText(L[categoryData.name] or L[categoryName] or categoryData.name or categoryName)
         categoryFrame.title:SetTextColor(1, 1, 1, 1)
         
+        -- Immediately update the column Y position so subsequent categories use the correct anchor.
+        -- Previously this was deferred until the ThrottledMountCreation callback, causing overlap because
+        -- the loop continued positioning later categories before the Y offsets were adjusted.
+        if isLeftColumn then
+            leftColumnY = leftColumnY - (categoryHeight + 8)
+        else
+            rightColumnY = rightColumnY - (categoryHeight + 8)
+        end
+
         -- Create progress bar container
         local progressContainer = CreateFrame("Frame", nil, categoryFrame)
         progressContainer:SetWidth(columnWidth - 20)  -- Now 500px wide
@@ -2470,15 +2479,8 @@ for _, categoryName in ipairs(sortedCategoryNames) do
             sectionName = sectionName or "Unknown"
         }
         
-        ThrottledMountCreation(mountList, categoryFrame, mountConfig, function()
-            -- This callback runs when all mounts are created
-            -- Update column positions for next category
-            if isLeftColumn then
-                leftColumnY = leftColumnY - (categoryHeight + 8)  -- Reduced spacing between categories
-            else
-                rightColumnY = rightColumnY - (categoryHeight + 8)  -- Reduced spacing between categories
-            end
-        end)
+        -- We no longer adjust column Y in the callback; it's done immediately after frame creation above.
+        ThrottledMountCreation(mountList, categoryFrame, mountConfig, function() end)
         
     end
 end
@@ -2585,10 +2587,6 @@ function MCL_frames:RefreshLayout()
                         if t.SetBackdropBorderColor then
                             t:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
                         end
-                    end
-                    -- Also properly destroy search results content if it exists
-                    if MCLcore.Search and MCLcore.Search.DestroySearchResultsFrame then
-                        MCLcore.Search:DestroySearchResultsFrame()
                     end
                     if tab.SetBackdropBorderColor then
                         tab:SetBackdropBorderColor(1, 0.82, 0, 1)
