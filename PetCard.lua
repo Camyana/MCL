@@ -576,6 +576,68 @@ end
 -- Mixed implementation cleanup - removed incomplete functions
 
 --[[
+  Get PetCard dimensions that match main window height
+]]
+local function GetPetCardDimensions()
+    local cardWidth = PET_CARD_WIDTH
+    local cardHeight = PET_CARD_HEIGHT
+    
+    -- Get main window height if available
+    if PCL_frames and PCL_frames.GetCurrentFrameDimensions then
+        local _, mainHeight = PCL_frames:GetCurrentFrameDimensions()
+        if mainHeight and mainHeight > 0 then
+            cardHeight = mainHeight
+            if PCLcore and PCLcore.Debug then
+                print(string.format("[PCL Debug] GetPetCardDimensions: Using main window height: %d", mainHeight))
+            end
+        else
+            if PCLcore and PCLcore.Debug then
+                print("[PCL Debug] GetPetCardDimensions: No valid main height, using default")
+            end
+        end
+    else
+        if PCLcore and PCLcore.Debug then
+            print("[PCL Debug] GetPetCardDimensions: PCL_frames.GetCurrentFrameDimensions not available")
+        end
+    end
+    
+    return cardWidth, cardHeight
+end
+
+--[[
+  Resize PetCard to match main frame dimensions
+]]
+function PetCard:ResizePetCard()
+    if not PCL_PetCard then
+        return
+    end
+    
+    -- Get new dimensions (fixed width, dynamic height)
+    local cardWidth, cardHeight = GetPetCardDimensions()
+    
+    -- Debug output to help diagnose sizing issues
+    if PCLcore and PCLcore.Debug then
+        print(string.format("[PCL Debug] PetCard Resize: cardWidth=%d, cardHeight=%d", cardWidth or 0, cardHeight or 0))
+        if PCL_mainFrame then
+            local mainWidth, mainHeight = PCL_mainFrame:GetSize()
+            print(string.format("[PCL Debug] MainFrame Size: width=%d, height=%d", mainWidth or 0, mainHeight or 0))
+        end
+    end
+    
+    -- Resize the main card frame
+    PCL_PetCard:SetSize(cardWidth, cardHeight)
+    
+    -- Resize child frames with fixed width
+    if PCL_PetCard.titleFrame then
+        PCL_PetCard.titleFrame:SetSize(cardWidth - 20, 40)
+    end
+    
+    if PCL_PetCard.scrollChild then
+        PCL_PetCard.scrollChild:SetSize(cardWidth - 20, cardHeight - 80)
+    end
+end
+
+--[[
   Create the main PetCard frame using PCL styling
 ]]
 function PetCard:CreatePetCard()
@@ -583,9 +645,12 @@ function PetCard:CreatePetCard()
         return PCL_PetCard  -- Already exists
     end
     
+    -- Get dynamic dimensions
+    local cardWidth, cardHeight = GetPetCardDimensions()
+    
     -- Create main frame with PCL styling
     local f = CreateFrame("Frame", "PCL_PetCard", UIParent, "BackdropTemplate")
-    f:SetSize(PET_CARD_WIDTH, 500)  -- Match main window height
+    f:SetSize(cardWidth, cardHeight)  -- Use dynamic dimensions
     f:SetFrameStrata("HIGH")
     f:SetFrameLevel(100)
     f:SetMovable(false)  -- Disable moving since it's anchored
@@ -618,7 +683,7 @@ function PetCard:CreatePetCard()
     
     -- Title bar
     f.titleFrame = CreateFrame("Frame", nil, f)
-    f.titleFrame:SetSize(PET_CARD_WIDTH - 20, 40)
+    f.titleFrame:SetSize(cardWidth - 20, 40)
     f.titleFrame:SetPoint("TOP", f, "TOP", 0, -10)
     f.titleFrame:EnableMouse(false)  -- Disable dragging since frame is anchored
     
@@ -640,7 +705,7 @@ function PetCard:CreatePetCard()
     
     -- Scroll child
     f.scrollChild = CreateFrame("Frame", nil, f.scrollFrame)
-    f.scrollChild:SetSize(PET_CARD_WIDTH - 20, PET_CARD_HEIGHT - 80)  -- Adjusted for no tab bar and no scrollbar
+    f.scrollChild:SetSize(cardWidth - 20, cardHeight - 80)  -- Use dynamic dimensions
     f.scrollFrame:SetScrollChild(f.scrollChild)
     
     -- Initialize properties
@@ -2037,13 +2102,20 @@ function PetCard:Show(petData)
         self:CreatePetCard()
     end
     
+    -- Ensure PetCard is properly sized before showing
+    self:ResizePetCard()
+    
     -- Position the pet card to the right of the main window
     PCL_PetCard:ClearAllPoints()
     PCL_PetCard:SetPoint("TOPLEFT", PCL_mainFrame, "TOPRIGHT", 5, 0)  -- 5 pixels gap to the right
     
-    -- Match the height of the main window
-    local mainHeight = PCL_mainFrame:GetHeight()
-    PCL_PetCard:SetHeight(mainHeight)
+    -- Force height to match main window after positioning
+    if PCL_mainFrame then
+        local _, mainHeight = PCL_mainFrame:GetSize()
+        if mainHeight and mainHeight > 0 then
+            PCL_PetCard:SetHeight(mainHeight)
+        end
+    end
     
     -- Update the pet card content
     self:UpdateWindow(petData)
@@ -2276,6 +2348,9 @@ function PetCard:ShowAsTooltip(petSpeciesID, anchorFrame)
         self:CreatePetCard()
     end
     
+    -- Ensure PetCard is properly sized before showing
+    self:ResizePetCard()
+    
     -- Store the anchor frame and species ID for potential pinning
     if PCL_PetCard then
         PCL_PetCard.currentAnchorFrame = anchorFrame
@@ -2289,41 +2364,52 @@ function PetCard:ShowAsTooltip(petSpeciesID, anchorFrame)
     -- Position relative to the anchor frame (more centrally positioned)
     PCL_PetCard:ClearAllPoints()
     
-    -- Try to center the card next to the anchor frame, slightly offset
-    -- This positions it to the right of the anchor, but more vertically centered
-    PCL_PetCard:SetPoint("LEFT", anchorFrame, "RIGHT", 15, 0)
-    
-    -- Make sure it stays on screen with better positioning logic
-    local screenWidth = GetScreenWidth()
-    local screenHeight = GetScreenHeight()
-    local frameRight = PCL_PetCard:GetRight()
-    local frameLeft = PCL_PetCard:GetLeft()
-    local frameTop = PCL_PetCard:GetTop()
-    local frameBottom = PCL_PetCard:GetBottom()
-    
-    -- If the frame goes off the right side of screen, position it to the left of anchor
-    if frameRight and frameRight > screenWidth then
-        PCL_PetCard:ClearAllPoints()
-        PCL_PetCard:SetPoint("RIGHT", anchorFrame, "LEFT", -15, 0)
-    end
-    
-    -- If the frame goes off the top of screen, adjust vertically
-    if frameTop and frameTop > screenHeight then
-        PCL_PetCard:ClearAllPoints()
-        if frameRight and frameRight > screenWidth then
-            PCL_PetCard:SetPoint("BOTTOMRIGHT", anchorFrame, "BOTTOMLEFT", -15, -50)
-        else
-            PCL_PetCard:SetPoint("BOTTOMLEFT", anchorFrame, "BOTTOMRIGHT", 15, -50)
+    -- If main frame is available, anchor to it instead of the specific icon
+    if PCL_mainFrame and PCL_mainFrame:IsVisible() then
+        PCL_PetCard:SetPoint("TOPLEFT", PCL_mainFrame, "TOPRIGHT", 5, 0)
+        
+        -- Force height to match main window
+        local _, mainHeight = PCL_mainFrame:GetSize()
+        if mainHeight and mainHeight > 0 then
+            PCL_PetCard:SetHeight(mainHeight)
         end
-    end
-    
-    -- If the frame goes off the bottom of screen, adjust vertically upward
-    if frameBottom and frameBottom < 0 then
-        PCL_PetCard:ClearAllPoints()
+    else
+        -- Fallback: Try to center the card next to the anchor frame, slightly offset
+        -- This positions it to the right of the anchor, but more vertically centered
+        PCL_PetCard:SetPoint("LEFT", anchorFrame, "RIGHT", 15, 0)
+        
+        -- Make sure it stays on screen with better positioning logic
+        local screenWidth = GetScreenWidth()
+        local screenHeight = GetScreenHeight()
+        local frameRight = PCL_PetCard:GetRight()
+        local frameLeft = PCL_PetCard:GetLeft()
+        local frameTop = PCL_PetCard:GetTop()
+        local frameBottom = PCL_PetCard:GetBottom()
+        
+        -- If the frame goes off the right side of screen, position it to the left of anchor
         if frameRight and frameRight > screenWidth then
-            PCL_PetCard:SetPoint("TOPRIGHT", anchorFrame, "TOPLEFT", -15, 50)
-        else
-            PCL_PetCard:SetPoint("TOPLEFT", anchorFrame, "TOPRIGHT", 15, 50)
+            PCL_PetCard:ClearAllPoints()
+            PCL_PetCard:SetPoint("RIGHT", anchorFrame, "LEFT", -15, 0)
+        end
+        
+        -- If the frame goes off the top of screen, adjust vertically
+        if frameTop and frameTop > screenHeight then
+            PCL_PetCard:ClearAllPoints()
+            if frameRight and frameRight > screenWidth then
+                PCL_PetCard:SetPoint("BOTTOMRIGHT", anchorFrame, "BOTTOMLEFT", -15, -50)
+            else
+                PCL_PetCard:SetPoint("BOTTOMLEFT", anchorFrame, "BOTTOMRIGHT", 15, -50)
+            end
+        end
+        
+        -- If the frame goes off the bottom of screen, adjust vertically upward
+        if frameBottom and frameBottom < 0 then
+            PCL_PetCard:ClearAllPoints()
+            if frameRight and frameRight > screenWidth then
+                PCL_PetCard:SetPoint("TOPRIGHT", anchorFrame, "TOPLEFT", -15, 50)
+            else
+                PCL_PetCard:SetPoint("TOPLEFT", anchorFrame, "TOPRIGHT", 15, 50)
+            end
         end
     end
     
@@ -2534,3 +2620,8 @@ end
 
 -- Alternative access method for PetCollector compatibility
 _G["PCL_PetCard_Show"] = PCLcore.PetCard.Display.Show
+
+-- Expose resize function for external use
+PCLcore.PetCard.Resize = function()
+    return PetCard:ResizePetCard()
+end

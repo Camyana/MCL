@@ -794,7 +794,7 @@ MCLcore.mountList[15] = {
 		},
 		CollectorsEdition = {
 			name = "Collector's Edition",
-			mounts = {85870, 109013, 128425, 153539, 153540, "m1289", "m1556", "m1792"},
+			mounts = {85870, 109013, 128425, 153539, 153540, "m1289", "m1556", "m1792", 243019, 243020},
 			mountID = {1289, 1556}
 		},
 		WowClassic = {
