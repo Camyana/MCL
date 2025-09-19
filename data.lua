@@ -794,7 +794,7 @@ MCLcore.mountList[15] = {
 		},
 		CollectorsEdition = {
 			name = "Collector's Edition",
-			mounts = {85870, 109013, 128425, 153539, 153540, "m1289", "m1556", "m1792", 243019, 243020},
+			mounts = {85870, 109013, 128425, 153539, 153540, "m1289", "m1556", "m1792", 243019, 243020, 245610},
 			mountID = {1289, 1556}
 		},
 		WowClassic = {
@@ -817,6 +817,11 @@ MCLcore.mountList[15] = {
 			mounts = {235286},
 			mountID = {}
 		},
+		-- LegionRemix = {
+		-- 	name = "Legion Remix",
+		-- 	mounts = {, 253026, 253024, 253027, 253032, 252954, 253029, 253031, 253033, 250728, 250760, 250758, 250759, 250761, 253025, 250192, 250757, 250429, 253028, 250428, 250723, 253030, 253013},
+		-- 	mountID = {}
+		-- }
 		WarcraftIII = {
 			name = "Warcraft III Reforged",
 			mounts = {164571},
