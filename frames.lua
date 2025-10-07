@@ -361,8 +361,8 @@ function MCL_frames:CreateMainFrame()
     -- Add tooltip for refresh button
     MCL_mainFrame.refresh:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText("Refresh Layout", 1, 1, 1)
-        GameTooltip:AddLine("Refreshes the mount collection display", 0.8, 0.8, 0.8)
+        GameTooltip:SetText(L["Refresh Layout"], 1, 1, 1)
+        GameTooltip:AddLine(L["Refreshes the mount collection display"], 0.8, 0.8, 0.8)
         GameTooltip:Show()
     end)
     MCL_mainFrame.refresh:SetScript("OnLeave", function()
@@ -1424,7 +1424,6 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     themeTitle:SetPoint("TOPLEFT", leftColumn, "TOPLEFT", 0, leftYOffset)
     themeTitle:SetText(L["Theme"] or "Theme:")
     themeTitle:SetTextColor(0.2, 0.8, 1, 1)  -- MCL blue color
-    themeTitle:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
     leftYOffset = leftYOffset - 30
     
     -- Blizzard Theme Checkbox
@@ -1450,7 +1449,6 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     displayTitle:SetPoint("TOPLEFT", leftColumn, "TOPLEFT", 0, leftYOffset)
     displayTitle:SetText(L["Display Options"] or "Display Options:")
     displayTitle:SetTextColor(0.2, 0.8, 1, 1)
-    displayTitle:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
     leftYOffset = leftYOffset - 30
     
     -- Hide Collected Mounts Checkbox
@@ -1509,7 +1507,6 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     layoutTitle:SetPoint("TOPLEFT", leftColumn, "TOPLEFT", 0, leftYOffset)
     layoutTitle:SetText(L["Layout Options"] or "Layout Options:")
     layoutTitle:SetTextColor(0.2, 0.8, 1, 1)
-    layoutTitle:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
     leftYOffset = leftYOffset - 30
     
     -- Mounts Per Row Slider
@@ -1560,7 +1557,6 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     progressTitle:SetPoint("TOPLEFT", rightColumn, "TOPLEFT", 0, rightYOffset)
     progressTitle:SetText(L["Progress Bar Options"] or "Progress Bar Options:")
     progressTitle:SetTextColor(0.2, 0.8, 1, 1)
-    progressTitle:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
     rightYOffset = rightYOffset - 30
     
     -- Initialize LibSharedMedia if not already done
@@ -1812,7 +1808,6 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     opacityTitle:SetPoint("TOPLEFT", rightColumn, "TOPLEFT", 0, rightYOffset)
     opacityTitle:SetText(L["Window Opacity"] or "Window Opacity:")
     opacityTitle:SetTextColor(0.2, 0.8, 1, 1)
-    opacityTitle:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
     rightYOffset = rightYOffset - 30
     
     -- Opacity Slider
