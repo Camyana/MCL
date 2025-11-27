@@ -1222,4 +1222,8 @@ MCLcore.sectionNames[21] = {
 MCLcore.regionalFilter = {
 	['CN'] = {210077},
 	['KR'] = {210077},
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> c0c507bb4d5d3fb95cb0ce19eb418510e96f98b4
