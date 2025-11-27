@@ -1,0 +1,3 @@
+beautifulsoup4>=4.12
+selenium>=4.12
+webdriver-manager>=4.0

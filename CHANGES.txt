@@ -1,0 +1,10 @@
+lightweight tag c0c507bb4d5d3fb95cb0ce19eb418510e96f98b4 v2.7.9
+Author:	Camyana <117818293+Camyana@users.noreply.github.com>
+Date:	Fri Sep 19 10:33:22 2025 +0100
+
+commit c0c507bb4d5d3fb95cb0ce19eb418510e96f98b4
+Author: Camyana <117818293+Camyana@users.noreply.github.com>
+Date:   Fri Sep 19 10:33:22 2025 +0100
+
+    v2.7.9
+
