@@ -744,7 +744,7 @@ MCLcore.mountList[14] = {
 		},
 		Brewfest = {
 			name = "Brewfest",
-			mounts = {33977, 37828},
+			mounts = {33977, 37828, 248761},
 			mountID = {}
 		},
 		HallowsEnd = {
@@ -799,7 +799,7 @@ MCLcore.mountList[15] = {
 		},
 		WowClassic = {
 			name = "WoW Classic",
-			mounts = {"m1444", "m1602", "m1812", 235287, 210008},
+			mounts = {"m1444", "m1602", 235287, 210008},
 			mountID = {1444, 1602}
 		},
 		anniversary = {
@@ -817,11 +817,11 @@ MCLcore.mountList[15] = {
 			mounts = {235286},
 			mountID = {}
 		},
-		-- LegionRemix = {
-		-- 	name = "Legion Remix",
-		-- 	mounts = {, 253026, 253024, 253027, 253032, 252954, 253029, 253031, 253033, 250728, 250760, 250758, 250759, 250761, 253025, 250192, 250757, 250429, 253028, 250428, 250723, 253030, 253013},
-		-- 	mountID = {}
-		-- }
+		LegionRemix = {
+			name = "Legion Remix",
+			mounts = {253026, 253024, 253027, 253032, 252954, 253029, 253031, 253033, 250728, 250760, 250758, 250759, 250761, 253025, 250192, 250757, 250429, 253028, 250428, 250723, 253030, 253013},
+			mountID = {}
+		},
 		WarcraftIII = {
 			name = "Warcraft III Reforged",
 			mounts = {164571},
@@ -858,7 +858,7 @@ MCLcore.mountList[15] = {
 		},
 		ProductPromotion = {
 			name="Product Promotion",
-			mounts = {"m1947", "m1946", 211087}
+			mounts = {"m1946", 211087}
 		}
 	}	
 }

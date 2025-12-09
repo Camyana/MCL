@@ -70,6 +70,7 @@ if L then
     L["LEGION"] = "军团再临"
     L["Leatherworking"] = "制皮"
     L["Legion"] = "军团再临"
+    L["Legion Remix"] = "军团再临重置版"
     L["Love is in the Air"] = "情人节"
     L["Lunar Festival"] = "春节"
     L["MOP"] = "熊猫人之谜"

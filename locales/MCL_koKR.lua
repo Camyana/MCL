@@ -70,6 +70,7 @@ if L then
     L["LEGION"] = "LEGION"
     L["Leatherworking"] = "가죽세공"
     L["Legion"] = "군단"
+    L["Legion Remix"] = "군단 리믹스"
     L["Love is in the Air"] = "사랑이 넘치는 축제"
     L["Lunar Festival"] = "달의 축제"
     L["MOP"] = "MOP"

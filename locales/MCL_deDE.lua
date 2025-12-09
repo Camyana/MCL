@@ -70,6 +70,7 @@ if L then
     L["LEGION"] = "LEGION"
     L["Leatherworking"] = "Lederverarbeitung"
     L["Legion"] = "Legion"
+    L["Legion Remix"] = "Legion-Remix"
     L["Love is in the Air"] = "Liebe liegt in der Luft"
     L["Lunar Festival"] = "Mondfest"
     L["MOP"] = "MOP"

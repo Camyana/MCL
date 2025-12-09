@@ -1,9 +1,9 @@
-## Interface: 110200
+## Interface: 110205
 ## Title: |cFF1FB7EBMCL |cFFFFFFFF- Mount Collection Log
 ## Title-zhTW: |cFF1FB7EBMCL |cFFFFFFFF- 坐騎收集日誌
 ## Notes: A tool used to log collected mounts in a similiar way to Simple Armory.
 ## Notes-zhTW: 一個用於記錄坐騎收集的工具，類似於Simple Armory。
-## Version: 2.7.9
+## Version: 2.8.1
 ## DefaultState: enabled
 ## SavedVariables: MCL_DB, MOUNTLIST, MCL_PINNED, MCL_SETTINGS
 ## Author: Discord: Cam#7332
