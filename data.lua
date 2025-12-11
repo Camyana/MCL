@@ -1082,6 +1082,11 @@ MCLcore.mountList[19] = {
 			name = "Incursion",
 			mounts = {239563, 239020}
 		},
+		MidnightPrePatch = {
+			name = "Midnight Pre-Patch",
+			mounts = {},
+			mountID = {}
+		},
 		HorrificVisions = {
 			name = "Horrific Visions",
 			mounts = {235711,235709,235705,235700,235706,235707,211089,223265}
