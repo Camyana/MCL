@@ -211,6 +211,8 @@ if L then
     L["NO"] = "Non"
     L["Layout Settings"] = "Paramètres de mise en page"
     L["Mounts Per Row"] = "Montures par rangée"
+    L["Refresh Layout"] = "Actualiser la mise en page"
+    L["Refreshes the mount collection display"] = "Actualise l'affichage de la collection de montures"
     L["Set the number of mounts to display per row in the mount grid. Requires UI reload."] = "Définit le nombre de montures à afficher par rangée dans la grille de montures. Nécessite un rechargement de l'UI."
     L["Use Blizzard Theme"] = "Utiliser le thème Blizzard"
     L["If enabled, the addon will use Blizzard's default UI theme. Requires UI reload."] = "Si activé, l'addon utilisera le thème UI par défaut de Blizzard. Nécessite un rechargement de l'UI."

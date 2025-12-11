@@ -211,6 +211,8 @@ if L then
     L["NO"] = "No"
     L["Layout Settings"] = "Impostazioni Layout"
     L["Mounts Per Row"] = "Cavalcature per Riga"
+    L["Refresh Layout"] = "Aggiorna layout"
+    L["Refreshes the mount collection display"] = "Aggiorna la visualizzazione della collezione di cavalcature"
     L["Set the number of mounts to display per row in the mount grid. Requires UI reload."] = "Imposta il numero di cavalcature da visualizzare per riga nella griglia delle cavalcature. Richiede il riavvio dell'interfaccia."
     L["Use Blizzard Theme"] = "Usa Tema Blizzard"
     L["If enabled, the addon will use Blizzard's default UI theme. Requires UI reload."] = "Se abilitato, l'addon userà il tema interfaccia predefinito di Blizzard. Richiede il riavvio dell'interfaccia."

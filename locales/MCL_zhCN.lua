@@ -211,6 +211,8 @@ if L then
     L["NO"] = "否"
     L["Layout Settings"] = "布局设置"
     L["Mounts Per Row"] = "每行坐骑数"
+    L["Refresh Layout"] = "刷新布局"
+    L["Refreshes the mount collection display"] = "刷新坐骑收藏的显示"
     L["Set the number of mounts to display per row in the mount grid. Requires UI reload."] = "设置坐骑网格中每行显示的坐骑数量。需要重载界面。"
     L["Use Blizzard Theme"] = "使用暴雪主题"
     L["If enabled, the addon will use Blizzard's default UI theme. Requires UI reload."] = "启用后，插件将使用暴雪默认的界面主题。需要重载界面。"

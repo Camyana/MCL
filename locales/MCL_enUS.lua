@@ -200,6 +200,8 @@ if L then
     L["Reset to default colors"] = "Reset to default colors"
     L["Layout Settings"] = "Layout Settings"
     L["Mounts Per Row"] = "Mounts Per Row"
+    L["Refresh Layout"] = "Refresh Layout"
+    L["Refreshes the mount collection display"] = "Refreshes the mount collection display"
     L["Set the number of mounts to display per row in the mount grid. Requires UI reload."] = "Set the number of mounts to display per row in the mount grid. Requires UI reload."
     L["Unobtainable Settings"] = "Unobtainable Settings"
     L["Hide Unobtainable from overview"] = "Hide Unobtainable from overview"

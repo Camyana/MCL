@@ -211,6 +211,8 @@ if L then
     L["NO"] = "아니오"
     L["Layout Settings"] = "레이아웃 설정"
     L["Mounts Per Row"] = "행당 탈것 수"
+    L["Refresh Layout"] = "레이아웃 새로 고침"
+    L["Refreshes the mount collection display"] = "탈것 수집 표시를 새로 고칩니다"
     L["Set the number of mounts to display per row in the mount grid. Requires UI reload."] = "탈것 그리드에서 행당 표시할 탈것 수를 설정합니다. UI 재로드가 필요합니다."
     L["Use Blizzard Theme"] = "블리자드 테마 사용"
     L["If enabled, the addon will use Blizzard's default UI theme. Requires UI reload."] = "활성화하면 애드온이 블리자드의 기본 UI 테마를 사용합니다. UI 재로드가 필요합니다."

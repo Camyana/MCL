@@ -211,6 +211,8 @@ if L then
     L["NO"] = "Нет"
     L["Layout Settings"] = "Настройки макета"
     L["Mounts Per Row"] = "Маунтов в ряду"
+    L["Refresh Layout"] = "Обновить макет"
+    L["Refreshes the mount collection display"] = "Обновляет отображение коллекции маунтов"
     L["Set the number of mounts to display per row in the mount grid. Requires UI reload."] = "Установить количество маунтов для отображения в ряду в сетке маунтов. Требует перезагрузки UI."
     L["Use Blizzard Theme"] = "Использовать тему Blizzard"
     L["If enabled, the addon will use Blizzard's default UI theme. Requires UI reload."] = "Если включено, аддон будет использовать стандартную тему UI Blizzard. Требует перезагрузки UI."

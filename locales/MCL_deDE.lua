@@ -211,6 +211,8 @@ if L then
     L["NO"] = "Nein"
     L["Layout Settings"] = "Layout-Einstellungen"
     L["Mounts Per Row"] = "Reittiere pro Zeile"
+    L["Refresh Layout"] = "Layout aktualisieren"
+    L["Refreshes the mount collection display"] = "Aktualisiert die Anzeige der Reittiersammlung"
     L["Set the number of mounts to display per row in the mount grid. Requires UI reload."] = "Legen Sie die Anzahl der Reittiere fest, die pro Zeile im Reittier-Raster angezeigt werden sollen. UI-Neuladen erforderlich."
     L["Use Blizzard Theme"] = "Blizzard-Design verwenden"
     L["If enabled, the addon will use Blizzard's default UI theme. Requires UI reload."] = "Wenn aktiviert, verwendet das Addon Blizzards Standard-UI-Design. UI-Neuladen erforderlich."

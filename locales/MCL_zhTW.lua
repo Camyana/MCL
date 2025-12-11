@@ -200,6 +200,8 @@ if L then
     L["Layout Settings"] = "佈局設定"
     L["Mounts Per Row"] = "每行坐騎數"
     L["Set the number of mounts to display per row in the mount grid. Requires UI reload."] = "設定坐騎網格中每行顯示的坐騎數量。需要重新載入介面。"
+    L["Refresh Layout"] = "重新整理佈局"
+    L["Refreshes the mount collection display"] = "重新整理坐騎收藏顯示"
     L["Unobtainable Settings"] = "絕版設定"
     L["Hide Unobtainable from overview"] = "總覽中隱藏絕版"
     L["Hide Unobtainable mounts from the overview."] = "在總覽中隱藏絕版坐騎"
@@ -249,6 +251,4 @@ if L then
     L["This setting requires a UI reload to take effect. Reload now?"] = "此設定需要重新載入介面才能生效。現在重新載入嗎？"
     L["Reload Now"] = "立即重新載入"
     L["Later"] = "稍後"
-    L["Refresh Layout"] = "重新整理佈局"
-    L["Refreshes the mount collection display"] = "重新整理坐騎收藏顯示"
 end
