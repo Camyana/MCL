@@ -174,6 +174,8 @@ if L then
     L["Ashran"] = "Ashran"
     L["Mists of Pandaria Remix"] = "Mists of Pandaria Remix"
     L["Midnight Pre-Patch"] = "Midnight Pre-Patch"
+    L["Midnight"] = "Midnight"
+    L["Haranir"] = "Haranir"
 
     ------ setting panel ------
     L["Ctrl + Right Click to pin uncollected mounts"] = "Ctrl + Right Click to pin/unpin mounts"

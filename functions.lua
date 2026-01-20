@@ -1568,17 +1568,39 @@ function MCL_functions:GetMountID(id)
         end
     end
     
-    -- For non-problematic IDs, use the standard logic
+    -- For non-problematic IDs, resolve in a more robust way.
+    -- Inputs can be:
+    -- - "m1234" (direct mount journal ID)
+    -- - itemID (learned from an item)
+    -- - spellID (some sources report mount spell IDs)
+    -- - rarely, a direct mount journal ID as a number
     local mount_Id
     local inputType = type(id)
     local isStringWithM = (inputType == "string" and string.sub(tostring(id), 1, 1) == "m")
-    
+
     if isStringWithM then
-        mount_Id = tonumber(string.sub(tostring(id), 2, -1))
+        return tonumber(string.sub(tostring(id), 2, -1))
+    end
+
+    if inputType == "number" then
+        -- If the number is already a valid mount journal ID, use it.
+        local ok, mountName = pcall(C_MountJournal.GetMountInfoByID, id)
+        if ok and mountName then
+            return id
+        end
+
+        -- First try item -> mount
+        mount_Id = C_MountJournal.GetMountFromItem(id)
+
+        -- Fallback: spell -> mount (helps when sources provide spell IDs)
+        if (not mount_Id or mount_Id == 0) and C_MountJournal.GetMountFromSpell then
+            mount_Id = C_MountJournal.GetMountFromSpell(id)
+        end
     else
+        -- Non-number inputs (defensive): try as item
         mount_Id = C_MountJournal.GetMountFromItem(id)
     end
-    
+
     return mount_Id
 end
 
@@ -1867,7 +1889,19 @@ end,
 local icon = LibStub("LibDBIcon-1.0")
 
 function MCL_MM:OnInitialize() -- Obviously you'll need a ## SavedVariables: BunniesDB line in your TOC, duh!
-	self.db = LibStub("AceDB-3.0"):New("MCL_DB", { profile = { minimap = { hide = false, }, }, }) icon:Register("MCL!", MCL_LDB, self.db.profile.minimap)
+    local AceDB = LibStub("AceDB-3.0", true)
+    if AceDB and type(AceDB.New) == "function" then
+        self.db = AceDB:New("MCL_DB", { profile = { minimap = { hide = false } } })
+    else
+        MCL_DB = MCL_DB or {}
+        MCL_DB.profile = MCL_DB.profile or {}
+        MCL_DB.profile.minimap = MCL_DB.profile.minimap or { hide = false }
+        self.db = MCL_DB
+    end
+
+    if icon and type(icon.Register) == "function" then
+        icon:Register("MCL!", MCL_LDB, self.db.profile.minimap)
+    end
 end
 
 function MCL_MM:MCL_MM()

@@ -173,6 +173,8 @@ if L then
     L["Horrific Visions"] = "恐怖幻象"
     L["Ashran"] = "阿什兰"
     L["Mists of Pandaria Remix"] = "熊猫人之谜重置版"
+    L["Midnight"] = "Midnight"
+    L["Haranir"] = "Haranir"
     
     ------ setting panel ------
     L["Ctrl + Right Click to pin uncollected mounts"] = "Ctrl + 右键 标记/取消标记坐骑"

@@ -42,7 +42,17 @@
 -- @name AceDB-3.0.lua
 -- @release $Id: AceDB-3.0.lua 1284 2022-09-25 09:15:30Z nevcairiel $
 local ACEDB_MAJOR, ACEDB_MINOR = "AceDB-3.0", 27
-local AceDB = LibStub:NewLibrary(ACEDB_MAJOR, ACEDB_MINOR)
+local AceDB, oldminor = LibStub:NewLibrary(ACEDB_MAJOR, ACEDB_MINOR)
+
+-- If another addon registered a broken/incomplete AceDB instance with a higher
+-- minor, LibStub would normally prevent upgrading and we'd end up missing core
+-- APIs like :New(). Detect that and force a one-step bump to replace it.
+if not AceDB then
+	local existing, existingMinor = LibStub:GetLibrary(ACEDB_MAJOR, true)
+	if type(existing) == "table" and type(existing.New) ~= "function" then
+		AceDB = LibStub:NewLibrary(ACEDB_MAJOR, (tonumber(existingMinor) or ACEDB_MINOR) + 1)
+	end
+end
 
 if not AceDB then return end -- No upgrade needed
 
@@ -260,7 +270,8 @@ local factionrealmKey = factionKey .. " - " .. realmKey
 local localeKey = GetLocale():lower()
 
 local regionTable = { "US", "KR", "EU", "TW", "CN" }
-local regionKey = regionTable[GetCurrentRegion()]
+local regionId = (type(GetCurrentRegion) == "function") and GetCurrentRegion() or nil
+local regionKey = regionTable[tonumber(regionId or 0)] or "UNKNOWN"
 local factionrealmregionKey = factionrealmKey .. " - " .. regionKey
 
 -- Actual database initialization function

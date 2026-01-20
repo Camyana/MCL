@@ -60,6 +60,20 @@ end
 
 -- Throttled Mount Creation Helper
 local function ThrottledMountCreation(mountList, categoryFrame, config, callback)
+    -- Optional debug logging: enable with /run MCL_SETTINGS.debugRender=true then /reload
+    local function isDebugCategory()
+        if not (MCL_SETTINGS and MCL_SETTINGS.debugRender) then
+            return false
+        end
+        local name = tostring(config and config.categoryName or ""):lower()
+        return (name == "quest" or name == "dungeon drop" or name == "dungeondrop" or name == "dungeon")
+    end
+
+    local debugCategory = isDebugCategory()
+    if debugCategory then
+        print(string.format("MCL DEBUG: Rendering category '%s' (%s mounts in data)", tostring(config and config.categoryName or "?"), tostring(mountList and #mountList or 0)))
+    end
+
     if not mountList or #mountList == 0 then
         if callback then callback() end
         return
@@ -96,11 +110,13 @@ local function ThrottledMountCreation(mountList, categoryFrame, config, callback
         while index <= #mountList and processed < batchSize and processedCount < maxMounts do
             local mountId = mountList[index]
             local shouldProcess = true
+            local skipReason = nil
             
             -- Validate mount data
             if not mountId or (type(mountId) ~= "number" and type(mountId) ~= "string") then
                 print("MCL Warning: Invalid mount ID at index " .. index .. ": " .. tostring(mountId))
                 shouldProcess = false
+                skipReason = "invalid mountId type"
             end
             
             local mount_Id = nil
@@ -110,6 +126,7 @@ local function ThrottledMountCreation(mountList, categoryFrame, config, callback
                 -- Skip invalid mount IDs
                 if not mount_Id or type(mount_Id) ~= "number" or mount_Id <= 0 then
                     shouldProcess = false
+                    skipReason = "GetMountID returned nil/invalid"
                 end
             end
             
@@ -132,6 +149,17 @@ local function ThrottledMountCreation(mountList, categoryFrame, config, callback
                 if allowed and not (mount_Id and MCL_SETTINGS.hideCollectedMounts and IsMountCollected(mount_Id)) then
                 displayedIndex = displayedIndex + 1
                 if displayedIndex <= config.maxDisplayMounts then
+                    if debugCategory then
+                        local collected = (mount_Id and IsMountCollected(mount_Id)) and "collected" or "uncollected"
+                        print(string.format(
+                            "MCL DEBUG: show mountId=%s -> mountID=%s (%s) [%d/%d]",
+                            tostring(mountId),
+                            tostring(mount_Id),
+                            collected,
+                            displayedIndex,
+                            config.maxDisplayMounts
+                        ))
+                    end
                     -- Create mount frame using the existing logic
                     local success, error = pcall(function()
                         local col = ((displayedIndex-1) % config.mountsPerRow)
@@ -205,6 +233,14 @@ local function ThrottledMountCreation(mountList, categoryFrame, config, callback
                 end
             end
             end -- Close the shouldProcess if block
+
+                if debugCategory and (not shouldProcess) then
+                    print(string.format(
+                        "MCL DEBUG: skip mountId=%s (reason=%s)",
+                        tostring(mountId),
+                        tostring(skipReason or "filtered")
+                    ))
+                end
             
             index = index + 1
             processed = processed + 1
@@ -2287,8 +2323,11 @@ for _, categoryName in ipairs(sortedCategoryNames) do
         end
     end
 
-    -- Only increment categoryIndex if the category is actually displayed (e.g., displayedMounts > 0)
-    if displayedMounts > 0 then
+    -- Show a category as long as it has mounts defined in data.
+    -- Some categories are populated by item IDs; if the mount journal isn't ready yet, ID resolution can
+    -- temporarily fail (totalMounts would be 0), which would incorrectly hide the category.
+    -- Also, when "Hide Collected Mounts" is enabled, a fully-completed category can have displayedMounts == 0.
+    if #mountList > 0 then
         categoryIndex = categoryIndex + 1
         -- Determine which column to use (alternate left/right)
         local isLeftColumn = (categoryIndex % 2 == 1)
@@ -2330,8 +2369,14 @@ for _, categoryName in ipairs(sortedCategoryNames) do
         local actualSpacing = mountsPerRow > 1 and math.floor((availableMountWidth - actualMountWidth) / (mountsPerRow - 1)) or 0
         actualSpacing = math.max(1, actualSpacing)  -- Minimum 1px spacing (reduced from 2)
         
-        -- Calculate dynamic height based on actual mount layout
-        local numRows = math.ceil(displayedMounts / mountsPerRow)
+        -- Calculate dynamic height based on actual mount layout.
+        -- displayedMounts can be 0 temporarily (e.g., mount journal not ready or hide-collected enabled).
+        -- Ensure we reserve space when there are mounts in data.
+        local mountCountForLayout = displayedMounts
+        if mountCountForLayout == 0 and #mountList > 0 then
+            mountCountForLayout = math.min(#mountList, mountsPerRow)
+        end
+        local numRows = math.ceil(mountCountForLayout / mountsPerRow)
         local baseHeight = 80  -- Base height (title + progress bar + padding)
         local rowSpacing = 4  -- Minimal Y-axis spacing between rows (reduced)
         local rowHeight = mountSize + rowSpacing  -- Actual row height based on calculated mount size
@@ -2458,7 +2503,9 @@ for _, categoryName in ipairs(sortedCategoryNames) do
         -- Y-axis spacing (only affected by height changes)
         local rowSpacing = 4  -- Minimal Y-axis spacing between rows
         
-        local maxDisplayMounts = displayedMounts  -- Show all displayed mounts instead of limiting to 24
+        -- Allow rendering up to the number of mounts defined in data.
+        -- ThrottledMountCreation applies faction + hide-collected filtering while incrementing displayedIndex.
+        local maxDisplayMounts = #mountList
         local mountStartX = 10
         
         -- Use throttled mount creation to prevent "script ran too long" errors

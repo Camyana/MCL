@@ -173,6 +173,8 @@ if L then
     L["Horrific Visions"] = "Visioni Orripilanti"
     L["Ashran"] = "Ashran"
     L["Mists of Pandaria Remix"] = "Mists of Pandaria Remix"
+    L["Midnight"] = "Midnight"
+    L["Haranir"] = "Haranir"
 
     ------ pannello impostazioni ----
     L["Ctrl + Right Click to pin uncollected mounts"] = "Ctrl + Click destro per fissare/rimuovere le cavalcature"
