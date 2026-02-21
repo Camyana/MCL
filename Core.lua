@@ -111,8 +111,8 @@ local function InitializeSearch()
             -- Clear any highlighting
             self:ClearHighlighting()
             
-            -- Properly destroy search results content frame
-            self:DestroySearchResultsFrame()
+            -- Hide the search dropdown
+            self:HideSearchDropdown()
             
             -- Clear search text in navigation frame
             if MCLcore.MCL_MF_Nav and MCLcore.MCL_MF_Nav.searchBox then
@@ -120,39 +120,6 @@ local function InitializeSearch()
                 if MCLcore.MCL_MF_Nav.searchPlaceholder then
                     MCLcore.MCL_MF_Nav.searchPlaceholder:Show()
                 end
-            end
-            
-            -- Restore the previously selected tab using the proper SelectTab function
-            if self.previouslySelectedTab then
-                -- We need to call the SelectTab function from frames.lua
-                -- Since it's local, we'll replicate its logic here
-                if MCLcore.MCL_MF_Nav and MCLcore.MCL_MF_Nav.tabs then
-                    -- Deselect all tabs first
-                    for _, t in ipairs(MCLcore.MCL_MF_Nav.tabs) do
-                        if t.SetBackdropBorderColor then
-                            t:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
-                        end
-                    end
-                    -- Hide all tab contents
-                    for _, t in ipairs(MCLcore.MCL_MF_Nav.tabs) do
-                        if t.content then
-                            t.content:Hide()
-                        end
-                    end
-                    -- Restore the selected tab
-                    if self.previouslySelectedTab.SetBackdropBorderColor then
-                        self.previouslySelectedTab:SetBackdropBorderColor(1, 0.82, 0, 1)
-                    end
-                    if self.previouslySelectedTab.content and MCL_mainFrame.ScrollFrame then
-                        -- Always keep the main scroll child as the scroll child
-                        MCL_mainFrame.ScrollFrame:SetScrollChild(MCL_mainFrame.ScrollChild)
-                        self.previouslySelectedTab.content:Show()
-                        MCL_mainFrame.ScrollFrame:SetVerticalScroll(0)
-                    end
-                    -- Update global reference
-                    MCLcore.currentlySelectedTab = self.previouslySelectedTab
-                end
-                self.previouslySelectedTab = nil
             end
         end
 
@@ -164,8 +131,8 @@ local function InitializeSearch()
             -- Clear any highlighting
             self:ClearHighlighting()
             
-            -- Properly destroy search results content frame
-            self:DestroySearchResultsFrame()
+            -- Hide the search dropdown
+            self:HideSearchDropdown()
             
             -- Clear search text in navigation frame
             if MCLcore.MCL_MF_Nav and MCLcore.MCL_MF_Nav.searchBox then
@@ -174,344 +141,206 @@ local function InitializeSearch()
                     MCLcore.MCL_MF_Nav.searchPlaceholder:Show()
                 end
             end
-            
-            -- Always go to Overview tab regardless of previous selection
-            if MCLcore.MCL_MF_Nav and MCLcore.MCL_MF_Nav.tabs then
-                -- Find the Overview tab (should be the first one)
-                local overviewTab = nil
-                for _, tab in ipairs(MCLcore.MCL_MF_Nav.tabs) do
-                    if tab.section and tab.section.name == "Overview" then
-                        overviewTab = tab
-                        break
-                    end
-                end
-                
-                if overviewTab then
-                    -- Deselect all tabs first
-                    for _, t in ipairs(MCLcore.MCL_MF_Nav.tabs) do
-                        if t.SetBackdropBorderColor then
-                            t:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
-                        end
-                    end
-                    -- Hide all tab contents using the proper HideAllTabContents function
-                    if MCLcore.HideAllTabContents then
-                        MCLcore.HideAllTabContents()
-                    else
-                        -- Fallback: Hide all tab contents manually
-                        for _, t in ipairs(MCLcore.MCL_MF_Nav.tabs) do
-                            if t.content then
-                                t.content:Hide()
-                            end
-                        end
-                    end
-                    -- Select the Overview tab
-                    if overviewTab.SetBackdropBorderColor then
-                        overviewTab:SetBackdropBorderColor(1, 0.82, 0, 1)
-                    end
-                    if overviewTab.content and MCL_mainFrame.ScrollFrame then
-                        -- Always keep the main scroll child as the scroll child
-                        MCL_mainFrame.ScrollFrame:SetScrollChild(MCL_mainFrame.ScrollChild)
-                        overviewTab.content:Show()
-                        MCL_mainFrame.ScrollFrame:SetVerticalScroll(0)
-                    end
-                    -- Update global reference
-                    MCLcore.currentlySelectedTab = overviewTab
-                end
-            end
-            
-            -- Clear the previously selected tab since we're defaulting to Overview
-            self.previouslySelectedTab = nil
         end
         function MCLcore.Search:DisplaySearchResults()
             if not MCL_mainFrame then return end
-            
-            -- Store the currently selected tab so we can restore it later
-            if MCLcore.currentlySelectedTab and not self.previouslySelectedTab then
-                self.previouslySelectedTab = MCLcore.currentlySelectedTab
+
+            -- Show results as a dropdown list anchored to the search bar
+            self:ShowSearchDropdown()
+        end
+
+        function MCLcore.Search:HideSearchDropdown()
+            if MCLcore.searchDropdown then
+                MCLcore.searchDropdown:Hide()
             end
-            
-            -- Hide all tab contents first
-            if MCLcore.MCL_MF_Nav and MCLcore.MCL_MF_Nav.tabs then
-                for _, t in ipairs(MCLcore.MCL_MF_Nav.tabs) do
-                    if t.content then
-                        t.content:Hide()
-                    end
-                end
-                -- Deselect all tabs visually
-                for _, t in ipairs(MCLcore.MCL_MF_Nav.tabs) do
-                    if t.SetBackdropBorderColor then
-                        t:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
-                    end
-                end
+        end
+
+        function MCLcore.Search:ShowSearchDropdown()
+            local nav = MCLcore.MCL_MF_Nav
+            if not nav or not nav.searchContainer then return end
+
+            -- Create the dropdown frame once, reuse it
+            if not MCLcore.searchDropdown then
+                local dd = CreateFrame("Frame", "MCLSearchDropdown", UIParent, "BackdropTemplate")
+                dd:SetFrameStrata("TOOLTIP")  -- Above everything
+                dd:SetFrameLevel(200)
+                dd:SetClampedToScreen(true)
+                dd:SetBackdrop({
+                    bgFile = "Interface\\Buttons\\WHITE8x8",
+                    edgeFile = "Interface\\Buttons\\WHITE8x8",
+                    edgeSize = 1
+                })
+                dd:SetBackdropColor(0.06, 0.06, 0.09, 0.97)
+                dd:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.8)
+
+                -- Scroll frame inside the dropdown
+                dd.scroll = CreateFrame("ScrollFrame", nil, dd, "UIPanelScrollFrameTemplate")
+                dd.scroll:SetPoint("TOPLEFT", dd, "TOPLEFT", 6, -6)
+                dd.scroll:SetPoint("BOTTOMRIGHT", dd, "BOTTOMRIGHT", -24, 6)
+
+                dd.scrollChild = CreateFrame("Frame", nil, dd.scroll)
+                dd.scrollChild:SetWidth(1) -- will be set properly on show
+                dd.scroll:SetScrollChild(dd.scrollChild)
+
+                -- Style the scrollbar
+                dd.scroll.ScrollBar:SetPoint("TOPLEFT", dd.scroll, "TOPRIGHT", 2, -16)
+                dd.scroll.ScrollBar:SetPoint("BOTTOMLEFT", dd.scroll, "BOTTOMRIGHT", 2, 16)
+
+                MCLcore.searchDropdown = dd
             end
-            
-            -- Hide all section frames that might be stored globally
-            if MCLcore.sectionFrames then
-                for _, contentFrame in ipairs(MCLcore.sectionFrames) do
-                    if contentFrame and contentFrame.Hide then
-                        contentFrame:Hide()
-                    end
-                end
-            end
-            
-            -- Hide overview frame specifically
-            if MCLcore.overview then
-                MCLcore.overview:Hide()
-            end
-            
-            -- Create or get search results content frame
-            if not MCLcore.searchResultsContent then
-                MCLcore.searchResultsContent = MCLcore.Frames:createContentFrame(MCL_mainFrame.ScrollChild, "Search Results")
-                -- Ensure search results content is properly layered
-                MCLcore.searchResultsContent:SetFrameStrata("MEDIUM")
-                MCLcore.searchResultsContent:SetFrameLevel(10)
-            end
-            
-            -- Update search results content
-            self:UpdateSearchResultsContent()
-            
-            -- Show search results in main frame
-            if MCL_mainFrame.ScrollFrame then
-                -- Always keep the main scroll child as the scroll child
-                MCL_mainFrame.ScrollFrame:SetScrollChild(MCL_mainFrame.ScrollChild)
-                MCLcore.searchResultsContent:Show()
-                MCL_mainFrame.ScrollFrame:SetVerticalScroll(0)
-            end
-        end        function MCLcore.Search:UpdateSearchResultsContent()
-            if not MCLcore.searchResultsContent then return end
-            
-            local content = MCLcore.searchResultsContent
-            
-            -- Clear existing content more thoroughly
-            -- First hide and remove all children except the title
-            for i = content:GetNumChildren(), 1, -1 do
-                local child = select(i, content:GetChildren())
-                if child and child ~= content.title then
-                    child:Hide()
-                    child:SetParent(nil)
+
+            local dd = MCLcore.searchDropdown
+
+            -- Position dropdown: below the search bar, extending to the right
+            dd:ClearAllPoints()
+            dd:SetPoint("TOPLEFT", nav.searchContainer, "BOTTOMLEFT", 0, -2)
+            -- Width: extend across the main frame
+            local ddWidth = 400
+            local maxHeight = 420
+            dd:SetSize(ddWidth, maxHeight)
+            dd.scrollChild:SetWidth(ddWidth - 30)
+
+            -- Clear old rows
+            if dd.rows then
+                for _, row in ipairs(dd.rows) do
+                    row:Hide()
+                    row:ClearAllPoints()
+                    row:SetParent(nil)
                 end
             end
-            
-            -- Also clear any FontStrings that were created directly on the content frame
-            -- We need to track and clear these separately since they're not children
-            if content.searchFontStrings then
-                for _, fontString in ipairs(content.searchFontStrings) do
-                    if fontString then
-                        fontString:Hide()
-                        fontString:SetParent(nil)
-                    end
-                end
+            dd.rows = {}
+
+            -- Hide previous "more" text if it exists
+            if dd.moreText then
+                dd.moreText:Hide()
             end
-            content.searchFontStrings = {}
-            
-            -- Update title
-            content.title:SetText(string.format("Search Results: '%s' (%d found)", self.currentSearchTerm, #self.searchResults))
-            
+
+            -- Header: result count (reuse existing FontString)
+            local headerHeight = 20
+            if not dd.header then
+                dd.header = dd.scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                dd.header:SetPoint("TOPLEFT", dd.scrollChild, "TOPLEFT", 4, -2)
+                dd.header:SetTextColor(0.5, 0.55, 0.65, 1)
+            end
+            local header = dd.header
+            header:Show()
+
             if #self.searchResults == 0 then
-                -- Show no results message
-                if not content.noResultsText then
-                    content.noResultsText = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-                    content.noResultsText:SetPoint("TOP", content.title, "BOTTOM", 0, -20)
-                    content.noResultsText:SetTextColor(0.7, 0.7, 0.7, 1)
-                    table.insert(content.searchFontStrings, content.noResultsText)
-                end
-                content.noResultsText:SetText("No mounts found matching your search.")
-                content.noResultsText:Show()
+                header:SetText("No mounts found matching '" .. self.currentSearchTerm .. "'")
+                dd.scrollChild:SetHeight(headerHeight + 8)
+                dd:SetHeight(headerHeight + 20)
+                dd:Show()
                 return
-            else
-                if content.noResultsText then
-                    content.noResultsText:Hide()
-                end
             end
-            
-            -- Group results by section, then by category
-            local groupedResults = {}
-            for _, result in ipairs(self.searchResults) do
-                if not groupedResults[result.section] then
-                    groupedResults[result.section] = {}
-                end
-                if not groupedResults[result.section][result.category] then
-                    groupedResults[result.section][result.category] = {}
-                end
-                table.insert(groupedResults[result.section][result.category], result)
-            end
-            
-            -- Calculate layout dimensions
-            local currentWidth, _ = MCLcore.Frames:GetCurrentFrameDimensions()
-            local availableWidth = currentWidth - 60
-            
-            -- Start with user's preferred mounts per row
-            local mountsPerRow = MCL_SETTINGS.mountsPerRow or 12  -- Use setting or default to 12
-            -- Ensure it's within bounds
-            mountsPerRow = math.max(6, math.min(mountsPerRow, 24))
-            
-            -- Calculate mount size to fit exactly within available width
-            local desiredSpacing = 4  -- Fixed spacing between mounts
-            local minMountSize = 16  -- Absolute minimum mount size
-            local maxMountSize = 48  -- Maximum mount size
-            
-            -- Try the preferred mounts per row first
-            local totalSpacingWidth = desiredSpacing * (mountsPerRow - 1)
-            local availableForMounts = availableWidth - totalSpacingWidth
-            local mountSize = math.floor(availableForMounts / mountsPerRow)
-            
-            -- If mount size is too small, reduce mounts per row until we get acceptable size
-            while mountSize < minMountSize and mountsPerRow > 6 do
-                mountsPerRow = mountsPerRow - 1
-                totalSpacingWidth = desiredSpacing * (mountsPerRow - 1)
-                availableForMounts = availableWidth - totalSpacingWidth
-                mountSize = math.floor(availableForMounts / mountsPerRow)
-            end
-            
-            -- Ensure mount size is within bounds
-            mountSize = math.max(minMountSize, math.min(mountSize, maxMountSize))
-            
-            -- Recalculate actual spacing to center the grid
-            local actualMountWidth = mountSize * mountsPerRow
-            local spacing = mountsPerRow > 1 and math.floor((availableWidth - actualMountWidth) / (mountsPerRow - 1)) or 0
-            spacing = math.max(1, spacing)  -- Minimum 1px spacing
-            
-            local currentY = -80 -- Start below title
-            local mountIndex = 0
-            
-            -- Display results grouped by section and category
-            for sectionName, sectionData in pairs(groupedResults) do
-                -- Create section header
-                local sectionHeader = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-                sectionHeader:SetPoint("TOPLEFT", content, "TOPLEFT", 10, currentY)
-                sectionHeader:SetText(sectionName)
-                sectionHeader:SetTextColor(1, 0.82, 0, 1) -- Gold color like Blizzard UI
-                table.insert(content.searchFontStrings, sectionHeader)
-                currentY = currentY - 25
-                
-                for categoryName, categoryMounts in pairs(sectionData) do
-                    -- Create category header
-                    local categoryHeader = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-                    categoryHeader:SetPoint("TOPLEFT", content, "TOPLEFT", 20, currentY)
-                    categoryHeader:SetText(categoryName .. " (" .. #categoryMounts .. ")")
-                    categoryHeader:SetTextColor(0.8, 0.8, 1, 1) -- Light blue color
-                    table.insert(content.searchFontStrings, categoryHeader)
-                    currentY = currentY - 20
-                    
-                    -- Display mounts for this category
-                    local categoryStartY = currentY
-                    local categoryMountIndex = 0
-                    
-                    for _, result in ipairs(categoryMounts) do
-                        local col = (categoryMountIndex % mountsPerRow)
-                        local row = math.floor(categoryMountIndex / mountsPerRow)
-                        
-                        local x = spacing + col * (mountSize + spacing)
-                        local y = categoryStartY - row * (mountSize + 10)
-                          -- Create mount frame
-                        local mountFrame = CreateFrame("Button", nil, content, "BackdropTemplate")
-                        mountFrame:SetSize(mountSize, mountSize)
-                        mountFrame:SetPoint("TOPLEFT", content, "TOPLEFT", x, y)
-                        
-                        -- Set mount icon
-                        mountFrame.tex = mountFrame:CreateTexture(nil, "ARTWORK")
-                        mountFrame.tex:SetAllPoints(mountFrame)
-                        mountFrame.tex:SetTexture(result.icon)
-                          -- Add pin functionality (required for pin/unpin operations)
-                        mountFrame.pin = mountFrame:CreateTexture(nil, "OVERLAY")
-                        mountFrame.pin:SetWidth(16)
-                        mountFrame.pin:SetHeight(16)
-                        mountFrame.pin:SetTexture("Interface\\AddOns\\MCL\\icons\\pin.blp")
-                        mountFrame.pin:SetPoint("TOPRIGHT", mountFrame, "TOPRIGHT", -2, -2)
-                        mountFrame.pin:SetAlpha(0)
-                        
-                        -- Set mount properties for functionality
-                        mountFrame.mountID = result.mountId
-                        mountFrame.category = result.category
-                        mountFrame.section = result.section
-                        
-                        -- Check if mount is already pinned and show pin icon if needed
-                        local isPinned, pinIndex = MCLcore.Function:CheckIfPinned("m" .. result.mountId)
-                        if isPinned then
-                            mountFrame.pin:SetAlpha(1)
-                        end                        -- Style based on collection status
-                        -- Note: With hideCollectedMounts enabled, collected mounts won't be in search results
-                        if result.isCollected then
-                            mountFrame.tex:SetVertexColor(1, 1, 1, 1)
-                            mountFrame:SetBackdrop({
-                                bgFile = "Interface\\Buttons\\WHITE8x8",
-                                edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-                                edgeSize = 2
-                            })
-                            mountFrame:SetBackdropColor(0, 0.8, 0, 0.6)
-                            mountFrame:SetBackdropBorderColor(0, 1, 0, 1)
-                        else
-                            mountFrame.tex:SetVertexColor(0.4, 0.4, 0.4, 0.7)
-                            mountFrame:SetBackdrop({
-                                bgFile = "Interface\\Buttons\\WHITE8x8",
-                                edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-                                edgeSize = 2
-                            })
-                            mountFrame:SetBackdropColor(0.8, 0, 0, 0.4)
-                            mountFrame:SetBackdropBorderColor(0.8, 0.2, 0.2, 1)
-                        end                        -- Add tooltip and click functionality
-                        mountFrame:SetScript("OnEnter", function(self)
-                            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                            
-                            -- Check if this mount has an item ID (number) vs mount ID (string starting with "m")
-                            -- If it's an item ID, show the item tooltip; otherwise show the mount spell tooltip
-                            if type(result.mountId) == "number" then
-                                -- This is an item ID, show item tooltip
-                                GameTooltip:SetItemByID(result.mountId)
-                            else
-                                -- This is a mount ID or spell ID, show mount spell tooltip
-                                GameTooltip:SetMountBySpellID(result.spellID)
-                            end
-                            
-                            GameTooltip:AddLine(" ")
-                            GameTooltip:AddLine("Found in: " .. result.section .. " > " .. result.category, 0.7, 0.7, 1, 1)
-                            
-                            -- Show what was matched if it's different from the mount name
-                            if result.matchedName and result.matchedName ~= result.mountName then
-                                GameTooltip:AddLine("Matched: " .. result.matchedName, 0.7, 1, 0.7, 1)
-                            end
-                            
-                            GameTooltip:AddLine("Click to navigate to this mount's location", 1, 1, 0, 1)
-                            GameTooltip:AddLine("Ctrl+Right-Click to pin/unpin this mount", 1, 1, 0, 1)
-                            GameTooltip:Show()
-                        end)
-                        mountFrame:SetScript("OnLeave", function()
-                            GameTooltip:Hide()
-                        end)
-                        
-                        -- Set up proper mouse click functionality including pinning
-                        MCLcore.Function:SetMouseClickFunctionality(mountFrame, result.mountId, result.mountName, nil, result.spellID, false)
-                        
-                        -- Override the OnMouseDown handler to include navigation for search results
-                        local originalOnMouseDown = mountFrame:GetScript("OnMouseDown")
-                        mountFrame:SetScript("OnMouseDown", function(self, button)
-                            if button == "LeftButton" and not IsControlKeyDown() and not IsShiftKeyDown() then
-                                -- Navigate to the mount's location for search results
-                                MCLcore.Search:NavigateToMount(result)
-                            else
-                                -- Call the original OnMouseDown handler for other functionality
-                                if originalOnMouseDown then
-                                    originalOnMouseDown(self, button)
-                                end
-                            end
-                        end)
-                        
-                        -- Ensure mouse interaction is enabled
-                        mountFrame:EnableMouse(true)
-                        mountFrame:SetFrameStrata("HIGH")
-                        mountFrame:SetFrameLevel(10)
-                        
-                        categoryMountIndex = categoryMountIndex + 1
+
+            header:SetText(string.format("%d result%s", #self.searchResults, #self.searchResults == 1 and "" or "s"))
+
+            -- Build rows
+            local rowHeight = 24
+            local yOffset = -(headerHeight + 4)
+            local maxResults = 50  -- Cap displayed results for performance
+
+            for i, result in ipairs(self.searchResults) do
+                if i > maxResults then break end
+
+                local row = CreateFrame("Button", nil, dd.scrollChild, "BackdropTemplate")
+                row:SetSize(ddWidth - 32, rowHeight)
+                row:SetPoint("TOPLEFT", dd.scrollChild, "TOPLEFT", 2, yOffset)
+
+                -- Hover highlight
+                row:SetBackdrop({
+                    bgFile = "Interface\\Buttons\\WHITE8x8",
+                })
+                row:SetBackdropColor(0, 0, 0, 0)  -- transparent by default
+                row:SetScript("OnEnter", function(self)
+                    self:SetBackdropColor(0.15, 0.18, 0.25, 0.6)
+                    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                    if type(result.mountId) == "number" then
+                        GameTooltip:SetItemByID(result.mountId)
+                    else
+                        GameTooltip:SetMountBySpellID(result.spellID)
                     end
-                    
-                    -- Calculate how much Y space this category used
-                    local categoryRows = math.ceil(#categoryMounts / mountsPerRow)
-                    currentY = categoryStartY - categoryRows * (mountSize + 10) - 10 -- Add some spacing after category
+                    GameTooltip:Show()
+                end)
+                row:SetScript("OnLeave", function(self)
+                    self:SetBackdropColor(0, 0, 0, 0)
+                    GameTooltip:Hide()
+                end)
+
+                -- Click: navigate to mount
+                row:SetScript("OnClick", function(_, button)
+                    if button == "LeftButton" then
+                        dd:Hide()
+                        MCLcore.Search:NavigateToMount(result)
+                    end
+                end)
+                row:EnableMouse(true)
+
+                -- Icon
+                local icon = row:CreateTexture(nil, "ARTWORK")
+                icon:SetSize(rowHeight - 4, rowHeight - 4)
+                icon:SetPoint("LEFT", row, "LEFT", 4, 0)
+                icon:SetTexture(result.icon)
+                if not result.isCollected then
+                    icon:SetDesaturated(true)
+                    icon:SetAlpha(0.6)
                 end
-                
-                -- Add extra spacing after each section
-                currentY = currentY - 10
+
+                -- Mount name
+                local nameText = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+                nameText:SetPoint("LEFT", icon, "RIGHT", 6, 0)
+                nameText:SetWidth(ddWidth - 180)
+                nameText:SetJustifyH("LEFT")
+                nameText:SetWordWrap(false)
+                if result.isCollected then
+                    nameText:SetText(result.mountName or "Unknown")
+                    nameText:SetTextColor(0.7, 0.78, 0.88, 1)
+                else
+                    nameText:SetText(result.mountName or "Unknown")
+                    nameText:SetTextColor(0.45, 0.5, 0.55, 1)
+                end
+
+                -- Source (section > category) on the right
+                local sourceText = row:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+                sourceText:SetPoint("RIGHT", row, "RIGHT", -4, 0)
+                sourceText:SetJustifyH("RIGHT")
+                sourceText:SetTextColor(0.4, 0.45, 0.5, 1)
+                local shortSource = result.category or result.section or ""
+                if #shortSource > 20 then
+                    shortSource = shortSource:sub(1, 18) .. ".."
+                end
+                sourceText:SetText(shortSource)
+
+                -- Collected indicator (small green dot)
+                if result.isCollected then
+                    local dot = row:CreateTexture(nil, "OVERLAY")
+                    dot:SetSize(8, 8)
+                    dot:SetPoint("RIGHT", sourceText, "LEFT", -4, 0)
+                    dot:SetColorTexture(0.3, 0.85, 0.3, 1)
+                end
+
+                table.insert(dd.rows, row)
+                yOffset = yOffset - rowHeight
             end
+
+            -- "and X more..." line if capped
+            if #self.searchResults > maxResults then
+                if not dd.moreText then
+                    dd.moreText = dd.scrollChild:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+                    dd.moreText:SetTextColor(0.4, 0.45, 0.5, 1)
+                end
+                dd.moreText:ClearAllPoints()
+                dd.moreText:SetPoint("TOPLEFT", dd.scrollChild, "TOPLEFT", 8, yOffset - 4)
+                dd.moreText:SetText(string.format("...and %d more", #self.searchResults - maxResults))
+                dd.moreText:Show()
+                yOffset = yOffset - 20
+            end
+
+            -- Size the scroll child and dropdown
+            local contentHeight = math.abs(yOffset) + 8
+            dd.scrollChild:SetHeight(contentHeight)
+            dd:SetHeight(math.min(contentHeight + 14, maxHeight))
+            dd:Show()
         end
         function MCLcore.Search:NavigateToMount(result)
             -- Store the target section for navigation
@@ -547,7 +376,7 @@ local function InitializeSearch()
                         -- Deselect all tabs first
                         for _, t in ipairs(MCLcore.MCL_MF_Nav.tabs) do
                             if t.SetBackdropBorderColor then
-                                t:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
+                                t:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.6)
                             end
                         end
                         
@@ -558,7 +387,7 @@ local function InitializeSearch()
                         
                         -- Select the target tab
                         if tab.SetBackdropBorderColor then
-                            tab:SetBackdropBorderColor(1, 0.82, 0, 1)
+                            tab:SetBackdropBorderColor(0.3, 0.6, 0.9, 1)
                         end
                         if tab.content and MCL_mainFrame.ScrollFrame then
                             -- Always keep the main scroll child as the scroll child
@@ -595,9 +424,14 @@ local function InitializeSearch()
                         MCLcore.highlightedMountFrame.originalBorderColor[3],
                         MCLcore.highlightedMountFrame.originalBorderColor[4]
                     )
+                    MCLcore.highlightedMountFrame.originalBorderColor = nil
                 end
                 if MCLcore.highlightedMountFrame.highlightTimer then
                     MCLcore.highlightedMountFrame.highlightTimer:Cancel()
+                    MCLcore.highlightedMountFrame.highlightTimer = nil
+                end
+                if MCLcore.highlightedMountFrame.searchGlowFrame then
+                    MCLcore.highlightedMountFrame.searchGlowFrame:Hide()
                 end
                 MCLcore.highlightedMountFrame = nil
             end
@@ -637,42 +471,70 @@ local function InitializeSearch()
                 -- Store reference for cleanup
                 MCLcore.highlightedMountFrame = mountFrame
                 
-                -- Create pulsing highlight effect
-                local pulseTimer
-                local pulseCount = 0
-                local maxPulses = 6
+                -- Create a glow overlay Frame (not texture) so it renders on top of child icon
+                if not mountFrame.searchGlowFrame then
+                    mountFrame.searchGlowFrame = CreateFrame("Frame", nil, mountFrame)
+                    mountFrame.searchGlowFrame:SetAllPoints(mountFrame)
+                    mountFrame.searchGlowFrame:SetFrameLevel(mountFrame:GetFrameLevel() + 20)
+                    mountFrame.searchGlowFrame.tex = mountFrame.searchGlowFrame:CreateTexture(nil, "OVERLAY", nil, 7)
+                    mountFrame.searchGlowFrame.tex:SetAllPoints(mountFrame.searchGlowFrame)
+                    mountFrame.searchGlowFrame.tex:SetColorTexture(1, 1, 0, 0.5)
+                end
+                mountFrame.searchGlowFrame:Show()
                 
-                pulseTimer = C_Timer.NewTicker(0.5, function()
+                -- Pulse indefinitely until user hovers
+                local pulseCount = 0
+                local pulseTimer = C_Timer.NewTicker(0.35, function()
                     pulseCount = pulseCount + 1
-                    if pulseCount > maxPulses then
-                        -- Restore original color and stop
-                        if mountFrame.originalBorderColor then
-                            mountFrame:SetBackdropBorderColor(
-                                mountFrame.originalBorderColor[1],
-                                mountFrame.originalBorderColor[2],
-                                mountFrame.originalBorderColor[3],
-                                mountFrame.originalBorderColor[4]
-                            )
-                        end
-                        pulseTimer:Cancel()
-                        MCLcore.highlightedMountFrame = nil
-                        return
-                    end
-                    
-                    -- Pulse between yellow and original color
                     if pulseCount % 2 == 1 then
-                        mountFrame:SetBackdropBorderColor(1, 1, 0, 1) -- Bright yellow
+                        mountFrame:SetBackdropBorderColor(0.4, 0.78, 0.95, 1)  -- House style title blue
+                        if mountFrame.searchGlowFrame then mountFrame.searchGlowFrame.tex:SetAlpha(0.5) end
                     else
+                        mountFrame:SetBackdropBorderColor(0.2, 0.5, 0.85, 1)  -- House style accent blue
+                        if mountFrame.searchGlowFrame then mountFrame.searchGlowFrame.tex:SetAlpha(0.15) end
+                    end
+                end)
+                
+                mountFrame.highlightTimer = pulseTimer
+                
+                -- Helper to stop flashing and restore border
+                local function StopHighlight(srcFrame)
+                    if mountFrame.highlightTimer then
+                        mountFrame.highlightTimer:Cancel()
+                        mountFrame.highlightTimer = nil
+                    end
+                    if mountFrame.searchGlowFrame then mountFrame.searchGlowFrame:Hide() end
+                    if mountFrame.originalBorderColor then
                         mountFrame:SetBackdropBorderColor(
                             mountFrame.originalBorderColor[1],
                             mountFrame.originalBorderColor[2],
                             mountFrame.originalBorderColor[3],
                             mountFrame.originalBorderColor[4]
                         )
+                        mountFrame.originalBorderColor = nil
                     end
+                    MCLcore.highlightedMountFrame = nil
+                end
+                
+                -- Hook OnEnter on the backdrop frame itself
+                local origOnEnter = mountFrame:GetScript("OnEnter")
+                mountFrame:SetScript("OnEnter", function(self, ...)
+                    StopHighlight(self)
+                    if origOnEnter then origOnEnter(self, ...) end
                 end)
                 
-                mountFrame.highlightTimer = pulseTimer
+                -- Also hook OnEnter on child Button (the actual icon that receives mouse events)
+                for i = 1, mountFrame:GetNumChildren() do
+                    local child = select(i, mountFrame:GetChildren())
+                    if child and child:IsObjectType("Button") and child.mountID then
+                        local childOrigOnEnter = child:GetScript("OnEnter")
+                        child:SetScript("OnEnter", function(self, ...)
+                            StopHighlight(self)
+                            if childOrigOnEnter then childOrigOnEnter(self, ...) end
+                        end)
+                        break
+                    end
+                end
                 
                 -- Scroll to the mount if needed
                 local frameTop = currentContent:GetTop()
@@ -702,40 +564,12 @@ local function InitializeSearch()
         end
         
         function MCLcore.Search:RecreateSearchResultsFrame()
-            if not MCLcore.searchResultsContent then return end
-            
-            -- Hide and remove the old search results content frame
-            MCLcore.searchResultsContent:Hide()
-            MCLcore.searchResultsContent:SetParent(nil)
-            MCLcore.searchResultsContent = nil
-            
-            -- Create new search results content frame with updated dimensions
-            MCLcore.searchResultsContent = MCLcore.Frames:createContentFrame(MCL_mainFrame.ScrollChild, "Search Results")
-            
-            -- Update the content
-            self:UpdateSearchResultsContent()
-            
-            -- Show the new frame
-            if MCL_mainFrame.ScrollFrame then
-                -- Always keep the main scroll child as the scroll child
-                MCL_mainFrame.ScrollFrame:SetScrollChild(MCL_mainFrame.ScrollChild)
-                MCLcore.searchResultsContent:Show()
-                MCL_mainFrame.ScrollFrame:SetVerticalScroll(0)
-            end
+            -- No longer needed — dropdown is rebuilt each search
         end
         
         function MCLcore.Search:DestroySearchResultsFrame()
-            if MCLcore.searchResultsContent then
-                -- Hide and remove the search results content frame
-                MCLcore.searchResultsContent:Hide()
-                MCLcore.searchResultsContent:SetParent(nil)
-                MCLcore.searchResultsContent = nil
-                
-                -- Ensure the main scroll child is set as the scroll child
-                if MCL_mainFrame.ScrollFrame and MCL_mainFrame.ScrollChild then
-                    MCL_mainFrame.ScrollFrame:SetScrollChild(MCL_mainFrame.ScrollChild)
-                end
-            end
+            -- Hide the dropdown if visible
+            self:HideSearchDropdown()
         end
     end
 end
@@ -750,36 +584,30 @@ MCLcore.InitializeSearch = InitializeSearch
 SLASH_MCL1 = "/mcl";
 
 SlashCmdList["MCL"] = function(msg)
-    if msg:lower() == "help" then
-        print(MCLcore.L["|cff00CCFFMount Collection Log Commands:\n|cffFF0000Show:|cffFFFFFF Shows your mount collection log\n|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon\n|cffFF0000Config:|cffFFFFFF Opens the settings\n|cffFF0000Help:|cffFFFFFF Shows commands"])
-    end
-    if msg:lower() == "show" then
+    local cmd = msg:lower()
+    if cmd == "help" then
+        print("|cff00CCFFMount Collection Log Commands:")
+        print("|cffFF0000Show:|cffFFFFFF Shows your mount collection log")
+        print("|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon")
+        print("|cffFF0000Config:|cffFFFFFF Opens the settings")
+        print("|cffFF0000Help:|cffFFFFFF Shows commands")
+    elseif cmd == "show" or cmd == "" then
         MCLcore.Main.Toggle();
-    end
-    if msg:lower() == "icon" then
+    elseif cmd == "icon" then
         MCLcore.Function.MCL_MM();
-    end        
-    if msg:lower() == "" then
-        MCLcore.Main.Toggle();
-    end
-    if msg:lower() == "debug" then
+    elseif cmd == "debug" then
         MCLcore.Function:GetCollectedMounts();
-    end
-    if msg:lower() == "debugmounts" then
-        -- Re-run mount validation with debug enabled
+    elseif cmd == "debugmounts" then
         if MCLcore.Main then
-            MCLcore.Main:Init(true)  -- Force re-initialization with debug
+            MCLcore.Main:Init(true)
         end
-    end
-    if msg:lower() == "config" or msg == "settings" then
+    elseif cmd == "config" or cmd == "settings" then
         MCLcore.Frames:openSettings();
-    end
-    if msg:lower() == "refresh" then
+    elseif cmd == "refresh" then
         if MCLcore.Main and type(MCLcore.Main.Init) == "function" then
-            MCLcore.Main:Init(true)  -- True to force re-initialization.
+            MCLcore.Main:Init(true)
         end
-    end
-    if msg:lower() == "cleanup" or msg:lower() == "cleanpinned" then
+    elseif cmd == "cleanup" or cmd == "cleanpinned" then
         if MCLcore.Function and MCLcore.Function.CleanupInvalidPinnedMounts then
             print("|cff00CCFF[MCL]|r Starting cleanup of invalid pinned mounts...")
             MCLcore.Function:CleanupInvalidPinnedMounts()
@@ -787,8 +615,7 @@ SlashCmdList["MCL"] = function(msg)
         else
             print("|cffFF0000[MCL]|r Cleanup function not available.")
         end
-    end
-    if msg:lower() == "testmount" then
+    elseif cmd == "testmount" then
         -- Test a known mount ID to see what the API returns
         local testId = 230  -- Swift Palomino - a basic mount that should exist
         local mountName, spellID, icon = C_MountJournal.GetMountInfoByID(testId)

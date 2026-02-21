@@ -83,10 +83,10 @@ end
 -- * Function is designed to check if the ingame mount journal has loaded correctly before loading our own database.
 -- * -----------------------------------------------
 
-function IsRegionalFiltered(id)
+local function IsRegionalFiltered(id)
     if MCLcore.regionalFilter[region] ~= nil then
-        for k, v in pairs(MCLcore.regionalFilter[region]) do
-            if v == id then
+        for _, filteredId in pairs(MCLcore.regionalFilter[region]) do
+            if filteredId == id then
                 return true
             end
         end
@@ -94,19 +94,16 @@ function IsRegionalFiltered(id)
     return false
 end
 
-function CountMounts()
+local function CountMounts()
     MCLcore.mountList = MCLcore.mountList or {}
     local count = 0
-    for b, n in pairs(MCLcore.mountList) do
-        if type(n) == "table" then
-            for h, j in pairs(n) do
-                if type(j) == "table" then
-                    for k, v in pairs(j) do
-                        -- Ensure v.mounts is a table before attempting to iterate over it
-                        if type(v.mounts) == "table" then
-                            for kk, vv in pairs(v.mounts) do
-                                count = count + 1
-                            end
+    for _, section in pairs(MCLcore.mountList) do
+        if type(section) == "table" then
+            for _, field in pairs(section) do
+                if type(field) == "table" then
+                    for _, category in pairs(field) do
+                        if type(category.mounts) == "table" then
+                            count = count + #category.mounts
                         end
                     end
                 end
@@ -125,7 +122,7 @@ end
 local totalMountCount = CountMounts()
 
 -- Debugging variables
-local debugMode = true -- Set to false to disable debugging
+local debugMode = false -- Set to true to enable debug mount tracking
 local invalidMounts = {}
 local validMounts = {}
 
@@ -139,28 +136,28 @@ local function InitMounts()
         validMounts = {}
     end
     
-    for b,n in pairs(MCLcore.mountList) do
-        for h,j in pairs(n) do
-            if (type(j) == "table") then
-                for k,v in pairs(j) do
-                    for kk,vv in pairs(v.mounts) do
-                        if not IsRegionalFiltered(vv) then
-                            if not string.match(vv, "^m") then
+    for _, section in pairs(MCLcore.mountList) do
+        for _, field in pairs(section) do
+            if (type(field) == "table") then
+                for _, category in pairs(field) do
+                    for _, mountEntry in pairs(category.mounts) do
+                        if not IsRegionalFiltered(mountEntry) then
+                            if not string.match(mountEntry, "^m") then
                                 totalMountCount = totalMountCount + 1
-                                C_Item.RequestLoadItemDataByID(vv)
-                                local mountID = C_MountJournal.GetMountFromItem(vv)
+                                C_Item.RequestLoadItemDataByID(mountEntry)
+                                local mountID = C_MountJournal.GetMountFromItem(mountEntry)
                                 
                                 if mountID ~= nil then
                                     load_check = load_check + 1
                                     if debugMode then
-                                        table.insert(validMounts, {itemID = vv, mountID = mountID, expansion = n.name, category = v.name})
+                                        table.insert(validMounts, {itemID = mountEntry, mountID = mountID, expansion = section.name, category = category.name})
                                     end
                                 else
                                     -- Mount doesn't exist in game, but we'll count it as "loaded" to prevent infinite waiting
                                     load_check = load_check + 1
                                     if debugMode then
-                                        local itemName = GetItemInfo(vv) or "Unknown Item"
-                                        table.insert(invalidMounts, {itemID = vv, itemName = itemName, expansion = n.name, category = v.name})
+                                        local itemName = GetItemInfo(mountEntry) or "Unknown Item"
+                                        table.insert(invalidMounts, {itemID = mountEntry, itemName = itemName, expansion = section.name, category = category.name})
                                     end
                                 end                            
                             else
@@ -168,12 +165,12 @@ local function InitMounts()
                                 totalMountCount = totalMountCount + 1
                                 load_check = load_check + 1
                                 if debugMode then
-                                    local mountIDNum = tonumber(string.sub(vv, 2))
+                                    local mountIDNum = tonumber(string.sub(mountEntry, 2))
                                     local mountName = C_MountJournal.GetMountInfoByID(mountIDNum)
                                     if not mountName then
-                                        table.insert(invalidMounts, {mountID = mountIDNum, expansion = n.name, category = v.name, type = "mountID"})
+                                        table.insert(invalidMounts, {mountID = mountIDNum, expansion = section.name, category = category.name, type = "mountID"})
                                     else
-                                        table.insert(validMounts, {mountID = mountIDNum, mountName = mountName, expansion = n.name, category = v.name, type = "mountID"})
+                                        table.insert(validMounts, {mountID = mountIDNum, mountName = mountName, expansion = section.name, category = category.name, type = "mountID"})
                                     end
                                 end
                             end

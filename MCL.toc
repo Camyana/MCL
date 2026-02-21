@@ -1,13 +1,13 @@
 ## Interface: 110207, 120000, 120001
 ## Title: |cFF1FB7EBMCL |cFFFFFFFF- Mount Collection Log
 ## Title-zhTW: |cFF1FB7EBMCL |cFFFFFFFF- 坐騎收集日誌
-## Notes: A tool used to log collected mounts in a similiar way to Simple Armory.
+## Notes: A tool used to log collected mounts in a similar way to Simple Armory.
 ## Notes-zhTW: 一個用於記錄坐騎收集的工具，類似於Simple Armory。
-## Version: 2.8.3
+## Version: 2.9.0
 ## DefaultState: enabled
 ## SavedVariables: MCL_DB, MOUNTLIST, MCL_PINNED, MCL_SETTINGS
 ## Author: Discord: Cam#7332
-## Description: A tool used to log collected mounts in a similiar way to Simple Armory.
+## Description: A tool used to log collected mounts in a similar way to Simple Armory.
 ## Description-zhTW: 一個用於記錄坐騎收集的工具，類似於Simple Armory。
 ## IconTexture: Interface\AddOns\MCL\mcl-logo-32
 ## AddonCompartmentFunc: MCL_OnAddonCompartmentClick
@@ -20,7 +20,7 @@ frame.xml
 data.lua
 functions.lua
 frames.lua
-notifications.lua
 MountCard.lua
+MCLToast.lua
 main.lua
 Core.lua

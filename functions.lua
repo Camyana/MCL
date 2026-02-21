@@ -107,14 +107,20 @@ function MCL_functions:resetToDefault(setting)
     if setting == "HideCollectedMounts" or setting == nil then
         MCL_SETTINGS.hideCollectedMounts = false
     end
-    if setting == "BlizzardTheme" or setting == nil then
-        MCL_SETTINGS.useBlizzardTheme = false
-    end
     if setting == "MountsPerRow" or setting == nil then
         MCL_SETTINGS.mountsPerRow = 12
     end
     if setting == "MountCardHover" or setting == nil then
         MCL_SETTINGS.enableMountCardHover = true
+    end
+    if setting == "Toast" or setting == nil then
+        MCL_SETTINGS.enableCollectedToast = true
+        MCL_SETTINGS.enableCollectedSound = true
+        MCL_SETTINGS.enableCategoryCompleteToast = true
+        MCL_SETTINGS.enableCategoryCompleteSound = true
+        MCL_SETTINGS.enableSectionCompleteToast = true
+        MCL_SETTINGS.enableSectionCompleteSound = true
+        MCL_SETTINGS.toastPosition = nil
     end
 end
 
@@ -132,6 +138,26 @@ if MCL_SETTINGS.enableMountCardHover == nil then
     MCL_SETTINGS.enableMountCardHover = true
 end
 
+-- Ensure toast settings exist for existing users
+if MCL_SETTINGS.enableCollectedToast == nil then
+    MCL_SETTINGS.enableCollectedToast = true
+end
+if MCL_SETTINGS.enableCollectedSound == nil then
+    MCL_SETTINGS.enableCollectedSound = true
+end
+if MCL_SETTINGS.enableCategoryCompleteToast == nil then
+    MCL_SETTINGS.enableCategoryCompleteToast = true
+end
+if MCL_SETTINGS.enableCategoryCompleteSound == nil then
+    MCL_SETTINGS.enableCategoryCompleteSound = true
+end
+if MCL_SETTINGS.enableSectionCompleteToast == nil then
+    MCL_SETTINGS.enableSectionCompleteToast = true
+end
+if MCL_SETTINGS.enableSectionCompleteSound == nil then
+    MCL_SETTINGS.enableSectionCompleteSound = true
+end
+
 -- Tables Mounts into Global List
 function MCL_functions:TableMounts(id, frame, section, category)
     local mount = {
@@ -141,6 +167,68 @@ function MCL_functions:TableMounts(id, frame, section, category)
         category = category,
     }
     table.insert(MCLcore.mounts, mount)
+end
+
+-- Styled copy/link popup - MCL themed, reusable for URLs and text
+local function KethoEditBox_Show(text)
+    if not KethoEditBox then
+        local f = CreateFrame("Frame", "KethoEditBox", UIParent, "BackdropTemplate")
+        f:SetPoint("CENTER")
+        f:SetSize(500, 50)
+        f:SetFrameStrata("DIALOG")
+
+        f:SetBackdrop({
+            bgFile = "Interface\\Buttons\\WHITE8x8",
+            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+            edgeSize = 8,
+            insets = { left = 2, right = 2, top = 2, bottom = 2 },
+        })
+        f:SetBackdropColor(0.1, 0.1, 0.1, 0.95)
+        f:SetBackdropBorderColor(0, 0.44, 0.87, 0.8)
+
+        -- Movable
+        f:SetMovable(true)
+        f:SetClampedToScreen(true)
+        f:EnableMouse(true)
+        f:SetScript("OnMouseDown", function(self, button)
+            if button == "LeftButton" then
+                self:StartMoving()
+            end
+        end)
+        f:SetScript("OnMouseUp", f.StopMovingOrSizing)
+
+        -- Ctrl+C label
+        local copyLabel = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        copyLabel:SetPoint("LEFT", f, "LEFT", 10, 0)
+        copyLabel:SetText("Ctrl+C:")
+        copyLabel:SetTextColor(0.5, 0.5, 0.5, 1)
+
+        -- EditBox
+        local eb = CreateFrame("EditBox", "KethoEditBoxEditBox", f)
+        eb:SetPoint("LEFT", copyLabel, "RIGHT", 6, 0)
+        eb:SetPoint("RIGHT", f, "RIGHT", -30, 0)
+        eb:SetHeight(20)
+        eb:SetFontObject("ChatFontNormal")
+        eb:SetAutoFocus(false)
+        eb:SetScript("OnEscapePressed", function() f:Hide() end)
+
+        -- Close button
+        local closeBtn = CreateFrame("Button", nil, f)
+        closeBtn:SetSize(16, 16)
+        closeBtn:SetPoint("RIGHT", f, "RIGHT", -6, 0)
+        closeBtn:SetNormalTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
+        closeBtn:SetHighlightTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Highlight")
+        closeBtn:SetScript("OnClick", function() f:Hide() end)
+
+        f:Show()
+    end
+
+    if text then
+        KethoEditBoxEditBox:SetText(text)
+        KethoEditBoxEditBox:SetFocus()
+        KethoEditBoxEditBox:HighlightText()
+    end
+    KethoEditBox:Show()
 end
 
 function MCL_functions:simplearmoryLink()
@@ -191,61 +279,6 @@ function MCL_functions:compareLink()
     KethoEditBox_Show(string)
 end
 
-
-function KethoEditBox_Show(text)
-    if not KethoEditBox then
-        local f = CreateFrame("Frame", "KethoEditBox", UIParent, "DialogBoxFrame")
-        f:SetPoint("CENTER")
-        f:SetSize(700, 100)
-        
-        f:SetBackdrop({
-            bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
-            edgeFile = "Interface\\PVPFrame\\UI-Character-PVP-Highlight", -- this one is neat
-            edgeSize = 16,
-            insets = { left = 8, right = 6, top = 8, bottom = 8 },
-        })
-        f:SetBackdropBorderColor(0, .44, .87, 0.5) -- darkblue
-        
-        -- Movable
-        f:SetMovable(true)
-        f:SetClampedToScreen(true)
-        f:SetScript("OnMouseDown", function(self, button)
-            if button == "LeftButton" then
-                self:StartMoving()
-            end
-        end)
-        f:SetScript("OnMouseUp", f.StopMovingOrSizing)
-        
-        -- ScrollFrame
-        local sf = CreateFrame("ScrollFrame", "KethoEditBoxScrollFrame", KethoEditBox, "UIPanelScrollFrameTemplate")
-        sf:SetPoint("LEFT", 16, 0)
-        sf:SetPoint("RIGHT", -32, 0)
-        sf:SetPoint("TOP", 0, -16)
-        sf:SetPoint("BOTTOM", KethoEditBoxButton, "TOP", 0, 0)
-        
-        -- EditBox
-        local eb = CreateFrame("EditBox", "KethoEditBoxEditBox", KethoEditBoxScrollFrame)
-        eb:SetSize(sf:GetSize())
-        eb:SetMultiLine(true)
-        eb:SetAutoFocus(false) -- dont automatically focus
-        eb:SetFontObject("ChatFontNormal")
-        eb:SetScript("OnEscapePressed", function() f:Hide() end)
-        sf:SetScrollChild(eb)
-        
-        -- Resizable
-        f:SetResizable(true)
-        f:SetFrameStrata("HIGH")
-        
-        f:Show()
-    end
-    
-    if text then
-        KethoEditBoxEditBox:SetText(text)
-    end
-    KethoEditBox:Show()
-    MCLcore.MCL_MF:Hide()
-end
-
 function MCL_functions:initSections()
     -- * --------------------------------
     -- * Create variables and assign strings to each section.
@@ -268,8 +301,8 @@ function MCL_functions:initSections()
         -- Use the same width calculations from frames.lua for consistency
         local main_frame_width = 1250  -- Match the width from frames.lua
         MCLcore.overview = CreateFrame("Frame", nil, MCL_mainFrame.ScrollChild, "BackdropTemplate")
-        MCLcore.overview:SetSize(main_frame_width - 60, 550)  -- Use consistent width calculation
-        MCLcore.overview:SetPoint("TOPLEFT", MCL_mainFrame.ScrollChild, "TOPLEFT", 30, 0)  -- Consistent with other content frames
+        MCLcore.overview:SetSize(main_frame_width - 40, 550)  -- Symmetric padding within scroll viewport
+        MCLcore.overview:SetPoint("TOPLEFT", MCL_mainFrame.ScrollChild, "TOPLEFT", 10, 0)  -- Consistent with other content frames
         MCLcore.overview:SetBackdropColor(0, 0, 0, 0)
     end
     -- Build the overview content into the overview frame
@@ -302,14 +335,6 @@ function MCL_functions:GetCollectedMounts()
             if (isFactionSpecific == false) or (isFactionSpecific == true and faction == UnitFactionGroup("player")) then                     
                 table.insert(mounts, mountID)
             end   
-        end
-    end
-    for k,v in pairs(mounts) do
-        local exists = false
-        for kk,vv in pairs(MCLcore.mountCheck) do
-            if v == vv then
-                exists = true
-            end
         end
     end
 end
@@ -351,14 +376,16 @@ function MCL_functions:CreateFullBorder(self)
 end
 
 function MCL_functions:getTableLength(set)
-    local i = 1
-    for k,v in pairs(set) do
-        i = i+1
+    local i = 0
+    for _ in pairs(set) do
+        i = i + 1
     end
     return i
 end
 
-function MCL_functions:SetMouseClickFunctionalityPin(frame, mountID, mountName, itemLink, spellID, isSteadyFlight)
+function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, itemLink, spellID, isSteadyFlight, isPin)
+
+    local lastLeftClick = 0
     frame:SetScript("OnMouseDown", function(self, button)
         if IsControlKeyDown() then
             if button == 'LeftButton' then
@@ -371,164 +398,99 @@ function MCL_functions:SetMouseClickFunctionalityPin(frame, mountID, mountName, 
                 end
                 
                 local pin = false
-                local pin_count = table.getn(MCL_PINNED)
-                if pin_count ~= nil then                     
-                    for i=1, pin_count do                      
-                        if MCL_PINNED[i].mountID == "m"..mountID then
-                            pin = i
-                            break
-                        end
+                local pin_count = #MCL_PINNED
+                for i=1, pin_count do
+                    if MCL_PINNED[i].mountID == "m"..mountID then
+                        pin = i
+                        if isPin then break end
                     end
                 end
-                
-                -- Only remove if we found a valid pin index
-                if pin ~= false then
-                    table.remove(MCL_PINNED, pin)
-                    
-                    -- Set flag to indicate pinned mounts have been modified
-                    MCLcore.pinnedMountsChanged = true
-                    
-                    -- Update all pin icons for this mount
-                    MCLcore.Function:UpdateAllPinIcons(mountID)
-                    
-                    -- Refresh the pinned section by recreating it
-                    if _G["PinnedFrame"] then
-                        -- Clear existing mount frames more thoroughly
-                        if MCLcore.mountFrames[1] then
-                            for _, oldFrame in ipairs(MCLcore.mountFrames[1]) do
-                                if oldFrame and oldFrame:GetParent() then
-                                    oldFrame:Hide()
-                                    oldFrame:SetParent(nil)
-                                end
-                            end
-                        end
-                        
-                        -- Also clear any untracked children of PinnedFrame
-                        local children = {_G["PinnedFrame"]:GetChildren()}
-                        for _, child in ipairs(children) do
-                            if child and child:IsObjectType("Button") and child.mountID then
-                                child:Hide()
-                                child:SetParent(nil)
-                            end
-                        end
-                        
-                        MCLcore.mountFrames[1] = {}
-                        
-                        -- Clean up invalid pinned mounts before recreating
-                        MCLcore.Function:CleanupInvalidPinnedMounts()
-                        
-                        -- Recreate the pinned section content
-                        local overflow, mountFrame = MCLcore.Function:CreateMountsForCategory(MCL_PINNED, _G["PinnedFrame"], 30, _G["PinnedTab"], true, true)
-                        MCLcore.mountFrames[1] = mountFrame
-                    end
-                end
-            end               
-        elseif button=='LeftButton' then
-            if IsShiftKeyDown() then
-                -- Handle shift-click to link mount in chat
-                if itemLink and ChatEdit_GetActiveWindow() then
-                    ChatEdit_InsertLink(itemLink)
-                elseif spellID then
-                    local spellLink = C_Spell.GetSpellLink(spellID)
-                    if spellLink and ChatEdit_GetActiveWindow() then
-                        ChatEdit_InsertLink(spellLink)
-                    end
-                end
-            end
-        elseif button == 'RightButton' and not IsControlKeyDown() then
-            -- Right-click to show/hide mount card
-            if MCLcore and MCLcore.MountCard then
-                local mountData = {
-                    mountID = mountID,
-                    id = mountID,
-                    name = mountName,
-                    category = frame.category,
-                    section = frame.section
-                }
-                MCLcore.MountCard.Toggle(mountData, frame)
-            end
-        end
-        if button == 'MiddleButton' then
-            -- Middle click to cast mount if it's collected
-            if IsMountCollected(mountID) then
-                CastSpellByName(mountName);
-            end
-        end
-    end)
-end
 
-function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, itemLink, spellID, isSteadyFlight) -- * Mount Frames
-
-    frame:SetScript("OnMouseDown", function(self, button)
-        if IsControlKeyDown() then
-            if button == 'LeftButton' then
-                DressUpMount(mountID)
-            elseif button == 'RightButton' then
-                -- Allow pinning of both collected and uncollected mounts
-                -- Initialize MCL_PINNED if it doesn't exist
-                if not MCL_PINNED then
-                    MCL_PINNED = {}
-                end
-                
-                local pin = false
-                local pin_count = table.getn(MCL_PINNED)
-                if pin_count ~= nil then                     
-                    for i=1, pin_count do
-                        if MCL_PINNED[i].mountID == "m"..mountID then
-                            pin = i
-                        end
-                    end
-                end
                 if pin ~= false then
                     if frame.pin then
                         frame.pin:SetAlpha(0)
                     end
                     table.remove(MCL_PINNED, pin)
+                    MCLcore.Function:RebuildPinnedLookup()
                     
                     -- Set flag to indicate pinned mounts have been modified
                     MCLcore.pinnedMountsChanged = true
                     
                     -- Update all pin icons for this mount
                     MCLcore.Function:UpdateAllPinIcons(mountID)
-                    local index = 0
-                    -- Initialize MCLcore.mountFrames[1] if it doesn't exist
-                    if not MCLcore.mountFrames[1] then
-                        MCLcore.mountFrames[1] = {}
-                    end
-                    for k,v in pairs(MCLcore.mountFrames[1]) do
-                        index = index + 1
-                        if tostring(v.mountID) == tostring(mountID) then
-                            MCLcore.mountFrames[1][index]:Hide()                                
-                            table.remove(MCLcore.mountFrames[1],  index)
-                            for kk,vv in ipairs(MCLcore.mountFrames[1]) do
-                                if kk == 1 then
-                                    vv:SetParent(_G["PinnedFrame"])
-                                    vv:Show()
-                                else
-                                    vv:SetParent(MCLcore.mountFrames[1][kk-1])
-                                    vv:Show()
+
+                    if isPin then
+                        -- Refresh the pinned section by recreating it
+                        if _G["PinnedFrame"] then
+                            -- Clear existing mount frames more thoroughly
+                            if MCLcore.mountFrames[1] then
+                                for _, oldFrame in ipairs(MCLcore.mountFrames[1]) do
+                                    if oldFrame and oldFrame:GetParent() then
+                                        oldFrame:Hide()
+                                        oldFrame:SetParent(nil)
+                                    end
                                 end
-                            end                                
+                            end
+                            
+                            -- Also clear any untracked children of PinnedFrame
+                            local children = {_G["PinnedFrame"]:GetChildren()}
+                            for _, child in ipairs(children) do
+                                if child and child:IsObjectType("Button") and child.mountID then
+                                    child:Hide()
+                                    child:SetParent(nil)
+                                end
+                            end
+                            
+                            MCLcore.mountFrames[1] = {}
+                            
+                            -- Clean up invalid pinned mounts before recreating
+                            MCLcore.Function:CleanupInvalidPinnedMounts()
+                            
+                            -- Recreate the pinned section content
+                            local overflow, mountFrame = MCLcore.Function:CreateMountsForCategory(MCL_PINNED, _G["PinnedFrame"], 30, _G["PinnedTab"], true, true)
+                            MCLcore.mountFrames[1] = mountFrame
                         end
-                    end
-                    
-                    -- Refresh the pinned tab layout after unpinning
-                    if MCL_frames and MCL_frames.RefreshLayout then
-                        -- Check if we're currently viewing the Pinned tab
-                        local isPinnedTabActive = false
-                        if MCLcore.currentlySelectedTab and MCLcore.currentlySelectedTab.section and MCLcore.currentlySelectedTab.section.name == "Pinned" then
-                            isPinnedTabActive = true
+                    else
+                        local index = 0
+                        -- Initialize MCLcore.mountFrames[1] if it doesn't exist
+                        if not MCLcore.mountFrames[1] then
+                            MCLcore.mountFrames[1] = {}
+                        end
+                        for k,v in pairs(MCLcore.mountFrames[1]) do
+                            index = index + 1
+                            if tostring(v.mountID) == tostring(mountID) then
+                                MCLcore.mountFrames[1][index]:Hide()                                
+                                table.remove(MCLcore.mountFrames[1],  index)
+                                for kk,vv in ipairs(MCLcore.mountFrames[1]) do
+                                    if kk == 1 then
+                                        vv:SetParent(_G["PinnedFrame"])
+                                        vv:Show()
+                                    else
+                                        vv:SetParent(MCLcore.mountFrames[1][kk-1])
+                                        vv:Show()
+                                    end
+                                end                                
+                            end
                         end
                         
-                        -- Refresh the layout to update the pinned content
-                        MCLcore.Frames:RefreshLayout()
-                        
-                        -- If we were on the Pinned tab, reselect it
-                        if isPinnedTabActive and MCLcore.MCL_MF_Nav and MCLcore.MCL_MF_Nav.tabs then
-                            for _, tab in ipairs(MCLcore.MCL_MF_Nav.tabs) do
-                                if tab.section and tab.section.name == "Pinned" then
-                                    tab:GetScript("OnClick")(tab)
-                                    break
+                        -- Refresh the pinned tab layout after unpinning
+                        if MCL_frames and MCL_frames.RefreshLayout then
+                            -- Check if we're currently viewing the Pinned tab
+                            local isPinnedTabActive = false
+                            if MCLcore.currentlySelectedTab and MCLcore.currentlySelectedTab.section and MCLcore.currentlySelectedTab.section.name == "Pinned" then
+                                isPinnedTabActive = true
+                            end
+                            
+                            -- Refresh the layout to update the pinned content
+                            MCLcore.Frames:RefreshLayout()
+                            
+                            -- If we were on the Pinned tab, reselect it
+                            if isPinnedTabActive and MCLcore.MCL_MF_Nav and MCLcore.MCL_MF_Nav.tabs then
+                                for _, tab in ipairs(MCLcore.MCL_MF_Nav.tabs) do
+                                    if tab.section and tab.section.name == "Pinned" then
+                                        tab:GetScript("OnClick")(tab)
+                                        break
+                                    end
                                 end
                             end
                         end
@@ -542,11 +504,12 @@ function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, ite
                         category = frame.category,
                         section = frame.section
                     }
-                    if pin_count == nil then
+                    if pin_count == 0 then
                         MCL_PINNED[1] = t
                     else
                         MCL_PINNED[pin_count+1] = t
                     end
+                    MCLcore.Function:RebuildPinnedLookup()
                     
                     -- Set flag to indicate pinned mounts have been modified
                     MCLcore.pinnedMountsChanged = true
@@ -592,15 +555,25 @@ function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, ite
                         ChatEdit_InsertLink(spellLink)
                     end
                 end
-            elseif isSteadyFlight then
-                if frame.pop and frame.pop:IsShown() then 
-                    frame.pop:Hide()
-                elseif frame.pop then
-                    frame.pop:Show()
-                end
             else
-                -- Don't add conflicting OnClick handlers here since OnMouseDown is already handling mouse events
-                -- Shift-click functionality is handled in SetMouseClickFunctionality
+                -- Double-click to summon collected mount
+                local now = GetTime()
+                if (now - lastLeftClick) < 0.3 then
+                    if IsMountCollected(mountID) then
+                        C_MountJournal.SummonByID(mountID)
+                    end
+                    lastLeftClick = 0
+                else
+                    lastLeftClick = now
+                    -- Single-click: toggle dragonriding popup if applicable
+                    if isSteadyFlight and not isPin then
+                        if frame.pop and frame.pop:IsShown() then 
+                            frame.pop:Hide()
+                        elseif frame.pop then
+                            frame.pop:Show()
+                        end
+                    end
+                end
             end
         elseif button == 'RightButton' and not IsControlKeyDown() then
             -- Right-click to show/hide mount card
@@ -624,6 +597,23 @@ function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, ite
     end)
 end
 
+-- Adds an "Origin: Section > Category" line to GameTooltip for pinned mounts
+local function AddOriginTooltipLine(frame, isPinned)
+    if isPinned and frame.section and frame.category then
+        local origin
+        if frame.section ~= "Unknown" and frame.category ~= "Unknown" then
+            origin = frame.section .. " > " .. frame.category
+        elseif frame.section ~= "Unknown" then
+            origin = frame.section
+        elseif frame.category ~= "Unknown" then
+            origin = frame.category
+        end
+        if origin then
+            GameTooltip:AddLine("Origin: " .. origin, 0.5, 0.7, 1)
+        end
+    end
+end
+
 function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
 	--Adding a tooltip for mounts
     if string.sub(id, 1, 1) == "m" then
@@ -645,6 +635,7 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
                     
                     local _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(id)
                     GameTooltip:AddLine(source)
+                    AddOriginTooltipLine(frame, pin)
                     GameTooltip:Show()
                     frame:SetHyperlinksEnabled(true)
                 end
@@ -675,6 +666,7 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
                         if (spellID) then
                             GameTooltip:SetSpellByID(spellID)
                             GameTooltip:AddLine(sourceText)
+                            AddOriginTooltipLine(frame, pin)
                             GameTooltip:Show()
                             frame:SetHyperlinksEnabled(true)
                         end
@@ -698,11 +690,7 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
             GameTooltip:Hide()
             -- Note: MountCard is now persistent, so we don't hide it on hover end
         end)
-        if pin == true then
-            MCLcore.Function:SetMouseClickFunctionalityPin(frame, mountID, mountName, itemLink, spellID, isSteadyFlight)
-        else
-            MCLcore.Function:SetMouseClickFunctionality(frame, mountID, mountName, itemLink, spellID, isSteadyFlight)
-        end  
+        MCLcore.Function:SetMouseClickFunctionality(frame, mountID, mountName, itemLink, spellID, isSteadyFlight, pin)  
     else
         local item, itemLink = GetItemInfo(id);
         if dragonriding then
@@ -726,6 +714,7 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
                         GameTooltip:SetItemByID(id)
                         local _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(mountID)
                         GameTooltip:AddLine(source)
+                        AddOriginTooltipLine(frame, pin)
                         GameTooltip:Show()
                         frame:SetHyperlinksEnabled(true)
                     end
@@ -770,6 +759,7 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
                             if (id) then
                                 GameTooltip:SetItemByID(id)
                                 GameTooltip:AddLine(sourceText)
+                                AddOriginTooltipLine(frame, pin)
                                 GameTooltip:Show()
                                 frame:SetHyperlinksEnabled(true)
                             end
@@ -838,6 +828,7 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
                         GameTooltip:SetHyperlink(itemLink)
                         local _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(mountID)
                         GameTooltip:AddLine(source)
+                        AddOriginTooltipLine(frame, pin)
                         GameTooltip:Show()
                     end
                 else
@@ -868,6 +859,7 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
                                 frame:SetHyperlinksEnabled(true)
                                 GameTooltip:SetHyperlink(itemLink)
                                 GameTooltip:AddLine(sourceText)
+                                AddOriginTooltipLine(frame, pin)
                                 GameTooltip:Show()
                             end
                         end
@@ -890,11 +882,7 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
                 GameTooltip:Hide()
                 -- Note: MountCard is now persistent, so we don't hide it on hover end
             end)
-            if pin == true then
-                MCLcore.Function:SetMouseClickFunctionalityPin(frame, mountID, mountName, itemLink, _, isSteadyFlight)
-            else
-                MCLcore.Function:SetMouseClickFunctionality(frame, mountID, mountName, itemLink, _, isSteadyFlight)
-            end
+            MCLcore.Function:SetMouseClickFunctionality(frame, mountID, mountName, itemLink, _, isSteadyFlight, pin)
         end
     end
      
@@ -920,14 +908,30 @@ function MCL_functions:CompareMountJournal()
 end
 
 
+-- Cached lookup table for O(1) pin checks. Rebuilt whenever MCL_PINNED changes.
+local pinnedLookup = nil
+
+function MCL_functions:RebuildPinnedLookup()
+    pinnedLookup = {}
+    if MCL_PINNED then
+        for k, v in pairs(MCL_PINNED) do
+            if v and v.mountID then
+                pinnedLookup[v.mountID] = k
+            end
+        end
+    end
+end
+
 function MCL_functions:CheckIfPinned(mountID)
     if MCL_PINNED == nil then
         MCL_PINNED = {}
     end
-    for k,v in pairs(MCL_PINNED) do
-        if v.mountID == mountID then
-            return true, k
-        end
+    if not pinnedLookup then
+        self:RebuildPinnedLookup()
+    end
+    local idx = pinnedLookup[mountID]
+    if idx then
+        return true, idx
     end
     return false, nil
 end
@@ -976,6 +980,7 @@ function MCL_functions:CleanupInvalidPinnedMounts()
     
     -- Replace MCL_PINNED with cleaned version
     MCL_PINNED = validPinnedMounts
+    self:RebuildPinnedLookup()
 end
 
 function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, tab, skip_total, pin)
@@ -1285,7 +1290,7 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
         MCLcore.mountFrames[1] = {}
     end
     
-    local total_pinned = table.getn(MCLcore.mountFrames[1])
+    local total_pinned = #MCLcore.mountFrames[1]
     if total_pinned == 0 then
         -- Initialize MCL_PINNED if it doesn't exist
         if not MCL_PINNED then
@@ -1633,6 +1638,7 @@ function UpdateBackground(frame)
     local pinned, pin = MCLcore.Function:CheckIfPinned("m"..tostring(frame.mountID))
     if pinned == true then
         table.remove(MCL_PINNED, pin)
+        MCLcore.Function:RebuildPinnedLookup()
     end
     frame:SetBackdropBorderColor(0, 0.45, 0, 0.4)
     frame.tex:SetVertexColor(1, 1, 1, 1);	
@@ -2176,27 +2182,6 @@ function MCL_functions:AddonSettings()
                     end
                 end,
                 get = function(info) return MCL_SETTINGS.hideCollectedMounts; end,
-            },
-            useBlizzardTheme = {
-                order = 14.6,
-                name = MCLcore.L["Use Blizzard Theme"],
-                desc = MCLcore.L["If enabled, the addon will use Blizzard's default UI theme. Requires UI reload."],
-                type = "toggle",
-                width = "full",
-                set = function(info, val)
-                    if MCL_SETTINGS.useBlizzardTheme ~= val then
-                        StaticPopupDialogs["MCL_RELOADUI"] = {
-                            text = MCLcore.L["Changing this setting requires a UI reload. Reload now?"],
-                            button1 = MCLcore.L["YES"],
-                            button2 = MCLcore.L["NO"],
-                            OnAccept = function() MCL_SETTINGS.useBlizzardTheme = val; ReloadUI(); end,
-                            timeout = 0,
-                            hideOnEscape = true,
-                        }
-                        StaticPopup_Show("MCL_RELOADUI")
-                    end
-                end,
-                get = function(info) return MCL_SETTINGS.useBlizzardTheme; end,
             },
             minimapIconToggle = {
                 order = 14.7,

@@ -327,33 +327,19 @@ local function CreateSectionHeader(parent, text, yOffset, currentOpacity, parent
     -- Use current opacity if provided, otherwise fallback
     local opacity = currentOpacity or (MCL_SETTINGS and MCL_SETTINGS.opacity) or 0.95
     
-    -- Use MCL navigation frame styling (matching PetCard)
-    if MCL_SETTINGS and MCL_SETTINGS.useBlizzardTheme then
-        header:SetBackdrop({
-            bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background", 
-            edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border", 
-            edgeSize = 8,
-            insets = {left = 2, right = 2, top = 2, bottom = 2}
-        })
-        header:SetBackdropColor(0.05, 0.05, 0.2, opacity)
-        header:SetBackdropBorderColor(0.6, 0.6, 0.8, 0.8)
-    else
-        header:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8", 
-            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border", 
-            edgeSize = 4
-        })
-        header:SetBackdropColor(0.1, 0.1, 0.1, opacity)
-        header:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.8)
-    end
+    -- MCL house style for section headers
+    header:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+        insets = { left = 1, right = 1, top = 1, bottom = 1 },
+    })
+    header:SetBackdropColor(0.1, 0.1, 0.14, opacity)
+    header:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.6)
     
     local headerText = header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     headerText:SetPoint("LEFT", header, "LEFT", 8, 0)
-    if MCL_SETTINGS and MCL_SETTINGS.useBlizzardTheme then
-        headerText:SetTextColor(1, 0.82, 0, 1)  -- Gold color like Blizzard UI
-    else
-        headerText:SetTextColor(0.3, 0.7, 0.9, 1)  -- MCL blue color
-    end
+    headerText:SetTextColor(0.4, 0.78, 0.95, 1)
     headerText:SetText(text)
     
     return header
@@ -380,32 +366,39 @@ function MountCard:CreateMountCard()
     f:SetClampedToScreen(true)
     f:Hide()  -- Start hidden
     
-    -- Apply MCL theming (matching PetCard style)
+    -- Apply MCL house style (consistent with header bar)
     local currentOpacity = (MCL_SETTINGS and MCL_SETTINGS.opacity) or 0.95
-    if MCL_SETTINGS and MCL_SETTINGS.useBlizzardTheme then
-        f:SetBackdrop({
-            bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background-Dark", 
-            edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border", 
-            edgeSize = 16,
-            insets = {left = 4, right = 4, top = 4, bottom = 4}
-        })
-        f:SetBackdropColor(0.05, 0.05, 0.15, currentOpacity)
-        f:SetBackdropBorderColor(0.4, 0.4, 0.6, 1)
-    else
-        f:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8", 
-            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border", 
-            edgeSize = 8
-        })
-        f:SetBackdropColor(0.08, 0.08, 0.08, currentOpacity)
-        f:SetBackdropBorderColor(0.2, 0.2, 0.2, 1)
-    end
+    f:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+    })
+    f:SetBackdropColor(0.06, 0.06, 0.09, currentOpacity)
+    f:SetBackdropBorderColor(0.2, 0.2, 0.25, 0.8)
     
-    -- Title bar with mount icon and name (no "Mount Information" title)
-    f.titleFrame = CreateFrame("Frame", nil, f)
-    f.titleFrame:SetSize(cardWidth - 20, 30)
-    f.titleFrame:SetPoint("TOP", f, "TOP", 0, -10)
-    f.titleFrame:EnableMouse(false)  -- Disable dragging since frame is anchored
+    -- Header bar at top of mount card (matching main frame header)
+    f.headerBar = CreateFrame("Frame", nil, f, "BackdropTemplate")
+    f.headerBar:SetPoint("TOPLEFT", f, "TOPLEFT", 0, 0)
+    f.headerBar:SetPoint("TOPRIGHT", f, "TOPRIGHT", 0, 0)
+    f.headerBar:SetHeight(32)
+    f.headerBar:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+    })
+    f.headerBar:SetBackdropColor(0.08, 0.08, 0.12, 0.98)
+    f.headerBar:SetFrameLevel(f:GetFrameLevel() + 2)
+    
+    -- Accent line at bottom of header
+    f.headerAccent = f.headerBar:CreateTexture(nil, "OVERLAY")
+    f.headerAccent:SetHeight(1)
+    f.headerAccent:SetPoint("BOTTOMLEFT", f.headerBar, "BOTTOMLEFT", 0, 0)
+    f.headerAccent:SetPoint("BOTTOMRIGHT", f.headerBar, "BOTTOMRIGHT", 0, 0)
+    f.headerAccent:SetColorTexture(0.2, 0.6, 0.9, 0.6)
+    
+    -- Title bar with mount icon and name (clickable to copy name)
+    f.titleFrame = CreateFrame("Button", nil, f.headerBar)
+    f.titleFrame:SetPoint("TOPLEFT", f.headerBar, "TOPLEFT", 0, 0)
+    f.titleFrame:SetPoint("BOTTOMRIGHT", f.headerBar, "BOTTOMRIGHT", 0, 0)
+    f.titleFrame:SetFrameLevel(f.headerBar:GetFrameLevel() + 1)
     
     -- Mount icon in title bar
     f.mountIcon = f.titleFrame:CreateTexture(nil, "ARTWORK")
@@ -415,11 +408,87 @@ function MountCard:CreateMountCard()
     -- Mount name in title bar
     f.mountName = f.titleFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     f.mountName:SetPoint("LEFT", f.mountIcon, "RIGHT", 8, 0)
-    if MCL_SETTINGS and MCL_SETTINGS.useBlizzardTheme then
-        f.mountName:SetTextColor(1, 0.82, 0, 1)
-    else
-        f.mountName:SetTextColor(0.3, 0.7, 0.9, 1)
-    end
+    f.mountName:SetTextColor(0.4, 0.78, 0.95, 1)
+
+    -- Click-to-copy hint
+    f.copyHint = f.titleFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    f.copyHint:SetPoint("RIGHT", f.titleFrame, "RIGHT", -5, 0)
+    f.copyHint:SetText("Click to copy")
+    f.copyHint:SetTextColor(0.5, 0.5, 0.5, 0)
+
+    -- Inline copy popup anchored to the title bar
+    f.copyPopup = CreateFrame("Frame", nil, f, "BackdropTemplate")
+    f.copyPopup:SetSize(cardWidth - 20, 36)
+    f.copyPopup:SetPoint("TOP", f.titleFrame, "BOTTOM", 0, -2)
+    f.copyPopup:SetFrameStrata("DIALOG")
+    f.copyPopup:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+        insets = { left = 1, right = 1, top = 1, bottom = 1 },
+    })
+    f.copyPopup:SetBackdropColor(0.1, 0.1, 0.14, 0.95)
+    f.copyPopup:SetBackdropBorderColor(0.3, 0.6, 0.9, 0.8)
+    f.copyPopup:EnableMouse(true)
+    f.copyPopup:Hide()
+
+    -- Ctrl+C label
+    local copyLabel = f.copyPopup:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    copyLabel:SetPoint("LEFT", f.copyPopup, "LEFT", 6, 0)
+    copyLabel:SetText("Ctrl+C:")
+    copyLabel:SetTextColor(0.5, 0.5, 0.5, 1)
+
+    -- EditBox inside the popup
+    f.copyEditBox = CreateFrame("EditBox", nil, f.copyPopup)
+    f.copyEditBox:SetPoint("LEFT", copyLabel, "RIGHT", 4, 0)
+    f.copyEditBox:SetPoint("RIGHT", f.copyPopup, "RIGHT", -8, 0)
+    f.copyEditBox:SetHeight(20)
+    f.copyEditBox:SetFontObject("ChatFontNormal")
+    f.copyEditBox:SetAutoFocus(false)
+    f.copyEditBox:SetScript("OnEscapePressed", function()
+        f.copyPopup:Hide()
+    end)
+    f.copyEditBox:SetScript("OnEditFocusLost", function()
+        C_Timer.After(0.1, function()
+            if f.copyPopup:IsShown() and not f.copyEditBox:HasFocus() then
+                f.copyPopup:Hide()
+            end
+        end)
+    end)
+
+    f.titleFrame:SetScript("OnEnter", function(self)
+        f.copyHint:SetTextColor(0.5, 0.5, 0.5, 0.8)
+    end)
+    f.titleFrame:SetScript("OnLeave", function(self)
+        if not f.copyPopup:IsShown() then
+            f.copyHint:SetTextColor(0.5, 0.5, 0.5, 0)
+        end
+    end)
+    f.titleFrame:SetScript("OnClick", function(self)
+        local name = f.mountName:GetText()
+        if name and name ~= "" then
+            if ChatEdit_GetActiveWindow() then
+                ChatEdit_InsertLink(name)
+                -- Brief flash to confirm
+                f.copyHint:SetTextColor(0, 1, 0, 1)
+                f.copyHint:SetText("Linked!")
+                C_Timer.After(1, function()
+                    f.copyHint:SetText("Click to copy")
+                    if f.titleFrame:IsMouseOver() then
+                        f.copyHint:SetTextColor(0.5, 0.5, 0.5, 0.8)
+                    else
+                        f.copyHint:SetTextColor(0.5, 0.5, 0.5, 0)
+                    end
+                end)
+            else
+                -- Show inline copy popup
+                f.copyEditBox:SetText(name)
+                f.copyPopup:Show()
+                f.copyEditBox:SetFocus()
+                f.copyEditBox:HighlightText()
+            end
+        end
+    end)
     
     -- Header frame for additional mount info (below title)
     f.headerFrame = CreateFrame("Frame", nil, f)
@@ -634,7 +703,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
         sourceText:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
         sourceText:SetPoint("TOPRIGHT", detailsFrame, "TOPRIGHT", 0, detailsYOffset)
         sourceText:SetText(blizzardSourceText)
-        sourceText:SetTextColor(0.7, 0.9, 1, 1)  -- Light blue color
+        sourceText:SetTextColor(0.65, 0.75, 0.85, 1)  -- House style secondary text
         sourceText:SetJustifyH("LEFT")
         sourceText:SetWordWrap(true)
         
@@ -644,16 +713,23 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
     yOffset = yOffset - 80
     contentHeight = contentHeight + 80
     
-    -- Mount Model Section (no header, small spacing, no backdrop)
+    -- Mount Model Section (no header, small spacing, subtle border)
     yOffset = yOffset - 5  -- Reduced gap from 10 to 5
     contentHeight = contentHeight + 5
     
     -- Use fixed height for model frame
     local modelHeight = 450 -- Fixed height instead of dynamic calculation
     
-    local modelFrame = CreateFrame("Frame", nil, parentFrame)
+    local modelFrame = CreateFrame("Frame", nil, parentFrame, "BackdropTemplate")
     modelFrame:SetSize(parentFrame:GetWidth() - 20, modelHeight) -- Use full width minus small padding
     modelFrame:SetPoint("TOPLEFT", parentFrame, "TOPLEFT", 10, yOffset)  -- Aligned with description
+    modelFrame:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1
+    })
+    modelFrame:SetBackdropColor(0.04, 0.04, 0.06, 0.6)
+    modelFrame:SetBackdropBorderColor(0.2, 0.2, 0.25, 0.5)
     
     -- Create model display using PlayerModel frame (no backdrop)
     local mountModel = CreateFrame("PlayerModel", nil, modelFrame)
@@ -677,9 +753,8 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
             -- Use camera setting 2 for better mount viewing angle
             mountModel:SetCamera(2)
             
-            -- Set consistent model size regardless of original model size
-            -- This ensures all mounts appear at the same absolute size
-            mountModel:SetSize(300, 300)  -- Fixed 300x300 size for all mounts
+            -- Let the model fill the full frame viewport
+            mountModel:SetSize(modelFrame:GetWidth(), modelFrame:GetHeight())
             
             -- Position the model for better viewing distance
             mountModel:SetPosition(0, 0, 0)
@@ -691,9 +766,11 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
             mountModel:RefreshCamera()
         end)
         
-        -- Variables for drag rotation
+        -- Variables for drag rotation and panning
         local isDragging = false
-        local lastCursorX = 0
+        local isPanning = false
+        local lastCursorX, lastCursorY = 0, 0
+        local posX, posY, posZ = 0, 0, 0
         
         -- Add model controls with proper click-and-drag
         mountModel:EnableMouse(true)
@@ -701,17 +778,29 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
             if button == "LeftButton" then
                 isDragging = true
                 lastCursorX = select(1, GetCursorPosition())
+            elseif button == "RightButton" then
+                isPanning = true
+                lastCursorX, lastCursorY = GetCursorPosition()
+            end
+            if isDragging or isPanning then
                 self:SetScript("OnUpdate", function(self)
+                    local currentX, currentY = GetCursorPosition()
                     if isDragging then
-                        local currentX = select(1, GetCursorPosition())
                         local deltaX = currentX - lastCursorX
-                        local sensitivity = 0.01 -- Adjust for rotation speed
-                        
-                        -- Rotate based on horizontal mouse movement
+                        local sensitivity = 0.01
                         local currentFacing = self:GetFacing()
                         self:SetFacing(currentFacing + (deltaX * sensitivity))
-                        
                         lastCursorX = currentX
+                    end
+                    if isPanning then
+                        local scale = UIParent:GetEffectiveScale()
+                        local deltaX = (currentX - lastCursorX) / scale
+                        local deltaY = (currentY - lastCursorY) / scale
+                        local panSpeed = 0.01
+                        posY = posY + deltaX * panSpeed   -- left/right
+                        posZ = posZ + deltaY * panSpeed    -- up/down
+                        self:SetPosition(posX, posY, posZ)
+                        lastCursorX, lastCursorY = currentX, currentY
                     end
                 end)
             end
@@ -720,6 +809,17 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
         mountModel:SetScript("OnMouseUp", function(self, button)
             if button == "LeftButton" then
                 isDragging = false
+            elseif button == "RightButton" then
+                isPanning = false
+            elseif button == "MiddleButton" then
+                -- Reset zoom, pan, and rotation to defaults
+                posX, posY, posZ = 0, 0, 0
+                currentZoom = 1.0
+                self:SetPosition(0, 0, 0)
+                self:SetFacing(0)
+                self:SetCamDistanceScale(1.0)
+            end
+            if not isDragging and not isPanning then
                 self:SetScript("OnUpdate", nil)
             end
         end)
@@ -727,14 +827,25 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
         -- Also handle mouse leaving the frame
         mountModel:SetScript("OnLeave", function(self)
             isDragging = false
+            isPanning = false
             self:SetScript("OnUpdate", nil)
+        end)
+        
+        -- Mouse wheel zoom
+        local currentZoom = 1.0
+        local zoomMin, zoomMax, zoomStep = 0.3, 3.0, 0.15
+        mountModel:EnableMouseWheel(true)
+        mountModel:SetScript("OnMouseWheel", function(self, delta)
+            currentZoom = currentZoom - (delta * zoomStep)
+            currentZoom = math.max(zoomMin, math.min(zoomMax, currentZoom))
+            self:SetCamDistanceScale(currentZoom)
         end)
         
         -- Model controls text
         local modelControlsText = modelFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         modelControlsText:SetPoint("BOTTOM", mountModel, "BOTTOM", 0, -25)
-        modelControlsText:SetText("Left-click and drag to rotate")
-        modelControlsText:SetTextColor(0.7, 0.7, 0.7, 1)
+        modelControlsText:SetText("LMB: rotate | RMB: pan | Scroll: zoom | MMB: reset")
+        modelControlsText:SetTextColor(0.5, 0.55, 0.65, 0.8)
     else
         -- Fallback: show large mount icon if no model available
         local largeIconFrame = CreateFrame("Frame", nil, modelFrame)
@@ -750,7 +861,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
         local noModelText = modelFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         noModelText:SetPoint("BOTTOM", largeIconFrame, "BOTTOM", 0, -15)
         noModelText:SetText("3D Model not available")
-        noModelText:SetTextColor(0.7, 0.7, 0.7, 1)
+        noModelText:SetTextColor(0.5, 0.55, 0.65, 0.8)
     end
     
     yOffset = yOffset - modelHeight
