@@ -1,9 +1,10 @@
 .vscode
-mount_report.py
-mount_missing_report.py
-.ven
+dev/
+__pycache__/
+*.py
+requirements.txt
+run_editor.bat
+CHANGES.txt
+README.md
+editor/
 mounts_live.json
-mounts_to_add.json
-add_mounts_to_data_lua.py
-missing_mounts.html
-/__pycache__

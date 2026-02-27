@@ -585,4 +585,263 @@ eventFrame:SetScript("OnEvent", function(self, event, newMountID)
     end
 end)
 
+-- ========================================================
+-- Zone Alert Toast  –  compact bottom-left notification
+-- shown on zone change when uncollected drop mounts exist
+-- ========================================================
+local ZONE_TOAST_WIDTH     = 280
+local ZONE_TOAST_ROW_H     = 18
+local ZONE_TOAST_PADDING   = 8
+local ZONE_TOAST_DURATION  = 8
+local ZONE_TOAST_FADE_IN   = 0.35
+local ZONE_TOAST_FADE_OUT  = 0.6
 
+local zoneToastFrame
+local zoneToastHideTimer
+local lastAlertedMapID     -- avoid re-firing while staying in the same zone
+
+-- --------------------------------------------------------
+-- Build the zone toast frame (once, reused)
+-- --------------------------------------------------------
+local function EnsureZoneToastFrame()
+    if zoneToastFrame then return zoneToastFrame end
+
+    local f = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+    f:SetSize(ZONE_TOAST_WIDTH, 60)
+    f:SetFrameStrata("DIALOG")
+    f:SetFrameLevel(450)
+    f:SetClampedToScreen(true)
+
+    -- Use the same saved position as the collection toast
+    local pos = MCL_SETTINGS and MCL_SETTINGS.toastPosition
+    if pos then
+        f:SetPoint(pos.point, UIParent, pos.relPoint, pos.x, pos.y)
+    else
+        f:SetPoint("TOP", UIParent, "TOP", 0, -120)
+    end
+
+    f:SetBackdrop({
+        bgFile   = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+    })
+    f:SetBackdropColor(0.06, 0.06, 0.09, 0.95)
+    f:SetBackdropBorderColor(0.2, 0.6, 0.9, 0.8)
+
+    -- Header stripe
+    f.header = CreateFrame("Frame", nil, f, "BackdropTemplate")
+    f.header:SetPoint("TOPLEFT", 1, -1)
+    f.header:SetPoint("TOPRIGHT", -1, -1)
+    f.header:SetHeight(20)
+    f.header:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+    f.header:SetBackdropColor(0.08, 0.08, 0.12, 1)
+
+    -- Accent line
+    f.accent = f:CreateTexture(nil, "OVERLAY")
+    f.accent:SetHeight(1)
+    f.accent:SetPoint("TOPLEFT", f.header, "BOTTOMLEFT")
+    f.accent:SetPoint("TOPRIGHT", f.header, "BOTTOMRIGHT")
+    f.accent:SetColorTexture(0.2, 0.6, 0.9, 0.6)
+
+    -- MCL label
+    f.label = f.header:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    f.label:SetPoint("LEFT", f.header, "LEFT", 8, 0)
+    f.label:SetText("MCL")
+    f.label:SetTextColor(0.4, 0.78, 0.95, 1)
+
+    -- Zone name (right side of header)
+    f.zoneName = f.header:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    f.zoneName:SetPoint("RIGHT", f.header, "RIGHT", -8, 0)
+    f.zoneName:SetTextColor(0.6, 0.75, 0.9, 1)
+
+    -- Mount rows container
+    f.rows = {}
+
+    -- Animations
+    f.fadeIn = f:CreateAnimationGroup()
+    local fin = f.fadeIn:CreateAnimation("Alpha")
+    fin:SetFromAlpha(0); fin:SetToAlpha(1); fin:SetDuration(ZONE_TOAST_FADE_IN); fin:SetSmoothing("OUT")
+    f.fadeIn:SetScript("OnFinished", function() f:SetAlpha(1) end)
+
+    f.fadeOut = f:CreateAnimationGroup()
+    local fout = f.fadeOut:CreateAnimation("Alpha")
+    fout:SetFromAlpha(1); fout:SetToAlpha(0); fout:SetDuration(ZONE_TOAST_FADE_OUT); fout:SetSmoothing("IN")
+    f.fadeOut:SetScript("OnFinished", function() f:SetAlpha(0); f:Hide() end)
+
+    -- Right-click to dismiss
+    f:EnableMouse(true)
+    f:SetScript("OnMouseUp", function(self, button)
+        if button == "RightButton" then
+            Toast:DismissZoneToast()
+        elseif button == "LeftButton" then
+            -- Navigate to Current Zone tab
+            Toast:DismissZoneToast()
+            Toast:NavigateToSection("Current Zone")
+        end
+    end)
+
+    f:SetAlpha(0)
+    f:Hide()
+    zoneToastFrame = f
+    return f
+end
+
+-- --------------------------------------------------------
+-- Dismiss the zone toast
+-- --------------------------------------------------------
+function Toast:DismissZoneToast()
+    if not zoneToastFrame then return end
+    if zoneToastFrame.fadeOut:IsPlaying() then zoneToastFrame.fadeOut:Stop() end
+    if zoneToastFrame.fadeIn:IsPlaying() then zoneToastFrame.fadeIn:Stop() end
+    if zoneToastHideTimer then zoneToastHideTimer:Cancel(); zoneToastHideTimer = nil end
+    zoneToastFrame:SetAlpha(0)
+    zoneToastFrame:Hide()
+end
+
+-- --------------------------------------------------------
+-- Show zone alert
+-- --------------------------------------------------------
+function Toast:ShowZoneAlert(mapID)
+    if not MCL_SETTINGS or MCL_SETTINGS.enableZoneToast ~= true then return end
+    if not MCL_GUIDE or not MCL_GUIDE.zoneMounts then return end
+
+    local spellIds = MCL_GUIDE.zoneMounts[mapID]
+    if not spellIds or #spellIds == 0 then return end
+
+    -- Gather uncollected mounts
+    local guideLookup = MCL_GUIDE.mountLookup or {}
+    local uncollected = {}
+    for _, sid in ipairs(spellIds) do
+        local info = guideLookup[sid]
+        if info and info.mountID then
+            local mName, _, mIcon, _, _, _, _, _, _, _, isCollected = C_MountJournal.GetMountInfoByID(info.mountID)
+            if mName and not isCollected then
+                local methodText = (MCL_GUIDE.GetMethodText and MCL_GUIDE:GetMethodText(info.method)) or info.method or "Unknown"
+                table.insert(uncollected, {
+                    name   = mName,
+                    icon   = mIcon,
+                    chance = info.chance,
+                    method = methodText,
+                })
+            end
+        end
+    end
+
+    if #uncollected == 0 then return end
+
+    -- Sort rarest first
+    table.sort(uncollected, function(a, b) return (a.chance or 0) > (b.chance or 0) end)
+
+    -- Cap display at 5 mounts
+    local displayMax = 5
+    local overflow = #uncollected - displayMax
+
+    local f = EnsureZoneToastFrame()
+
+    -- Tear down old rows
+    for _, row in ipairs(f.rows) do row:Hide(); row:SetParent(nil) end
+    f.rows = {}
+
+    -- Zone name
+    local mapInfo = C_Map.GetMapInfo(mapID)
+    f.zoneName:SetText(mapInfo and mapInfo.name or "")
+
+    -- Build rows
+    local yOff = -24  -- below header + accent
+    for i = 1, math.min(#uncollected, displayMax) do
+        local m = uncollected[i]
+
+        local row = CreateFrame("Frame", nil, f)
+        row:SetSize(ZONE_TOAST_WIDTH - 16, ZONE_TOAST_ROW_H)
+        row:SetPoint("TOPLEFT", f, "TOPLEFT", 8, yOff)
+
+        -- Small icon
+        row.icon = row:CreateTexture(nil, "ARTWORK")
+        row.icon:SetSize(14, 14)
+        row.icon:SetPoint("LEFT", 0, 0)
+        row.icon:SetTexture(m.icon)
+        row.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+
+        -- Mount name
+        row.name = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        row.name:SetPoint("LEFT", row.icon, "RIGHT", 4, 0)
+        row.name:SetText(m.name)
+        row.name:SetTextColor(0.95, 0.95, 1, 1)
+
+        -- Drop chance (right-aligned)
+        if m.chance and m.chance > 0 then
+            local pct = 100 / m.chance
+            local pctStr
+            if pct >= 1 then
+                pctStr = string.format("1/%d", m.chance)
+            elseif pct >= 0.1 then
+                pctStr = string.format("1/%d (%.1f%%)", m.chance, pct)
+            else
+                pctStr = string.format("1/%d (%.2f%%)", m.chance, pct)
+            end
+            row.chance = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+            row.chance:SetPoint("RIGHT", row, "RIGHT", 0, 0)
+            -- Colour by rarity
+            local r, g, b
+            if pct >= 10 then r, g, b = 0.3, 0.9, 0.3
+            elseif pct >= 1 then r, g, b = 1, 0.85, 0.2
+            elseif pct >= 0.1 then r, g, b = 1, 0.5, 0.15
+            else r, g, b = 1, 0.25, 0.25 end
+            row.chance:SetTextColor(r, g, b, 1)
+            row.chance:SetText(pctStr)
+            -- Ensure name doesn't overlap chance
+            row.name:SetPoint("RIGHT", row.chance, "LEFT", -4, 0)
+        end
+
+        table.insert(f.rows, row)
+        yOff = yOff - ZONE_TOAST_ROW_H
+    end
+
+    -- Overflow line
+    if overflow > 0 then
+        local moreRow = CreateFrame("Frame", nil, f)
+        moreRow:SetSize(ZONE_TOAST_WIDTH - 16, ZONE_TOAST_ROW_H)
+        moreRow:SetPoint("TOPLEFT", f, "TOPLEFT", 8, yOff)
+        moreRow.text = moreRow:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        moreRow.text:SetPoint("LEFT", 0, 0)
+        moreRow.text:SetText(string.format("... +%d %s", overflow, L["more"] or "more"))
+        moreRow.text:SetTextColor(0.5, 0.55, 0.65, 1)
+        table.insert(f.rows, moreRow)
+        yOff = yOff - ZONE_TOAST_ROW_H
+    end
+
+    -- Resize frame to fit
+    local totalH = math.abs(yOff) + ZONE_TOAST_PADDING
+    f:SetHeight(totalH)
+
+    -- Stop any running anim/timer
+    if f.fadeOut:IsPlaying() then f.fadeOut:Stop() end
+    if f.fadeIn:IsPlaying() then f.fadeIn:Stop() end
+    if zoneToastHideTimer then zoneToastHideTimer:Cancel(); zoneToastHideTimer = nil end
+
+    -- Show
+    f:Show()
+    f:SetAlpha(0)
+    f.fadeIn:Play()
+
+    -- Auto-hide after duration
+    zoneToastHideTimer = C_Timer.NewTimer(ZONE_TOAST_DURATION, function()
+        if f:IsShown() then f.fadeOut:Play() end
+        zoneToastHideTimer = nil
+    end)
+end
+
+-- --------------------------------------------------------
+-- Zone change listener for zone alert
+-- --------------------------------------------------------
+local zoneAlertFrame = CreateFrame("Frame")
+zoneAlertFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+zoneAlertFrame:SetScript("OnEvent", function()
+    -- Short delay so map data is ready
+    C_Timer.After(0.8, function()
+        local mapID = C_Map.GetBestMapForUnit("player")
+        if not mapID or mapID == lastAlertedMapID then return end
+        lastAlertedMapID = mapID
+        Toast:ShowZoneAlert(mapID)
+    end)
+end)

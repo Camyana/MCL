@@ -170,7 +170,7 @@ function MCL_functions:TableMounts(id, frame, section, category)
 end
 
 -- Styled copy/link popup - MCL themed, reusable for URLs and text
-local function KethoEditBox_Show(text)
+function KethoEditBox_Show(text)
     if not KethoEditBox then
         local f = CreateFrame("Frame", "KethoEditBox", UIParent, "BackdropTemplate")
         f:SetPoint("CENTER")
@@ -255,6 +255,10 @@ function MCL_functions:dfaLink()
 
     KethoEditBox_Show(string)
 
+end
+
+function MCL_functions:reportLink()
+    KethoEditBox_Show("https://discord.gg/YvrpHSyqtj")
 end
 
 function MCL_functions:compareLink()

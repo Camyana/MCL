@@ -3,9 +3,9 @@
 ## Title-zhTW: |cFF1FB7EBMCL |cFFFFFFFF- 坐騎收集日誌
 ## Notes: A tool used to log collected mounts in a similar way to Simple Armory.
 ## Notes-zhTW: 一個用於記錄坐騎收集的工具，類似於Simple Armory。
-## Version: 2.9.0
+## Version: 3.0.0
 ## DefaultState: enabled
-## SavedVariables: MCL_DB, MOUNTLIST, MCL_PINNED, MCL_SETTINGS
+## SavedVariables: MCL_DB, MOUNTLIST, MCL_PINNED, MCL_SETTINGS, MCL_GUIDE_SETTINGS
 ## Author: Discord: Cam#7332
 ## Description: A tool used to log collected mounts in a similar way to Simple Armory.
 ## Description-zhTW: 一個用於記錄坐騎收集的工具，類似於Simple Armory。
@@ -14,13 +14,23 @@
 
 libs\load_libs.xml
 locales\Locales.xml
-locales.lua
-button.xml
-frame.xml
-data.lua
-functions.lua
-frames.lua
-MountCard.lua
-MCLToast.lua
-main.lua
-Core.lua
+core\locales.lua
+core\button.xml
+core\frame.xml
+core\data.lua
+guide\GuideData.lua
+guide\GuideAchievementData.lua
+guide\GuideRepData.lua
+guide\GuideCurrencyData.lua
+guide\GuideVendorData.lua
+guide\GuideQuestData.lua
+guide\MCL_Guide.lua
+guide\GuideReputation.lua
+guide\GuideZonePanel.lua
+guide\GuideMapPins.lua
+core\functions.lua
+core\frames.lua
+core\MountCard.lua
+core\MCLToast.lua
+core\main.lua
+core\Core.lua

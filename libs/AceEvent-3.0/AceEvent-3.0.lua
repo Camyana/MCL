@@ -20,7 +20,7 @@ if not AceEvent then return end
 -- Lua APIs
 local pairs = pairs
 
-AceEvent.frame = AceEvent.frame or CreateFrame("Frame", "AceEvent30Frame") -- our event frame
+AceEvent.frame = AceEvent.frame or CreateFrame("Frame") -- our event frame (anonymous to avoid taint)
 AceEvent.embeds = AceEvent.embeds or {} -- what objects embed this lib
 
 -- APIs and registry for blizzard events, using CallbackHandler lib

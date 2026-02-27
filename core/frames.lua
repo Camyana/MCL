@@ -582,7 +582,43 @@ function MCL_frames:CreateMainFrame()
             end
         end
     )
-    MCL_mainFrame.dfa:SetPoint("RIGHT", MCL_mainFrame.sa, "LEFT", -3, 0)		
+    MCL_mainFrame.dfa:SetPoint("RIGHT", MCL_mainFrame.sa, "LEFT", -3, 0)
+
+    -- Report button (bug icon)
+    MCL_mainFrame.report = CreateHeaderButton(
+        MCL_mainFrame.headerBar, 22, "",
+        "Report Issue",
+        "Report a missing or incorrect mount",
+        function()
+            if MCLcore.Function and MCLcore.Function.reportLink then
+                MCLcore.Function:reportLink()
+            end
+        end
+    )
+    MCL_mainFrame.report:SetPoint("RIGHT", MCL_mainFrame.dfa, "LEFT", -3, 0)
+    -- Use bug icon instead of text
+    MCL_mainFrame.report.text:Hide()
+    MCL_mainFrame.report.icon = MCL_mainFrame.report:CreateTexture(nil, "OVERLAY")
+    MCL_mainFrame.report.icon:SetSize(12, 12)
+    MCL_mainFrame.report.icon:SetPoint("CENTER", 0, 0)
+    MCL_mainFrame.report.icon:SetTexture("Interface\\HELPFRAME\\HelpIcon-Bug")
+    MCL_mainFrame.report.icon:SetVertexColor(0.9, 0.4, 0.4, 1)
+    -- Override hover to also tint the icon
+    MCL_mainFrame.report:SetScript("OnEnter", function(self)
+        self:SetBackdropColor(0.18, 0.22, 0.3, 1)
+        self:SetBackdropBorderColor(0.9, 0.3, 0.3, 1)
+        self.icon:SetVertexColor(1, 0.5, 0.5, 1)
+        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+        GameTooltip:SetText("Report Issue", 1, 1, 1)
+        GameTooltip:AddLine("Report a missing or incorrect mount", 0.7, 0.7, 0.7)
+        GameTooltip:Show()
+    end)
+    MCL_mainFrame.report:SetScript("OnLeave", function(self)
+        self:SetBackdropColor(0.12, 0.12, 0.16, 0.9)
+        self:SetBackdropBorderColor(0.3, 0.3, 0.35, 0.8)
+        self.icon:SetVertexColor(0.9, 0.4, 0.4, 1)
+        GameTooltip:Hide()
+    end)
 
 
 	--MCL Frame settings
@@ -678,6 +714,10 @@ function MCL_frames:CreateMainFrame()
         -- Hide search dropdown when main frame closes
         if MCLcore.Search and MCLcore.Search.HideSearchDropdown then
             MCLcore.Search:HideSearchDropdown()
+        end
+        -- Hide mount card when main frame closes
+        if MCL_MountCard and MCL_MountCard:IsShown() then
+            MCL_MountCard:Hide()
         end
     end)
     
@@ -1139,7 +1179,7 @@ function MCL_frames:SetTabs()
         tabIndex = tabIndex + 1
         navYOffset = navYOffset - 28
     end
-    
+
     -- 5. Settings tab (always last)
     do
         local tab = CreateFrame("Button", nil, tabFrame, "BackdropTemplate")
@@ -1161,6 +1201,34 @@ function MCL_frames:SetTabs()
         tab:Show()
         table.insert(tabFrame.tabs, tab)
         -- Also store in navigation frame for settings navigation
+        if MCLcore.MCL_MF_Nav then
+            table.insert(MCLcore.MCL_MF_Nav.tabs, tab)
+        end
+        table.insert(MCLcore.sectionFrames, tab.content)
+        tabIndex = tabIndex + 1
+        navYOffset = navYOffset - 28
+    end
+
+    -- 8. About tab
+    do
+        local tab = CreateFrame("Button", nil, tabFrame, "BackdropTemplate")
+        tab:SetSize(nav_width + 8, 32)
+        tab:SetPoint("TOPLEFT", tabFrame, "TOPLEFT", 1, navYOffset)
+        StyleNavButton(tab, false)
+        tab.text = tab:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        tab.text:SetPoint("LEFT", 10, 0)
+        tab.text:SetText("About")
+        tab.section = {name = "About"}
+        tab.content = MCLcore.Frames:createAboutFrame(MCL_mainFrame.ScrollChild)
+        tab.content:Hide()
+        tab:SetScript("OnClick", function(self)
+            SelectTab(self)
+        end)
+        tab:EnableMouse(true)
+        tab:SetFrameStrata("HIGH")
+        tab:SetFrameLevel(100)
+        tab:Show()
+        table.insert(tabFrame.tabs, tab)
         if MCLcore.MCL_MF_Nav then
             table.insert(MCLcore.MCL_MF_Nav.tabs, tab)
         end
@@ -1590,6 +1658,979 @@ function MCL_frames:createContentFrame(relativeFrame, title, sectionIcon)
 
     return frame
 end
+
+-- ========================================================
+-- Zone Drops  –  shows farmable mounts in the player's
+--                current zone, powered by MCL_Guide data
+-- ========================================================
+function MCL_frames:createZoneDropsFrame(relativeFrame)
+    local currentWidth, _ = MCL_frames:GetCurrentFrameDimensions()
+    local availableWidth   = currentWidth - 40
+
+    local frame = CreateFrame("Frame", nil, relativeFrame, "BackdropTemplate")
+    frame:SetWidth(availableWidth)
+    frame:SetHeight(50)
+    frame:SetPoint("TOPLEFT", relativeFrame, "TOPLEFT", 10, 0)
+    frame:SetBackdropColor(0, 0, 0, 0)
+    frame.name = "Current Zone"
+
+    -- Title
+    frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    frame.title:SetPoint("TOPLEFT", frame, "TOPLEFT", 24, -10)
+    frame.title:SetText(L["Current Zone"] or "Current Zone")
+    frame.title:SetTextColor(0.4, 0.78, 0.95, 1)
+
+    -- Map icon next to title
+    frame.mapIcon = frame:CreateTexture(nil, "ARTWORK")
+    frame.mapIcon:SetSize(20, 20)
+    frame.mapIcon:SetPoint("RIGHT", frame.title, "LEFT", -4, 0)
+    frame.mapIcon:SetTexture("Interface\\Minimap\\Tracking\\None")
+
+    -- Sub-title showing current zone name (updated on refresh)
+    frame.zoneLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    frame.zoneLabel:SetPoint("TOPLEFT", frame.title, "BOTTOMLEFT", 0, -4)
+    frame.zoneLabel:SetTextColor(0.6, 0.65, 0.75, 1)
+
+    -- Container for mount rows (will be cleared/rebuilt on refresh)
+    frame.mountContainer = CreateFrame("Frame", nil, frame)
+    frame.mountContainer:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -55)
+    frame.mountContainer:SetWidth(availableWidth)
+    frame.mountContainer:SetHeight(1) -- grows dynamically
+
+    -- Store reference for refresh
+    MCLcore._zoneDropsFrame = frame
+
+    -- Register for zone changes so we can auto-refresh when visible
+    local zoneWatcher = CreateFrame("Frame")
+    zoneWatcher:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+    zoneWatcher:RegisterEvent("ZONE_CHANGED")
+    zoneWatcher:RegisterEvent("ZONE_CHANGED_INDOORS")
+    zoneWatcher:SetScript("OnEvent", function()
+        if frame:IsVisible() and MCLcore.Frames.RefreshZoneDrops then
+            MCLcore.Frames:RefreshZoneDrops()
+        end
+    end)
+
+    return frame
+end
+
+-- --------------------------------------------------------
+-- Refresh / rebuild the zone drops mount list
+-- --------------------------------------------------------
+function MCL_frames:RefreshZoneDrops()
+    local frame = MCLcore._zoneDropsFrame
+    if not frame then return end
+
+    local container = frame.mountContainer
+    -- Clear old rows
+    if container.rows then
+        for _, row in ipairs(container.rows) do
+            row:Hide()
+            row:SetParent(nil)
+        end
+    end
+    container.rows = {}
+
+    -- Current map
+    local mapID = C_Map.GetBestMapForUnit("player")
+    local mapInfo = mapID and C_Map.GetMapInfo(mapID)
+    local zoneName = mapInfo and mapInfo.name or "Unknown"
+    frame.zoneLabel:SetText(zoneName)
+
+    -- Look up mounts for this map
+    local guideZones = MCL_GUIDE and MCL_GUIDE.zoneMounts
+    local spellIds = guideZones and guideZones[mapID]
+    if not spellIds or #spellIds == 0 then
+        -- Also try the parent map (continent->zone hierarchy)
+        if mapInfo and mapInfo.parentMapID and mapInfo.parentMapID > 0 then
+            spellIds = guideZones and guideZones[mapInfo.parentMapID]
+        end
+    end
+
+    if not spellIds or #spellIds == 0 then
+        -- Show "no mounts" message
+        local noData = container:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        noData:SetPoint("TOPLEFT", container, "TOPLEFT", 15, 0)
+        noData:SetText(L["No drop mounts found for this zone."] or "No drop mounts found for this zone.")
+        noData:SetTextColor(0.5, 0.55, 0.65, 1)
+        local dummyRow = CreateFrame("Frame", nil, container)
+        dummyRow:SetSize(1, 30)
+        dummyRow.fontStr = noData
+        table.insert(container.rows, dummyRow)
+        frame:SetHeight(100)
+        return
+    end
+
+    -- Sort by drop chance (rarest first) — higher chance number = rarer
+    local guideLookup = MCL_GUIDE and MCL_GUIDE.mountLookup or {}
+    local sorted = {}
+    for _, sid in ipairs(spellIds) do
+        local info = guideLookup[sid]
+        if info then
+            table.insert(sorted, info)
+        end
+    end
+    table.sort(sorted, function(a, b)
+        return (a.chance or 0) > (b.chance or 0)
+    end)
+
+    local currentWidth, _ = MCL_frames:GetCurrentFrameDimensions()
+    local rowWidth = currentWidth - 70
+    local yOffset = 0
+    local uncollectedCount = 0
+    local collectedCount = 0
+
+    for _, info in ipairs(sorted) do
+        local mountID = info.mountID
+        if not mountID then
+            -- skip mounts we can't resolve
+        else
+            local mountName, spellID, icon, _, _, _, _, _, _, _, isCollected = C_MountJournal.GetMountInfoByID(mountID)
+            if mountName then
+                -- Apply hide-collected filter
+                local show = true
+                if MCL_SETTINGS.hideCollectedMounts and isCollected then
+                    show = false
+                end
+
+                if isCollected then
+                    collectedCount = collectedCount + 1
+                else
+                    uncollectedCount = uncollectedCount + 1
+                end
+
+                if show then
+                    local row = CreateFrame("Button", nil, container, "BackdropTemplate")
+                    row:SetSize(rowWidth, 44)
+                    row:SetPoint("TOPLEFT", container, "TOPLEFT", 10, yOffset)
+                    row:SetBackdrop({
+                        bgFile   = "Interface\\Buttons\\WHITE8x8",
+                        edgeFile = "Interface\\Buttons\\WHITE8x8",
+                        edgeSize = 1,
+                    })
+
+                    if isCollected then
+                        row:SetBackdropColor(0.04, 0.14, 0.04, 0.6)
+                        row:SetBackdropBorderColor(0.1, 0.4, 0.1, 0.5)
+                    else
+                        row:SetBackdropColor(0.08, 0.08, 0.14, 0.8)
+                        row:SetBackdropBorderColor(0.2, 0.2, 0.25, 0.6)
+                    end
+
+                    -- Mount icon
+                    row.icon = row:CreateTexture(nil, "ARTWORK")
+                    row.icon:SetSize(32, 32)
+                    row.icon:SetPoint("LEFT", row, "LEFT", 6, 0)
+                    row.icon:SetTexture(icon)
+                    if not isCollected then
+                        row.icon:SetVertexColor(0.7, 0.7, 0.7, 0.9)
+                    end
+
+                    -- Collected check
+                    if isCollected then
+                        row.check = row:CreateTexture(nil, "OVERLAY")
+                        row.check:SetSize(14, 14)
+                        row.check:SetPoint("BOTTOMRIGHT", row.icon, "BOTTOMRIGHT", 2, -2)
+                        row.check:SetTexture("Interface\\RaidFrame\\ReadyCheck-Ready")
+                    end
+
+                    -- Mount name
+                    row.nameText = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                    row.nameText:SetPoint("LEFT", row.icon, "RIGHT", 8, 4)
+                    row.nameText:SetText(mountName)
+                    if isCollected then
+                        row.nameText:SetTextColor(0.3, 0.9, 0.3, 1)
+                    else
+                        row.nameText:SetTextColor(0.95, 0.95, 1, 1)
+                    end
+
+                    -- Source method
+                    row.sourceText = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+                    row.sourceText:SetPoint("TOPLEFT", row.nameText, "BOTTOMLEFT", 0, -1)
+                    local methodText = (MCL_GUIDE and MCL_GUIDE.GetMethodText) and MCL_GUIDE:GetMethodText(info.method) or info.method or "Unknown"
+                    row.sourceText:SetText(methodText)
+                    row.sourceText:SetTextColor(0.4, 0.65, 0.85, 1)
+
+                    -- Drop rate (right side)
+                    if info.chance and info.chance > 0 then
+                        local pct = 100 / info.chance
+                        local r, g, b
+                        if pct >= 10 then
+                            r, g, b = 0.3, 0.9, 0.3
+                        elseif pct >= 1 then
+                            r, g, b = 1, 0.85, 0.2
+                        elseif pct >= 0.1 then
+                            r, g, b = 1, 0.5, 0.15
+                        else
+                            r, g, b = 1, 0.25, 0.25
+                        end
+                        row.chanceText = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+                        row.chanceText:SetPoint("RIGHT", row, "RIGHT", -10, 4)
+                        local pctStr = pct >= 1 and string.format("%d", pct) or (pct >= 0.1 and string.format("%.1f", pct) or string.format("%.2f", pct))
+                        row.chanceText:SetText(string.format("1/%d (%s%%)", info.chance, pctStr))
+                        row.chanceText:SetTextColor(r, g, b, 1)
+                    end
+
+                    -- NPC / Boss name below chance
+                    local npcName = info.lockBossName or (info.coords and info.coords[1] and info.coords[1].n)
+                    if npcName then
+                        row.npcText = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+                        row.npcText:SetPoint("TOPRIGHT", row.chanceText or row, row.chanceText and "BOTTOMRIGHT" or "RIGHT", 0, row.chanceText and -1 or -4)
+                        row.npcText:SetText(npcName)
+                        row.npcText:SetTextColor(0.6, 0.6, 0.7, 1)
+                    end
+
+                    -- Waypoint button if coords available for this map
+                    if info.coords then
+                        local bestCoord
+                        for _, c in ipairs(info.coords) do
+                            if c.m == mapID then
+                                bestCoord = c
+                                break
+                            end
+                        end
+                        if bestCoord and bestCoord.x and bestCoord.y then
+                            row.wpBtn = CreateFrame("Button", nil, row, "BackdropTemplate")
+                            row.wpBtn:SetSize(60, 16)
+                            row.wpBtn:SetPoint("RIGHT", row, "RIGHT", -10, -12)
+                            row.wpBtn:SetBackdrop({
+                                bgFile   = "Interface\\Buttons\\WHITE8x8",
+                                edgeFile = "Interface\\Buttons\\WHITE8x8",
+                                edgeSize = 1,
+                            })
+                            row.wpBtn:SetBackdropColor(0.12, 0.12, 0.2, 0.9)
+                            row.wpBtn:SetBackdropBorderColor(0.3, 0.6, 0.9, 0.8)
+                            row.wpBtn.label = row.wpBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+                            row.wpBtn.label:SetPoint("CENTER")
+                            row.wpBtn.label:SetText(L["Waypoint"] or "Waypoint")
+                            row.wpBtn.label:SetTextColor(0.4, 0.78, 0.95, 1)
+                            row.wpBtn:SetScript("OnClick", function(self)
+                                local wx, wy = bestCoord.x / 100, bestCoord.y / 100
+                                if TomTom and TomTom.AddWaypoint then
+                                    TomTom:AddWaypoint(bestCoord.m, wx, wy, { title = mountName })
+                                else
+                                    local point = UiMapPoint.CreateFromCoordinates(bestCoord.m, wx, wy)
+                                    C_Map.SetUserWaypoint(point)
+                                    C_SuperTrack.SetSuperTrackedUserWaypoint(true)
+                                end
+                                -- Open map to target zone
+                                OpenWorldMap(bestCoord.m)
+                                self.label:SetText("Set!")
+                                self.label:SetTextColor(0.3, 0.9, 0.3, 1)
+                                C_Timer.After(1.5, function()
+                                    if self.label then
+                                        self.label:SetText(L["Waypoint"] or "Waypoint")
+                                        self.label:SetTextColor(0.4, 0.78, 0.95, 1)
+                                    end
+                                end)
+                            end)
+                            row.wpBtn:SetScript("OnEnter", function(self)
+                                self:SetBackdropBorderColor(0.5, 0.8, 1, 1)
+                                self:SetBackdropColor(0.18, 0.18, 0.28, 1)
+                            end)
+                            row.wpBtn:SetScript("OnLeave", function(self)
+                                self:SetBackdropBorderColor(0.3, 0.6, 0.9, 0.8)
+                                self:SetBackdropColor(0.12, 0.12, 0.2, 0.9)
+                            end)
+                        end
+                    end
+
+                    -- Hover effects
+                    row:SetScript("OnEnter", function(self)
+                        self:SetBackdropColor(0.14, 0.14, 0.22, 1)
+                        self:SetBackdropBorderColor(0.3, 0.6, 0.9, 0.8)
+                        -- Show tooltip
+                        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                        if spellID then
+                            GameTooltip:SetSpellByID(spellID)
+                        end
+                        GameTooltip:Show()
+                        -- Show MountCard on hover
+                        if MCLcore and MCLcore.MountCard and MCL_SETTINGS.enableMountCardHover then
+                            local mountData = {
+                                mountID = mountID,
+                                id = mountID,
+                                name = mountName,
+                                category = "Current Zone",
+                                section = zoneName
+                            }
+                            MCLcore.MountCard.ShowOnHover(mountData, self, 0.2)
+                        end
+                    end)
+                    row:SetScript("OnLeave", function(self)
+                        if isCollected then
+                            self:SetBackdropColor(0.04, 0.14, 0.04, 0.6)
+                            self:SetBackdropBorderColor(0.1, 0.4, 0.1, 0.5)
+                        else
+                            self:SetBackdropColor(0.08, 0.08, 0.14, 0.8)
+                            self:SetBackdropBorderColor(0.2, 0.2, 0.25, 0.6)
+                        end
+                        GameTooltip:Hide()
+                    end)
+                    row:SetScript("OnClick", function(self, button)
+                        if button == "RightButton" then
+                            if MCLcore and MCLcore.MountCard then
+                                local mountData = {
+                                    mountID = mountID,
+                                    id = mountID,
+                                    name = mountName,
+                                    category = "Current Zone",
+                                    section = zoneName
+                                }
+                                MCLcore.MountCard.Toggle(mountData, self)
+                            end
+                        elseif button == "MiddleButton" then
+                            if isCollected then
+                                CastSpellByName(mountName)
+                            end
+                        end
+                    end)
+                    row:RegisterForClicks("AnyUp")
+
+                    table.insert(container.rows, row)
+                    yOffset = yOffset - 50
+                end
+            end
+        end
+    end
+
+    -- Summary line
+    local totalInZone = uncollectedCount + collectedCount
+    if totalInZone > 0 then
+        frame.zoneLabel:SetText(string.format("%s  —  %d/%d " .. (L["collected"] or "collected"),
+            zoneName, collectedCount, totalInZone))
+    end
+
+    -- Adjust frame height to fit all rows
+    local totalHeight = math.abs(yOffset) + 70
+    frame:SetHeight(math.max(totalHeight, 100))
+    container:SetHeight(math.abs(yOffset) + 10)
+end
+
+-- ============================================================
+-- Reputation / Renown filter tab
+-- ============================================================
+function MCL_frames:createRepFilterFrame(relativeFrame)
+    local currentWidth, _ = MCL_frames:GetCurrentFrameDimensions()
+    local availableWidth   = currentWidth - 40
+
+    local frame = CreateFrame("Frame", nil, relativeFrame, "BackdropTemplate")
+    frame:SetWidth(availableWidth)
+    frame:SetHeight(50)
+    frame:SetPoint("TOPLEFT", relativeFrame, "TOPLEFT", 10, 0)
+    frame:SetBackdropColor(0, 0, 0, 0)
+    frame.name = "Reputation"
+
+    -- Title
+    frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    frame.title:SetPoint("TOPLEFT", frame, "TOPLEFT", 24, -10)
+    frame.title:SetText("Reputation Mounts")
+    frame.title:SetTextColor(0.4, 0.78, 0.95, 1)
+
+    -- Reputation icon next to title
+    frame.repIcon = frame:CreateTexture(nil, "ARTWORK")
+    frame.repIcon:SetSize(20, 20)
+    frame.repIcon:SetPoint("RIGHT", frame.title, "LEFT", -4, 0)
+    frame.repIcon:SetTexture("Interface\\Icons\\Achievement_Reputation_08")
+
+    -- Sub-title (updated on refresh)
+    frame.subLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    frame.subLabel:SetPoint("TOPLEFT", frame.title, "BOTTOMLEFT", 0, -4)
+    frame.subLabel:SetTextColor(0.6, 0.65, 0.75, 1)
+
+    -- "Can Afford" checkbox — filters to mounts the player can actually purchase
+    frame.canAfford = false
+    frame.affordCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
+    frame.affordCheck:SetSize(24, 24)
+    frame.affordCheck:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -10, -8)
+    frame.affordCheck:SetChecked(false)
+    frame.affordCheck.text = frame.affordCheck:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    frame.affordCheck.text:SetPoint("RIGHT", frame.affordCheck, "LEFT", -4, 0)
+    frame.affordCheck.text:SetText("Can Afford")
+    frame.affordCheck.text:SetTextColor(0.7, 0.78, 0.88, 1)
+    frame.affordCheck:SetScript("OnClick", function(self)
+        frame.canAfford = self:GetChecked()
+        MCLcore.Frames:RefreshRepFilter()
+    end)
+    frame.affordCheck:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        GameTooltip:AddLine("Can Afford", 1, 1, 1)
+        GameTooltip:AddLine("Only show mounts you have the currency/gold to purchase right now.", 0.7, 0.78, 0.88, true)
+        GameTooltip:Show()
+    end)
+    frame.affordCheck:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+    -- Container for mount rows
+    frame.mountContainer = CreateFrame("Frame", nil, frame)
+    frame.mountContainer:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -55)
+    frame.mountContainer:SetWidth(availableWidth)
+    frame.mountContainer:SetHeight(1)
+
+    MCLcore._repFilterFrame = frame
+    return frame
+end
+
+-- --------------------------------------------------------
+-- Refresh / rebuild the reputation filter mount list
+-- Shows only: unlocked (rep met) AND uncollected mounts
+-- --------------------------------------------------------
+function MCL_frames:RefreshRepFilter()
+    local frame = MCLcore._repFilterFrame
+    if not frame then return end
+
+    local container = frame.mountContainer
+    -- Properly destroy old rows and their children
+    if container.rows then
+        for _, row in ipairs(container.rows) do
+            row:Hide()
+            row:ClearAllPoints()
+            row:SetParent(nil)
+        end
+    end
+    container.rows = {}
+    -- Also destroy any leftover "no data" font strings from previous refreshes
+    if container._noDataText then
+        container._noDataText:Hide()
+        container._noDataText:SetText("")
+        container._noDataText = nil
+    end
+
+    -- Need rep data
+    if not MCL_GUIDE_REP_DATA then
+        local noData = container:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        noData:SetPoint("TOPLEFT", container, "TOPLEFT", 15, 0)
+        noData:SetText("MCL_Guide reputation data not loaded.")
+        noData:SetTextColor(0.5, 0.55, 0.65, 1)
+        container._noDataText = noData
+        local dummyRow = CreateFrame("Frame", nil, container)
+        dummyRow:SetSize(1, 30)
+        table.insert(container.rows, dummyRow)
+        frame:SetHeight(100)
+        return
+    end
+
+    -- Standing name -> ID for comparison
+    local STANDING_IDS = {
+        Hated = 1, Hostile = 2, Unfriendly = 3, Neutral = 4,
+        Friendly = 5, Honored = 6, Revered = 7, Exalted = 8,
+    }
+    local STANDING_LABELS = {
+        [1]="Hated",[2]="Hostile",[3]="Unfriendly",[4]="Neutral",
+        [5]="Friendly",[6]="Honored",[7]="Revered",[8]="Exalted",
+    }
+
+    -- Inline helper: resolve current rep/renown status
+    local function GetRepStatus(repInfo)
+        if not repInfo or not repInfo.factionId then return nil end
+        local result = {
+            factionName  = repInfo.factionName or "Unknown",
+            isRenown     = repInfo.renown or false,
+            isMet        = false,
+            currentText  = "Unknown",
+            requiredText = "Unknown",
+        }
+        if repInfo.renown then
+            local required = repInfo.level or 0
+            result.requiredText = "Renown " .. required
+            if C_MajorFactions and C_MajorFactions.GetMajorFactionData then
+                local data = C_MajorFactions.GetMajorFactionData(repInfo.factionId)
+                if data then
+                    local current = data.renownLevel or 0
+                    result.currentText = "Renown " .. current
+                    result.isMet = current >= required
+                end
+            end
+        else
+            local reqId = STANDING_IDS[repInfo.levelName] or 8
+            result.requiredText = repInfo.levelName or "Exalted"
+            if C_Reputation and C_Reputation.GetFactionDataByID then
+                local data = C_Reputation.GetFactionDataByID(repInfo.factionId)
+                if data then
+                    local standingName = STANDING_LABELS[data.reaction] or ("Standing " .. (data.reaction or "?"))
+                    local progressText = ""
+                    if data.nextReactionThreshold and data.nextReactionThreshold > 0 then
+                        progressText = " (" .. (data.currentStanding or 0) .. "/" .. data.nextReactionThreshold .. ")"
+                    end
+                    result.currentText = standingName .. progressText
+                    result.isMet = (data.reaction or 0) >= reqId
+                end
+            elseif GetFactionInfoByID then
+                local name, _, standingId = GetFactionInfoByID(repInfo.factionId)
+                if name then
+                    result.currentText = STANDING_LABELS[standingId] or "Unknown"
+                    result.isMet = (standingId or 0) >= reqId
+                end
+            end
+        end
+        return result
+    end
+
+    -- Helper: check if player can afford all costs for a mount
+    local function CanAffordMount(spellId)
+        local costs = MCL_GUIDE_CURRENCY_DATA and MCL_GUIDE_CURRENCY_DATA[spellId]
+        if not costs then return true end  -- no cost data = assume affordable
+        for _, cost in ipairs(costs) do
+            if cost.type == "gold" then
+                local playerGold = GetMoney() or 0
+                local needed = (cost.amount or 0) * 10000  -- amount is in gold, GetMoney is in copper
+                if playerGold < needed then return false end
+            elseif cost.type == "currency" then
+                if C_CurrencyInfo and C_CurrencyInfo.GetCurrencyInfo then
+                    local info = C_CurrencyInfo.GetCurrencyInfo(cost.id)
+                    if info then
+                        if (info.quantity or 0) < (cost.amount or 0) then return false end
+                    else
+                        return false
+                    end
+                end
+            elseif cost.type == "item" then
+                local count = C_Item and C_Item.GetItemCount and C_Item.GetItemCount(cost.id, true) or GetItemCount(cost.id, true) or 0
+                if count < (cost.amount or 0) then return false end
+            end
+        end
+        return true
+    end
+
+    -- Collect all rep mounts and resolve their info
+    local mounts = {}
+    local playerFaction = UnitFactionGroup("player")
+    for spellId, repInfo in pairs(MCL_GUIDE_REP_DATA) do
+        local mountID = C_MountJournal.GetMountFromSpell(spellId)
+        if mountID and mountID > 0 then
+            local mountName, mountSpellID, icon, _, _, _, _, _, isFactionSpecific, faction, _, isCollected = C_MountJournal.GetMountInfoByID(mountID)
+            if mountName then
+                local show = true
+                if isFactionSpecific then
+                    if (faction == 0 and playerFaction ~= "Horde") or (faction == 1 and playerFaction ~= "Alliance") then
+                        show = false
+                    end
+                end
+                if show then
+                    local repStatus = GetRepStatus(repInfo)
+                    local isMet = repStatus and repStatus.isMet or false
+                    -- Only include mounts that are unlocked (rep met) and NOT collected
+                    if isMet and not isCollected then
+                        table.insert(mounts, {
+                            spellId     = spellId,
+                            mountID     = mountID,
+                            mountName   = mountName,
+                            icon        = icon,
+                            isCollected = isCollected,
+                            repInfo     = repInfo,
+                            repStatus   = repStatus,
+                            factionName = repInfo.factionName or "Unknown",
+                            isRenown    = repInfo.renown or false,
+                            canAfford   = CanAffordMount(spellId),
+                        })
+                    end
+                end
+            end
+        end
+    end
+
+    -- Sort: faction name, then by mount name
+    table.sort(mounts, function(a, b)
+        if a.factionName ~= b.factionName then
+            return a.factionName < b.factionName
+        end
+        return a.mountName < b.mountName
+    end)
+
+    local currentWidth, _ = MCL_frames:GetCurrentFrameDimensions()
+    local rowWidth = currentWidth - 70
+    local yOffset = 0
+    local shownCount = 0
+    local lastFaction = nil
+
+    for _, m in ipairs(mounts) do
+        -- Apply "Can Afford" filter
+        if frame.canAfford and not m.canAfford then
+            -- skip this mount
+        else
+            -- Faction header
+            if m.factionName ~= lastFaction then
+                lastFaction = m.factionName
+                local header = CreateFrame("Frame", nil, container)
+                header:SetSize(rowWidth, 24)
+                header:SetPoint("TOPLEFT", container, "TOPLEFT", 10, yOffset - 6)
+                header.text = header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                header.text:SetPoint("LEFT", header, "LEFT", 0, 0)
+                local headerLabel = m.factionName
+                if m.isRenown then
+                    headerLabel = headerLabel .. "  |cFF1FB7EB(Renown)|r"
+                end
+                header.text:SetText(headerLabel)
+                header.text:SetTextColor(0.9, 0.8, 0.5, 1)
+                header.line = header:CreateTexture(nil, "ARTWORK")
+                header.line:SetHeight(1)
+                header.line:SetPoint("LEFT", header.text, "RIGHT", 8, 0)
+                header.line:SetPoint("RIGHT", header, "RIGHT", 0, 0)
+                header.line:SetColorTexture(0.3, 0.3, 0.35, 0.5)
+                table.insert(container.rows, header)
+                yOffset = yOffset - 30
+            end
+
+            -- Mount row
+            local row = CreateFrame("Button", nil, container, "BackdropTemplate")
+            row:SetSize(rowWidth, 44)
+            row:SetPoint("TOPLEFT", container, "TOPLEFT", 10, yOffset)
+            row:SetBackdrop({
+                bgFile   = "Interface\\Buttons\\WHITE8x8",
+                edgeFile = "Interface\\Buttons\\WHITE8x8",
+                edgeSize = 1,
+            })
+            row:SetBackdropColor(0.08, 0.08, 0.14, 0.8)
+            row:SetBackdropBorderColor(0.2, 0.2, 0.25, 0.6)
+
+            -- Mount icon
+            row.icon = row:CreateTexture(nil, "ARTWORK")
+            row.icon:SetSize(32, 32)
+            row.icon:SetPoint("LEFT", row, "LEFT", 6, 0)
+            row.icon:SetTexture(m.icon)
+            row.icon:SetVertexColor(0.7, 0.7, 0.7, 0.9)
+
+            -- Mount name
+            row.nameText = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            row.nameText:SetPoint("LEFT", row.icon, "RIGHT", 8, 4)
+            row.nameText:SetText(m.mountName)
+            row.nameText:SetTextColor(0.95, 0.95, 1, 1)
+
+            -- Required standing (below name)
+            local reqLabel
+            if m.isRenown then
+                reqLabel = "Renown " .. (m.repInfo.level or "?")
+            else
+                reqLabel = m.repInfo.levelName or "Exalted"
+            end
+            row.reqText = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+            row.reqText:SetPoint("TOPLEFT", row.nameText, "BOTTOMLEFT", 0, -1)
+            row.reqText:SetText(m.factionName .. " — " .. reqLabel)
+            row.reqText:SetTextColor(0.4, 0.65, 0.85, 1)
+
+            -- Cost info (right side)
+            local costs = MCL_GUIDE_CURRENCY_DATA and MCL_GUIDE_CURRENCY_DATA[m.spellId]
+            if costs then
+                local costParts = {}
+                for _, cost in ipairs(costs) do
+                    if cost.type == "gold" then
+                        table.insert(costParts, string.format("%dg", cost.amount))
+                    elseif cost.type == "currency" then
+                        local info = C_CurrencyInfo and C_CurrencyInfo.GetCurrencyInfo(cost.id)
+                        local cname = info and info.name or ("Currency " .. cost.id)
+                        local have = info and info.quantity or 0
+                        table.insert(costParts, string.format("%d/%d %s", have, cost.amount, cname))
+                    elseif cost.type == "item" then
+                        local iname = C_Item and C_Item.GetItemNameByID and C_Item.GetItemNameByID(cost.id) or ("Item " .. cost.id)
+                        local have = C_Item and C_Item.GetItemCount and C_Item.GetItemCount(cost.id, true) or GetItemCount(cost.id, true) or 0
+                        table.insert(costParts, string.format("%d/%d %s", have, cost.amount, iname))
+                    end
+                end
+                if #costParts > 0 then
+                    row.costText = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+                    row.costText:SetPoint("RIGHT", row, "RIGHT", -10, 0)
+                    row.costText:SetText(table.concat(costParts, "  "))
+                    if m.canAfford then
+                        row.costText:SetTextColor(0.3, 0.9, 0.3, 1)
+                    else
+                        row.costText:SetTextColor(1, 0.3, 0.3, 1)
+                    end
+                end
+            end
+
+            -- Hover / click
+            local spellId = m.spellId
+            local mountID = m.mountID
+            local mountName = m.mountName
+            row:SetScript("OnEnter", function(self)
+                self:SetBackdropColor(0.14, 0.14, 0.22, 1)
+                self:SetBackdropBorderColor(0.3, 0.6, 0.9, 0.8)
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                if spellId then GameTooltip:SetSpellByID(spellId) end
+                GameTooltip:Show()
+                if MCLcore and MCLcore.MountCard and MCL_SETTINGS.enableMountCardHover then
+                    MCLcore.MountCard.ShowOnHover({
+                        mountID = mountID, id = mountID, name = mountName,
+                        category = "Reputation", section = "Reputation"
+                    }, self, 0.2)
+                end
+            end)
+            row:SetScript("OnLeave", function(self)
+                self:SetBackdropColor(0.08, 0.08, 0.14, 0.8)
+                self:SetBackdropBorderColor(0.2, 0.2, 0.25, 0.6)
+                GameTooltip:Hide()
+            end)
+            row:SetScript("OnClick", function(self, button)
+                if button == "RightButton" then
+                    if MCLcore and MCLcore.MountCard then
+                        MCLcore.MountCard.Toggle({
+                            mountID = mountID, id = mountID, name = mountName,
+                            category = "Reputation", section = "Reputation"
+                        }, self)
+                    end
+                end
+            end)
+            row:RegisterForClicks("AnyUp")
+
+            table.insert(container.rows, row)
+            yOffset = yOffset - 50
+            shownCount = shownCount + 1
+        end
+    end
+
+    -- Summary
+    local totalUnlocked = #mounts
+    frame.subLabel:SetText(string.format("%d unlocked uncollected", totalUnlocked) ..
+        (frame.canAfford and string.format("  —  %d affordable", shownCount) or ""))
+
+    if shownCount == 0 then
+        local noData = container:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        noData:SetPoint("TOPLEFT", container, "TOPLEFT", 15, 0)
+        if frame.canAfford then
+            noData:SetText("No affordable mounts found. Uncheck 'Can Afford' to see all unlocked mounts.")
+        elseif totalUnlocked == 0 then
+            noData:SetText("No unlocked uncollected reputation mounts found.")
+        end
+        noData:SetTextColor(0.5, 0.55, 0.65, 1)
+        container._noDataText = noData
+        local dummyRow = CreateFrame("Frame", nil, container)
+        dummyRow:SetSize(1, 30)
+        table.insert(container.rows, dummyRow)
+    end
+
+    -- Adjust frame height
+    local totalHeight = math.abs(yOffset) + 70
+    frame:SetHeight(math.max(totalHeight, 100))
+    container:SetHeight(math.abs(yOffset) + 10)
+end
+
+-- ============================================================
+-- About / Disclaimer panel
+-- ============================================================
+function MCL_frames:createAboutFrame(relativeFrame)
+    local currentWidth, _ = MCL_frames:GetCurrentFrameDimensions()
+    local availableWidth   = currentWidth - 40
+
+    local frame = CreateFrame("Frame", nil, relativeFrame, "BackdropTemplate")
+    frame:SetWidth(availableWidth)
+    frame:SetHeight(700)
+    frame:SetPoint("TOPLEFT", relativeFrame, "TOPLEFT", 10, 0)
+    frame:SetBackdropColor(0, 0, 0, 0)
+    frame.name = "About"
+
+    -- ── Helper: card container (same style as Settings cards) ──
+    local function createCard(parent, title, yOffset, height)
+        local card = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+        card:SetWidth(availableWidth)
+        card:SetHeight(height)
+        card:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, yOffset)
+        card:SetBackdrop({
+            bgFile   = "Interface\\Buttons\\WHITE8x8",
+            edgeFile = "Interface\\Buttons\\WHITE8x8",
+            edgeSize = 1,
+        })
+        card:SetBackdropColor(0.06, 0.06, 0.09, 0.9)
+        card:SetBackdropBorderColor(0.2, 0.2, 0.25, 0.6)
+
+        local header = CreateFrame("Frame", nil, card, "BackdropTemplate")
+        header:SetPoint("TOPLEFT", card, "TOPLEFT", 1, -1)
+        header:SetPoint("TOPRIGHT", card, "TOPRIGHT", -1, -1)
+        header:SetHeight(26)
+        header:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+        header:SetBackdropColor(0.08, 0.08, 0.12, 1)
+
+        local headerText = header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        headerText:SetPoint("LEFT", header, "LEFT", 10, 0)
+        headerText:SetText(title)
+        headerText:SetTextColor(0.4, 0.78, 0.95, 1)
+
+        local accent = card:CreateTexture(nil, "ARTWORK")
+        accent:SetHeight(1)
+        accent:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 0, 0)
+        accent:SetPoint("TOPRIGHT", header, "BOTTOMRIGHT", 0, 0)
+        accent:SetColorTexture(0.2, 0.5, 0.8, 0.3)
+
+        return card
+    end
+
+    -- ── Helper: clickable link row inside a card ──
+    local function createLinkRow(parent, yOff, label, url)
+        local row = CreateFrame("Frame", nil, parent)
+        row:SetHeight(22)
+        row:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOff)
+        row:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOff)
+
+        local lbl = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        lbl:SetPoint("LEFT", row, "LEFT", 0, 0)
+        lbl:SetText(label)
+        lbl:SetTextColor(0.7, 0.78, 0.88, 1)
+
+        local link = CreateFrame("Button", nil, row)
+        link:SetPoint("LEFT", lbl, "RIGHT", 6, 0)
+        link:SetSize(math.min(400, availableWidth - 160), 18)
+        link.text = link:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        link.text:SetPoint("LEFT")
+        link.text:SetText("|cFF1FB7EB" .. url .. "|r")
+        link.text:SetJustifyH("LEFT")
+        link:SetScript("OnClick", function()
+            if KethoEditBox_Show then
+                KethoEditBox_Show(url)
+            end
+        end)
+        link:SetScript("OnEnter", function(self)
+            self.text:SetText("|cFF66DDFF" .. url .. "|r")
+            GameTooltip:SetOwner(self, "ANCHOR_TOP")
+            GameTooltip:AddLine("Click to copy link", 1, 1, 1)
+            GameTooltip:Show()
+        end)
+        link:SetScript("OnLeave", function(self)
+            self.text:SetText("|cFF1FB7EB" .. url .. "|r")
+            GameTooltip:Hide()
+        end)
+
+        return row
+    end
+
+    local yOffset = -10
+
+    -- ── Title ──
+    frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    frame.title:SetPoint("TOPLEFT", frame, "TOPLEFT", 24, yOffset)
+    frame.title:SetText("About MCL")
+    frame.title:SetTextColor(0.4, 0.78, 0.95, 1)
+
+    frame.aboutIcon = frame:CreateTexture(nil, "ARTWORK")
+    frame.aboutIcon:SetSize(20, 20)
+    frame.aboutIcon:SetPoint("RIGHT", frame.title, "LEFT", -4, 0)
+    frame.aboutIcon:SetTexture("Interface\\AddOns\\MCL\\mcl-logo-32")
+
+    -- Version
+    local versionText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    versionText:SetPoint("TOPLEFT", frame.title, "BOTTOMLEFT", 0, -4)
+    versionText:SetTextColor(0.6, 0.65, 0.75, 1)
+    local tocVersion = C_AddOns and C_AddOns.GetAddOnMetadata and C_AddOns.GetAddOnMetadata("MCL", "Version")
+    versionText:SetText("Version: " .. (tocVersion or "unknown"))
+
+    yOffset = -50
+
+    -- ══════════════════════════════════════════════════════
+    -- Card 1 — Disclaimer / Data Quality
+    -- ══════════════════════════════════════════════════════
+    local disclaimerCard = createCard(frame, "Data Disclaimer", yOffset, 150)
+
+    local disclaimerLines = {
+        "|cFFFFCC00This addon's location and source data is a work in progress.|r",
+        "",
+        "Zone coordinates, vendor locations, drop sources and reputation requirements",
+        "are continuously being reviewed and corrected. Some entries may be inaccurate,",
+        "outdated, or missing entirely — especially for older content and faction-specific",
+        "NPCs that have been relocated across patches.",
+        "",
+        "If you spot something wrong, please let us know using the links below!",
+    }
+
+    local textY = -34
+    for _, line in ipairs(disclaimerLines) do
+        local fs = disclaimerCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        fs:SetPoint("TOPLEFT", disclaimerCard, "TOPLEFT", 12, textY)
+        fs:SetPoint("RIGHT", disclaimerCard, "RIGHT", -12, 0)
+        fs:SetJustifyH("LEFT")
+        fs:SetWordWrap(true)
+        fs:SetSpacing(2)
+        if line == "" then
+            textY = textY - 6
+        else
+            fs:SetText(line)
+            fs:SetTextColor(0.75, 0.78, 0.85, 1)
+            textY = textY - 16
+        end
+    end
+
+    disclaimerCard:SetHeight(math.abs(textY) + 10)
+    yOffset = yOffset - disclaimerCard:GetHeight() - 12
+
+    -- ══════════════════════════════════════════════════════
+    -- Card 2 — How to Help
+    -- ══════════════════════════════════════════════════════
+    local helpCard = createCard(frame, "Help Improve MCL", yOffset, 180)
+
+    local helpLines = {
+        "Community contributions are what make this addon better for everyone.",
+        "Whether it's a wrong zone name, a missing mount, or coordinates that",
+        "point to the wrong NPC — every report helps.",
+        "",
+        "Here's how you can contribute:",
+    }
+
+    textY = -34
+    for _, line in ipairs(helpLines) do
+        local fs = helpCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        fs:SetPoint("TOPLEFT", helpCard, "TOPLEFT", 12, textY)
+        fs:SetPoint("RIGHT", helpCard, "RIGHT", -12, 0)
+        fs:SetJustifyH("LEFT")
+        fs:SetWordWrap(true)
+        fs:SetSpacing(2)
+        if line == "" then
+            textY = textY - 6
+        else
+            fs:SetText(line)
+            fs:SetTextColor(0.75, 0.78, 0.85, 1)
+            textY = textY - 16
+        end
+    end
+
+    textY = textY - 8
+
+    -- Discord invite link
+    createLinkRow(helpCard, textY, "|cFF5865F2\226\151\143|r  Discord:", "https://discord.gg/YvrpHSyqtj")
+    textY = textY - 26
+
+    -- CurseForge link
+    createLinkRow(helpCard, textY, "|cFFF16436\226\151\143|r  CurseForge:", "https://www.curseforge.com/wow/addons/mount-collection-log-mcl")
+    textY = textY - 26
+
+    textY = textY - 0
+
+    helpCard:SetHeight(math.abs(textY) + 10)
+    yOffset = yOffset - helpCard:GetHeight() - 12
+
+    -- ══════════════════════════════════════════════════════
+    -- Card 3 — Credits / Thank You
+    -- ══════════════════════════════════════════════════════
+    local creditsCard = createCard(frame, "Credits", yOffset, 100)
+
+    local creditsLines = {
+        "Created by |cFF1FB7EBCamyam|r",
+        "",
+        "Data sourced from Wowhead, wago.tools, and community contributions.",
+        "Thank you to everyone who has submitted corrections and reports!",
+    }
+
+    textY = -34
+    for _, line in ipairs(creditsLines) do
+        local fs = creditsCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        fs:SetPoint("TOPLEFT", creditsCard, "TOPLEFT", 12, textY)
+        fs:SetPoint("RIGHT", creditsCard, "RIGHT", -12, 0)
+        fs:SetJustifyH("LEFT")
+        fs:SetWordWrap(true)
+        fs:SetSpacing(2)
+        if line == "" then
+            textY = textY - 6
+        else
+            fs:SetText(line)
+            fs:SetTextColor(0.75, 0.78, 0.85, 1)
+            textY = textY - 16
+        end
+    end
+
+    creditsCard:SetHeight(math.abs(textY) + 10)
+    yOffset = yOffset - creditsCard:GetHeight() - 12
+
+    -- Set total frame height
+    frame:SetHeight(math.abs(yOffset) + 20)
+
+    return frame
+end
+
 
 function MCL_frames:createSettingsFrame(relativeFrame)
     -- Calculate dynamic width based on current main frame width
@@ -2121,17 +3162,19 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     -- =====================================================
     -- CARD 6: Collection Toast
     -- =====================================================
-    local toastCard = createCard(frame, L["Collection Toast"] or "Collection Toast", yPos, 350)
+    local toastCardHeight = (MCL_GUIDE_DATA and MCL_GUIDE_DATA.zones) and 400 or 350
+    local toastCard = createCard(frame, L["Collection Toast"] or "Collection Toast", yPos, toastCardHeight)
     
     local toastY = -34
     local toastXInput, toastYInput  -- forward declarations for coord inputs
     
     -- Helper: add a toast checkbox row
-    local function addToastCheckbox(parent, yOff, settingKey, labelKey, labelColor)
+    local function addToastCheckbox(parent, yOff, settingKey, labelKey, labelColor, defaultOn)
+        if defaultOn == nil then defaultOn = true end
         local cb = CreateFrame("CheckButton", nil, parent)
         cb:SetSize(18, 18)
         cb:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOff)
-        cb:SetChecked(MCL_SETTINGS[settingKey] ~= false)
+        cb:SetChecked(defaultOn and MCL_SETTINGS[settingKey] ~= false or MCL_SETTINGS[settingKey] == true)
         cb.originalOnClick = function(self) MCL_SETTINGS[settingKey] = self:GetChecked() end
         styleCheckbox(cb)
         local lbl = parent:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -2147,9 +3190,9 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     mountHeader:SetText("|cFF33AAEE" .. (L["Mount Collected"] or "Mount Collected") .. "|r")
     toastY = toastY - 20
     
-    addToastCheckbox(toastCard, toastY, "enableCollectedToast", "Enable Collection Toast", {0.7, 0.78, 0.88, 1})
+    addToastCheckbox(toastCard, toastY, "enableCollectedToast", "Collection Toast", {0.7, 0.78, 0.88, 1})
     toastY = toastY - 24
-    addToastCheckbox(toastCard, toastY, "enableCollectedSound", "Enable Toast Sound", {0.7, 0.78, 0.88, 1})
+    addToastCheckbox(toastCard, toastY, "enableCollectedSound", "Toast Sound", {0.7, 0.78, 0.88, 1})
     toastY = toastY - 30
     
     -- Category Complete  (purple section)
@@ -2158,9 +3201,9 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     catHeader:SetText("|cFFAA55FF" .. (L["Category Complete"] or "Category Complete") .. "|r")
     toastY = toastY - 20
     
-    addToastCheckbox(toastCard, toastY, "enableCategoryCompleteToast", "Enable Category Complete Toast", {0.7, 0.78, 0.88, 1})
+    addToastCheckbox(toastCard, toastY, "enableCategoryCompleteToast", "Category Complete Toast", {0.7, 0.78, 0.88, 1})
     toastY = toastY - 24
-    addToastCheckbox(toastCard, toastY, "enableCategoryCompleteSound", "Enable Category Complete Sound", {0.7, 0.78, 0.88, 1})
+    addToastCheckbox(toastCard, toastY, "enableCategoryCompleteSound", "Category Complete Sound", {0.7, 0.78, 0.88, 1})
     toastY = toastY - 30
     
     -- Section Complete  (orange section)
@@ -2169,10 +3212,21 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     secHeader:SetText("|cFFFF8800" .. (L["Section Complete"] or "Section Complete") .. "|r")
     toastY = toastY - 20
     
-    addToastCheckbox(toastCard, toastY, "enableSectionCompleteToast", "Enable Section Complete Toast", {0.7, 0.78, 0.88, 1})
+    addToastCheckbox(toastCard, toastY, "enableSectionCompleteToast", "Section Complete Toast", {0.7, 0.78, 0.88, 1})
     toastY = toastY - 24
-    addToastCheckbox(toastCard, toastY, "enableSectionCompleteSound", "Enable Section Complete Sound", {0.7, 0.78, 0.88, 1})
+    addToastCheckbox(toastCard, toastY, "enableSectionCompleteSound", "Section Complete Sound", {0.7, 0.78, 0.88, 1})
     toastY = toastY - 30
+    
+    -- Zone Alert  (teal section) — only if MCL_Guide drop data is loaded
+    if MCL_GUIDE_DATA and MCL_GUIDE_DATA.zones then
+        local zoneHeader = toastCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        zoneHeader:SetPoint("TOPLEFT", toastCard, "TOPLEFT", 12, toastY)
+        zoneHeader:SetText("|cFF33CCAA" .. (L["Zone Alert"] or "Zone Alert") .. "|r")
+        toastY = toastY - 20
+        
+        addToastCheckbox(toastCard, toastY, "enableZoneToast", "Zone Alert Toast", {0.7, 0.78, 0.88, 1}, false)
+        toastY = toastY - 30
+    end
     
     -- Unlock / Lock Toast Position button
     local unlockBtn = CreateFrame("Button", nil, toastCard, "BackdropTemplate")
@@ -2353,10 +3407,120 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     toastXInput:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
     toastYInput:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
     
-    yPos = yPos - 360
+    yPos = yPos - (toastCardHeight + 20)
     
     -- =====================================================
-    -- CARD 7: Reset
+    -- CARD 7: Map Pin Options
+    -- =====================================================
+    if MCL_GUIDE_DATA and MCL_GUIDE_DATA.zones then
+        local pinCard = createCard(frame, "Map Pin Options", yPos, 200)
+        
+        local pinY = -34
+        
+        -- Checkbox: Show Map Icons
+        local showPinsCheck = CreateFrame("CheckButton", nil, pinCard)
+        showPinsCheck:SetSize(18, 18)
+        showPinsCheck:SetPoint("TOPLEFT", pinCard, "TOPLEFT", 12, pinY)
+        showPinsCheck:SetChecked(MCL_GUIDE_SETTINGS.showMapPins ~= false)
+        showPinsCheck.originalOnClick = function(self)
+            MCL_GUIDE_SETTINGS.showMapPins = self:GetChecked()
+            if MCL_GUIDE and MCL_GUIDE.MapPins and MCL_GUIDE.MapPins.RefreshPins then
+                MCL_GUIDE.MapPins:RefreshPins()
+            end
+        end
+        styleCheckbox(showPinsCheck)
+        local showPinsLabel = pinCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        showPinsLabel:SetPoint("LEFT", showPinsCheck, "RIGHT", 8, 0)
+        showPinsLabel:SetText("Show Map Icons")
+        showPinsLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        pinY = pinY - 30
+        
+        -- Checkbox: Show Mount List on Map
+        local showPanelCheck = CreateFrame("CheckButton", nil, pinCard)
+        showPanelCheck:SetSize(18, 18)
+        showPanelCheck:SetPoint("TOPLEFT", pinCard, "TOPLEFT", 12, pinY)
+        showPanelCheck:SetChecked(MCL_GUIDE_SETTINGS.showZonePanel ~= false)
+        showPanelCheck.originalOnClick = function(self)
+            MCL_GUIDE_SETTINGS.showZonePanel = self:GetChecked()
+            if MCL_GUIDE and MCL_GUIDE.ZonePanel then
+                if self:GetChecked() then
+                    MCL_GUIDE.ZonePanel:Refresh()
+                else
+                    MCL_GUIDE.ZonePanel:OnMapHide()
+                end
+            end
+        end
+        styleCheckbox(showPanelCheck)
+        local showPanelLabel = pinCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        showPanelLabel:SetPoint("LEFT", showPanelCheck, "RIGHT", 8, 0)
+        showPanelLabel:SetText("Show Mount List on Map")
+        showPanelLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        pinY = pinY - 30
+        
+        -- Checkbox: Show Child-Map Mounts
+        local showChildCheck = CreateFrame("CheckButton", nil, pinCard)
+        showChildCheck:SetSize(18, 18)
+        showChildCheck:SetPoint("TOPLEFT", pinCard, "TOPLEFT", 12, pinY)
+        showChildCheck:SetChecked(MCL_GUIDE_SETTINGS.showChildMapPins == true)
+        showChildCheck.originalOnClick = function(self)
+            MCL_GUIDE_SETTINGS.showChildMapPins = self:GetChecked()
+            if MCL_GUIDE and MCL_GUIDE.MapPins and MCL_GUIDE.MapPins.RefreshPins then
+                MCL_GUIDE.MapPins:RefreshPins()
+            end
+            if MCL_GUIDE and MCL_GUIDE.ZonePanel then
+                MCL_GUIDE.ZonePanel:Refresh()
+            end
+        end
+        styleCheckbox(showChildCheck)
+        local showChildLabel = pinCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        showChildLabel:SetPoint("LEFT", showChildCheck, "RIGHT", 8, 0)
+        showChildLabel:SetText("Show Child-Map Mounts")
+        showChildLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        pinY = pinY - 30
+        
+        -- Slider: Map Pin Size
+        local pinScaleValue = (MCL_GUIDE_SETTINGS and MCL_GUIDE_SETTINGS.mapPinScale) or 2.0
+        local pinLabel = pinCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        pinLabel:SetPoint("TOPLEFT", pinCard, "TOPLEFT", 12, pinY)
+        pinLabel:SetText("Map Pin Size: " .. string.format("%.1fx", pinScaleValue))
+        pinLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        
+        local pinSlider = CreateFrame("Slider", nil, pinCard)
+        pinSlider:SetPoint("TOPLEFT", pinCard, "TOPLEFT", 12, pinY - 22)
+        pinSlider:SetOrientation("HORIZONTAL")
+        pinSlider:SetThumbTexture("Interface\\Buttons\\WHITE8x8")
+        pinSlider:SetMinMaxValues(0.5, 4.0)
+        pinSlider:SetValue(pinScaleValue)
+        pinSlider:SetValueStep(0.1)
+        pinSlider:SetObeyStepOnDrag(true)
+        pinSlider:SetWidth(200)
+        pinSlider:SetHeight(20)
+        
+        local pinMin = pinCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        pinMin:SetPoint("LEFT", pinSlider, "LEFT", 0, -15)
+        pinMin:SetText("0.5x"); pinMin:SetTextColor(0.5, 0.55, 0.65, 1)
+        local pinMax = pinCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        pinMax:SetPoint("RIGHT", pinSlider, "RIGHT", 0, -15)
+        pinMax:SetText("4.0x"); pinMax:SetTextColor(0.5, 0.55, 0.65, 1)
+        
+        pinSlider.originalOnValueChanged = function(self, value)
+            value = math.floor(value * 10 + 0.5) / 10  -- round to 1 decimal
+            if MCL_GUIDE_SETTINGS then
+                MCL_GUIDE_SETTINGS.mapPinScale = value
+            end
+            pinLabel:SetText("Map Pin Size: " .. string.format("%.1fx", value))
+            -- Live-refresh map pins if the map is open
+            if MCL_GUIDE and MCL_GUIDE.MapPins and MCL_GUIDE.MapPins.RefreshPins then
+                MCL_GUIDE.MapPins:RefreshPins()
+            end
+        end
+        styleSlider(pinSlider, false)
+        
+        yPos = yPos - 210
+    end
+    
+    -- =====================================================
+    -- CARD 8: Reset
     -- =====================================================
     local resetCard = createCard(frame, L["Danger Zone"] or "Danger Zone", yPos, 60)
     -- Red accent line for danger zone
@@ -2412,6 +3576,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
             MCL_SETTINGS.enableCategoryCompleteSound = true
             MCL_SETTINGS.enableSectionCompleteToast = true
             MCL_SETTINGS.enableSectionCompleteSound = true
+            MCL_SETTINGS.enableZoneToast = false
             MCL_SETTINGS.toastPosition = nil
             ReloadUI()
         end,
@@ -2807,10 +3972,12 @@ for _, categoryName in ipairs(sortedCategoryNames) do
         end
     end
 
-    -- Show a category as long as it has mounts defined in data.
-    -- Some categories are populated by item IDs; if the mount journal isn't ready yet, ID resolution can
-    -- temporarily fail (totalMounts would be 0), which would incorrectly hide the category.
-    -- Also, when "Hide Collected Mounts" is enabled, a fully-completed category can have displayedMounts == 0.
+    -- Hide fully-collected categories when the "Hide Collected Mounts" filter is active.
+    -- Otherwise, show a category as long as it has mounts defined in data (even when
+    -- totalMounts is 0 because the mount journal isn't ready yet).
+    if MCL_SETTINGS.hideCollectedMounts and totalMounts > 0 and displayedMounts == 0 then
+        -- All mounts collected & filter is on — skip this category entirely
+    else
 
     -- Apply user-selected sort mode to the mount list
     SortMountList(mountList, MCL_SETTINGS.mountSortMode)
@@ -3123,6 +4290,7 @@ for _, categoryName in ipairs(sortedCategoryNames) do
         end)
         
     end
+    end -- hideCollected else
 end
     
     -- Adjust parent frame height to accommodate all categories with proper padding
