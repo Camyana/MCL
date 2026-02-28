@@ -1660,9 +1660,6 @@ MCL_GUIDE_DATA.mounts = {
 		name = "Forsworn Aquilon",
 		method = "NPC",
 		itemId = 186483,
-		coords = {
-			{ m = 2248, x = 62, y = 30.6 },
-		},
 	},
 	[354351] = {
 		name = "Sanctum Gloomcharger",

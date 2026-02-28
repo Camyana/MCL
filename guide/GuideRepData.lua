@@ -228,5 +228,5 @@ MCL_GUIDE_REP_VENDORS = {
     [2679] = { npc = "Quartermaster Riggs", npcId = 234890, m = 2346, x = 54, y = 55 },
     [2685] = { npc = "Ando the Gat", npcId = 235621, m = 0, x = 0, y = 0 },
     [2736] = { npc = "Quartermaster Riggs", npcId = 234890, m = 2346, x = 54, y = 55 },
-    [2770] = { npc = "Thraxadar", m = 2444, x = 39.3, y = 81.1 },
+    [2770] = { npc = "Vendor NPC", m = 2346, x = 54, y = 55 },
 }
