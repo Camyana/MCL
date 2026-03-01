@@ -428,7 +428,7 @@ MCL_GUIDE_VENDOR_DATA = {
     [1616] = { { npc = "Granpap Whiskers", zone = "Dragonscale Basecamp", m = 2022, x = 47.6, y = 83.2 } },  -- Azure Skitterfly
     [1622] = { { npc = "Mythressa", zone = "", m = 2112, x = 38, y = 37.4 } },  -- Stormhide Salamanther
     [1629] = { { npc = "Dealer Vexil", zone = "The Waking Shores", m = 2022, x = 34.8, y = 46.6 } },  -- Scrappy Worldsnail
-    [1638] = { { npc = "Provisioner Aristta", zone = "Thaldraszus", m = 2024, x = 27, y = 46.4 } },  -- Explorer's Stonehide Packbeast
+    [1638] = { { npc = "Provisioner Aristta", zone = "Thaldraszus", m = 2262, x = 55.4, y = 51.6 } },  -- Explorer's Stonehide Packbeast
     [1653] = { { npc = "Tatto", zone = "Iskaara", m = 2024, x = 13.2, y = 48.8 } },  -- Brown War Ottuk
     [1655] = { { npc = "Tatto", zone = "Iskaara", m = 2024, x = 13.2, y = 48.8 } },  -- Yellow War Ottuk
     [1657] = { { npc = "Tatto", zone = "Iskaara", m = 2024, x = 13.2, y = 48.8 } },  -- Brown Scouting Ottuk
@@ -454,11 +454,11 @@ MCL_GUIDE_VENDOR_DATA = {
     [1741] = { { npc = "Deathguard Netharian", zone = "Orgrimmar", m = 85, x = 41.8, y = 73 } },
     [1776] = { { npc = "Warden Krizzik", zone = "Tyrhold Reservoir", m = 2025, x = 51, y = 56.6 } },  -- White War Wolf
     [1777] = { { npc = "Warden Krizzik", zone = "Tyrhold Reservoir", m = 2025, x = 51, y = 56.6 } },  -- Ravenous Black Gryphon
-    [1778] = { { npc = "Sorotis", zone = "Tyrhold Reservoir", m = 2112, x = 25.8, y = 40 } },  -- Gold-Toed Albatross
+    [1778] = { { npc = "Sorotis", zone = "Tyrhold Reservoir", m = 2025, x = 51, y = 56.6 } },  -- Gold-Toed Albatross
     [1779] = { { npc = "Falara Nightsong", zone = "Tyrhold Reservoir", m = 2025, x = 51, y = 56.6 } },  -- Felstorm Dragon
-    [1781] = { { npc = "Provisioner Qorra", zone = "Tyrhold Reservoir", m = 1527, x = 55, y = 32.8 } },  -- Sulfur Hound
+    [1781] = { { npc = "Provisioner Qorra", zone = "Tyrhold Reservoir", m = 2025, x = 51, y = 56 } },  -- Sulfur Hound
     [1782] = { { npc = "Gill the Drill", zone = "Tyrhold Reservoir", m = 2025, x = 51, y = 56.6 } },  -- Perfected Juggernaut
-    [1783] = { { npc = "Baron Silver", zone = "Tyrhold Reservoir", m = 210, x = 30.4, y = 77.3 } },  -- Scourgebound Vanquisher
+    [1783] = { { npc = "Baron Silver", zone = "Tyrhold Reservoir", m = 2025, x = 51, y = 56 } },  -- Scourgebound Vanquisher
     [1808] = { { npc = "Talisa Whisperbloom", zone = "Emerald Dream", m = 2200, x = 49.8, y = 62 } },  -- Blossoming Dreamstag
     [1809] = { { npc = "Moon Priestess Lasara", zone = "Emerald Dream", m = 2200, x = 50, y = 62 } },  -- Suntouched Dreamstag
     [1810] = { { npc = "Talisa Whisperbloom", zone = "Emerald Dream", m = 2200, x = 49.8, y = 62 } },  -- Rekindled Dreamstag

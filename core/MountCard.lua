@@ -1271,9 +1271,19 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
         guideDropInfo = MCL_GUIDE.mountLookup[mountInfo.spellID]
     end
 
+    -- Resolve the item ID for this mount (used for currency data keyed by itemID)
+    local guideItemId = guideDropInfo and guideDropInfo.itemId
+    if not guideItemId and MCL_GUIDE_DATA and MCL_GUIDE_DATA.mounts and mountInfo.spellID then
+        local raw = MCL_GUIDE_DATA.mounts[mountInfo.spellID]
+        if raw then guideItemId = raw.itemId end
+    end
+
     -- Only show Blizzard source text if Guide data AND rep/currency/quest data are NOT available
     local hasGuideRep = MCL_GUIDE_GET_REP_INFO and mountInfo.spellID and MCL_GUIDE_GET_REP_INFO(mountInfo.spellID)
-    local hasGuideCurrency = MCL_GUIDE_CURRENCY_DATA and mountInfo.spellID and MCL_GUIDE_CURRENCY_DATA[mountInfo.spellID]
+    local hasGuideCurrency = MCL_GUIDE_CURRENCY_DATA and (
+        (mountInfo.spellID and MCL_GUIDE_CURRENCY_DATA[mountInfo.spellID])
+        or (guideItemId and MCL_GUIDE_CURRENCY_DATA[guideItemId])
+    )
     local hasGuideQuest = MCL_GUIDE_QUEST_DATA and mountInfo.mountID and MCL_GUIDE_QUEST_DATA[mountInfo.mountID]
     if not guideDropInfo and not hasGuideRep and not hasGuideCurrency and not hasGuideQuest then
         local blizzardSourceText = "Unknown"
@@ -1908,8 +1918,12 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
     -- --------------------------------------------------------
     -- MCL_Guide currency / cost data (if loaded)
     -- --------------------------------------------------------
-    if MCL_GUIDE_CURRENCY_DATA and mountInfo.spellID then
-        local costList = MCL_GUIDE_CURRENCY_DATA[mountInfo.spellID]
+    if MCL_GUIDE_CURRENCY_DATA then
+        local costList = mountInfo.spellID and MCL_GUIDE_CURRENCY_DATA[mountInfo.spellID]
+        -- Fallback: try looking up by item ID (e.g. Protoform Synthesis mounts keyed by itemID)
+        if not costList and guideItemId then
+            costList = MCL_GUIDE_CURRENCY_DATA[guideItemId]
+        end
         if costList and #costList > 0 then
             do
                 detailsYOffset = detailsYOffset - 6

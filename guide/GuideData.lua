@@ -1157,7 +1157,7 @@ MCL_GUIDE_DATA.mounts = {
 		itemId = 166437,
 		chance = 20,
 		coords = {
-			{ m = 62, x = 56.6, y = 48.8 },
+			{ m = 62, x = 39.8, y = 32.8 },
 		},
 	},
 	[288712] = {
@@ -1297,6 +1297,30 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 390, x = 49.1, y = 53.5 },
 		},
 	},
+	[312753] = {
+		name = "Hopecrusher Gargon",
+		method = "NPC",
+		itemId = 180581,
+		chance = 150,
+		coords = {
+			{ m = 1525 },
+		},
+	},
+	[312754] = {
+		name = "Battle Gargon Vrednic",
+		method = "SPECIAL",
+		itemId = 180948,
+	},
+	[312759] = {
+		name = "Dreamlight Runestag",
+		method = "SPECIAL",
+		itemId = 180263,
+	},
+	[312761] = {
+		name = "Enchanted Dreamlight Runestag",
+		method = "SPECIAL",
+		itemId = 180721,
+	},
 	[312762] = {
 		name = "Mawsworn Soulhunter",
 		method = "NPC",
@@ -1305,6 +1329,11 @@ MCL_GUIDE_DATA.mounts = {
 		coords = {
 			{ m = 1543, x = 53.4, y = 79.2 },
 		},
+	},
+	[312763] = {
+		name = "Darkwarren Hardshell",
+		method = "SPECIAL",
+		itemId = 183052,
 	},
 	[312765] = {
 		name = "Sundancer",
@@ -1321,6 +1350,16 @@ MCL_GUIDE_DATA.mounts = {
 		coords = {
 			{ m = 1565, x = 57.4, y = 50.2 },
 		},
+	},
+	[312776] = {
+		name = "Chittering Animite",
+		method = "SPECIAL",
+		itemId = 183617,
+	},
+	[312777] = {
+		name = "Silvertip Dredwing",
+		method = "SPECIAL",
+		itemId = 181316,
 	},
 	[315014] = {
 		name = "Ivory Cloud Serpent",
@@ -1393,6 +1432,44 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1536 },
 		},
 	},
+	[332244] = {
+		name = "Wakener's Runestag",
+		method = "SPECIAL",
+		itemId = 180414,
+	},
+	[332245] = {
+		name = "Winterborn Runestag",
+		method = "SPECIAL",
+		itemId = 180415,
+	},
+	[332247] = {
+		name = "Enchanted Wakener's Runestag",
+		method = "SPECIAL",
+		itemId = 180723,
+	},
+	[332248] = {
+		name = "Enchanted Winterborn Runestag",
+		method = "SPECIAL",
+		itemId = 180724,
+	},
+	[332252] = {
+		name = "Shimmermist Runner",
+		method = "SPECIAL",
+		itemId = 180727,
+		coords = {
+			{ m = 1565, x = 31, y = 55 },
+		},
+	},
+	[332455] = {
+		name = "War-Bred Tauralus",
+		method = "SPECIAL",
+		itemId = 182077,
+	},
+	[332456] = {
+		name = "Plaguerot Tauralus",
+		method = "SPECIAL",
+		itemId = 182076,
+	},
 	[332457] = {
 		name = "Bonehoof Tauralus",
 		method = "NPC",
@@ -1402,6 +1479,16 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1536, x = 44, y = 50.4 },
 		},
 	},
+	[332460] = {
+		name = "Chosen Tauralus",
+		method = "SPECIAL",
+		itemId = 182074,
+	},
+	[332462] = {
+		name = "Armored War-Bred Tauralus",
+		method = "SPECIAL",
+		itemId = 181822,
+	},
 	[332466] = {
 		name = "Armored Bonehoof Tauralus",
 		method = "NPC",
@@ -1410,6 +1497,11 @@ MCL_GUIDE_DATA.mounts = {
 		coords = {
 			{ m = 1536, x = 50.2, y = 48.6 },
 		},
+	},
+	[332467] = {
+		name = "Armored Chosen Tauralus",
+		method = "SPECIAL",
+		itemId = 181820,
 	},
 	[332478] = {
 		name = "Blisterback Bloodtusk",
@@ -1456,6 +1548,56 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1525, x = 62.4, y = 46.8 },
 		},
 	},
+	[332923] = {
+		name = "Inquisition Gargon",
+		method = "SPECIAL",
+		itemId = 182954,
+	},
+	[332927] = {
+		name = "Sinfall Gargon",
+		method = "SPECIAL",
+		itemId = 183715,
+	},
+	[332932] = {
+		name = "Crypt Gargon",
+		method = "SPECIAL",
+		itemId = 180945,
+	},
+	[332949] = {
+		name = "Desire's Battle Gargon",
+		method = "SPECIAL",
+		itemId = 182209,
+	},
+	[333021] = {
+		name = "Gravestone Battle Armor",
+		method = "SPECIAL",
+		itemId = 182332,
+	},
+	[333023] = {
+		name = "Silessa's Battle Harness",
+		method = "NPC",
+		itemId = 183798,
+		chance = 100,
+		coords = {
+			{ m = 1525 },
+		},
+	},
+	[333027] = {
+		name = "Loyal Gorger",
+		method = "SPECIAL",
+		itemId = 182589,
+		coords = {
+			{ m = 1525, x = 57.5, y = 39.8 },
+		},
+	},
+	[334352] = {
+		name = "Wildseed Cradle",
+		method = "SPECIAL",
+		itemId = 180731,
+		coords = {
+			{ m = 1565, x = 36.7, y = 55.3 },
+		},
+	},
 	[334364] = {
 		name = "Spinemaw Gladechewer",
 		method = "NPC",
@@ -1464,6 +1606,11 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1565, x = 26.6, y = 55.2 },
 		},
 	},
+	[334365] = {
+		name = "Pale Acidmaw",
+		method = "SPECIAL",
+		itemId = 180726,
+	},
 	[334366] = {
 		name = "Wild Glimmerfur Prowler",
 		method = "NPC",
@@ -1471,6 +1618,49 @@ MCL_GUIDE_DATA.mounts = {
 		chance = 100,
 		coords = {
 			{ m = 1565, x = 29.4, y = 55.8 },
+		},
+	},
+	[334382] = {
+		name = "Phalynx of Loyalty",
+		method = "SPECIAL",
+		itemId = 180761,
+	},
+	[334386] = {
+		name = "Phalynx of Humility",
+		method = "SPECIAL",
+		itemId = 180762,
+	},
+	[334391] = {
+		name = "Phalynx of Courage",
+		method = "SPECIAL",
+		itemId = 180763,
+	},
+	[334403] = {
+		name = "Eternal Phalynx of Purity",
+		method = "SPECIAL",
+		itemId = 180765,
+	},
+	[334406] = {
+		name = "Eternal Phalynx of Courage",
+		method = "SPECIAL",
+		itemId = 180766,
+	},
+	[334408] = {
+		name = "Eternal Phalynx of Loyalty",
+		method = "SPECIAL",
+		itemId = 180767,
+	},
+	[334409] = {
+		name = "Eternal Phalynx of Humility",
+		method = "SPECIAL",
+		itemId = 180768,
+	},
+	[334433] = {
+		name = "Silverwind Larion",
+		method = "SPECIAL",
+		itemId = 180772,
+		coords = {
+			{ m = 1533, x = 53, y = 88 },
 		},
 	},
 	[336036] = {
@@ -1483,6 +1673,24 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1666, i = true },
 		},
 		instanceDifficulties = { 23 },
+	},
+	[336038] = {
+		name = "Chewed Reins of the Callow Flayedwing",
+		method = "SPECIAL",
+		itemId = 181818,
+		coords = {
+			{ m = 1536, x = 58, y = 74 },
+		},
+	},
+	[336039] = {
+		name = "Gruesome Flayedwing",
+		method = "SPECIAL",
+		itemId = 181300,
+	},
+	[336041] = {
+		name = "Bonesewn Fleshroc",
+		method = "USE",
+		itemId = 182078,
 	},
 	[336042] = {
 		name = "Hulking Deathroc",
@@ -1502,18 +1710,42 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1536, x = 31.4, y = 35.4 },
 		},
 	},
+	[336064] = {
+		name = "Dauntless Duskrunner",
+		method = "SPECIAL",
+		itemId = 181317,
+	},
 	[339588] = {
 		name = "Blanchy's Reins",
 		method = "NPC",
 		itemId = 182614,
 		coords = {
-			{ m = 10413, x = 63.1, y = 43.1 },
+			{ m = 1525, x = 63.1, y = 43.1 },
 		},
 	},
 	[339632] = {
 		name = "Arboreal Gulper",
 		method = "NPC",
 		itemId = 182650,
+	},
+	[341766] = {
+		name = "Warstitched Darkhound",
+		method = "SPECIAL",
+		itemId = 183615,
+	},
+	[341776] = {
+		name = "Highwind Darkmane",
+		method = "SPECIAL",
+		itemId = 183618,
+	},
+	[342335] = {
+		name = "Ascended Skymane",
+		method = "NPC",
+		itemId = 183741,
+		chance = 500,
+		coords = {
+			{ m = 1533, x = 33.2, y = 56.6 },
+		},
 	},
 	[342666] = {
 		name = "Amber Ardenmoth",
@@ -1569,6 +1801,14 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1536 },
 		},
 	},
+	[344577] = {
+		name = "Bound Shadehound",
+		method = "SPECIAL",
+		itemId = 184168,
+		coords = {
+			{ m = 1543 },
+		},
+	},
 	[346141] = {
 		name = "Slime Serpent",
 		method = "NPC",
@@ -1597,6 +1837,14 @@ MCL_GUIDE_DATA.mounts = {
 		chance = 8,
 		coords = {
 			{ m = 1543 },
+		},
+	},
+	[350219] = {
+		name = "Magmashell",
+		method = "SPECIAL",
+		itemId = 192777,
+		coords = {
+			{ m = 2022, x = 71.8, y = 24.4 },
 		},
 	},
 	[351195] = {
@@ -1648,6 +1896,11 @@ MCL_GUIDE_DATA.mounts = {
 		},
 		instanceDifficulties = { 23 },
 	},
+	[353856] = {
+		name = "Ardenweald Wilderling Harness",
+		method = "SPECIAL",
+		itemId = 186493,
+	},
 	[353859] = {
 		name = "Summer Wilderling",
 		method = "NPC",
@@ -1656,10 +1909,30 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1961, x = 33.2, y = 39.4 },
 		},
 	},
+	[353872] = {
+		name = "Sinfall Gravewing",
+		method = "SPECIAL",
+		itemId = 186476,
+	},
+	[353875] = {
+		name = "Elysian Aquilon",
+		method = "SPECIAL",
+		itemId = 186482,
+	},
 	[353877] = {
 		name = "Forsworn Aquilon",
 		method = "NPC",
 		itemId = 186483,
+	},
+	[353883] = {
+		name = "Maldraxxian Corpsefly Harness",
+		method = "SPECIAL",
+		itemId = 186487,
+	},
+	[353885] = {
+		name = "Battlefield Swarmer Harness",
+		method = "SPECIAL",
+		itemId = 186490,
 	},
 	[354351] = {
 		name = "Sanctum Gloomcharger",
@@ -1690,6 +1963,14 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1543, x = 16.4, y = 49.6 },
 		},
 	},
+	[354354] = {
+		name = "Nilganihmaht Control Ring",
+		method = "SPECIAL",
+		itemId = 186713,
+		coords = {
+			{ m = 1543 },
+		},
+	},
 	[354357] = {
 		name = "Crimson Shardhide",
 		method = "NPC",
@@ -1697,6 +1978,14 @@ MCL_GUIDE_DATA.mounts = {
 		chance = 100,
 		coords = {
 			{ m = 1961, x = 44.4, y = 29.4 },
+		},
+	},
+	[354358] = {
+		name = "Darkmaul",
+		method = "SPECIAL",
+		itemId = 186646,
+		coords = {
+			{ m = 1961 },
 		},
 	},
 	[354359] = {
@@ -1717,6 +2006,22 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1961, x = 55.4, y = 67.4 },
 		},
 	},
+	[354361] = {
+		name = "Dusklight Razorwing",
+		method = "SPECIAL",
+		itemId = 186651,
+		coords = {
+			{ m = 1961 },
+		},
+	},
+	[354362] = {
+		name = "Reins of the Wanderer",
+		method = "SPECIAL",
+		itemId = 186643,
+		coords = {
+			{ m = 1961 },
+		},
+	},
 	[356501] = {
 		name = "Rampaging Mauler",
 		method = "NPC",
@@ -1735,6 +2040,11 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 2024, x = 25.8, y = 46 },
 		},
 	},
+	[363136] = {
+		name = "Sturdy Soulsteel Mawrat Harness",
+		method = "SPECIAL",
+		itemId = 188696,
+	},
 	[363178] = {
 		name = "Colossal Umbrahide Mawrat",
 		method = "NPC",
@@ -1742,6 +2052,19 @@ MCL_GUIDE_DATA.mounts = {
 		chance = 100,
 		coords = {
 			{ m = 1751 },
+		},
+	},
+	[363297] = {
+		name = "Sturdy Gilded Mawrat Harness",
+		method = "SPECIAL",
+		itemId = 188736,
+	},
+	[363701] = {
+		name = "Patient Bufonid",
+		method = "USE",
+		itemId = 188808,
+		coords = {
+			{ m = 1970 },
 		},
 	},
 	[365040] = {
@@ -1946,23 +2269,13 @@ MCL_GUIDE_DATA.mounts = {
 		},
 		instanceDifficulties = { 16 },
 	},
-	[374090] = {
-		name = "Ancient Salamanther",
-		method = "NPC",
-		itemId = 192772,
-		chance = 80,
-		groupSize = 5,
-	},
-	[374157] = {
-		name = "Gooey Snailemental",
-		method = "COLLECTION",
-		itemId = 192785,
-		chance = 50,
-	},
-	[374194] = {
-		name = "Mossy Mammoth",
-		method = "USE",
-		itemId = 192790,
+	[374138] = {
+		name = "Seething Slug",
+		method = "SPECIAL",
+		itemId = 192779,
+		coords = {
+			{ m = 2133 },
+		},
 	},
 	[374196] = {
 		name = "Plainswalker Bearer",
@@ -1979,11 +2292,6 @@ MCL_GUIDE_DATA.mounts = {
 		name = "Raging Magmammoth",
 		method = "",
 		itemId = 192806,
-	},
-	[374278] = {
-		name = "Renewed Magmammoth",
-		method = "USE",
-		itemId = 192807,
 	},
 	[385266] = {
 		name = "Zenet Hatchling",

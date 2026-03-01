@@ -2168,6 +2168,19 @@ function MCL_frames:RefreshRepFilter()
     -- Helper: check if player can afford all costs for a mount
     local function CanAffordMount(spellId)
         local costs = MCL_GUIDE_CURRENCY_DATA and MCL_GUIDE_CURRENCY_DATA[spellId]
+        -- Fallback: try looking up by item ID (e.g. Protoform Synthesis mounts)
+        if not costs and MCL_GUIDE_DATA and MCL_GUIDE_DATA.mounts and MCL_GUIDE_DATA.mounts[spellId] then
+            local itemId = MCL_GUIDE_DATA.mounts[spellId].itemId
+            if itemId then
+                costs = MCL_GUIDE_CURRENCY_DATA[itemId]
+            end
+        end
+        if not costs and MCL_GUIDE and MCL_GUIDE.mountLookup and MCL_GUIDE.mountLookup[spellId] then
+            local guideEntry = MCL_GUIDE.mountLookup[spellId]
+            if guideEntry.itemId then
+                costs = MCL_GUIDE_CURRENCY_DATA[guideEntry.itemId]
+            end
+        end
         if not costs then return true end  -- no cost data = assume affordable
         for _, cost in ipairs(costs) do
             if cost.type == "gold" then
