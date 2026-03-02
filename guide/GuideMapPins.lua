@@ -8,6 +8,7 @@
 -- small mount icons on the map itself.
 -- =============================================================
 
+local _, MCLcore = ...
 local Guide = MCL_GUIDE
 
 Guide.MapPins = Guide.MapPins or {}
@@ -130,6 +131,523 @@ end
 -- This creates small pin icons on the world map for mounts
 -- available in the viewed zone.
 
+-- ─── Mini Mount Card Tooltip ─────────────────────────────────
+-- A custom rich tooltip that replaces basic GameTooltip for map pins
+-- Shows mount icon, name, source info, obtainment instructions, and more.
+
+local MINI_CARD_WIDTH = 320
+local miniCardFrame = nil
+local miniCardLines = {}   -- reusable pool of font strings
+
+-- Colours matching MCL house style
+local COLOR_TITLE       = { 0.40, 0.78, 0.95 }  -- MCL blue
+local COLOR_COLLECTED   = { 0.30, 1.00, 0.30 }
+local COLOR_UNCOLLECTED = { 1.00, 0.40, 0.40 }
+local COLOR_METHOD      = { 0.12, 0.72, 0.92 }
+local COLOR_LABEL       = { 0.55, 0.65, 0.75 }
+local COLOR_VALUE       = { 0.85, 0.85, 0.85 }
+local COLOR_GOLD        = { 1.00, 0.82, 0.00 }
+local COLOR_REP         = { 0.60, 0.80, 1.00 }
+local COLOR_ACH         = { 1.00, 1.00, 0.40 }
+local COLOR_ACH_DONE    = { 0.30, 1.00, 0.30 }
+local COLOR_NOTE        = { 0.82, 0.90, 1.00 }
+local COLOR_HINT        = { 0.45, 0.65, 0.45 }
+local COLOR_ORIGIN      = { 0.55, 0.55, 0.55 }
+local COLOR_SEPARATOR   = { 0.20, 0.40, 0.60 }
+local COLOR_QUEST       = { 1.00, 0.90, 0.30 }
+local COLOR_DESC        = { 0.85, 0.85, 0.30 }
+local COLOR_SOURCE      = { 0.70, 0.70, 0.70 }
+local COLOR_ITEM        = { 0.60, 0.80, 1.00 }
+local COLOR_SECTION_HDR = { 0.50, 0.75, 0.95 }
+local COLOR_BMAH        = { 0.90, 0.70, 0.30 }
+local COLOR_DIFF        = { 0.90, 0.65, 0.30 }
+
+-- ─── Note lookup (multi-strategy) ───────────────────────────
+-- Notes in MCLcore.mountNotes are keyed by item ID.  We build a
+-- cache mapping journal mount IDs → note strings, but also keep
+-- the raw table accessible for direct item-ID or spell-ID lookup.
+local pinNotesCache = nil
+
+local function BuildPinNotesCache()
+    if pinNotesCache then return end
+    pinNotesCache = { byMountID = {}, byKey = {} }
+    if not MCLcore or not MCLcore.mountNotes then return end
+    for ref, note in pairs(MCLcore.mountNotes) do
+        if not note or note == "" then -- skip blanks
+        else
+            -- Store the raw key for direct lookup
+            local numRef = (type(ref) == "number") and ref or tonumber(ref)
+            if numRef then
+                pinNotesCache.byKey[numRef] = note
+            end
+            -- Try to resolve to a journal mount ID via item lookup
+            local jid = nil
+            if type(ref) == "string" and string.sub(ref, 1, 1) == "m" then
+                jid = tonumber(string.sub(ref, 2))
+            elseif numRef then
+                -- Try item → mount (the primary keying strategy)
+                local ok, mid = pcall(C_MountJournal.GetMountFromItem, numRef)
+                if ok and mid and mid ~= 0 then
+                    jid = mid
+                end
+            end
+            if jid then
+                pinNotesCache.byMountID[jid] = note
+            end
+        end
+    end
+end
+
+-- Look up a note for a mount, trying multiple strategies
+local function GetPinMountNote(data)
+    BuildPinNotesCache()
+    if not pinNotesCache then return nil end
+
+    -- 1) By journal mount ID (fastest, most reliable)
+    if data.mountID and pinNotesCache.byMountID[data.mountID] then
+        return pinNotesCache.byMountID[data.mountID]
+    end
+
+    -- 2) By item ID (direct key match – notes are keyed by item ID)
+    if data.itemId and pinNotesCache.byKey[data.itemId] then
+        return pinNotesCache.byKey[data.itemId]
+    end
+
+    -- 3) By spell ID (some older notes may use spell ID as key)
+    if data.spellId and pinNotesCache.byKey[data.spellId] then
+        return pinNotesCache.byKey[data.spellId]
+    end
+
+    return nil
+end
+
+-- ─── Template tag cleaning ──────────────────────────────────
+local function CleanNoteText(text)
+    if not text then return nil end
+    -- {{npc:id,Name}} → Name
+    text = text:gsub("%{%{npc:%d+,([^}]+)%}%}", "%1")
+    -- {{m:mapId,x,y}} → (x, y)
+    text = text:gsub("%{%{m:(%d+),%s*([%d%.]+),%s*([%d%.]+)%}%}", function(mapId, x, y)
+        -- Try to get zone name
+        local mapInfo = C_Map.GetMapInfo(tonumber(mapId))
+        local zoneName = mapInfo and mapInfo.name
+        if zoneName then
+            return zoneName .. " (" .. x .. ", " .. y .. ")"
+        end
+        return "(" .. x .. ", " .. y .. ")"
+    end)
+    -- {{m:mapId,ZoneName}} (zone-only reference, no coords)
+    text = text:gsub("%{%{m:%d+,([^}]+)%}%}", "%1")
+    -- {{item:id}} → [ItemName] or [Item id]
+    text = text:gsub("%{%{item:(%d+)%}%}", function(id)
+        local itemName = C_Item.GetItemInfo(tonumber(id))
+        if itemName then return "[" .. itemName .. "]" end
+        return "[Item " .. id .. "]"
+    end)
+    return text
+end
+
+-- ─── Gold formatting ────────────────────────────────────────
+local function FormatGold(copperAmount)
+    if not copperAmount or copperAmount <= 0 then return nil end
+    local gold = math.floor(copperAmount / 10000)
+    if gold >= 1000 then
+        return string.format("%s,%03dg", math.floor(gold / 1000), gold % 1000)
+    elseif gold >= 1 then
+        return tostring(gold) .. "g"
+    else
+        return tostring(copperAmount) .. "c"
+    end
+end
+
+-- ─── Frame creation ─────────────────────────────────────────
+local function GetMiniCard()
+    if miniCardFrame then return miniCardFrame end
+
+    local f = CreateFrame("Frame", "MCL_MiniMountCard", UIParent, "BackdropTemplate")
+    f:SetFrameStrata("TOOLTIP")
+    f:SetFrameLevel(9000)
+    f:SetClampedToScreen(true)
+    f:EnableMouse(false)
+    f:SetSize(MINI_CARD_WIDTH, 100)
+    f:Hide()
+
+    f:SetBackdrop({
+        bgFile   = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+    })
+    f:SetBackdropColor(0.06, 0.06, 0.09, 0.96)
+    f:SetBackdropBorderColor(0.20, 0.40, 0.60, 0.80)
+
+    -- Accent line at top
+    f.accent = f:CreateTexture(nil, "OVERLAY")
+    f.accent:SetHeight(1)
+    f.accent:SetPoint("TOPLEFT", f, "TOPLEFT", 1, -1)
+    f.accent:SetPoint("TOPRIGHT", f, "TOPRIGHT", -1, -1)
+    f.accent:SetColorTexture(0.20, 0.60, 0.90, 0.60)
+
+    -- Header background
+    f.headerBg = f:CreateTexture(nil, "BACKGROUND", nil, 1)
+    f.headerBg:SetPoint("TOPLEFT", f, "TOPLEFT", 1, -2)
+    f.headerBg:SetPoint("TOPRIGHT", f, "TOPRIGHT", -1, -2)
+    f.headerBg:SetHeight(36)
+    f.headerBg:SetColorTexture(0.08, 0.08, 0.12, 0.98)
+
+    -- Mount icon
+    f.mountIcon = f:CreateTexture(nil, "ARTWORK")
+    f.mountIcon:SetSize(28, 28)
+    f.mountIcon:SetPoint("TOPLEFT", f, "TOPLEFT", 8, -6)
+
+    -- Mount name
+    f.mountName = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    f.mountName:SetPoint("LEFT", f.mountIcon, "RIGHT", 8, 1)
+    f.mountName:SetPoint("RIGHT", f, "RIGHT", -80, 0)
+    f.mountName:SetJustifyH("LEFT")
+    f.mountName:SetWordWrap(false)
+
+    -- Collected badge
+    f.collectedBadge = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    f.collectedBadge:SetPoint("RIGHT", f, "RIGHT", -8, 0)
+    f.collectedBadge:SetPoint("TOP", f, "TOP", 0, -6)
+    f.collectedBadge:SetJustifyH("RIGHT")
+
+    -- Separator under header
+    f.headerSep = f:CreateTexture(nil, "OVERLAY")
+    f.headerSep:SetHeight(1)
+    f.headerSep:SetPoint("TOPLEFT", f, "TOPLEFT", 6, -38)
+    f.headerSep:SetPoint("TOPRIGHT", f, "TOPRIGHT", -6, -38)
+    f.headerSep:SetColorTexture(COLOR_SEPARATOR[1], COLOR_SEPARATOR[2], COLOR_SEPARATOR[3], 0.50)
+
+    f.contentStartY = -42
+
+    -- Separator textures for reuse (up to 4)
+    f.separators = {}
+
+    miniCardFrame = f
+    return f
+end
+
+-- ─── Line pool ──────────────────────────────────────────────
+local function AcquireLine(card, index)
+    if miniCardLines[index] then
+        miniCardLines[index]:Show()
+        return miniCardLines[index]
+    end
+    local fs = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    fs:SetJustifyH("LEFT")
+    fs:SetWordWrap(true)
+    miniCardLines[index] = fs
+    return fs
+end
+
+local function HideLinesFrom(startIdx)
+    for i = startIdx, #miniCardLines do
+        miniCardLines[i]:Hide()
+    end
+end
+
+-- ─── Coloured info row: "Label:  Value" ────────────────────
+local function AddInfoRow(card, lineIdx, yOff, label, value, labelColor, valueColor)
+    local fs = AcquireLine(card, lineIdx)
+    fs:ClearAllPoints()
+    fs:SetPoint("TOPLEFT", card, "TOPLEFT", 10, yOff)
+    fs:SetWidth(MINI_CARD_WIDTH - 20)
+    local lHex = string.format("%02X%02X%02X", labelColor[1]*255, labelColor[2]*255, labelColor[3]*255)
+    local vHex = string.format("%02X%02X%02X", valueColor[1]*255, valueColor[2]*255, valueColor[3]*255)
+    fs:SetText("|cFF" .. lHex .. label .. ":|r  |cFF" .. vHex .. value .. "|r")
+    local h = math.max(fs:GetStringHeight(), 12)
+    return lineIdx + 1, yOff - h - 2
+end
+
+-- ─── Plain text line ────────────────────────────────────────
+local function AddTextLine(card, lineIdx, yOff, text, color, indent)
+    local fs = AcquireLine(card, lineIdx)
+    fs:ClearAllPoints()
+    fs:SetPoint("TOPLEFT", card, "TOPLEFT", indent or 10, yOff)
+    fs:SetWidth(MINI_CARD_WIDTH - (indent or 10) - 10)
+    fs:SetTextColor(color[1], color[2], color[3], 1)
+    fs:SetText(text)
+    local h = math.max(fs:GetStringHeight(), 12)
+    return lineIdx + 1, yOff - h - 2
+end
+
+-- ─── Visual divider (thin line via a texture) ───────────────
+local function AddDivider(card, yOff, sepIndex)
+    if not card.separators[sepIndex] then
+        local tex = card:CreateTexture(nil, "ARTWORK")
+        tex:SetHeight(1)
+        tex:SetColorTexture(COLOR_SEPARATOR[1], COLOR_SEPARATOR[2], COLOR_SEPARATOR[3], 0.40)
+        card.separators[sepIndex] = tex
+    end
+    local tex = card.separators[sepIndex]
+    tex:ClearAllPoints()
+    tex:SetPoint("TOPLEFT", card, "TOPLEFT", 10, yOff - 3)
+    tex:SetPoint("TOPRIGHT", card, "TOPRIGHT", -10, yOff - 3)
+    tex:Show()
+    return yOff - 8
+end
+
+local function HideDividersFrom(startIdx)
+    for i = startIdx, #(miniCardFrame and miniCardFrame.separators or {}) do
+        if miniCardFrame.separators[i] then miniCardFrame.separators[i]:Hide() end
+    end
+end
+
+-- ─── Populate ───────────────────────────────────────────────
+local function PopulateMiniCard(card, data)
+    -- ── Header ──────────────────────────────────────────────
+    if data.icon then
+        card.mountIcon:SetTexture(data.icon)
+        card.mountIcon:SetDesaturated(data.isCollected == true)
+    else
+        card.mountIcon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
+    end
+    card.mountIcon:Show()
+
+    card.mountName:SetText(data.mountName or data.name or "Unknown")
+    card.mountName:SetTextColor(COLOR_TITLE[1], COLOR_TITLE[2], COLOR_TITLE[3])
+
+    if data.isCollected then
+        card.collectedBadge:SetText("|cFF4CE04CCollected|r")
+    else
+        card.collectedBadge:SetText("|cFFFF6666Not Collected|r")
+    end
+    card.collectedBadge:Show()
+
+    local li  = 1   -- line pool index
+    local y   = card.contentStartY
+    local sep = 1   -- divider index
+
+    -- ── WoW API flavour text (description) ──────────────────
+    local apiDesc, apiSource
+    if data.mountID then
+        local _, description, source = C_MountJournal.GetMountInfoExtraByID(data.mountID)
+        apiDesc   = description and description ~= "" and description or nil
+        apiSource = source and source ~= "" and source or nil
+    end
+
+    if apiDesc then
+        li, y = AddTextLine(card, li, y, "\"" .. apiDesc .. "\"", COLOR_DESC, 10)
+        y = y - 2
+    end
+
+    -- ── Divider after description ───────────────────────────
+    if apiDesc then
+        y = AddDivider(card, y, sep); sep = sep + 1
+    end
+
+    -- ── Source / Method ─────────────────────────────────────
+    local methodText = Guide:GetMethodText(data.method)
+    if methodText and methodText ~= "Unknown" then
+        li, y = AddInfoRow(card, li, y, "Source", methodText, COLOR_LABEL, COLOR_METHOD)
+    end
+
+    -- Drop chance
+    if data.chance then
+        local chanceText = "1/" .. tostring(data.chance)
+        if data.chance <= 20 then
+            chanceText = chanceText .. "  (rare!)"
+        end
+        li, y = AddInfoRow(card, li, y, "Drop Chance", chanceText, COLOR_LABEL, COLOR_VALUE)
+    end
+
+    -- Boss
+    if data.lockBossName then
+        li, y = AddInfoRow(card, li, y, "Boss", data.lockBossName, COLOR_LABEL, COLOR_GOLD)
+    end
+
+    -- Dungeon / raid difficulty
+    if data.instanceDifficulties then
+        local diffText = Guide:GetDifficultyText(data.instanceDifficulties)
+        if diffText then
+            li, y = AddInfoRow(card, li, y, "Difficulty", diffText, COLOR_LABEL, COLOR_DIFF)
+        end
+    end
+
+    -- NPC from coords
+    if data.coords then
+        for _, wp in ipairs(data.coords) do
+            if wp.n then
+                li, y = AddInfoRow(card, li, y, "NPC", wp.n, COLOR_LABEL, COLOR_VALUE)
+                break
+            end
+        end
+    end
+
+    -- Item name
+    if data.itemId then
+        local itemName, itemLink = C_Item.GetItemInfo(data.itemId)
+        if itemName then
+            li, y = AddInfoRow(card, li, y, "Item", itemLink or itemName, COLOR_LABEL, COLOR_ITEM)
+        end
+    end
+
+    -- Reputation
+    if data.rep then
+        local repInfo = data.rep
+        local label = repInfo.renown and "Renown" or "Reputation"
+        local text = repInfo.factionName or "Unknown"
+        if repInfo.levelName then
+            text = text .. " — " .. repInfo.levelName
+        end
+        local liveText = Guide.Reputation and Guide.Reputation:GetStandingText(repInfo) or nil
+        if liveText then
+            text = text .. "  (" .. liveText .. ")"
+        end
+        li, y = AddInfoRow(card, li, y, label, text, COLOR_LABEL, COLOR_REP)
+    end
+
+    -- Vendor
+    if data.vendorInfo then
+        local vi = data.vendorInfo
+        if vi[1] and type(vi[1]) == "table" then vi = vi[1] end
+        local vendorText = vi.npc or "Vendor"
+        if vi.x and vi.y then
+            vendorText = vendorText .. string.format("  (%.1f, %.1f)", vi.x, vi.y)
+        end
+        li, y = AddInfoRow(card, li, y, "Vendor", vendorText, COLOR_LABEL, { 0.80, 0.70, 1.00 })
+    end
+
+    -- Currency / Cost
+    if data.spellId and MCL_GUIDE_CURRENCY_DATA then
+        local costData = MCL_GUIDE_CURRENCY_DATA[data.spellId]
+        if costData then
+            local parts = {}
+            for _, entry in ipairs(costData) do
+                if entry.type == "gold" then
+                    local gs = FormatGold(entry.amount)
+                    if gs then table.insert(parts, gs) end
+                elseif entry.type == "currency" and entry.id then
+                    local info = C_CurrencyInfo.GetCurrencyInfo(entry.id)
+                    if info and info.name then
+                        local icon = info.iconFileID and ("|T" .. info.iconFileID .. ":14:14|t ") or ""
+                        local current = info.quantity or 0
+                        local needed = entry.amount
+                        local progressColor = current >= needed and "4CE04C" or "FF6666"
+                        local costStr = icon .. info.name .. "  |cFF" .. progressColor .. tostring(current) .. " / " .. tostring(needed) .. "|r"
+                        table.insert(parts, costStr)
+                    else
+                        table.insert(parts, tostring(entry.amount) .. " Currency")
+                    end
+                end
+            end
+            if #parts > 0 then
+                li, y = AddInfoRow(card, li, y, "Cost", table.concat(parts, ", "), COLOR_LABEL, COLOR_GOLD)
+            end
+        end
+    end
+
+    -- Achievement
+    if data.achievementId then
+        local _, achName, _, achCompleted = GetAchievementInfo(data.achievementId)
+        if achName then
+            local achColor = achCompleted and COLOR_ACH_DONE or COLOR_ACH
+            local achStatus = achCompleted and " (Done)" or ""
+            li, y = AddInfoRow(card, li, y, "Achievement", achName .. achStatus, COLOR_LABEL, achColor)
+        end
+    end
+
+    -- Quest
+    if data.questInfo then
+        local qi = data.questInfo
+        local questText = qi.quest or "Quest"
+        if qi.npc then
+            questText = questText .. "  (from " .. qi.npc .. ")"
+        end
+        li, y = AddInfoRow(card, li, y, "Quest", questText, COLOR_LABEL, COLOR_QUEST)
+    end
+
+    -- Black Market Auction House
+    if data.blackMarket then
+        li, y = AddInfoRow(card, li, y, "BMAH", "Available on Black Market AH", COLOR_LABEL, COLOR_BMAH)
+    end
+
+    -- Origin (section > category)
+    local sec, cat = Pins:GetSectionInfo(data.mountID)
+    if sec then
+        local origin = sec
+        if cat then origin = origin .. " > " .. cat end
+        li, y = AddInfoRow(card, li, y, "Origin", origin, COLOR_LABEL, COLOR_ORIGIN)
+    end
+
+    -- ── Notes / Instructions ────────────────────────────────
+    local note = GetPinMountNote(data)
+    if note then
+        y = AddDivider(card, y, sep); sep = sep + 1
+
+        li, y = AddTextLine(card, li, y, "How to Get:", COLOR_SECTION_HDR, 10)
+
+        -- Clean template tags and format for display
+        local cleanNote = CleanNoteText(note)
+        if cleanNote then
+            cleanNote = cleanNote:gsub("^\n+", "")
+            cleanNote = cleanNote:gsub("\n\n+", "\n\n")
+        end
+
+        -- Truncate very long notes but allow more room than before
+        local MAX_NOTE_LEN = 500
+        if cleanNote and #cleanNote > MAX_NOTE_LEN then
+            -- Try to truncate at a sentence boundary
+            local cutPoint = cleanNote:find("%.", MAX_NOTE_LEN - 60)
+            if cutPoint and cutPoint <= MAX_NOTE_LEN + 20 then
+                cleanNote = cleanNote:sub(1, cutPoint) .. " ..."
+            else
+                cleanNote = cleanNote:sub(1, MAX_NOTE_LEN) .. "..."
+            end
+        end
+
+        if cleanNote and cleanNote ~= "" then
+            -- Split into paragraphs for better readability
+            local paragraphs = {}
+            for para in (cleanNote .. "\n"):gmatch("([^\n]+)\n") do
+                local trimmed = para:match("^%s*(.-)%s*$")
+                if trimmed and trimmed ~= "" then
+                    table.insert(paragraphs, trimmed)
+                end
+            end
+            if #paragraphs == 0 then
+                -- No newlines, just one block of text
+                li, y = AddTextLine(card, li, y, cleanNote, COLOR_NOTE, 14)
+            else
+                for i, para in ipairs(paragraphs) do
+                    li, y = AddTextLine(card, li, y, para, COLOR_NOTE, 14)
+                    if i < #paragraphs then
+                        y = y - 3  -- small gap between paragraphs
+                    end
+                end
+            end
+        end
+    end
+
+    -- ── Footer ──────────────────────────────────────────────
+    y = AddDivider(card, y, sep); sep = sep + 1
+    li, y = AddTextLine(card, li, y, "Click to set waypoint  |  Right-click for mount card", COLOR_HINT, 10)
+
+    -- Clean up unused elements
+    HideLinesFrom(li)
+    HideDividersFrom(sep)
+
+    -- Set dynamic height
+    local totalHeight = math.abs(y) + 10
+    card:SetHeight(math.max(totalHeight, 60))
+end
+
+-- ─── Show / Hide ────────────────────────────────────────────
+local function ShowMiniCard(pinFrame, data)
+    local card = GetMiniCard()
+    PopulateMiniCard(card, data)
+    card:ClearAllPoints()
+    card:SetPoint("BOTTOMLEFT", pinFrame, "TOPRIGHT", 5, -5)
+    card:Show()
+end
+
+local function HideMiniCard()
+    if miniCardFrame then
+        miniCardFrame:Hide()
+    end
+end
+
 -- ─── Pin sizing & colours by source type ────────────────────
 local PIN_STYLES = {
     -- method        = { size, borderR, borderG, borderB, label, labelR, labelG, labelB }
@@ -150,7 +668,8 @@ local DEFAULT_STYLE  = { 28, 0.50, 0.50, 0.50, "",       0.60, 0.60, 0.60 }
 local MCL_GuidePinMixin = {}
 
 function MCL_GuidePinMixin:OnLoad()
-    self:SetFrameStrata("HIGH")
+    self:SetFrameStrata("TOOLTIP")
+    self:SetFrameLevel(2500)
 end
 
 function MCL_GuidePinMixin:OnAcquired(mountData)
@@ -258,88 +777,38 @@ end
 
 function MCL_GuidePinMixin:OnMouseEnter()
     if not self.mountData then return end
-    local data = self.mountData
-
-    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-    GameTooltip:AddLine(data.mountName or data.name, 1, 1, 1)
-    GameTooltip:AddLine(Guide:GetMethodText(data.method), 0.12, 0.72, 0.92)
-
-    if data.chance then
-        GameTooltip:AddLine("Drop chance: 1/" .. data.chance, 1, 1, 1)
-    end
-    if data.lockBossName then
-        GameTooltip:AddLine("Boss: " .. data.lockBossName, 1, 0.82, 0)
-    end
-
-    -- NPC name from coords
-    if data.coords then
-        for _, wp in ipairs(data.coords) do
-            if wp.n then
-                GameTooltip:AddLine("NPC: " .. wp.n, 0.7, 0.7, 0.7)
-                break
-            end
-        end
-    end
-
-    -- Reputation
-    if data.rep then
-        local repInfo = data.rep
-        local label = repInfo.renown and "Renown" or "Reputation"
-        local text = repInfo.factionName or "Unknown"
-        if repInfo.levelName then
-            text = text .. " — " .. repInfo.levelName
-        end
-        local liveText = Guide.Reputation and Guide.Reputation:GetStandingText(repInfo) or nil
-        if liveText then
-            text = text .. " (" .. liveText .. ")"
-        end
-        GameTooltip:AddLine(label .. ": " .. text, 0.6, 0.8, 1.0)
-    end
-
-    -- Vendor / Quartermaster location
-    if data.vendorInfo then
-        local vi = data.vendorInfo
-        local vendorText = vi.npc or "Vendor"
-        if vi.x and vi.y then
-            vendorText = vendorText .. string.format(" (%.1f, %.1f)", vi.x, vi.y)
-        end
-        GameTooltip:AddLine("Vendor: " .. vendorText, 0.8, 0.7, 1.0)
-    end
-
-    -- Achievement
-    if data.achievementId then
-        local _, achName, _, achCompleted = GetAchievementInfo(data.achievementId)
-        if achName then
-            local achColor = achCompleted and "|cFF00FF00" or "|cFFFFFF00"
-            local achStatus = achCompleted and " (Done)" or ""
-            GameTooltip:AddLine("Achievement: " .. achColor .. achName .. achStatus .. "|r")
-        end
-    end
-
-    -- Section + Category from MCL data
-    local sec, cat = Pins:GetSectionInfo(data.mountID)
-    if sec then
-        local origin = sec
-        if cat then origin = origin .. " > " .. cat end
-        GameTooltip:AddLine("Origin: " .. origin, 0.6, 0.6, 0.6)
-    end
-
-    if data.isCollected then
-        GameTooltip:AddLine("|cFF00FF00Collected|r")
-    end
-
-    GameTooltip:AddLine(" ")
-    GameTooltip:AddLine("|cFF00FF00Click to set waypoint|r")
-    GameTooltip:Show()
+    ShowMiniCard(self, self.mountData)
 end
 
 function MCL_GuidePinMixin:OnMouseLeave()
-    GameTooltip:Hide()
+    HideMiniCard()
 end
 
-function MCL_GuidePinMixin:OnClick()
+function MCL_GuidePinMixin:OnClick(button)
     if not self.mountData then return end
-    Pins:PinMount(self.mountData)
+    if button == "RightButton" then
+        HideMiniCard()
+        -- Open mount card in the Legend Tab panel
+        if Guide.MapPanel and Guide.MapPanel.ShowMountCard then
+            Guide.MapPanel:ShowMountCard(self.mountData)
+        elseif MCLcore and MCLcore.MountCard and MCLcore.MountCard.Show then
+            local mountID = self.mountData.mountID
+            if mountID then
+                local card = MCLcore.MountCard.Show({
+                    mountID = mountID,
+                    id      = mountID,
+                }, WorldMapFrame)
+                if card then
+                    card:ClearAllPoints()
+                    card:SetPoint("TOPLEFT", WorldMapFrame, "TOPRIGHT", 4, 0)
+                    card:SetFrameStrata("FULLSCREEN_DIALOG")
+                    card:SetFrameLevel(500)
+                end
+            end
+        end
+    else
+        Pins:PinMount(self.mountData)
+    end
 end
 
 -- ─── Data Provider for WorldMapFrame ────────────────────────
@@ -353,6 +822,7 @@ local activePins = {}
 local ZOOM_DAMPING = 0.25
 
 local function ReleasePins()
+    HideMiniCard()
     for _, pin in ipairs(activePins) do
         pin:Hide()
         pin:ClearAllPoints()
@@ -367,7 +837,8 @@ local function AcquirePin(canvas)
     local pin = table.remove(pinPool)
     if not pin then
         pin = CreateFrame("Button", nil, canvas)
-        pin:SetFrameStrata("HIGH")
+        pin:SetFrameStrata("TOOLTIP")
+        pin:SetFrameLevel(2500)
 
         -- Mixin
         for k, v in pairs(MCL_GuidePinMixin) do
@@ -375,10 +846,18 @@ local function AcquirePin(canvas)
         end
         pin:OnLoad()
 
-        pin:RegisterForClicks("LeftButtonUp")
+        pin:RegisterForClicks("LeftButtonUp", "RightButtonDown")
         pin:SetScript("OnEnter", pin.OnMouseEnter)
         pin:SetScript("OnLeave", pin.OnMouseLeave)
         pin:SetScript("OnClick", pin.OnClick)
+
+        -- Prevent mouse events from propagating to underlying map elements
+        if pin.SetPropagateMouseMotion then
+            pin:SetPropagateMouseMotion(false)
+        end
+        if pin.SetPropagateMouseClicks then
+            pin:SetPropagateMouseClicks(false)
+        end
     end
     pin:Show()
     table.insert(activePins, pin)
@@ -514,7 +993,12 @@ hookFrame:SetScript("OnEvent", function()
         end)
 
         WorldMapFrame:HookScript("OnHide", function()
+            HideMiniCard()
             ReleasePins()
+            -- Also hide the full mount card if it was opened from a map pin
+            if MCLcore and MCLcore.MountCard and MCLcore.MountCard.Hide then
+                MCLcore.MountCard.Hide()
+            end
         end)
 
         -- Track canvas zoom changes to keep pin sizes consistent

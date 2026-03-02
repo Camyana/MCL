@@ -3,7 +3,7 @@
 ## Title-zhTW: |cFF1FB7EBMCL |cFFFFFFFF- 坐騎收集日誌
 ## Notes: A tool used to log collected mounts in a similar way to Simple Armory.
 ## Notes-zhTW: 一個用於記錄坐騎收集的工具，類似於Simple Armory。
-## Version: 3.0.2
+## Version: 3.0.3
 ## DefaultState: enabled
 ## SavedVariables: MCL_DB, MOUNTLIST, MCL_PINNED, MCL_SETTINGS, MCL_GUIDE_SETTINGS
 ## Author: Discord: Cam#7332
@@ -27,6 +27,7 @@ guide\GuideQuestData.lua
 guide\MCL_Guide.lua
 guide\GuideReputation.lua
 guide\GuideZonePanel.lua
+guide\GuideMapPanel.lua
 guide\GuideMapPins.lua
 core\functions.lua
 core\frames.lua

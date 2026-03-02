@@ -821,6 +821,19 @@ MCL_GUIDE_DATA.mounts = {
 		itemId = 152843,
 		chance = 16,
 	},
+	[237286] = {
+		name = "Dune Scavenger",
+		method = "NPC",
+		itemId = 163576,
+		coords = {
+			{ m = 864 },
+		},
+	},
+	[237287] = {
+		name = "Alabaster Hyena",
+		method = "",
+		itemId = 161773,
+	},
 	[238454] = {
 		name = "Netherlord's Accursed Wrathsteed",
 		method = "NPC",
@@ -828,6 +841,11 @@ MCL_GUIDE_DATA.mounts = {
 		coords = {
 			{ m = 646, x = 44.4, y = 52.4 },
 		},
+	},
+	[239049] = {
+		name = "Obsidian Krolusk",
+		method = "SPECIAL",
+		itemId = 161215,
 	},
 	[242874] = {
 		name = "Highmountain Elderhorn",
@@ -893,10 +911,28 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 885, x = 63.2, y = 23.6 },
 		},
 	},
+	[243795] = {
+		name = "Leaping Veinseeker",
+		method = "NPC",
+		itemId = 163575,
+		coords = {
+			{ m = 863 },
+		},
+	},
+	[244712] = {
+		name = "Spectral Pterrorwing",
+		method = "",
+		itemId = 161664,
+	},
 	[247402] = {
 		name = "Lucid Nightmare",
 		method = "USE",
 		itemId = 151623,
+	},
+	[250735] = {
+		name = "Bloodgorged Crawg",
+		method = "SPECIAL",
+		itemId = 163216,
 	},
 	[253058] = {
 		name = "Maddened Chaosrunner",
@@ -1003,10 +1039,76 @@ MCL_GUIDE_DATA.mounts = {
 		},
 		instanceDifficulties = { 23 },
 	},
+	[258022] = {
+		name = "Lightforged Felcrusher",
+		method = "SPECIAL",
+		itemId = 155656,
+	},
+	[258060] = {
+		name = "Highmountain Thunderhoof",
+		method = "SPECIAL",
+		itemId = 155662,
+	},
+	[258845] = {
+		name = "Nightborne Manasaber",
+		method = "SPECIAL",
+		itemId = 156487,
+	},
+	[259202] = {
+		name = "Starcursed Voidstrider",
+		method = "SPECIAL",
+		itemId = 156486,
+	},
+	[259213] = {
+		name = "Admiralty Stallion",
+		method = "",
+		itemId = 161911,
+	},
+	[259740] = {
+		name = "Green Marsh Hopper",
+		method = "",
+		itemId = 163183,
+	},
+	[259741] = {
+		name = "Honeyback Harvester",
+		method = "SPECIAL",
+		itemId = 170069,
+	},
+	[260172] = {
+		name = "Dapple Gray",
+		method = "",
+		itemId = 161912,
+	},
+	[260173] = {
+		name = "Smoky Charger",
+		method = "",
+		itemId = 161910,
+	},
+	[260174] = {
+		name = "Terrified Pack Mule",
+		method = "NPC",
+		itemId = 163574,
+		coords = {
+			{ m = 896 },
+		},
+	},
+	[260175] = {
+		name = "Goldenmane",
+		method = "NPC",
+		itemId = 163573,
+		coords = {
+			{ m = 942 },
+		},
+	},
 	[261395] = {
 		name = "The Hivemind",
 		method = "NPC",
 		itemId = 156798,
+	},
+	[263707] = {
+		name = "Zandalari Direhorn",
+		method = "SPECIAL",
+		itemId = 157870,
 	},
 	[266058] = {
 		name = "Tomb Stalker",
@@ -1018,6 +1120,26 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1004, i = true },
 		},
 		instanceDifficulties = { 23 },
+	},
+	[266925] = {
+		name = "Siltwing Albatross",
+		method = "",
+		itemId = 166745,
+	},
+	[267270] = {
+		name = "Kua'fon",
+		method = "SPECIAL",
+		itemId = 159146,
+	},
+	[267274] = {
+		name = "Mag'har Direwolf",
+		method = "SPECIAL",
+		itemId = 161330,
+	},
+	[271646] = {
+		name = "Dark Iron Core Hound",
+		method = "SPECIAL",
+		itemId = 161331,
 	},
 	[273541] = {
 		name = "Underrot Crawg",
@@ -1038,11 +1160,51 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1355, x = 51.8, y = 53.4 },
 		},
 	},
+	[275837] = {
+		name = "Cobalt Pterrordax",
+		method = "",
+		itemId = 161665,
+	},
+	[275838] = {
+		name = "Captured Swampstalker",
+		method = "",
+		itemId = 161666,
+	},
+	[275840] = {
+		name = "Voldunai Dunescraper",
+		method = "",
+		itemId = 161667,
+	},
+	[275841] = {
+		name = "Expedition Bloodswarmer",
+		method = "",
+		itemId = 161774,
+	},
+	[275859] = {
+		name = "Dusky Waycrest Gryphon",
+		method = "",
+		itemId = 161908,
+	},
+	[275866] = {
+		name = "Stormsong Coastwatcher",
+		method = "",
+		itemId = 161909,
+	},
+	[275868] = {
+		name = "Proudmoore Sea Scout",
+		method = "",
+		itemId = 161879,
+	},
 	[278979] = {
 		name = "Surf Jelly",
 		method = "USE",
 		itemId = 163585,
 		chance = 100,
+	},
+	[279454] = {
+		name = "Conqueror's Scythemaw",
+		method = "SPECIAL",
+		itemId = 163577,
 	},
 	[279456] = {
 		name = "Highland Mustang",
@@ -1080,6 +1242,11 @@ MCL_GUIDE_DATA.mounts = {
 		itemId = 163582,
 		chance = 100,
 	},
+	[279474] = {
+		name = "Palehide Direhorn",
+		method = "",
+		itemId = 163589,
+	},
 	[279569] = {
 		name = "Swift Albino Raptor",
 		method = "NPC",
@@ -1115,6 +1282,11 @@ MCL_GUIDE_DATA.mounts = {
 		coords = {
 			{ m = 14, x = 67, y = 61.6 },
 		},
+	},
+	[282682] = {
+		name = "Kul Tiran Charger",
+		method = "SPECIAL",
+		itemId = 164762,
 	},
 	[288438] = {
 		name = "Blackpaw",
@@ -1160,11 +1332,36 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 62, x = 39.8, y = 32.8 },
 		},
 	},
+	[288506] = {
+		name = "Sandy Nightsaber",
+		method = "",
+		itemId = 166436,
+	},
+	[288587] = {
+		name = "Blue Marsh Hopper",
+		method = "",
+		itemId = 166442,
+	},
+	[288589] = {
+		name = "Yellow Marsh Hopper",
+		method = "",
+		itemId = 166443,
+	},
+	[288711] = {
+		name = "Saltwater Seahorse",
+		method = "",
+		itemId = 166471,
+	},
 	[288712] = {
 		name = "Stonehide Elderhorn",
 		method = "USE",
 		itemId = 166470,
 		chance = 100,
+	},
+	[288714] = {
+		name = "Bloodthirsty Dreadwing",
+		method = "",
+		itemId = 166469,
 	},
 	[288720] = {
 		name = "Bloodgorged Hunter",
@@ -1184,6 +1381,21 @@ MCL_GUIDE_DATA.mounts = {
 		itemId = 166466,
 		chance = 100,
 	},
+	[288735] = {
+		name = "Rubyshell Krolusk",
+		method = "",
+		itemId = 166464,
+	},
+	[288736] = {
+		name = "Azureshell Krolusk",
+		method = "",
+		itemId = 166465,
+	},
+	[288740] = {
+		name = "Priestess' Moonsaber",
+		method = "",
+		itemId = 166463,
+	},
 	[289083] = {
 		name = "G.M.O.D.",
 		method = "BOSS",
@@ -1195,6 +1407,11 @@ MCL_GUIDE_DATA.mounts = {
 		},
 		instanceDifficulties = { 14 },
 	},
+	[289101] = {
+		name = "Dazar'alor Windreaver",
+		method = "SPECIAL",
+		itemId = 166539,
+	},
 	[289555] = {
 		name = "Glacial Tidestorm",
 		method = "BOSS",
@@ -1205,6 +1422,11 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1364, i = true },
 		},
 		instanceDifficulties = { 16 },
+	},
+	[290328] = {
+		name = "Wonderwing 2.0",
+		method = "SPECIAL",
+		itemId = 169162,
 	},
 	[290718] = {
 		name = "Aerial Unit R-21/X",
@@ -1220,6 +1442,21 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1462, x = 52, y = 41.4, n = "Arachnoid Harvester" },
 		},
 	},
+	[291538] = {
+		name = "Unshackled Waveray",
+		method = "",
+		itemId = 167170,
+	},
+	[292407] = {
+		name = "Ankoan Waveray",
+		method = "",
+		itemId = 167167,
+	},
+	[292419] = {
+		name = "Azshari Bloatray",
+		method = "SPECIAL",
+		itemId = 167171,
+	},
 	[294038] = {
 		name = "Royal Snapdragon",
 		method = "USE",
@@ -1229,6 +1466,31 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1355 },
 		},
 	},
+	[294039] = {
+		name = "Snapback Scuttler",
+		method = "SPECIAL",
+		itemId = 169194,
+	},
+	[294143] = {
+		name = "X-995 Mechanocat",
+		method = "SPECIAL",
+		itemId = 167751,
+	},
+	[295386] = {
+		name = "Ironclad Frostclaw",
+		method = "SPECIAL",
+		itemId = 168056,
+	},
+	[295387] = {
+		name = "Bloodflank Charger",
+		method = "SPECIAL",
+		itemId = 168055,
+	},
+	[296788] = {
+		name = "Mechacycle Model W",
+		method = "SPECIAL",
+		itemId = 168329,
+	},
 	[297157] = {
 		name = "Junkheap Drifter",
 		method = "NPC",
@@ -1237,6 +1499,11 @@ MCL_GUIDE_DATA.mounts = {
 		coords = {
 			{ m = 1462, x = 65, y = 77.4 },
 		},
+	},
+	[297560] = {
+		name = "Child of Torcali",
+		method = "SPECIAL",
+		itemId = 168408,
 	},
 	[298367] = {
 		name = "Mollie",
@@ -1260,6 +1527,26 @@ MCL_GUIDE_DATA.mounts = {
 		},
 		instanceDifficulties = { 23 },
 	},
+	[299159] = {
+		name = "Scrapforged Mechaspider",
+		method = "SPECIAL",
+		itemId = 168827,
+	},
+	[299170] = {
+		name = "Rustbolt Resistor",
+		method = "",
+		itemId = 168829,
+	},
+	[300146] = {
+		name = "Snapdragon Kelpstalker",
+		method = "SPECIAL",
+		itemId = 169199,
+	},
+	[300147] = {
+		name = "Deepcoral Snapdragon",
+		method = "SPECIAL",
+		itemId = 169200,
+	},
 	[300149] = {
 		name = "Silent Glider",
 		method = "NPC",
@@ -1276,6 +1563,31 @@ MCL_GUIDE_DATA.mounts = {
 		coords = {
 			{ m = 1355, x = 25.6, y = 29.4 },
 		},
+	},
+	[300151] = {
+		name = "Inkscale Deepseeker",
+		method = "",
+		itemId = 169203,
+	},
+	[300153] = {
+		name = "Crimson Tidestallion",
+		method = "SPECIAL",
+		itemId = 169202,
+	},
+	[305182] = {
+		name = "Black Serpent of N'Zoth",
+		method = "SPECIAL",
+		itemId = 174654,
+	},
+	[305592] = {
+		name = "Mechagon Mechanostrider",
+		method = "SPECIAL",
+		itemId = 174067,
+	},
+	[306423] = {
+		name = "Caravan Hyena",
+		method = "SPECIAL",
+		itemId = 174066,
 	},
 	[308814] = {
 		name = "Ny'alotha Allseer",
@@ -1369,6 +1681,14 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 390, x = 3.6, y = 61.8 },
 		},
 	},
+	[315427] = {
+		name = "Rajani Warserpent",
+		method = "",
+		itemId = 174649,
+		coords = {
+			{ m = 390 },
+		},
+	},
 	[315847] = {
 		name = "Drake of the Four Winds",
 		method = "NPC",
@@ -1396,6 +1716,11 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 249, x = 68, y = 31.4 },
 		},
 	},
+	[316276] = {
+		name = "Wastewander Skyterror",
+		method = "",
+		itemId = 174754,
+	},
 	[316337] = {
 		name = "Malevolent Drone",
 		method = "NPC",
@@ -1403,6 +1728,29 @@ MCL_GUIDE_DATA.mounts = {
 		chance = 100,
 		coords = {
 			{ m = 249, x = 30.4, y = 49.4 },
+		},
+	},
+	[316339] = {
+		name = "Shadowbarb Drone",
+		method = "SPECIAL",
+		itemId = 174771,
+	},
+	[316340] = {
+		name = "Wicked Swarmer",
+		method = "",
+		itemId = 174770,
+	},
+	[316343] = {
+		name = "Wriggling Parasite",
+		method = "SPECIAL",
+		itemId = 174861,
+	},
+	[316493] = {
+		name = "Elusive Quickhoof",
+		method = "NPC",
+		itemId = 174860,
+		coords = {
+			{ m = 864 },
 		},
 	},
 	[316722] = {
@@ -1422,6 +1770,11 @@ MCL_GUIDE_DATA.mounts = {
 		coords = {
 			{ m = 390, x = 33.4, y = 67.4 },
 		},
+	},
+	[316802] = {
+		name = "Springfur Alpaca",
+		method = "SPECIAL",
+		itemId = 174859,
 	},
 	[327405] = {
 		name = "Colossal Slaughterclaw",
@@ -2539,6 +2892,11 @@ MCL_GUIDE_DATA.mounts = {
 		},
 		instanceDifficulties = { 23 },
 	},
+	[449415] = {
+		name = "Slatestone Ramolith",
+		method = "SPECIAL",
+		itemId = 223572,
+	},
 	[451486] = {
 		name = "Sureki Skyrazor",
 		method = "BOSS",
@@ -2652,12 +3010,17 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 2346 },
 		},
 	},
+	[473472] = {
+		name = "Jani's Trashpile",
+		method = "SPECIAL",
+		itemId = 235515,
+	},
 	[474086] = {
 		name = "Prismatic Snapdragon",
 		method = "USE",
 		itemId = 233489,
 		coords = {
-			{ m = 2369, x = 71.0, y = 48.6 },
+			{ m = 2369, x = 71, y = 48.6 },
 		},
 	},
 	[1217760] = {
@@ -2806,7 +3169,15 @@ MCL_GUIDE_DATA.mounts = {
 		method = "Treasure",
 		itemId = 252017,
 		coords = {
-			{ m = 2413, x = 40, y = 21.4 },
+			{ m = 2413, x = 40.8, y = 28.3 },
+		},
+	},
+	[1260354] = {
+		name = "Untainted Grove Crawler",
+		method = "Chest",
+		itemId = 256423,
+		coords = {
+			{ m = 2413, x = 47.4, y = 67.6 },
 		},
 	},
 	[1260356] = {
@@ -2872,7 +3243,7 @@ MCL_GUIDE_DATA.mounts = {
 		method = "Treasure",
 		itemId = 257223,
 		coords = {
-			{ m = 2437, x = 21.4, y = 77.4 },
+			{ m = 2437, x = 46.7, y = 81.7 },
 		},
 	},
 	[1261576] = {
@@ -2888,7 +3259,7 @@ MCL_GUIDE_DATA.mounts = {
 		method = "Treasure",
 		itemId = 257446,
 		coords = {
-			{ m = 2403, x = 48.9, y = 78.3 },
+			{ m = 2405, x = 50.0, y = 79.3 },
 		},
 	},
 	[1263635] = {

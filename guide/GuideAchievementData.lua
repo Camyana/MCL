@@ -190,7 +190,7 @@ MCL_GUIDE_ACHIEVEMENT_DATA.byAchievement = {
 	[61017] = { itemId = 250240, name = "Phase-Lost-and-Found", reward = "Mount: Phase-Lost Slateback", points = 10, desc = "Collect all of the Phase-Lost item appearances found from Phase Diving orbs." },
 	[61256] = { itemId = 262620, name = "Midnight Keystone Master: Season One", reward = "Mount: Calamitous Carrion", points = 0, desc = "Attain a Mythic+ Rating of at least 2000 during Midnight Season One." },
 	[61258] = { itemId = 262621, name = "Midnight Keystone Legend: Season One", reward = "Mount: Convalescent Carrion", points = 0, desc = "Attain a Mythic+ Rating of at least 3000 during Midnight Season One." },
-	[61263] = { itemId = 263579, name = "Treasures of Harandar", reward = "Mount: Vivacious Chloroceros", points = 5, desc = "Discover the hidden treasures across Harandar." },
+	[61263] = { itemId = 0, mountId = 2912, name = "Treasures of Harandar", reward = "Mount: Vivacious Chloroceros", points = 5, desc = "Discover the hidden treasures across Harandar." },
 	[61380] = { itemId = 260887, name = "Glory of the Midnight Raider", reward = "Mount: Tenebrous Harrower", points = 25, desc = "Complete the raid achievements listed below." },
 	[61403] = { itemId = 257502, name = "Galactic Combatant", reward = "Mount: Vicious Snaplizard", points = 0, desc = "" },
 	[61405] = { itemId = 257504, name = "Galactic Combatant", reward = "Mount: Vicious Snaplizard", points = 0, desc = "" },

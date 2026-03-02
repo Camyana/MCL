@@ -199,11 +199,11 @@ MCL_GUIDE_VENDOR_DATA = {
     [436] = { { npc = "Astrid Langstrump", zone = "Darnassus", m = 89, x = 48.2, y = 21.4 } },  -- Swift Mountain Horse
     [447] = { { npc = "Landro Longshot", zone = "Booty Bay", m = 210, x = 42.4, y = 71.4 } },  -- Feldrake
     [449] = { { npc = "Nat Pagle", zone = "Krasarang Wilds", m = 418 } },  -- Azure Water Strider
-    [452] = {  -- Green Dragon Turtle
+    [452] = {
         { npc = "Turtlemaster Odai", zone = "Orgrimmar", m = 1637, x = 69.4, y = 41.2 },
         { npc = "Old Whitenose", zone = "Stormwind City", m = 1519, x = 67.8, y = 18.4 },
     },
-    [453] = {  -- Great Red Dragon Turtle
+    [453] = {
         { npc = "Turtlemaster Odai", zone = "Orgrimmar", m = 1637, x = 69.4, y = 41.2 },
         { npc = "Old Whitenose", zone = "Stormwind City", m = 1519, x = 67.8, y = 18.4 },
     },
@@ -212,58 +212,58 @@ MCL_GUIDE_VENDOR_DATA = {
     [466] = { { npc = "Shay Pressler (Alliance)", zone = "Stormwind City", m = 84, x = 64.2, y = 77 } },  -- Thundering Jade Cloud Serpent
     [475] = { { npc = "Mistweaver Ku", zone = "Timeless Isle", m = 554 } },  -- Heavenly Golden Cloud Serpent
     [476] = { { npc = "Mistweaver Xia", zone = "Timeless Isle", m = 554, x = 43, y = 55.4 } },  -- Yu'lei, Daughter of Jade
-    [479] = {  -- Azure Riding Crane
+    [479] = {
         { npc = "Jaluu the Generous", zone = "Vale of Eternal Blossoms", faction = "Horde", m = 390, x = 63, y = 22.2 },
         { npc = "Jaluu the Generous", zone = "Vale of Eternal Blossoms", faction = "Alliance", m = 390, x = 84, y = 63 },
     },
-    [480] = {  -- Golden Riding Crane
+    [480] = {
         { npc = "Jaluu the Generous", zone = "Vale of Eternal Blossoms", faction = "Horde", m = 390, x = 63, y = 22.2 },
         { npc = "Jaluu the Generous", zone = "Vale of Eternal Blossoms", faction = "Alliance", m = 390, x = 84, y = 63 },
     },
-    [481] = {  -- Regal Riding Crane
+    [481] = {
         { npc = "Jaluu the Generous", zone = "Vale of Eternal Blossoms", faction = "Horde", m = 390, x = 63, y = 22.2 },
         { npc = "Jaluu the Generous", zone = "Vale of Eternal Blossoms", faction = "Alliance", m = 390, x = 84, y = 63 },
     },
     [486] = { { npc = "Uncle Bigpocket", zone = "Kun-Lai Summit", m = 379, x = 65.4, y = 61.6 } },  -- Grey Riding Yak
     [487] = { { npc = "Uncle Bigpocket", zone = "Kun-Lai Summit", m = 379, x = 65.4, y = 61.6 } },  -- Blonde Riding Yak
     [488] = { { npc = "Nat Pagle", zone = "Krasarang Wilds", m = 418, x = 68.4, y = 43.6 } },  -- Crimson Water Strider
-    [492] = {  -- Black Dragon Turtle
+    [492] = {
         { npc = "Turtlemaster Odai", zone = "Orgrimmar", m = 1637, x = 69.4, y = 41.2 },
         { npc = "Old Whitenose", zone = "Stormwind City", m = 1519, x = 67.8, y = 18.4 },
     },
-    [493] = {  -- Blue Dragon Turtle
+    [493] = {
         { npc = "Turtlemaster Odai", zone = "Orgrimmar", m = 1637, x = 69.4, y = 41.2 },
         { npc = "Old Whitenose", zone = "Stormwind City", m = 1519, x = 67.8, y = 18.4 },
     },
-    [494] = {  -- Brown Dragon Turtle
+    [494] = {
         { npc = "Turtlemaster Odai", zone = "Orgrimmar", m = 1637, x = 69.4, y = 41.2 },
         { npc = "Old Whitenose", zone = "Stormwind City", m = 1519, x = 67.8, y = 18.4 },
     },
-    [495] = {  -- Purple Dragon Turtle
+    [495] = {
         { npc = "Turtlemaster Odai", zone = "Orgrimmar", m = 1637, x = 69.4, y = 41.2 },
         { npc = "Old Whitenose", zone = "Stormwind City", m = 1519, x = 67.8, y = 18.4 },
     },
-    [496] = {  -- Red Dragon Turtle
+    [496] = {
         { npc = "Turtlemaster Odai", zone = "Orgrimmar", m = 1637, x = 69.4, y = 41.2 },
         { npc = "Old Whitenose", zone = "Stormwind City", m = 1519, x = 67.8, y = 18.4 },
     },
-    [497] = {  -- Great Green Dragon Turtle
+    [497] = {
         { npc = "Turtlemaster Odai", zone = "Orgrimmar", m = 1637, x = 69.4, y = 41.2 },
         { npc = "Old Whitenose", zone = "Stormwind City", m = 1519, x = 67.8, y = 18.4 },
     },
-    [498] = {  -- Great Black Dragon Turtle
+    [498] = {
         { npc = "Turtlemaster Odai", zone = "Orgrimmar", m = 1637, x = 69.4, y = 41.2 },
         { npc = "Old Whitenose", zone = "Stormwind City", m = 1519, x = 67.8, y = 18.4 },
     },
-    [499] = {  -- Great Blue Dragon Turtle
+    [499] = {
         { npc = "Turtlemaster Odai", zone = "Orgrimmar", m = 1637, x = 69.4, y = 41.2 },
         { npc = "Old Whitenose", zone = "Stormwind City", m = 1519, x = 67.8, y = 18.4 },
     },
-    [500] = {  -- Great Brown Dragon Turtle
+    [500] = {
         { npc = "Turtlemaster Odai", zone = "Orgrimmar", m = 1637, x = 69.4, y = 41.2 },
         { npc = "Old Whitenose", zone = "Stormwind City", m = 1519, x = 67.8, y = 18.4 },
     },
-    [501] = {  -- Great Purple Dragon Turtle
+    [501] = {
         { npc = "Turtlemaster Odai", zone = "Orgrimmar", m = 1637, x = 69.4, y = 41.2 },
         { npc = "Old Whitenose", zone = "Stormwind City", m = 1519, x = 67.8, y = 18.4 },
     },
@@ -529,16 +529,16 @@ MCL_GUIDE_VENDOR_DATA = {
     [2586] = { { npc = "Churbro", zone = "Boralus Harbor", m = 1161, x = 70.8, y = 16.4 } },  -- Moonlit Nightsaber
     [2587] = { { npc = "Churbro", zone = "Boralus Harbor", m = 1161, x = 70.8, y = 16.4 } },  -- Ivory Savagemane
     [2604] = { { npc = "Sir Finley Mrrgglton", zone = "Dornogal", m = 2339, x = 47.4, y = 43.4 } },  -- OC91 Chariot
-    [2614] = { { npc = "Naynar", zone = "Harandar", m = 2413, x = 51.0, y = 50.7 } },  -- Fierce Grimlynx
-    [2693] = { { npc = "Chel the Chip", zone = "", m = 2437, x = 45.0, y = 67.5 } },  -- Amani Sunfeather
-    [2694] = { { npc = "Magovu", zone = "Zul'Aman", m = 2437, x = 46.0, y = 65.9 } },  -- Amani Windcaller
-    [2710] = { { npc = "Naynar", zone = "Harandar", m = 2413, x = 51.0, y = 50.7 } },  -- Cerulean Sporeglider
+    [2614] = { { npc = "Naynar", zone = "Harandar", m = 2413, x = 51, y = 50.7 } },  -- Fierce Grimlynx
+    [2693] = { { npc = "Chel the Chip", zone = "", m = 2437, x = 45, y = 67.5 } },  -- Amani Sunfeather
+    [2694] = { { npc = "Magovu", zone = "Zul'Aman", m = 2437, x = 46, y = 65.9 } },  -- Amani Windcaller
+    [2710] = { { npc = "Naynar", zone = "Harandar", m = 2413, x = 51, y = 50.7 } },  -- Cerulean Sporeglider
     [2753] = { { npc = "Caeris Fairdawn", zone = "Eversong Woods", m = 2395, x = 43.5, y = 47.5 } },  -- Fiery Dragonhawk
     [2761] = { { npc = "Caeris Fairdawn", zone = "Eversong Woods", m = 2395, x = 43.5, y = 47.5 } },  -- Crimson Silvermoon Hawkstrider
     [2769] = { { npc = "Construct V'anore", zone = "Silvermoon City", m = 2393, x = 55.7, y = 65.7 } },  -- Preyseeker's Hubris
     [2770] = { { npc = "Construct V'anore", zone = "Silvermoon City", m = 2393, x = 55.7, y = 65.7 } },  -- Preyseeker's Wrath
-    [2772] = { { npc = "Chel the Chip", zone = "", m = 2437, x = 45.0, y = 67.5 } },  -- Blessed Amani Burrower
-    [2776] = { { npc = "Magovu", zone = "Zul'Aman", m = 2437, x = 46.0, y = 65.9 } },  -- Amani Blessed Bear
+    [2772] = { { npc = "Chel the Chip", zone = "", m = 2437, x = 45, y = 67.5 } },  -- Blessed Amani Burrower
+    [2776] = { { npc = "Magovu", zone = "Zul'Aman", m = 2437, x = 46, y = 65.9 } },  -- Amani Blessed Bear
     [2789] = { { npc = "Void Researcher Anomander", zone = "Voidstorm", m = 2664, x = 47.1, y = 66.2 } },  -- Ravenous Shredclaw
     [2791] = { { npc = "Thraxadar", zone = "Masters' Perch", m = 2444, x = 39.3, y = 81.1 } },  -- Prowling Shredclaw
     [2792] = { { npc = "Thraxadar", zone = "Masters' Perch", m = 2444, x = 39.3, y = 81.1 } },  -- Frenzied Shredclaw

@@ -39,6 +39,9 @@ local iconPool    = {}
 local activeIcons = {}
 local mountList   = {}
 
+-- Pin toggle button
+local pinToggleButton
+
 -- ─── Flyout helper ──────────────────────────────────────────
 local function GetFlyout()
     return MCL_GUIDE_SETTINGS and MCL_GUIDE_SETTINGS.zonePanelFlyout or "DOWN"
@@ -198,7 +201,7 @@ local function TogglePanel()
     end
 end
 
--- ─── Anchor the panel frame relative to the tab ─────────────
+-- ─── Anchor the panel frame + pin toggle relative to the tab ─
 local function AnchorPanelToTab()
     if not panelFrame or not tabButton then return end
     panelFrame:ClearAllPoints()
@@ -211,6 +214,18 @@ local function AnchorPanelToTab()
         panelFrame:SetPoint("TOPLEFT", tabButton, "TOPRIGHT", 4, 0)
     elseif dir == "LEFT" then
         panelFrame:SetPoint("TOPRIGHT", tabButton, "TOPLEFT", -4, 0)
+    end
+
+    -- Keep pin toggle button anchored beside the tab
+    if pinToggleButton then
+        pinToggleButton:ClearAllPoints()
+        if dir == "DOWN" or dir == "UP" then
+            -- Tab is vertical strip → place toggle to the right of tab
+            pinToggleButton:SetPoint("LEFT", tabButton, "RIGHT", 2, 0)
+        else
+            -- Tab is horizontal strip → place toggle below the tab
+            pinToggleButton:SetPoint("TOP", tabButton, "BOTTOM", 0, -2)
+        end
     end
 end
 
@@ -349,6 +364,56 @@ local function GetPanelFrame()
         GameTooltip:Show()
     end)
     tabButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+    -- ── Map Icons toggle button ─────────────────────────────
+    pinToggleButton = CreateFrame("Button", nil, WorldMapFrame, "BackdropTemplate")
+    pinToggleButton:SetSize(TAB_SIZE, TAB_SIZE)
+    pinToggleButton:SetFrameStrata("HIGH")
+    pinToggleButton:SetFrameLevel((WorldMapFrame:GetFrameLevel() or 5) + 20)
+    pinToggleButton:SetBackdrop({
+        bgFile   = "Interface\\Tooltips\\UI-Tooltip-Background",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true, tileSize = 16, edgeSize = 10,
+        insets = { left = 2, right = 2, top = 2, bottom = 2 },
+    })
+
+    local function UpdatePinToggleVisual()
+        local on = MCL_GUIDE_SETTINGS.showMapPins ~= false
+        if on then
+            pinToggleButton:SetBackdropColor(0.05, 0.15, 0.08, 0.95)
+            pinToggleButton:SetBackdropBorderColor(0.2, 0.8, 0.3, 0.8)
+            pinToggleButton.icon:SetDesaturated(false)
+            pinToggleButton.icon:SetAlpha(1.0)
+        else
+            pinToggleButton:SetBackdropColor(0.12, 0.05, 0.05, 0.95)
+            pinToggleButton:SetBackdropBorderColor(0.6, 0.2, 0.2, 0.8)
+            pinToggleButton.icon:SetDesaturated(true)
+            pinToggleButton.icon:SetAlpha(0.5)
+        end
+    end
+
+    pinToggleButton.icon = pinToggleButton:CreateTexture(nil, "ARTWORK")
+    pinToggleButton.icon:SetPoint("CENTER")
+    pinToggleButton.icon:SetSize(TAB_SIZE - 8, TAB_SIZE - 8)
+    pinToggleButton.icon:SetAtlas("Waypoint-MapPin-ChatIcon")
+
+    UpdatePinToggleVisual()
+
+    pinToggleButton:SetScript("OnClick", function()
+        MCL_GUIDE_SETTINGS.showMapPins = not (MCL_GUIDE_SETTINGS.showMapPins ~= false)
+        UpdatePinToggleVisual()
+        if Guide.MapPins and Guide.MapPins.RefreshPins then
+            Guide.MapPins:RefreshPins()
+        end
+    end)
+    pinToggleButton:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        local state = (MCL_GUIDE_SETTINGS.showMapPins ~= false) and "|cFF00FF00ON|r" or "|cFFFF4444OFF|r"
+        GameTooltip:AddLine("Map Icons (" .. state .. ")")
+        GameTooltip:AddLine("|cFFFFFFFFClick|r to toggle mount pins on the map", 0.5, 0.5, 0.5)
+        GameTooltip:Show()
+    end)
+    pinToggleButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
     -- ── Icon container ──────────────────────────────────────
     panelFrame = CreateFrame("Frame", "MCL_GuideZonePanel", WorldMapFrame)
@@ -522,9 +587,11 @@ function Panel:Refresh()
     if MCL_GUIDE_SETTINGS.showZonePanel and WorldMapFrame and WorldMapFrame:IsShown() then
         if panelExpanded and #mountList > 0 then pf:Show() end
         if tabButton then tabButton:Show() end
+        if pinToggleButton then pinToggleButton:Show() end
     else
         pf:Hide()
         if tabButton then tabButton:Hide() end
+        if pinToggleButton then pinToggleButton:Hide() end
     end
 end
 
@@ -532,6 +599,7 @@ end
 function Panel:OnMapShow()
     if MCL_GUIDE_SETTINGS.showZonePanel then
         if tabButton then tabButton:Show() end
+        if pinToggleButton then pinToggleButton:Show() end
         self:Refresh()
     end
 end
@@ -539,6 +607,7 @@ end
 function Panel:OnMapHide()
     if panelFrame then panelFrame:Hide() end
     if tabButton  then tabButton:Hide()  end
+    if pinToggleButton then pinToggleButton:Hide() end
     ReleaseAllIcons()
 end
 
@@ -567,6 +636,7 @@ SlashCmdList["MCLGUIDE"] = function(msg)
         MCL_GUIDE_SETTINGS.showZonePanel = false
         if panelFrame then panelFrame:Hide() end
         if tabButton then tabButton:Hide() end
+        if pinToggleButton then pinToggleButton:Hide() end
     elseif msg == "show" then
         MCL_GUIDE_SETTINGS.showZonePanel = true
         if WorldMapFrame and WorldMapFrame:IsShown() then
@@ -585,6 +655,7 @@ SlashCmdList["MCLGUIDE"] = function(msg)
         else
             if panelFrame then panelFrame:Hide() end
             if tabButton then tabButton:Hide() end
+            if pinToggleButton then pinToggleButton:Hide() end
             print("|cFF1FB7EBMCL|r Guide: Panel hidden.")
         end
     end
