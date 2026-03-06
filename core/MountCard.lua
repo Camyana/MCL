@@ -461,7 +461,7 @@ function MountCard:CreateMountCard()
         GameTooltip:Hide()
     end)
     f.reportBtn:SetScript("OnClick", function(self)
-        local url = "https://discord.gg/YvrpHSyqtj"
+        local url = "https://discord.gg/ak2gma8enk"
         if f.copyEditBox then
             f.copyEditBox:SetText(url)
             f.copyPopup:Show()

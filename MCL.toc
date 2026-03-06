@@ -6,7 +6,7 @@
 ## Version: 3.0.3
 ## DefaultState: enabled
 ## SavedVariables: MCL_DB, MOUNTLIST, MCL_PINNED, MCL_SETTINGS, MCL_GUIDE_SETTINGS
-## Author: Discord: Cam#7332
+## Author: Discord: https://discord.gg/ak2gma8enk
 ## Description: A tool used to log collected mounts in a similar way to Simple Armory.
 ## Description-zhTW: 一個用於記錄坐騎收集的工具，類似於Simple Armory。
 ## IconTexture: Interface\AddOns\MCL\mcl-logo-32
@@ -33,5 +33,6 @@ core\functions.lua
 core\frames.lua
 core\MountCard.lua
 core\MCLToast.lua
+core\PartyCheck.lua
 core\main.lua
 core\Core.lua

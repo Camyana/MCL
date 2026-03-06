@@ -266,7 +266,6 @@ MCL_GUIDE_CURRENCY_DATA = {
     [260173] = { { type = "gold", id = 0, amount = 100000000 } }, -- Smoky Charger
     [261433] = { { type = "item", id = 103533, amount = 1 } },
     [261434] = { { type = "item", id = 103533, amount = 1 } }, -- Vicious War Basilisk
-    [264058] = { { type = "gold", id = 0, amount = 50000000000 } }, -- Mighty Caravan Brutosaur
     [266925] = { { type = "currency", id = 1710, amount = 1000 } }, -- Siltwing Albatross
     [270560] = { { type = "item", id = 103533, amount = 1 } },
     [272481] = { { type = "item", id = 103533, amount = 1 } },

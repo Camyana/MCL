@@ -2594,7 +2594,7 @@ function MCL_frames:createAboutFrame(relativeFrame)
     textY = textY - 8
 
     -- Discord invite link
-    createLinkRow(helpCard, textY, "|cFF5865F2\226\151\143|r  Discord:", "https://discord.gg/YvrpHSyqtj")
+    createLinkRow(helpCard, textY, "|cFF5865F2\226\151\143|r  Discord:", "https://discord.gg/ak2gma8enk")
     textY = textY - 26
 
     -- CurseForge link

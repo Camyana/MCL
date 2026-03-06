@@ -293,6 +293,14 @@ MCL_GUIDE_DATA.mounts = {
 		},
 		instanceDifficulties = { 6 },
 	},
+	[73510] = {
+		name = "Long-Forgotten Hippogryph",
+		method = "NPC",
+		itemId = 138258,
+		coords = {
+			{ m = 630 },
+		},
+	},
 	[88718] = {
 		name = "Phosphorescent Stone Drake",
 		method = "NPC",
@@ -443,6 +451,56 @@ MCL_GUIDE_DATA.mounts = {
 		},
 		instanceDifficulties = { 3, 4, 5, 6 },
 	},
+	[113199] = {
+		name = "Jade Cloud Serpent",
+		method = "",
+		itemId = 79802,
+	},
+	[118089] = {
+		name = "Azure Water Strider",
+		method = "",
+		itemId = 81354,
+	},
+	[118737] = {
+		name = "Pandaren Kite",
+		method = "",
+		itemId = 81559,
+	},
+	[122708] = {
+		name = "Grand Expedition Yak",
+		method = "",
+		itemId = 84101,
+	},
+	[123886] = {
+		name = "Amber Scorpion",
+		method = "",
+		itemId = 85262,
+	},
+	[123992] = {
+		name = "Azure Cloud Serpent",
+		method = "",
+		itemId = 85430,
+	},
+	[123993] = {
+		name = "Golden Cloud Serpent",
+		method = "",
+		itemId = 85429,
+	},
+	[127139] = {
+		name = "Lightforged Warframe",
+		method = "",
+		itemId = 152788,
+	},
+	[127154] = {
+		name = "Onyx Cloud Serpent",
+		method = "",
+		itemId = 87768,
+	},
+	[127156] = {
+		name = "Crimson Cloud Serpent",
+		method = "",
+		itemId = 87769,
+	},
 	[127158] = {
 		name = "Heavenly Onyx Cloud Serpent",
 		method = "BOSS",
@@ -453,6 +511,16 @@ MCL_GUIDE_DATA.mounts = {
 		coords = {
 			{ m = 379, x = 54.4, y = 63.2 },
 		},
+	},
+	[127161] = {
+		name = "Heavenly Crimson Cloud Serpent",
+		method = "",
+		itemId = 87773,
+	},
+	[127164] = {
+		name = "Heavenly Golden Cloud Serpent",
+		method = "",
+		itemId = 87774,
 	},
 	[127170] = {
 		name = "Astral Cloud Serpent",
@@ -466,10 +534,75 @@ MCL_GUIDE_DATA.mounts = {
 		},
 		instanceDifficulties = { 3, 4, 5, 6 },
 	},
+	[127174] = {
+		name = "Azure Riding Crane",
+		method = "",
+		itemId = 87781,
+	},
+	[127176] = {
+		name = "Golden Riding Crane",
+		method = "",
+		itemId = 87782,
+	},
+	[127177] = {
+		name = "Regal Riding Crane",
+		method = "",
+		itemId = 87783,
+	},
+	[127216] = {
+		name = "Grey Riding Yak",
+		method = "",
+		itemId = 87788,
+	},
+	[127220] = {
+		name = "Blonde Riding Yak",
+		method = "",
+		itemId = 87789,
+	},
 	[127271] = {
 		name = "Reins of the Crimson Water Strider",
 		method = "",
 		itemId = 87791,
+	},
+	[129918] = {
+		name = "Thundering August Cloud Serpent",
+		method = "",
+		itemId = 89304,
+	},
+	[129932] = {
+		name = "Green Shado-Pan Riding Tiger",
+		method = "",
+		itemId = 89305,
+	},
+	[129934] = {
+		name = "Blue Shado-Pan Riding Tiger",
+		method = "",
+		itemId = 89307,
+	},
+	[129935] = {
+		name = "Red Shado-Pan Riding Tiger",
+		method = "",
+		itemId = 89306,
+	},
+	[130086] = {
+		name = "Brown Riding Goat",
+		method = "",
+		itemId = 89362,
+	},
+	[130092] = {
+		name = "Disc of the Red Flying Cloud",
+		method = "",
+		itemId = 89363,
+	},
+	[130137] = {
+		name = "White Riding Goat",
+		method = "",
+		itemId = 89390,
+	},
+	[130138] = {
+		name = "Black Riding Goat",
+		method = "",
+		itemId = 89391,
 	},
 	[130965] = {
 		name = "Son of Galleon",
@@ -482,13 +615,40 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 376, x = 71.6, y = 64.4 },
 		},
 	},
+	[130985] = {
+		name = "Pandaren Kite",
+		method = "",
+		itemId = 89785,
+	},
 	[132036] = {
 		name = "Thundering Ruby Cloud Serpent",
-		method = "NPC",
-		itemId = 224374,
-		coords = {
-			{ m = 390, x = 16.4, y = 38 },
-		},
+		method = "SPECIAL",
+		itemId = 90655,
+	},
+	[135416] = {
+		name = "Grand Armored Gryphon",
+		method = "",
+		itemId = 93168,
+	},
+	[135418] = {
+		name = "Grand Armored Wyvern",
+		method = "",
+		itemId = 93169,
+	},
+	[136163] = {
+		name = "Grand Gryphon",
+		method = "",
+		itemId = 93385,
+	},
+	[136164] = {
+		name = "Grand Wyvern",
+		method = "",
+		itemId = 93386,
+	},
+	[136400] = {
+		name = "Armored Skyscreamer",
+		method = "",
+		itemId = 93662,
 	},
 	[136471] = {
 		name = "Spawn of Horridon",
@@ -547,6 +707,11 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 371, x = 54, y = 19 },
 		},
 	},
+	[138640] = {
+		name = "Bone-White Primal Raptor",
+		method = "",
+		itemId = 94290,
+	},
 	[138641] = {
 		name = "Red Primal Raptor",
 		method = "USE",
@@ -585,6 +750,21 @@ MCL_GUIDE_DATA.mounts = {
 		},
 		instanceDifficulties = { 3, 4, 5, 6 },
 	},
+	[140249] = {
+		name = "Golden Primal Direhorn",
+		method = "",
+		itemId = 95564,
+	},
+	[140250] = {
+		name = "Crimson Primal Direhorn",
+		method = "",
+		itemId = 95565,
+	},
+	[148392] = {
+		name = "Galakras",
+		method = "",
+		itemId = 104208,
+	},
 	[148417] = {
 		name = "Kor'kron Juggernaut",
 		method = "BOSS",
@@ -607,11 +787,34 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 554, x = 57.4, y = 57.8 },
 		},
 	},
+	[164862] = {
+		name = "Brinedeep Bottom-Feeder",
+		method = "",
+		itemId = 138811,
+	},
+	[171436] = {
+		name = "Gorestrider Gronnling",
+		method = "",
+		itemId = 116383,
+	},
+	[171616] = {
+		name = "Witherhide Cliffstomper",
+		method = "",
+		itemId = 116655,
+	},
+	[171617] = {
+		name = "Trained Icehoof",
+		method = "",
+		itemId = 116656,
+	},
 	[171619] = {
 		name = "Tundra Icehoof",
 		method = "NPC",
 		itemId = 116658,
-		chance = 30,
+		chance = 20,
+		coords = {
+			{ m = 534 },
+		},
 	},
 	[171620] = {
 		name = "Bloodhoof Bull",
@@ -628,9 +831,11 @@ MCL_GUIDE_DATA.mounts = {
 		chance = 100,
 		lockBossName = "Blackhand",
 		blackMarket = true,
+		groupSize = 10,
 		coords = {
 			{ m = 600, x = 48.4, y = 34.5, i = true },
 		},
+		instanceDifficulties = { 16 },
 	},
 	[171622] = {
 		name = "Mottled Meadowstomper",
@@ -640,31 +845,84 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 550, x = 66.2, y = 44 },
 		},
 	},
+	[171623] = {
+		name = "Trained Meadowstomper",
+		method = "",
+		itemId = 116662,
+	},
 	[171624] = {
 		name = "Shadowhide Pearltusk",
 		method = "USE",
 		itemId = 116663,
-		chance = 50,
+		chance = 100,
+	},
+	[171625] = {
+		name = "Dusty Rockhide",
+		method = "",
+		itemId = 116664,
+	},
+	[171626] = {
+		name = "Armored Irontusk",
+		method = "",
+		itemId = 116665,
+	},
+	[171628] = {
+		name = "Rocktusk Battleboar",
+		method = "",
+		itemId = 116667,
+	},
+	[171629] = {
+		name = "Armored Frostboar",
+		method = "",
+		itemId = 116668,
 	},
 	[171630] = {
 		name = "Armored Razorback",
 		method = "NPC",
 		itemId = 116669,
-		chance = 30,
+		chance = 20,
+		coords = {
+			{ m = 534 },
+		},
+	},
+	[171632] = {
+		name = "Frostplains Battleboar",
+		method = "",
+		itemId = 116670,
+	},
+	[171633] = {
+		name = "Wild Goretusk",
+		method = "",
+		itemId = 116671,
+	},
+	[171634] = {
+		name = "Domesticated Razorback",
+		method = "",
+		itemId = 116672,
 	},
 	[171635] = {
 		name = "Giant Coldsnout",
 		method = "USE",
 		itemId = 116673,
-		chance = 50,
+		chance = 100,
 	},
 	[171636] = {
 		name = "Great Greytusk",
 		method = "NPC",
 		itemId = 116674,
 		coords = {
-			{ m = 542, x = 22.4, y = 66 },
+			{ m = 525, x = 22.4, y = 66 },
 		},
+	},
+	[171637] = {
+		name = "Trained Rocktusk",
+		method = "",
+		itemId = 116675,
+	},
+	[171638] = {
+		name = "Trained Riverwallow",
+		method = "",
+		itemId = 116676,
 	},
 	[171824] = {
 		name = "Sapphire Riverbeast",
@@ -673,6 +931,16 @@ MCL_GUIDE_DATA.mounts = {
 		coords = {
 			{ m = 535, x = 55, y = 81.2 },
 		},
+	},
+	[171825] = {
+		name = "Mosshide Riverwallow",
+		method = "",
+		itemId = 116768,
+	},
+	[171826] = {
+		name = "Mudback Riverbeast",
+		method = "",
+		itemId = 116769,
 	},
 	[171827] = {
 		name = "Hellfire Infernal",
@@ -689,12 +957,16 @@ MCL_GUIDE_DATA.mounts = {
 		name = "Solar Spirehawk",
 		method = "BOSS",
 		itemId = 116771,
-		chance = 100,
+		chance = 3000,
 		lockBossName = "Rukhmar",
-		blackMarket = true,
 		coords = {
-			{ m = 535, x = 47.1, y = 78.4 },
+			{ m = 542, x = 47.1, y = 78.4 },
 		},
+	},
+	[171829] = {
+		name = "Shadowmane Charger",
+		method = "",
+		itemId = 116772,
 	},
 	[171830] = {
 		name = "Swift Breezestrider",
@@ -704,23 +976,51 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 539, x = 38.6, y = 37 },
 		},
 	},
+	[171831] = {
+		name = "Trained Silverpelt",
+		method = "",
+		itemId = 116774,
+	},
 	[171836] = {
 		name = "Garn Steelmaw",
 		method = "USE",
 		itemId = 116779,
-		chance = 50,
+		chance = 100,
 	},
 	[171837] = {
 		name = "Warsong Direfang",
 		method = "NPC",
 		itemId = 116780,
-		chance = 30,
+		chance = 20,
+		coords = {
+			{ m = 534 },
+		},
+	},
+	[171838] = {
+		name = "Armored Frostwolf",
+		method = "",
+		itemId = 116781,
+	},
+	[171839] = {
+		name = "Ironside Warwolf",
+		method = "",
+		itemId = 116782,
+	},
+	[171841] = {
+		name = "Trained Snarler",
+		method = "",
+		itemId = 116784,
+	},
+	[171842] = {
+		name = "Swift Frostwolf",
+		method = "",
+		itemId = 116785,
 	},
 	[171843] = {
 		name = "Smoky Direwolf",
 		method = "USE",
 		itemId = 116786,
-		chance = 50,
+		chance = 100,
 	},
 	[171849] = {
 		name = "Sunhide Gronnling",
@@ -730,13 +1030,20 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 543, x = 42, y = 25 },
 		},
 	},
+	[171850] = {
+		name = "Llothien Prowler",
+		method = "SPECIAL",
+		itemId = 137573,
+		coords = {
+			{ m = 680 },
+		},
+	},
 	[171851] = {
 		name = "Garn Nighthowl",
-		method = "BOSS",
+		method = "NPC",
 		itemId = 116794,
-		chance = 1,
 		coords = {
-			{ m = 542, x = 13, y = 50.4 },
+			{ m = 525, x = 13, y = 50.4 },
 		},
 	},
 	[179478] = {
@@ -751,9 +1058,90 @@ MCL_GUIDE_DATA.mounts = {
 		chance = 100,
 		lockBossName = "Archimonde",
 		blackMarket = true,
+		groupSize = 10,
 		coords = {
 			{ m = 670, x = 58.4, y = 53.3, i = true },
 		},
+		instanceDifficulties = { 16 },
+	},
+	[183117] = {
+		name = "Reins of the Corrupted Dreadwing",
+		method = "",
+		itemId = 123974,
+	},
+	[186305] = {
+		name = "Infernal Direwolf",
+		method = "",
+		itemId = 127140,
+	},
+	[189364] = {
+		name = "Coalfist Gronnling",
+		method = "",
+		itemId = 128311,
+	},
+	[190690] = {
+		name = "Bristling Hellboar",
+		method = "",
+		itemId = 128480,
+	},
+	[190977] = {
+		name = "Deathtusk Felboar",
+		method = "",
+		itemId = 128526,
+	},
+	[191633] = {
+		name = "Soaring Skyterror",
+		method = "",
+		itemId = 128706,
+	},
+	[192229] = {
+		name = "Ratstallion",
+		method = "SPECIAL",
+		itemId = 138387,
+	},
+	[193007] = {
+		name = "Defiled Reins",
+		method = "SPECIAL",
+		itemId = 141216,
+	},
+	[193695] = {
+		name = "Prestigious War Steed",
+		method = "SPECIAL",
+		itemId = 129280,
+	},
+	[197211] = {
+		name = "Bleakhoof Ruinstrider",
+		method = "SPECIAL",
+		itemId = 153041,
+	},
+	[204166] = {
+		name = "Prestigious War Wolf",
+		method = "SPECIAL",
+		itemId = 143864,
+	},
+	[206221] = {
+		name = "Living Infernal Core",
+		method = "BOSS",
+		itemId = 137574,
+		chance = 100,
+		lockBossName = "Gul'dan",
+		blackMarket = true,
+		coords = {
+			{ m = 764, i = true },
+		},
+	},
+	[211135] = {
+		name = "Arcanist's Manasaber",
+		method = "SPECIAL",
+		itemId = 142436,
+		coords = {
+			{ m = 680 },
+		},
+	},
+	[213115] = {
+		name = "Bloodfang Spider",
+		method = "",
+		itemId = 137570,
 	},
 	[213134] = {
 		name = "Felblaze Infernal",
@@ -766,6 +1154,26 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 772, i = true },
 		},
 		instanceDifficulties = { 14 },
+	},
+	[213158] = {
+		name = "Predatory Bloodgazer",
+		method = "SPECIAL",
+		itemId = 137577,
+	},
+	[213163] = {
+		name = "Snowfeather Hunter",
+		method = "SPECIAL",
+		itemId = 137578,
+	},
+	[213164] = {
+		name = "Brilliant Direbeak",
+		method = "SPECIAL",
+		itemId = 137579,
+	},
+	[213165] = {
+		name = "Viridian Sharptalon",
+		method = "SPECIAL",
+		itemId = 137580,
 	},
 	[215545] = {
 		name = "Mastercraft Gravewing",
@@ -783,6 +1191,58 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 790, x = 45.2, y = 50.6 },
 		},
 	},
+	[225765] = {
+		name = "Leyfeather Hippogryph",
+		method = "SPECIAL",
+		itemId = 141217,
+	},
+	[227956] = {
+		name = "Arcadian War Turtle",
+		method = "",
+		itemId = 141713,
+	},
+	[229376] = {
+		name = "Archmage's Prismatic Disc",
+		method = "SPECIAL",
+	},
+	[229377] = {
+		name = "High Priest's Lightsworn Seeker",
+		method = "SPECIAL",
+	},
+	[229385] = {
+		name = "Ban-lu, Grandmaster's Companion",
+		method = "SPECIAL",
+		itemId = 142225,
+	},
+	[229386] = {
+		name = "Huntmaster's Loyal Wolfhawk",
+		method = "SPECIAL",
+		itemId = 142227,
+	},
+	[229387] = {
+		name = "Deathlord's Vilebrood Vanquisher",
+		method = "SPECIAL",
+		itemId = 142231,
+	},
+	[229388] = {
+		name = "Battlelord's Bloodthirsty War Wyrm",
+		method = "SPECIAL",
+		itemId = 142232,
+	},
+	[229417] = {
+		name = "Slayer's Felbroken Shrieker",
+		method = "SPECIAL",
+	},
+	[229438] = {
+		name = "Huntmaster's Fierce Wolfhawk",
+		method = "",
+		itemId = 142226,
+	},
+	[229439] = {
+		name = "Huntmaster's Dire Wolfhawk",
+		method = "",
+		itemId = 142228,
+	},
 	[229499] = {
 		name = "Midnight",
 		method = "BOSS",
@@ -793,6 +1253,66 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 794, i = true },
 		},
 		instanceDifficulties = { 23 },
+	},
+	[231428] = {
+		name = "Smoldering Ember Wyrm",
+		method = "BOSS",
+		itemId = 142552,
+		chance = 20,
+		lockBossName = "Nightbane",
+		coords = {
+			{ m = 794, i = true },
+		},
+		instanceDifficulties = { 23 },
+	},
+	[231434] = {
+		name = "Shadowblade's Murderous Omen",
+		method = "SPECIAL",
+		itemId = 143493,
+	},
+	[231435] = {
+		name = "Highlord's Golden Charger",
+		method = "SPECIAL",
+		itemId = 143502,
+	},
+	[231442] = {
+		name = "Farseer's Raging Tempest",
+		method = "SPECIAL",
+		itemId = 143489,
+	},
+	[231523] = {
+		name = "Shadowblade's Lethal Omen",
+		method = "",
+		itemId = 143492,
+	},
+	[231524] = {
+		name = "Shadowblade's Baneful Omen",
+		method = "",
+		itemId = 143491,
+	},
+	[231525] = {
+		name = "Shadowblade's Crimson Omen",
+		method = "",
+		itemId = 143490,
+	},
+	[231587] = {
+		name = "Highlord's Vengeful Charger",
+		method = "",
+		itemId = 143503,
+	},
+	[231588] = {
+		name = "Highlord's Vigilant Charger",
+		method = "",
+		itemId = 143504,
+	},
+	[231589] = {
+		name = "Highlord's Valorous Charger",
+		method = "",
+		itemId = 143505,
+	},
+	[232412] = {
+		name = "Netherlord's Chaotic Wrathsteed",
+		method = "SPECIAL",
 	},
 	[232519] = {
 		name = "Abyss Worm",
@@ -834,6 +1354,11 @@ MCL_GUIDE_DATA.mounts = {
 		method = "",
 		itemId = 161773,
 	},
+	[238452] = {
+		name = "Netherlord's Brimstone Wrathsteed",
+		method = "",
+		itemId = 143637,
+	},
 	[238454] = {
 		name = "Netherlord's Accursed Wrathsteed",
 		method = "NPC",
@@ -846,6 +1371,11 @@ MCL_GUIDE_DATA.mounts = {
 		name = "Obsidian Krolusk",
 		method = "SPECIAL",
 		itemId = 161215,
+	},
+	[242305] = {
+		name = "Sable Ruinstrider",
+		method = "",
+		itemId = 152791,
 	},
 	[242874] = {
 		name = "Highmountain Elderhorn",
@@ -934,6 +1464,31 @@ MCL_GUIDE_DATA.mounts = {
 		method = "SPECIAL",
 		itemId = 163216,
 	},
+	[253004] = {
+		name = "Amethyst Ruinstrider",
+		method = "",
+		itemId = 152794,
+	},
+	[253005] = {
+		name = "Beryl Ruinstrider",
+		method = "",
+		itemId = 152795,
+	},
+	[253006] = {
+		name = "Russet Ruinstrider",
+		method = "",
+		itemId = 152793,
+	},
+	[253007] = {
+		name = "Cerulean Ruinstrider",
+		method = "",
+		itemId = 152797,
+	},
+	[253008] = {
+		name = "Umber Ruinstrider",
+		method = "",
+		itemId = 152796,
+	},
 	[253058] = {
 		name = "Maddened Chaosrunner",
 		method = "NPC",
@@ -942,6 +1497,11 @@ MCL_GUIDE_DATA.mounts = {
 		coords = {
 			{ m = 2215, x = 23, y = 59 },
 		},
+	},
+	[253087] = {
+		name = "Antoran Gloomhound",
+		method = "SPECIAL",
+		itemId = 152815,
 	},
 	[253088] = {
 		name = "Antoran Charhound",
@@ -3259,7 +3819,7 @@ MCL_GUIDE_DATA.mounts = {
 		method = "Treasure",
 		itemId = 257446,
 		coords = {
-			{ m = 2405, x = 50.0, y = 79.3 },
+			{ m = 2405, x = 50, y = 79.3 },
 		},
 	},
 	[1263635] = {

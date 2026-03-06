@@ -353,7 +353,6 @@ MCL_GUIDE_VENDOR_DATA = {
     [1016] = { { npc = "Quartermaster Alcorn", zone = "Drustvar", m = 896, x = 37.8, y = 49 } },  -- Smoky Charger
     [1026] = { { npc = "Deathguard Netharian", zone = "Orgrimmar", m = 85, x = 41.8, y = 73 } },  -- Vicious War Basilisk
     [1027] = { { npc = "Necrolord Sipe", zone = "Stormwind City", m = 84, x = 76.8, y = 65.4 } },  -- Vicious War Basilisk
-    [1039] = { { npc = "Talutu", zone = "Zuldazar", m = 1165, x = 48.4, y = 87.2 } },  -- Mighty Caravan Brutosaur
     [1042] = { { npc = "Captain Klarisa", zone = "Tiragarde Sound", m = 895, x = 66.2, y = 32.4 } },  -- Siltwing Albatross
     [1045] = { { npc = "Deathguard Netharian", zone = "Orgrimmar", m = 85, x = 41.8, y = 73 } },  -- Vicious War Clefthoof
     [1050] = { { npc = "Necrolord Sipe", zone = "Stormwind City", m = 84, x = 76.8, y = 65.4 } },  -- Vicious War Riverbeast

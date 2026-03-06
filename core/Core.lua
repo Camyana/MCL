@@ -590,6 +590,7 @@ SlashCmdList["MCL"] = function(msg)
         print("|cffFF0000Show:|cffFFFFFF Shows your mount collection log")
         print("|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon")
         print("|cffFF0000Config:|cffFFFFFF Opens the settings")
+        print("|cffFF0000Party:|cffFFFFFF Check party/raid MCL users & mount counts")
         print("|cffFF0000Help:|cffFFFFFF Shows commands")
     elseif cmd == "show" or cmd == "" then
         MCLcore.Main.Toggle();
@@ -614,6 +615,12 @@ SlashCmdList["MCL"] = function(msg)
             print("|cff00CCFF[MCL]|r Cleanup complete. Try viewing the Pinned tab now.")
         else
             print("|cffFF0000[MCL]|r Cleanup function not available.")
+        end
+    elseif cmd == "party" or cmd == "group" or cmd == "raid" then
+        if MCLcore.PartyCheck then
+            MCLcore.PartyCheck:SendRequest()
+        else
+            print("|cffFF0000[MCL]|r Party check module not loaded.")
         end
     elseif cmd == "testmount" then
         -- Test a known mount ID to see what the API returns
