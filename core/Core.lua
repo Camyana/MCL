@@ -591,6 +591,8 @@ SlashCmdList["MCL"] = function(msg)
         print("|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon")
         print("|cffFF0000Config:|cffFFFFFF Opens the settings")
         print("|cffFF0000Party:|cffFFFFFF Check party/raid MCL users & mount counts")
+        print("|cffFF0000Compare:|cffFFFFFF Compare your collection with a group member")
+        print("|cffFF0000Compare clear:|cffFFFFFF Exit comparison mode")
         print("|cffFF0000Help:|cffFFFFFF Shows commands")
     elseif cmd == "show" or cmd == "" then
         MCLcore.Main.Toggle();
@@ -621,6 +623,21 @@ SlashCmdList["MCL"] = function(msg)
             MCLcore.PartyCheck:SendRequest()
         else
             print("|cffFF0000[MCL]|r Party check module not loaded.")
+        end
+    elseif cmd:sub(1, 7) == "compare" then
+        if not MCLcore.Compare then
+            print("|cffFF0000[MCL]|r Compare module not loaded.")
+        else
+            local arg = cmd:sub(9):match("^%s*(.-)%s*$") or ""
+            if arg == "" then
+                -- No argument: scan group for MCL users
+                MCLcore.Compare:ScanGroup()
+            elseif arg == "clear" or arg == "off" or arg == "stop" then
+                MCLcore.Compare:Deactivate()
+            else
+                -- Argument given: request that player's collection
+                MCLcore.Compare:RequestCollection(arg)
+            end
         end
     elseif cmd == "testmount" then
         -- Test a known mount ID to see what the API returns

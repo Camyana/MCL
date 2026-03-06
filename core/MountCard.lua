@@ -649,6 +649,11 @@ function MountCard:CreateMountCard()
     
     -- Add hover detection to keep the card open when hovering over it
     f:SetScript("OnEnter", function(self)
+        -- If main window is no longer visible, hide the card immediately
+        if not MCL_mainFrame or not MCL_mainFrame:IsVisible() then
+            self:Hide()
+            return
+        end
         -- Cancel any pending hide timer when hovering over the card
         if hoverTimer then
             hoverTimer:Cancel()
@@ -2335,6 +2340,11 @@ function MountCard:ShowMountCard(mountData, anchorFrame)
     if not mountData then
         return
     end
+
+    -- Guard: only show mount card when the main addon window is visible
+    if not MCL_mainFrame or not MCL_mainFrame:IsVisible() then
+        return
+    end
     
     local card = self:CreateMountCard()
     if not card then
@@ -2346,18 +2356,9 @@ function MountCard:ShowMountCard(mountData, anchorFrame)
     card.currentAnchorFrame = anchorFrame
     card.notesExpanded = false  -- Reset expand state for new mount
     
-    -- Position the card relative to main MCL window
+    -- Position the card anchored to the right of the main MCL window
     card:ClearAllPoints()
-    if MCL_mainFrame and MCL_mainFrame:IsVisible() then
-        -- Attach to the right of the main MCL window
-        card:SetPoint("TOPLEFT", MCL_mainFrame, "TOPRIGHT", 10, 0)
-    elseif anchorFrame then
-        -- Fallback to anchor frame if main window not available
-        card:SetPoint("TOPLEFT", anchorFrame, "TOPRIGHT", 10, 0)
-    else
-        -- Final fallback to center of screen
-        card:SetPoint("CENTER", UIParent, "CENTER", 200, 0)
-    end
+    card:SetPoint("TOPLEFT", MCL_mainFrame, "TOPRIGHT", 10, 0)
     
     -- Create content
     self:CreateMountCardContent(card.scrollChild, mountData)
@@ -2425,6 +2426,11 @@ function MountCard:ShowMountCardOnHover(mountData, anchorFrame, delay)
     if not MCL_SETTINGS or not MCL_SETTINGS.enableMountCardHover then
         return
     end
+
+    -- Guard: only allow hover-show when the main addon window is visible
+    if not MCL_mainFrame or not MCL_mainFrame:IsVisible() then
+        return
+    end
     
     -- Cancel any existing hover timer
     if hoverTimer then
@@ -2446,8 +2452,9 @@ function MountCard:ShowMountCardOnHover(mountData, anchorFrame, delay)
     end
     
     hoverTimer = C_Timer.NewTimer(showDelay, function()
-        -- Only show if we're still hovering the same mount
-        if currentHoveredMount and currentHoveredMount.mountID == mountData.mountID then
+        -- Only show if we're still hovering the same mount AND the main window is still open
+        if currentHoveredMount and currentHoveredMount.mountID == mountData.mountID
+           and MCL_mainFrame and MCL_mainFrame:IsVisible() then
             self:ShowMountCard(mountData, anchorFrame)
         end
         hoverTimer = nil

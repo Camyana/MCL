@@ -620,6 +620,19 @@ function MCL_frames:CreateMainFrame()
         GameTooltip:Hide()
     end)
 
+    -- Compare button (group compare feature)
+    MCL_mainFrame.compare = CreateHeaderButton(
+        MCL_mainFrame.headerBar, 60, "Compare",
+        "Compare Collections",
+        "Compare your mount collection with a party or raid member",
+        function()
+            if MCLcore.Compare and MCLcore.Compare.ShowUserPicker then
+                MCLcore.Compare:ShowUserPicker()
+            end
+        end
+    )
+    MCL_mainFrame.compare:SetPoint("RIGHT", MCL_mainFrame.report, "LEFT", -3, 0)
+
 
 	--MCL Frame settings
 	MCL_mainFrame:SetSize(main_frame_width, main_frame_height); -- width, height
