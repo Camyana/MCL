@@ -257,6 +257,12 @@ if L then
     L["This setting requires a UI reload to take effect. Reload now?"] = "This setting requires a UI reload to take effect. Reload now?"
     L["Reload Now"] = "Reload Now"
     L["Later"] = "Later"
+    L["Map Pin Options"] = "Map Pin Options"
+    L["Show Map Icons"] = "Show Map Icons"
+    L["Show Mount List on Map"] = "Show Mount List on Map"
+    L["Show Child-Map Mounts"] = "Show Child-Map Mounts"
+    L["Map Pin Size:"] = "Map Pin Size:"
+    L["About"] = "About"
 
     -- Collection Toast Strings
     L["Collection Toast"] = "Collection Toast"

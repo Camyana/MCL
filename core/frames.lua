@@ -1225,13 +1225,14 @@ function MCL_frames:SetTabs()
     -- 8. About tab
     do
         local tab = CreateFrame("Button", nil, tabFrame, "BackdropTemplate")
+        local aboutText = L["About"] or "About"
         tab:SetSize(nav_width + 8, 32)
         tab:SetPoint("TOPLEFT", tabFrame, "TOPLEFT", 1, navYOffset)
         StyleNavButton(tab, false)
         tab.text = tab:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         tab.text:SetPoint("LEFT", 10, 0)
-        tab.text:SetText("About")
-        tab.section = {name = "About"}
+        tab.text:SetText(aboutText)
+        tab.section = {name = aboutText}
         tab.content = MCLcore.Frames:createAboutFrame(MCL_mainFrame.ScrollChild)
         tab.content:Hide()
         tab:SetScript("OnClick", function(self)
@@ -3439,7 +3440,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     -- CARD 7: Map Pin Options
     -- =====================================================
     if MCL_GUIDE_DATA and MCL_GUIDE_DATA.zones then
-        local pinCard = createCard(frame, "Map Pin Options", yPos, 200)
+        local pinCard = createCard(frame, L["Map Pin Options"] or "Map Pin Options", yPos, 200)
         
         local pinY = -34
         
@@ -3457,7 +3458,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         styleCheckbox(showPinsCheck)
         local showPinsLabel = pinCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         showPinsLabel:SetPoint("LEFT", showPinsCheck, "RIGHT", 8, 0)
-        showPinsLabel:SetText("Show Map Icons")
+        showPinsLabel:SetText(L["Show Map Icons"] or "Show Map Icons")
         showPinsLabel:SetTextColor(0.7, 0.78, 0.88, 1)
         pinY = pinY - 30
         
@@ -3479,7 +3480,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         styleCheckbox(showPanelCheck)
         local showPanelLabel = pinCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         showPanelLabel:SetPoint("LEFT", showPanelCheck, "RIGHT", 8, 0)
-        showPanelLabel:SetText("Show Mount List on Map")
+        showPanelLabel:SetText(L["Show Mount List on Map"] or "Show Mount List on Map")
         showPanelLabel:SetTextColor(0.7, 0.78, 0.88, 1)
         pinY = pinY - 30
         
@@ -3500,15 +3501,16 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         styleCheckbox(showChildCheck)
         local showChildLabel = pinCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         showChildLabel:SetPoint("LEFT", showChildCheck, "RIGHT", 8, 0)
-        showChildLabel:SetText("Show Child-Map Mounts")
+        showChildLabel:SetText(L["Show Child-Map Mounts"] or "Show Child-Map Mounts")
         showChildLabel:SetTextColor(0.7, 0.78, 0.88, 1)
         pinY = pinY - 30
         
         -- Slider: Map Pin Size
         local pinScaleValue = (MCL_GUIDE_SETTINGS and MCL_GUIDE_SETTINGS.mapPinScale) or 2.0
+        local mapPinSizePrefix = L["Map Pin Size:"] or "Map Pin Size:"
         local pinLabel = pinCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         pinLabel:SetPoint("TOPLEFT", pinCard, "TOPLEFT", 12, pinY)
-        pinLabel:SetText("Map Pin Size: " .. string.format("%.1fx", pinScaleValue))
+        pinLabel:SetText(mapPinSizePrefix .. " " .. string.format("%.1fx", pinScaleValue))
         pinLabel:SetTextColor(0.7, 0.78, 0.88, 1)
         
         local pinSlider = CreateFrame("Slider", nil, pinCard)
@@ -3534,7 +3536,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
             if MCL_GUIDE_SETTINGS then
                 MCL_GUIDE_SETTINGS.mapPinScale = value
             end
-            pinLabel:SetText("Map Pin Size: " .. string.format("%.1fx", value))
+            pinLabel:SetText(mapPinSizePrefix .. " " .. string.format("%.1fx", value))
             -- Live-refresh map pins if the map is open
             if MCL_GUIDE and MCL_GUIDE.MapPins and MCL_GUIDE.MapPins.RefreshPins then
                 MCL_GUIDE.MapPins:RefreshPins()
