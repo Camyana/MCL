@@ -170,6 +170,10 @@ function MCL_functions:TableMounts(id, frame, section, category)
 end
 
 -- Styled copy/link popup - MCL themed, reusable for URLs and text
+-- Namespaced under MCLcore.Function; global alias kept for backward compat
+function MCL_functions:ShowEditBox(text)
+    KethoEditBox_Show(text)  -- delegate to setup function below
+end
 function KethoEditBox_Show(text)
     if not KethoEditBox then
         local f = CreateFrame("Frame", "KethoEditBox", UIParent, "BackdropTemplate")
@@ -302,10 +306,10 @@ function MCL_functions:initSections()
 
     -- Create the overview parent frame before SetTabs
     if not MCLcore.overview or not MCLcore.overview:IsObjectType("Frame") then
-        -- Use the same width calculations from frames.lua for consistency
-        local main_frame_width = 1250  -- Match the width from frames.lua
+        -- Use dynamic width from the actual main frame instead of a hardcoded value
+        local curWidth = MCLcore.Frames:GetCurrentFrameDimensions()
         MCLcore.overview = CreateFrame("Frame", nil, MCL_mainFrame.ScrollChild, "BackdropTemplate")
-        MCLcore.overview:SetSize(main_frame_width - 40, 550)  -- Symmetric padding within scroll viewport
+        MCLcore.overview:SetSize(curWidth - 40, 550)  -- Symmetric padding within scroll viewport
         MCLcore.overview:SetPoint("TOPLEFT", MCL_mainFrame.ScrollChild, "TOPLEFT", 10, 0)  -- Consistent with other content frames
         MCLcore.overview:SetBackdropColor(0, 0, 0, 0)
     end
@@ -425,7 +429,7 @@ function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, ite
 
                     if isPin then
                         -- Refresh the pinned section by recreating it
-                        if _G["PinnedFrame"] then
+                        if MCLcore.pinnedFrame then
                             -- Clear existing mount frames more thoroughly
                             if MCLcore.mountFrames[1] then
                                 for _, oldFrame in ipairs(MCLcore.mountFrames[1]) do
@@ -437,7 +441,7 @@ function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, ite
                             end
                             
                             -- Also clear any untracked children of PinnedFrame
-                            local children = {_G["PinnedFrame"]:GetChildren()}
+                            local children = {MCLcore.pinnedFrame:GetChildren()}
                             for _, child in ipairs(children) do
                                 if child and child:IsObjectType("Button") and child.mountID then
                                     child:Hide()
@@ -451,7 +455,7 @@ function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, ite
                             MCLcore.Function:CleanupInvalidPinnedMounts()
                             
                             -- Recreate the pinned section content
-                            local overflow, mountFrame = MCLcore.Function:CreateMountsForCategory(MCL_PINNED, _G["PinnedFrame"], 30, _G["PinnedTab"], true, true)
+                            local overflow, mountFrame = MCLcore.Function:CreateMountsForCategory(MCL_PINNED, MCLcore.pinnedFrame, 30, MCLcore.pinnedTab, true, true)
                             MCLcore.mountFrames[1] = mountFrame
                         end
                     else
@@ -467,7 +471,7 @@ function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, ite
                                 table.remove(MCLcore.mountFrames[1],  index)
                                 for kk,vv in ipairs(MCLcore.mountFrames[1]) do
                                     if kk == 1 then
-                                        vv:SetParent(_G["PinnedFrame"])
+                                        vv:SetParent(MCLcore.pinnedFrame)
                                         vv:Show()
                                     else
                                         vv:SetParent(MCLcore.mountFrames[1][kk-1])
@@ -1304,7 +1308,7 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
         -- Clean up invalid pinned mounts before creating
         MCLcore.Function:CleanupInvalidPinnedMounts()
         
-        local overflow, mountFrame = MCLcore.Function:CreateMountsForCategory(MCL_PINNED, _G["PinnedFrame"], 30, _G["PinnedTab"], true, true)
+        local overflow, mountFrame = MCLcore.Function:CreateMountsForCategory(MCL_PINNED, MCLcore.pinnedFrame, 30, MCLcore.pinnedTab, true, true)
         MCLcore.mountFrames[1] = mountFrame
     else
         local relativeFrame = MCLcore.mountFrames[1][total_pinned]
@@ -1316,7 +1320,7 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
         sourceText = sourceText or "Unknown"
 
         -- Create frame parented to the Pinned section, not to the previous frame
-        local frame = CreateFrame("Button", nil, _G["PinnedFrame"], "BackdropTemplate");
+        local frame = CreateFrame("Button", nil, MCLcore.pinnedFrame, "BackdropTemplate");
         frame:SetWidth(frame_size);
         frame:SetHeight(frame_size);
         frame:SetBackdrop({
@@ -1593,62 +1597,96 @@ function MCL_functions:GetMountID(id)
 
     if inputType == "number" then
         -- If the number is already a valid mount journal ID, use it.
-        local ok, mountName = pcall(C_MountJournal.GetMountInfoByID, id)
-        if ok and mountName then
-            return id
-        end
+        -- Use MountCache when available for cached lookups
+        if MCLcore.MountCache then
+            local name = MCLcore.MountCache:GetMountInfo(id)
+            if name then return id end
 
-        -- First try item -> mount
-        mount_Id = C_MountJournal.GetMountFromItem(id)
+            -- Try item -> mount (cached)
+            mount_Id = MCLcore.MountCache:GetMountFromItem(id)
 
-        -- Fallback: spell -> mount (helps when sources provide spell IDs)
-        if (not mount_Id or mount_Id == 0) and C_MountJournal.GetMountFromSpell then
-            mount_Id = C_MountJournal.GetMountFromSpell(id)
+            -- Fallback: spell -> mount (cached)
+            if not mount_Id or mount_Id == 0 then
+                mount_Id = MCLcore.MountCache:GetMountFromSpell(id)
+            end
+        else
+            -- Direct API fallback (before MountCache loads)
+            local ok, mountName = pcall(C_MountJournal.GetMountInfoByID, id)
+            if ok and mountName then return id end
+
+            mount_Id = C_MountJournal.GetMountFromItem(id)
+
+            if (not mount_Id or mount_Id == 0) and C_MountJournal.GetMountFromSpell then
+                mount_Id = C_MountJournal.GetMountFromSpell(id)
+            end
         end
     else
         -- Non-number inputs (defensive): try as item
-        mount_Id = C_MountJournal.GetMountFromItem(id)
+        if MCLcore.MountCache then
+            mount_Id = MCLcore.MountCache:GetMountFromItem(id)
+        else
+            mount_Id = C_MountJournal.GetMountFromItem(id)
+        end
     end
 
     return mount_Id
 end
 
-function IsMountCollected(id)
+-- Namespaced version: MCLcore.Function:IsMountCollected
+-- Uses MountCache when available, falls back to direct API call.
+function MCL_functions:IsMountCollected(id)
     -- Handle negative IDs (fallback cases for problematic items)
     local numericId = tonumber(id)
     if numericId and numericId < 0 then
-        -- For fallback cases, we can't determine collection status from the API
-        -- so we'll return false (not collected) to show them in the UI
         return false
     end
-    
-    -- Ensure we have a valid mount ID
     if not id or id == 0 then
         return false
     end
-    
-    -- Use pcall to safely get mount info
+    -- Prefer cached lookup
+    if MCLcore.MountCache then
+        return MCLcore.MountCache:IsMountCollected(id)
+    end
+    -- Direct API fallback
     local success, mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID = pcall(C_MountJournal.GetMountInfoByID, id)
-    
     if not success or not mountName then
-        -- Mount data not available yet, return false but don't cache this result
         return false
     end
-    
     return isCollected or false
 end
 
-function UpdateBackground(frame)
+-- Global alias for backward compatibility (used in 20+ call sites)
+function IsMountCollected(id)
+    return MCLcore.Function:IsMountCollected(id)
+end
+
+-- Namespaced version of UpdateBackground
+function MCL_functions:UpdateBackground(frame)
     local pinned, pin = MCLcore.Function:CheckIfPinned("m"..tostring(frame.mountID))
     if pinned == true then
         table.remove(MCL_PINNED, pin)
         MCLcore.Function:RebuildPinnedLookup()
     end
     frame:SetBackdropBorderColor(0, 0.45, 0, 0.4)
-    frame.tex:SetVertexColor(1, 1, 1, 1);	
+    frame.tex:SetVertexColor(1, 1, 1, 1)
+end
+
+-- Global alias for backward compatibility
+function UpdateBackground(frame)
+    return MCLcore.Function:UpdateBackground(frame)
 end
 
 
+-- Namespaced progress bar update; delegates to Widgets when available.
+function MCL_functions:UpdateProgressBar(frame, total, collected)
+    if MCLcore.Widgets then
+        return MCLcore.Widgets:UpdateProgressBar(frame, total, collected)
+    end
+    -- Inline fallback (should rarely be needed after Widgets.lua loads)
+    return UpdateProgressBar(frame, total, collected)
+end
+
+-- Global UpdateProgressBar kept for backward compatibility.
 function UpdateProgressBar(frame, total, collected)
     if not frame then
         return
@@ -1699,14 +1737,17 @@ function UpdateProgressBar(frame, total, collected)
         frame:SetStatusBarColor(MCL_SETTINGS.progressColors.complete.r, MCL_SETTINGS.progressColors.complete.g, MCL_SETTINGS.progressColors.complete.b) -- blue
     end
     
-    -- Ensure we have a good texture for coloring
-    local textureToUse = "Interface\\TargetingFrame\\UI-StatusBar"  -- Default fallback
-    
-    -- Try to get the texture from settings first
-    if MCL_SETTINGS and MCL_SETTINGS.statusBarTexture and MCLcore.media then
-        local settingsTexture = MCLcore.media:Fetch("statusbar", MCL_SETTINGS.statusBarTexture)
-        if settingsTexture then
-            textureToUse = settingsTexture
+    -- Ensure we have a good texture for coloring (use Widgets helper when available)
+    local textureToUse
+    if MCLcore.Widgets then
+        textureToUse = MCLcore.Widgets:GetStatusBarTexture()
+    else
+        textureToUse = "Interface\\TargetingFrame\\UI-StatusBar"
+        if MCL_SETTINGS and MCL_SETTINGS.statusBarTexture and MCLcore.media then
+            local settingsTexture = MCLcore.media:Fetch("statusbar", MCL_SETTINGS.statusBarTexture)
+            if settingsTexture then
+                textureToUse = settingsTexture
+            end
         end
     end
     
@@ -1721,8 +1762,13 @@ function UpdateProgressBar(frame, total, collected)
     return frame
 end
 
-function UpdateProgressBarColor(frame)
+function MCL_functions:UpdateProgressBarColor(frame)
 	frame:SetStatusBarColor(0, 0.5, 0.9)
+end
+
+-- Global alias
+function UpdateProgressBarColor(frame)
+	return MCLcore.Function:UpdateProgressBarColor(frame)
 end
 
 local function clearOverviewStats()
@@ -1898,6 +1944,10 @@ end,
 })
 local icon = LibStub("LibDBIcon-1.0")
 
+-- Expose minimap references so the settings panel can toggle them
+MCLcore.minimapAddon = MCL_MM
+MCLcore.minimapIcon  = icon
+
 function MCL_MM:OnInitialize() -- Obviously you'll need a ## SavedVariables: BunniesDB line in your TOC, duh!
     local AceDB = LibStub("AceDB-3.0", true)
     if AceDB and type(AceDB.New) == "function" then
@@ -1934,313 +1984,6 @@ function MCL_functions:updateFromDefaults(setting)
     MCLcore.Function:updateFromSettings("texture")
     MCLcore.Function:updateFromSettings("progressColor")
     MCLcore.Function:updateFromSettings("unobtainable", false)
-end
-
-function MCL_functions:AddonSettings()
-    local AceConfig = LibStub("AceConfig-3.0");
-    local media = LibStub("LibSharedMedia-3.0")
-    MCLcore.media = media
-    local options = {
-        type = "group",
-        name = MCLcore.L["Mount Collection Log Settings"],
-        order = 1,
-        args = {
-            headerone = {             
-                order = 1,
-                name = MCLcore.L["Main Window Options"],
-                type = "header",
-                width = "full",
-            },            
-            mainWindow = {             
-                order = 2,
-                name = MCLcore.L["Main Window Opacity"],
-                desc = MCLcore.L["Changes the opacity of the main window"],
-                type = "range",
-                width = "normal",
-                min = 0,
-                max = 1,
-                softMin = 0,
-                softMax = 1,
-                bigStep = 0.05,
-                isPercent = false,
-                set = function(info, val) MCL_SETTINGS.opacity = val; MCLcore.Function:updateFromSettings("opacity"); end,
-                get = function(info) return MCL_SETTINGS.opacity; end,
-            },
-            spacer1 = {
-                order = 2.5,
-                cmdHidden = true,
-                name = "",
-                type = "description",
-                width = "half",
-            },
-            defaultOpacity = {
-                order = 3,
-                name = MCLcore.L["Reset Opacity"],
-                desc = MCLcore.L["Reset to default opacity"],
-                width = "normal",
-                type = "execute",
-                func = function()
-                    MCLcore.Function:updateFromDefaults("Opacity")
-                end
-            },              
-            headertwo = {             
-                order = 4,
-                name = MCLcore.L["Progress Bar Settings"],
-                type = "header",
-                width = "normal",
-            },             
-            texture = {              
-                order = 5,
-                type = "select",
-                name = MCLcore.L["Statusbar Texture"],
-                width = "normal",
-                desc = MCLcore.L["Set the statusbar texture."],
-                values = media:HashTable("statusbar"),
-                -- Removed dialogControl = "LSM30_Statusbar",
-                set = function(info, val) MCL_SETTINGS.statusBarTexture = val; MCLcore.Function:updateFromSettings("texture"); end,
-                get = function(info) return MCL_SETTINGS.statusBarTexture; end,
-                style = "dropdown", -- This ensures it uses a dropdown menu for selection
-            },
-            spacer2 = {
-                order = 5.5,
-                cmdHidden = true,
-                name = "",
-                type = "description",
-                width = "half",
-            },            
-            defaultTexture = {
-                order = 6,
-                name = MCLcore.L["Reset Texture"],
-                desc = MCLcore.L["Reset to default texture"],
-                width = "normal",
-                type = "execute",
-                func = function()
-                    MCLcore.Function:updateFromDefaults("Texture")
-                end
-            },
-            spacer3 = {
-                order = 6.5,
-                cmdHidden = true,
-                name = "",
-                type = "description",
-                width = "full",
-            },
-            spacer3large = {
-                order = 6.6,
-                cmdHidden = true,
-                name = "",
-                type = "description",
-                width = "full",
-            },                                  
-            progressColorLow = {
-                order = 7,
-                type = "color",
-                name = MCLcore.L["Progress Bar (<33%)"],
-                width = "normal",
-                desc = MCLcore.L["Set the progress bar colors to be shown when the percentage collected is below 33%"],
-                set = function(info, r, g, b) MCL_SETTINGS.progressColors.low.r = r; MCL_SETTINGS.progressColors.low.g = g; MCL_SETTINGS.progressColors.low.b = b; MCLcore.Function:updateFromSettings("progressColor"); end,
-                get = function(info) return MCL_SETTINGS.progressColors.low.r, MCL_SETTINGS.progressColors.low.g, MCL_SETTINGS.progressColors.low.b; end,                
-            },
-            spacer4 = {
-                order = 7.5,
-                cmdHidden = true,
-                name = "",
-                type = "description",
-                width = "half",
-            },            
-            progressColorMedium = {
-                order = 8,
-                type = "color",
-                name = MCLcore.L["Progress Bar (<66%)"],
-                width = "normal",
-                desc = MCLcore.L["Set the progress bar colors to be shown when the percentage collected is below 66%"],
-                set = function(info, r, g, b) MCL_SETTINGS.progressColors.medium.r = r; MCL_SETTINGS.progressColors.medium.g = g; MCL_SETTINGS.progressColors.medium.b = b; MCLcore.Function:updateFromSettings("progressColor"); end,
-                get = function(info) return MCL_SETTINGS.progressColors.medium.r, MCL_SETTINGS.progressColors.medium.g, MCL_SETTINGS.progressColors.medium.b; end,                
-            },
-            spacer5 = {
-                order = 8.5,
-                cmdHidden = true,
-                name = "",
-                type = "description",
-                width = "half",
-            },             
-            progressColorHigh = {
-                order = 9,
-                type = "color",
-                name = MCLcore.L["Progress Bar (<100%)"],
-                width = "normal",
-                desc = MCLcore.L["Set the progress bar colors to be shown when the percentage collected is below 100%"],
-                set = function(info, r, g, b) MCL_SETTINGS.progressColors.high.r = r; MCL_SETTINGS.progressColors.high.g = g; MCL_SETTINGS.progressColors.high.b = b; MCLcore.Function:updateFromSettings("progressColor"); end,
-                get = function(info) return MCL_SETTINGS.progressColors.high.r, MCL_SETTINGS.progressColors.high.g, MCL_SETTINGS.progressColors.high.b; end,                
-            },
-            spacer6 = {
-                order = 9.5,
-                cmdHidden = true,
-                name = "",
-                type = "description",
-                width = "half",
-            },             
-            progressColorComplete = {
-                order = 10,
-                type = "color",
-                name = MCLcore.L["Progress Bar (100%)"],
-                width = "normal",
-                desc = MCLcore.L["Set the progress bar colors to be shown when all mounts are collected"],
-                set = function(info, r, g, b) MCL_SETTINGS.progressColors.complete.r = r; MCL_SETTINGS.progressColors.complete.g = g; MCL_SETTINGS.progressColors.complete.b = b; MCLcore.Function:updateFromSettings("progressColor"); end,
-                get = function(info) return MCL_SETTINGS.progressColors.complete.r, MCL_SETTINGS.progressColors.complete.g, MCL_SETTINGS.progressColors.complete.b; end,                
-            },
-            defaultColor = {
-                order = 11,
-                name = MCLcore.L["Reset Colors"],
-                desc = MCLcore.L["Reset to default colors"],
-                width = "normal",
-                type = "execute",
-                func = function()
-                    MCLcore.Function:updateFromDefaults("Colors")
-                end
-            },              
-            headerthree = {             
-                order = 12,
-                name = MCLcore.L["Layout Settings"],
-                type = "header",
-                width = "full",
-            },
-            mountsPerRow = {
-                order = 12.5,
-                name = MCLcore.L["Mounts Per Row"],
-                desc = MCLcore.L["Set the number of mounts to display per row in the mount grid. Requires UI reload."],
-                type = "range",
-                width = "normal",
-                min = 6,
-                max = 24,
-                softMin = 6,
-                softMax = 24,
-                step = 1,
-                bigStep = 1,
-                set = function(info, val)
-                    if MCL_SETTINGS.mountsPerRow ~= val then
-                        -- Save the setting first
-                        MCL_SETTINGS.mountsPerRow = val;
-                        
-                        -- Then ask if they want to reload
-                        StaticPopupDialogs["MCL_MOUNTS_PER_ROW_RELOAD"] = {
-                            text = MCLcore.L["Changing this setting requires a UI reload. Reload now?"],
-                            button1 = MCLcore.L["YES"],
-                            button2 = MCLcore.L["NO"],
-                            OnAccept = function()
-                                ReloadUI();
-                            end,
-                            OnCancel = function()
-                                -- Setting is already saved, so just do nothing
-                            end,
-                            timeout = 0,
-                            whileDead = true,
-                            hideOnEscape = true,
-                            preferredIndex = 3,
-                        }
-                        StaticPopup_Show("MCL_MOUNTS_PER_ROW_RELOAD")
-                    end
-                end,
-                get = function(info) return MCL_SETTINGS.mountsPerRow; end,
-            },
-            headerfour = {             
-                order = 13,
-                name = MCLcore.L["Unobtainable Settings"],
-                type = "header",
-                width = "full",
-            },            
-            unobtainable = {             
-                order = 14,
-                name = MCLcore.L["Hide Unobtainable from overview"],
-                desc = MCLcore.L["Hide Unobtainable mounts from the overview."],
-                type = "toggle",
-                width = "full",
-                set = function(info, val) MCL_SETTINGS.unobtainable = val; MCLcore.Function:updateFromSettings("unobtainable", val); end,
-                get = function(info) return MCL_SETTINGS.unobtainable; end,
-            },
-            hideCollectedMounts = {
-                order = 14.5,
-                name = MCLcore.L["Hide Collected Mounts"],
-                desc = MCLcore.L["If enabled, collected mounts will not be shown in the list at all. Requires UI reload."],
-                type = "toggle",
-                width = "full",
-                set = function(info, val)
-                    if MCL_SETTINGS.hideCollectedMounts ~= val then
-                        StaticPopupDialogs["MCL_RELOAD_CONFIRM"] = {
-                            text = MCLcore.L["Changing this setting requires a UI reload. Reload now?"],
-                            button1 = MCLcore.L["YES"],
-                            button2 = MCLcore.L["NO"],
-                            OnAccept = function()
-                                MCL_SETTINGS.hideCollectedMounts = val;
-                                ReloadUI();
-                            end,
-                            OnCancel = function()
-                                -- Do nothing
-                            end,
-                            timeout = 0,
-                            whileDead = true,
-                            hideOnEscape = true,
-                            preferredIndex = 3,
-                        }
-                        StaticPopup_Show("MCL_RELOAD_CONFIRM")
-                    end
-                end,
-                get = function(info) return MCL_SETTINGS.hideCollectedMounts; end,
-            },
-            minimapIconToggle = {
-                order = 14.7,
-                name = MCLcore.L["Show Minimap Icon"],
-                desc = MCLcore.L["Toggle the display of the Minimap Icon."],
-                type = "toggle",
-                width = "full",
-                set = function(info, val)
-                    MCL_MM.db.profile.minimap.hide = not val
-                    if val then
-                        icon:Show("MCL!")
-                    else
-                        icon:Hide("MCL!")
-                    end
-                end,
-                get = function(info)
-                    return not MCL_MM.db.profile.minimap.hide
-                end,
-            },
-            mountCardHoverToggle = {
-                order = 14.8,
-                name = MCLcore.L["Enable Mount Card on Hover"],
-                desc = MCLcore.L["If enabled, the mount card will automatically appear when hovering over mounts."],
-                type = "toggle",
-                width = "full",
-                set = function(info, val)
-                    MCL_SETTINGS.enableMountCardHover = val
-                end,
-                get = function(info)
-                    return MCL_SETTINGS.enableMountCardHover
-                end,
-            },
-            headerfive = {             
-                order = 15,
-                name = MCLcore.L["Reset Settings"],
-                type = "header",
-                width = "full",
-            },             
-            defaults = {
-                order = 16,
-                name = MCLcore.L["Reset Settings"],
-                desc = MCLcore.L["Reset to default settings"],
-                width = "normal",
-                type = "execute",
-                func = function()
-                    MCLcore.Function:updateFromDefaults()
-                end
-            }                                                                                                       
-        }
-    }                                                        
-
-
-    AceConfig:RegisterOptionsTable(MCLcore.addon_name, options, {});
-    MCLcore.AceConfigDialog = LibStub("AceConfigDialog-3.0");
-    MCLcore.AceConfigDialog:AddToBlizOptions(MCLcore.addon_name, MCLcore.addon_name, nil);
 end
 
 function MCL_functions:CalculateSectionStats()

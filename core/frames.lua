@@ -385,32 +385,38 @@ end
 
 
 function MCL_frames:openSettings()
-	-- Modern WoW Settings.OpenToCategory requires a numeric ID, but
-	-- AceConfigDialog registers with a string ID. Open the panel and
-	-- select the category manually.
-	if SettingsPanel then
-		SettingsPanel:Show()
-		local category = Settings.GetCategory(MCLcore.addon_name)
-		if category then
-			SettingsPanel:SelectCategory(category)
+	-- Ensure the MCL window is visible
+	if MCLcore.MCL_MF and not MCLcore.MCL_MF:IsShown() then
+		MCLcore.MCL_MF:Show()
+	end
+	-- Navigate to the in-addon Settings tab
+	local navFrame = MCLcore.MCL_MF_Nav
+	if navFrame and navFrame.tabs then
+		for _, tab in ipairs(navFrame.tabs) do
+			if tab.section and tab.section.name == "Settings" then
+				-- Deselect all tabs
+				for _, t in ipairs(navFrame.tabs) do
+					if t.content then t.content:Hide() end
+					if t.SetBackdropBorderColor then
+						t:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.6)
+						t:SetBackdropColor(0.1, 0.1, 0.14, 0.9)
+						if t.text then t.text:SetTextColor(0.7, 0.78, 0.88, 1) end
+					end
+				end
+				-- Select the Settings tab
+				if tab.SetBackdropBorderColor then
+					tab:SetBackdropBorderColor(0.3, 0.6, 0.9, 1)
+					tab:SetBackdropColor(0.15, 0.18, 0.25, 1)
+					if tab.text then tab.text:SetTextColor(0.5, 0.85, 1, 1) end
+				end
+				if MCL_mainFrame and MCL_mainFrame.ScrollFrame then
+					MCL_mainFrame.ScrollFrame:SetScrollChild(MCL_mainFrame.ScrollChild)
+					if tab.content then tab.content:Show() end
+					MCL_mainFrame.ScrollFrame:SetVerticalScroll(0)
+				end
+				break
+			end
 		end
-	end
-	local panel = SettingsPanel or InterfaceOptionsFrame or _G["SettingsPanel"]
-	if not panel then return end
-
-	-- Remove old checkboxes if they exist
-	if MCLcore.hideCollectedIconCheckbox then
-		MCLcore.hideCollectedIconCheckbox:Hide()
-		MCLcore.hideCollectedIconCheckbox = nil
-	end
-	-- Find the last checkbox in the Unobtainable Settings section to anchor below
-	local lastCheckbox = nil
-	if MCLcore.hideUnobtainableCheckbox then
-		lastCheckbox = MCLcore.hideUnobtainableCheckbox
-	elseif MCLcore.hideCollectedMountsCheckbox then
-		lastCheckbox = MCLcore.hideCollectedMountsCheckbox
-	elseif MCLcore.showMinimapIconCheckbox then
-		lastCheckbox = MCLcore.showMinimapIconCheckbox
 	end
 end
 
@@ -677,7 +683,7 @@ function MCL_frames:CreateMainFrame()
 	-- Anchor scroll frame to the main frame, not Bg
     MCL_mainFrame.ScrollFrame:ClearAllPoints()
     MCL_mainFrame.ScrollFrame:SetPoint("TOPLEFT", MCL_mainFrame, "TOPLEFT", 10, -40)
-    MCL_mainFrame.ScrollFrame:SetPoint("BOTTOMRIGHT", MCL_mainFrame, "BOTTOMRIGHT", -18, 10)
+    MCL_mainFrame.ScrollFrame:SetPoint("BOTTOMRIGHT", MCL_mainFrame, "BOTTOMRIGHT", -10, 10)
 	MCL_mainFrame.ScrollFrame:SetClipsChildren(true);
 	MCL_mainFrame.ScrollFrame:SetScript("OnMouseWheel", ScrollFrame_OnMouseWheel);
 	MCL_mainFrame.ScrollFrame:EnableMouse(true)
@@ -703,8 +709,9 @@ function MCL_frames:CreateMainFrame()
 
     -- Create and assign a dedicated scroll child frame
     if not MCL_mainFrame.ScrollChild then
+        local actualWidth, actualHeight = MCL_frames:GetCurrentFrameDimensions()
         MCL_mainFrame.ScrollChild = CreateFrame("Frame", nil, MCL_mainFrame.ScrollFrame)
-        MCL_mainFrame.ScrollChild:SetSize(main_frame_width - 20, main_frame_height)
+        MCL_mainFrame.ScrollChild:SetSize(actualWidth - 20, actualHeight)
         MCL_mainFrame.ScrollFrame:SetScrollChild(MCL_mainFrame.ScrollChild)
     end
 
@@ -800,6 +807,9 @@ function MCL_frames:SetTabs()
     
     -- Refresh overview stats after calculation
     if MCLcore.overviewFrames then
+        local grandTotal = 0
+        local grandCollected = 0
+
         for _, overviewFrame in ipairs(MCLcore.overviewFrames) do
             local sectionName = overviewFrame.name
             local pBar = overviewFrame.frame
@@ -807,6 +817,23 @@ function MCL_frames:SetTabs()
             
             if sectionStats and sectionStats.collected and sectionStats.total then
                 UpdateProgressBar(pBar, sectionStats.total, sectionStats.collected)
+                grandTotal     = grandTotal     + sectionStats.total
+                grandCollected = grandCollected + sectionStats.collected
+            end
+        end
+
+        -- Refresh the total mounts bar at the top of the overview
+        if MCLcore.overviewTotalBar then
+            UpdateProgressBar(MCLcore.overviewTotalBar, grandTotal, grandCollected)
+        end
+        if MCLcore.overviewTotalCount then
+            if grandTotal > 0 then
+                local pct = math.floor((grandCollected / grandTotal) * 100)
+                MCLcore.overviewTotalCount:SetText(
+                    string.format("|cffffffff%d|r / |cff888888%d|r  |cff66ccff(%d%%)|r",
+                        grandCollected, grandTotal, pct))
+            else
+                MCLcore.overviewTotalCount:SetText("|cff8888880 / 0|r")
             end
         end
     end
@@ -1148,9 +1175,9 @@ function MCL_frames:SetTabs()
         tab.section = pinnedSection
         tab.content = MCLcore.Frames:createContentFrame(MCL_mainFrame.ScrollChild, pinnedSection.name, pinnedSection.icon)
                 
-        -- Set global reference for pinned content frame (used by functions.lua)
-        _G["PinnedFrame"] = tab.content
-        _G["PinnedTab"] = tab
+        -- Set namespaced reference for pinned content frame (used by functions.lua)
+        MCLcore.pinnedFrame = tab.content
+        MCLcore.pinnedTab = tab
         
         -- Populate pinned tab content after creating the frame
         -- Initialize MCL_PINNED if it doesn't exist
@@ -1170,7 +1197,7 @@ function MCL_frames:SetTabs()
             end
             -- Create the pinned section content
             if MCLcore.Function and MCLcore.Function.CreateMountsForCategory then
-                local overflow, mountFrame = MCLcore.Function:CreateMountsForCategory(MCL_PINNED, _G["PinnedFrame"], 30, _G["PinnedTab"], true, true)
+                local overflow, mountFrame = MCLcore.Function:CreateMountsForCategory(MCL_PINNED, MCLcore.pinnedFrame, 30, MCLcore.pinnedTab, true, true)
                 MCLcore.mountFrames[1] = mountFrame
             end
         end
@@ -1433,12 +1460,17 @@ end
 function MCL_frames:progressBar(relativeFrame, top)
     MyStatusBar = CreateFrame("StatusBar", nil, relativeFrame, "BackdropTemplate")
     
-    -- Safe texture handling with fallback
-    local textureToUse = "Interface\\TargetingFrame\\UI-StatusBar"  -- Good default that colors well
-    if MCLcore.media and MCL_SETTINGS and MCL_SETTINGS.statusBarTexture then
-        local settingsTexture = MCLcore.media:Fetch("statusbar", MCL_SETTINGS.statusBarTexture)
-        if settingsTexture then
-            textureToUse = settingsTexture
+    -- Safe texture handling with fallback (use Widgets helper when available)
+    local textureToUse
+    if MCLcore.Widgets then
+        textureToUse = MCLcore.Widgets:GetStatusBarTexture()
+    else
+        textureToUse = "Interface\\TargetingFrame\\UI-StatusBar"
+        if MCLcore.media and MCL_SETTINGS and MCL_SETTINGS.statusBarTexture then
+            local settingsTexture = MCLcore.media:Fetch("statusbar", MCL_SETTINGS.statusBarTexture)
+            if settingsTexture then
+                textureToUse = settingsTexture
+            end
         end
     end
     
@@ -1903,48 +1935,16 @@ function MCL_frames:RefreshZoneDrops()
                             end
                         end
                         if bestCoord and bestCoord.x and bestCoord.y then
-                            row.wpBtn = CreateFrame("Button", nil, row, "BackdropTemplate")
-                            row.wpBtn:SetSize(60, 16)
-                            row.wpBtn:SetPoint("RIGHT", row, "RIGHT", -10, -12)
-                            row.wpBtn:SetBackdrop({
-                                bgFile   = "Interface\\Buttons\\WHITE8x8",
-                                edgeFile = "Interface\\Buttons\\WHITE8x8",
-                                edgeSize = 1,
+                            row.wpBtn = MCLcore.Widgets:CreateWaypointButton({
+                                parent = row,
+                                mapID  = bestCoord.m,
+                                x      = bestCoord.x,
+                                y      = bestCoord.y,
+                                title  = mountName,
+                                width  = 60,
+                                anchor = { "RIGHT", row, "RIGHT", -10, -12 },
+                                showIcon = false,
                             })
-                            row.wpBtn:SetBackdropColor(0.12, 0.12, 0.2, 0.9)
-                            row.wpBtn:SetBackdropBorderColor(0.3, 0.6, 0.9, 0.8)
-                            row.wpBtn.label = row.wpBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-                            row.wpBtn.label:SetPoint("CENTER")
-                            row.wpBtn.label:SetText(L["Waypoint"] or "Waypoint")
-                            row.wpBtn.label:SetTextColor(0.4, 0.78, 0.95, 1)
-                            row.wpBtn:SetScript("OnClick", function(self)
-                                local wx, wy = bestCoord.x / 100, bestCoord.y / 100
-                                if TomTom and TomTom.AddWaypoint then
-                                    TomTom:AddWaypoint(bestCoord.m, wx, wy, { title = mountName })
-                                else
-                                    local point = UiMapPoint.CreateFromCoordinates(bestCoord.m, wx, wy)
-                                    C_Map.SetUserWaypoint(point)
-                                    C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-                                end
-                                -- Open map to target zone
-                                OpenWorldMap(bestCoord.m)
-                                self.label:SetText("Set!")
-                                self.label:SetTextColor(0.3, 0.9, 0.3, 1)
-                                C_Timer.After(1.5, function()
-                                    if self.label then
-                                        self.label:SetText(L["Waypoint"] or "Waypoint")
-                                        self.label:SetTextColor(0.4, 0.78, 0.95, 1)
-                                    end
-                                end)
-                            end)
-                            row.wpBtn:SetScript("OnEnter", function(self)
-                                self:SetBackdropBorderColor(0.5, 0.8, 1, 1)
-                                self:SetBackdropColor(0.18, 0.18, 0.28, 1)
-                            end)
-                            row.wpBtn:SetScript("OnLeave", function(self)
-                                self:SetBackdropBorderColor(0.3, 0.6, 0.9, 0.8)
-                                self:SetBackdropColor(0.12, 0.12, 0.2, 0.9)
-                            end)
                         end
                     end
 
@@ -2897,7 +2897,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     -- =====================================================
     -- CARD 1: Display Options
     -- =====================================================
-    local displayCard = createCard(frame, L["Display Options"] or "Display Options", yPos, 130)
+    local displayCard = createCard(frame, L["Display Options"] or "Display Options", yPos, 160)
     
     local displayY = -34
     
@@ -2938,8 +2938,32 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     hoverLabel:SetPoint("LEFT", hoverCheck, "RIGHT", 8, 0)
     hoverLabel:SetText(L["Enable Mount Card on Hover"] or "Enable Mount Card on Hover")
     hoverLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+    displayY = displayY - 30
     
-    yPos = yPos - 140
+    -- Show Minimap Icon
+    local mmIcon = MCLcore.minimapIcon
+    local mmAddon = MCLcore.minimapAddon
+    local minimapCheck = CreateFrame("CheckButton", nil, displayCard)
+    minimapCheck:SetSize(18, 18)
+    minimapCheck:SetPoint("TOPLEFT", displayCard, "TOPLEFT", 12, displayY)
+    minimapCheck:SetChecked(mmAddon and mmAddon.db and not mmAddon.db.profile.minimap.hide or false)
+    minimapCheck.originalOnClick = function(self)
+        if mmAddon and mmAddon.db then
+            mmAddon.db.profile.minimap.hide = not self:GetChecked()
+            if self:GetChecked() then
+                if mmIcon then mmIcon:Show("MCL!") end
+            else
+                if mmIcon then mmIcon:Hide("MCL!") end
+            end
+        end
+    end
+    styleCheckbox(minimapCheck)
+    local minimapLabel = displayCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    minimapLabel:SetPoint("LEFT", minimapCheck, "RIGHT", 8, 0)
+    minimapLabel:SetText(L["Show Minimap Icon"] or "Show Minimap Icon")
+    minimapLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+    
+    yPos = yPos - 170
     
     -- =====================================================
     -- CARD 3: Layout
@@ -2989,7 +3013,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     -- =====================================================
     -- CARD 4: Progress Bar
     -- =====================================================
-    local progressCard = createCard(frame, L["Progress Bar Options"] or "Progress Bar", yPos, 100)
+    local progressCard = createCard(frame, L["Progress Bar Options"] or "Progress Bar", yPos, 240)
     
     -- Texture selector
     if not MCLcore.media then
@@ -3129,12 +3153,131 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         texNote:SetTextColor(0.5, 0.4, 0.4, 1)
     end
     
-    yPos = yPos - 110
+    -- -----------------------------------------------------------------
+    -- Progress Bar Color Pickers
+    -- -----------------------------------------------------------------
+    local colorLabel = progressCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    colorLabel:SetPoint("TOPLEFT", progressCard, "TOPLEFT", 12, -100)
+    colorLabel:SetText(L["Progress Colors"] or "Progress Colors:")
+    colorLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+    
+    -- Helper: create a color swatch + label that opens the WoW color picker
+    local function createColorSwatch(parent, xOff, yOff, colorKey, labelText)
+        local c = MCL_SETTINGS.progressColors[colorKey]
+        
+        local swatch = CreateFrame("Button", nil, parent, "BackdropTemplate")
+        swatch:SetSize(22, 22)
+        swatch:SetPoint("TOPLEFT", parent, "TOPLEFT", xOff, yOff)
+        swatch:SetBackdrop({
+            bgFile = "Interface\\Buttons\\WHITE8x8",
+            edgeFile = "Interface\\Buttons\\WHITE8x8",
+            edgeSize = 1,
+        })
+        swatch:SetBackdropColor(c.r, c.g, c.b, 1)
+        swatch:SetBackdropBorderColor(0.4, 0.4, 0.45, 1)
+        
+        local lbl = parent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        lbl:SetPoint("LEFT", swatch, "RIGHT", 6, 0)
+        lbl:SetText(labelText)
+        lbl:SetTextColor(0.6, 0.66, 0.75, 1)
+        
+        swatch:SetScript("OnEnter", function(self) self:SetBackdropBorderColor(0.3, 0.6, 0.9, 1) end)
+        swatch:SetScript("OnLeave", function(self) self:SetBackdropBorderColor(0.4, 0.4, 0.45, 1) end)
+        swatch:SetScript("OnClick", function()
+            local cur = MCL_SETTINGS.progressColors[colorKey]
+            local info = {
+                r = cur.r, g = cur.g, b = cur.b,
+                hasOpacity = false,
+                swatchFunc = function()
+                    local r, g, b = ColorPickerFrame:GetColorRGB()
+                    MCL_SETTINGS.progressColors[colorKey].r = r
+                    MCL_SETTINGS.progressColors[colorKey].g = g
+                    MCL_SETTINGS.progressColors[colorKey].b = b
+                    swatch:SetBackdropColor(r, g, b, 1)
+                    MCLcore.Function:updateFromSettings("progressColor")
+                end,
+                cancelFunc = function(prev)
+                    MCL_SETTINGS.progressColors[colorKey].r = prev.r
+                    MCL_SETTINGS.progressColors[colorKey].g = prev.g
+                    MCL_SETTINGS.progressColors[colorKey].b = prev.b
+                    swatch:SetBackdropColor(prev.r, prev.g, prev.b, 1)
+                    MCLcore.Function:updateFromSettings("progressColor")
+                end,
+            }
+            ColorPickerFrame:SetupColorPickerAndShow(info)
+        end)
+        
+        return swatch
+    end
+    
+    local swatchY = -120
+    local sw1 = createColorSwatch(progressCard,  12, swatchY, "low",      L["< 33%"] or "< 33%")
+    local sw2 = createColorSwatch(progressCard, 110, swatchY, "medium",   L["< 66%"] or "< 66%")
+    local sw3 = createColorSwatch(progressCard, 208, swatchY, "high",     L["< 100%"] or "< 100%")
+    local sw4 = createColorSwatch(progressCard, 306, swatchY, "complete", L["100%"] or "100%")
+    
+    -- Reset Colors button
+    local resetColorsBtn = CreateFrame("Button", nil, progressCard, "BackdropTemplate")
+    resetColorsBtn:SetSize(100, 22)
+    resetColorsBtn:SetPoint("TOPLEFT", progressCard, "TOPLEFT", 12, swatchY - 34)
+    resetColorsBtn:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+    })
+    resetColorsBtn:SetBackdropColor(0.1, 0.15, 0.25, 0.8)
+    resetColorsBtn:SetBackdropBorderColor(0.2, 0.5, 0.8, 0.6)
+    local rcText = resetColorsBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    rcText:SetPoint("CENTER")
+    rcText:SetText(L["Reset Colors"] or "Reset Colors")
+    rcText:SetTextColor(0.4, 0.78, 0.95, 1)
+    resetColorsBtn:SetScript("OnEnter", function(self)
+        self:SetBackdropColor(0.15, 0.25, 0.4, 0.9); self:SetBackdropBorderColor(0.3, 0.6, 0.9, 1)
+    end)
+    resetColorsBtn:SetScript("OnLeave", function(self)
+        self:SetBackdropColor(0.1, 0.15, 0.25, 0.8); self:SetBackdropBorderColor(0.2, 0.5, 0.8, 0.6)
+    end)
+    resetColorsBtn:SetScript("OnClick", function()
+        MCLcore.Function:updateFromDefaults("Colors")
+        -- Refresh swatches
+        local cols = MCL_SETTINGS.progressColors
+        sw1:SetBackdropColor(cols.low.r, cols.low.g, cols.low.b, 1)
+        sw2:SetBackdropColor(cols.medium.r, cols.medium.g, cols.medium.b, 1)
+        sw3:SetBackdropColor(cols.high.r, cols.high.g, cols.high.b, 1)
+        sw4:SetBackdropColor(cols.complete.r, cols.complete.g, cols.complete.b, 1)
+    end)
+    
+    -- Reset Texture button (next to Reset Colors)
+    local resetTexBtn = CreateFrame("Button", nil, progressCard, "BackdropTemplate")
+    resetTexBtn:SetSize(110, 22)
+    resetTexBtn:SetPoint("LEFT", resetColorsBtn, "RIGHT", 8, 0)
+    resetTexBtn:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+    })
+    resetTexBtn:SetBackdropColor(0.1, 0.15, 0.25, 0.8)
+    resetTexBtn:SetBackdropBorderColor(0.2, 0.5, 0.8, 0.6)
+    local rtText = resetTexBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    rtText:SetPoint("CENTER")
+    rtText:SetText(L["Reset Texture"] or "Reset Texture")
+    rtText:SetTextColor(0.4, 0.78, 0.95, 1)
+    resetTexBtn:SetScript("OnEnter", function(self)
+        self:SetBackdropColor(0.15, 0.25, 0.4, 0.9); self:SetBackdropBorderColor(0.3, 0.6, 0.9, 1)
+    end)
+    resetTexBtn:SetScript("OnLeave", function(self)
+        self:SetBackdropColor(0.1, 0.15, 0.25, 0.8); self:SetBackdropBorderColor(0.2, 0.5, 0.8, 0.6)
+    end)
+    resetTexBtn:SetScript("OnClick", function()
+        MCLcore.Function:updateFromDefaults("Texture")
+    end)
+    
+    yPos = yPos - 250
     
     -- =====================================================
     -- CARD 5: Window Opacity
     -- =====================================================
-    local opacityCard = createCard(frame, L["Window Opacity"] or "Window Opacity", yPos, 100)
+    local opacityCard = createCard(frame, L["Window Opacity"] or "Window Opacity", yPos, 110)
     
     local opacityValue = MCL_SETTINGS.opacity or 0.85
     local opacityLabel = opacityCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -3183,7 +3326,35 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     end
     styleSlider(opacitySlider, true, true)
     
-    yPos = yPos - 110
+    -- Reset Opacity button
+    local resetOpBtn = CreateFrame("Button", nil, opacityCard, "BackdropTemplate")
+    resetOpBtn:SetSize(110, 22)
+    resetOpBtn:SetPoint("LEFT", opacitySlider, "RIGHT", 80, 0)
+    resetOpBtn:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+    })
+    resetOpBtn:SetBackdropColor(0.1, 0.15, 0.25, 0.8)
+    resetOpBtn:SetBackdropBorderColor(0.2, 0.5, 0.8, 0.6)
+    local roText = resetOpBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    roText:SetPoint("CENTER")
+    roText:SetText(L["Reset Opacity"] or "Reset Opacity")
+    roText:SetTextColor(0.4, 0.78, 0.95, 1)
+    resetOpBtn:SetScript("OnEnter", function(self)
+        self:SetBackdropColor(0.15, 0.25, 0.4, 0.9); self:SetBackdropBorderColor(0.3, 0.6, 0.9, 1)
+    end)
+    resetOpBtn:SetScript("OnLeave", function(self)
+        self:SetBackdropColor(0.1, 0.15, 0.25, 0.8); self:SetBackdropBorderColor(0.2, 0.5, 0.8, 0.6)
+    end)
+    resetOpBtn:SetScript("OnClick", function()
+        MCLcore.Function:updateFromDefaults("Opacity")
+        local def = 0.85
+        opacitySlider:SetValue(def)
+        opacityLabel:SetText((L["Opacity"] or "Opacity") .. ": " .. math.floor(def * 100) .. "%")
+    end)
+    
+    yPos = yPos - 120
     
     -- =====================================================
     -- CARD 6: Collection Toast
@@ -3625,18 +3796,83 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
         return
     end
 
-    -- Use the same layout calculations as createCategoryFrame for consistency
+    -- Calculate available width from the parent frame, accounting for internal padding
     local currentWidth, _ = MCL_frames:GetCurrentFrameDimensions()
-    local availableWidth = currentWidth - 40  -- Match content frame width
+    local contentWidth = currentWidth - 40   -- content frame width (matches parent overview frame)
+    local availableWidth = contentWidth - 20 -- 10px left + 10px right internal padding
     local columnSpacing = 25  -- Spacing between columns
     local numColumns = 2
     local columnWidth = math.floor((availableWidth - columnSpacing * (numColumns - 1)) / numColumns)
-    
+
+    ----------------------------------------------------------------
+    -- Total Mounts progress bar (spans full width at the top)
+    ----------------------------------------------------------------
+    local grandTotal = 0
+    local grandCollected = 0
+    for _, v in pairs(set) do
+        if v.name ~= "Overview" and v.name ~= "Pinned" then
+            local s = MCLcore.stats and MCLcore.stats[v.name]
+            if s then
+                grandTotal     = grandTotal     + (s.total     or 0)
+                grandCollected = grandCollected + (s.collected or 0)
+            end
+        end
+    end
+
+    -- Container
+    local totalFrame = CreateFrame("Frame", nil, relativeFrame, "BackdropTemplate")
+    totalFrame:SetHeight(56)
+    totalFrame:SetPoint("TOPLEFT", relativeFrame, "TOPLEFT", 10, -10)
+    totalFrame:SetPoint("TOPRIGHT", relativeFrame, "TOPRIGHT", -10, -10)
+    totalFrame:SetBackdrop({
+        bgFile   = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+    })
+    totalFrame:SetBackdropColor(0.08, 0.08, 0.12, 0.85)
+    totalFrame:SetBackdropBorderColor(0.3, 0.6, 0.9, 0.7)
+
+    -- Title label
+    local totalTitle = totalFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    totalTitle:SetPoint("TOPLEFT", totalFrame, "TOPLEFT", 8, -6)
+    totalTitle:SetText("Total Mounts")
+    totalTitle:SetTextColor(0.5, 0.85, 1, 1)
+
+    -- Count label (right-aligned)
+    local totalCount = totalFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    totalCount:SetPoint("TOPRIGHT", totalFrame, "TOPRIGHT", -8, -8)
+    if grandTotal > 0 then
+        local pct = math.floor((grandCollected / grandTotal) * 100)
+        totalCount:SetText(string.format("|cffffffff%d|r / |cff888888%d|r  |cff66ccff(%d%%)|r", grandCollected, grandTotal, pct))
+    else
+        totalCount:SetText("|cff8888880 / 0|r")
+    end
+
+    -- Progress bar
+    local totalBarContainer = CreateFrame("Frame", nil, totalFrame)
+    totalBarContainer:SetHeight(18)
+    totalBarContainer:SetPoint("TOPLEFT", totalFrame, "TOPLEFT", 8, -28)
+    totalBarContainer:SetPoint("TOPRIGHT", totalFrame, "TOPRIGHT", -8, -28)
+
+    local totalBar = MCLcore.Widgets:CreateProgressBar({
+        parent    = totalBarContainer,
+        total     = grandTotal,
+        collected = grandCollected,
+    })
+
+    -- Store references so SetTabs can refresh
+    MCLcore.overviewTotalBar   = totalBar
+    MCLcore.overviewTotalCount = totalCount
+    MCLcore.overviewTotalGrand = { total = grandTotal, collected = grandCollected }
+
+    ----------------------------------------------------------------
+    -- Per-section bars (two-column grid below the total bar)
+    ----------------------------------------------------------------
     local leftColumnX = 10  -- Start with padding from left edge
     local rightColumnX = leftColumnX + columnWidth + columnSpacing
     
-    local leftColumnY = -30  -- Reduced from -60 for tighter spacing
-    local rightColumnY = -30
+    local leftColumnY = -76  -- Push down below total bar (10 top + 56 height + 10 gap)
+    local rightColumnY = -76
     local sectionIndex = 0
 
     -- Create sections similar to how categories are created in other tabs
@@ -3689,68 +3925,12 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
             progressContainer:SetHeight(18)
             progressContainer:SetPoint("TOPLEFT", sectionFrame, "TOPLEFT", 6, -22)
             
-            -- Create progress bar with background
-            local pBar = CreateFrame("StatusBar", nil, progressContainer, "BackdropTemplate")
-            
-            -- Add dark background to the progress bar
-            pBar:SetBackdrop({
-                bgFile = "Interface\\Buttons\\WHITE8x8",
-                edgeFile = "Interface\\Buttons\\WHITE8x8",
-                edgeSize = 1
+            -- Create progress bar via widget factory
+            local pBar = MCLcore.Widgets:CreateProgressBar({
+                parent    = progressContainer,
+                total     = totalMounts,
+                collected = collectedMounts,
             })
-            pBar:SetBackdropColor(0.08, 0.08, 0.1, 0.8)
-            pBar:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.8)
-            
-            -- Use settings texture if available, otherwise fallback to TargetingFrame
-            local textureToUse = "Interface\\TargetingFrame\\UI-StatusBar"  -- Good default that colors well
-            if MCL_SETTINGS and MCL_SETTINGS.statusBarTexture and MCLcore.media then
-                local settingsTexture = MCLcore.media:Fetch("statusbar", MCL_SETTINGS.statusBarTexture)
-                if settingsTexture then
-                    textureToUse = settingsTexture
-                end
-            end
-            
-            pBar:SetStatusBarTexture(textureToUse)
-            pBar:GetStatusBarTexture():SetHorizTile(false)
-            pBar:GetStatusBarTexture():SetVertTile(false)
-            pBar:SetMinMaxValues(0, 100)
-            pBar:SetValue(0)
-            pBar:SetAllPoints(progressContainer)
-            
-            -- Text for progress bar
-            pBar.Text = pBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            pBar.Text:SetPoint("CENTER", pBar, "CENTER", 0, 0)
-            pBar.Text:SetTextColor(0.85, 0.9, 0.95, 1)
-            
-            -- Update progress bar with actual data
-            if totalMounts > 0 then
-                local percentage = (collectedMounts / totalMounts) * 100
-                pBar:SetValue(percentage)
-                pBar.Text:SetText(string.format("%d/%d (%d%%)", collectedMounts, totalMounts, math.floor(percentage)))
-                
-                -- Use the same color logic as other progress bars
-                pBar.val = percentage
-                UpdateProgressBar(pBar, totalMounts, collectedMounts)
-            else
-                pBar:SetValue(0)
-                pBar.Text:SetText("0/0 (0%)")
-                pBar:SetStatusBarColor(0.5, 0.5, 0.5)  -- Gray for no data
-            end
-            
-            -- Store this in the same way other progress bars are stored
-            -- Check if this progress bar is already in the table to prevent duplicates
-            local alreadyExists = false
-            if MCLcore.statusBarFrames then
-                for _, existingBar in ipairs(MCLcore.statusBarFrames) do
-                    if existingBar == pBar then
-                        alreadyExists = true
-                        break
-                    end
-                end
-            end
-            if not alreadyExists then
-                table.insert(MCLcore.statusBarFrames, pBar)
-            end
             
             -- Add hover effects like other sections
             pBar:HookScript("OnEnter", function()
@@ -4149,50 +4329,12 @@ for _, categoryName in ipairs(sortedCategoryNames) do
         progressContainer:SetPoint("TOPRIGHT", categoryFrame, "TOPRIGHT", -10, -30)
         categoryFrame.progressContainer = progressContainer
         
-        -- Create progress bar using proper texture fallback
-        local pBar = CreateFrame("StatusBar", nil, progressContainer, "BackdropTemplate")
-        
-        -- Use settings texture if available, otherwise fallback to TargetingFrame
-        local textureToUse = "Interface\\TargetingFrame\\UI-StatusBar"  -- Good default that colors well
-        if MCL_SETTINGS and MCL_SETTINGS.statusBarTexture and MCLcore.media then
-            local settingsTexture = MCLcore.media:Fetch("statusbar", MCL_SETTINGS.statusBarTexture)
-            if settingsTexture then
-                textureToUse = settingsTexture
-            end
-        end
-        
-        pBar:SetStatusBarTexture(textureToUse)
-        pBar:GetStatusBarTexture():SetHorizTile(false)
-        pBar:GetStatusBarTexture():SetVertTile(false)
-        pBar:SetMinMaxValues(0, 100)
-        pBar:SetValue(0)
-        pBar:SetAllPoints(progressContainer)
-        
-        -- Background for progress bar
-        pBar:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1
+        -- Create progress bar via widget factory
+        local pBar = MCLcore.Widgets:CreateProgressBar({
+            parent    = progressContainer,
+            total     = totalMounts,
+            collected = collectedMounts,
         })
-        pBar:SetBackdropColor(0.08, 0.08, 0.1, 0.8)
-        pBar:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.8)
-        
-        -- Text for progress bar
-        pBar.Text = pBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        pBar.Text:SetPoint("CENTER", pBar, "CENTER", 0, 0)
-        pBar.Text:SetTextColor(0.85, 0.9, 0.95, 1)
-        
-        -- Update progress bar
-        local percentage = totalMounts > 0 and (collectedMounts / totalMounts) * 100 or 0
-        pBar:SetValue(percentage)
-        pBar.Text:SetText(string.format("%d/%d (%d%%)", collectedMounts, totalMounts, percentage))
-        
-        -- Use the UpdateProgressBar function for consistent coloring
-        pBar.val = percentage
-        UpdateProgressBar(pBar, totalMounts, collectedMounts)
-        
-        -- Store this progress bar in the statusBarFrames table for settings updates
-        table.insert(MCLcore.statusBarFrames, pBar)
         
         -- Mount grid within category - positioned below progress bar
         local mountStartY = -60  -- More padding below progress bar
@@ -4386,6 +4528,8 @@ function MCL_frames:RefreshLayout()
             if MCLcore.overviewFrames then
                 MCLcore.overviewFrames = {}
             end
+            MCLcore.overviewTotalBar   = nil
+            MCLcore.overviewTotalCount = nil
             
             -- Recreate overview content with new dimensions
             if MCLcore.sections and MCL_frames.createOverviewCategory then

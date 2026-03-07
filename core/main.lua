@@ -391,11 +391,6 @@ local function onevent(self, event, arg1, ...)
         EnsureCollectionsLoaded()
         ClearMountFilters()
         
-        -- Ensure Function module is available before calling AddonSettings
-        if MCLcore.Function and MCLcore.Function.AddonSettings then
-            MCLcore.Function:AddonSettings()
-        end
-        
         -- Start initialization after readiness polling handled inside :Init
         MCL_Load:Init()
         

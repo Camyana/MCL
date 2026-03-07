@@ -5,7 +5,6 @@
 MCL_GUIDE_VENDOR_DATA = {
 
     [6] = { { npc = "Katie Stokx", zone = "Stormwind City", m = 1519, x = 77, y = 67.8 } },  -- Brown Horse
-    [7] = { { npc = "Ogunaro Wolfrunner", zone = "Orgrimmar", m = 85, x = 61, y = 35.2 } },  -- Gray Wolf
     [9] = { { npc = "Katie Stokx", zone = "Stormwind City", m = 1519, x = 77, y = 67.8 } },  -- Black Stallion
     [11] = { { npc = "Katie Stokx", zone = "Stormwind City", m = 1519, x = 77, y = 67.8 } },  -- Pinto
     [12] = { { npc = "Ogunaro Wolfrunner", zone = "Orgrimmar", m = 85, x = 61, y = 35.2 } },  -- Black Wolf

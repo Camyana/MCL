@@ -38,6 +38,28 @@ local currentAnchorFrame = nil
 -- MountCollector compatibility interface
 MCLcore.MountCard.Display = MCLcore.MountCard.Display or {}
 
+-- ── Trading Post data lookup ────────────────────────────────────
+-- Builds a cache mapping journal mount ID → tradingPostData entry
+local tradingPostLookup = nil
+local function GetTradingPostInfo(journalID)
+    if not MCLcore.tradingPostData then return nil end
+    if not tradingPostLookup then
+        tradingPostLookup = {}
+        for ref, data in pairs(MCLcore.tradingPostData) do
+            local jid = nil
+            if type(ref) == "string" and string.sub(ref, 1, 1) == "m" then
+                jid = tonumber(string.sub(ref, 2))
+            elseif type(ref) == "number" then
+                jid = C_MountJournal.GetMountFromItem(ref)
+            end
+            if jid and data then
+                tradingPostLookup[jid] = data
+            end
+        end
+    end
+    return tradingPostLookup[journalID]
+end
+
 -- Notes lookup cache (mount journal ID → note text)
 local mountNotesLookup = nil
 local function GetMountNote(journalID)
@@ -180,6 +202,9 @@ local function GetMountSourceDetails(mountInfo, mountData)
                string.find(category, "Necrolord") or string.find(category, "Venthyr") then
             details.method = "Covenant"
             details.vendor = category .. " Covenant"
+        elseif category == "TradingPostTBA" or category == "Future Trading Post" then
+            details.method = "Trading Post"
+            details.vendor = "Future Trading Post (Datamined)"
         else
             details.method = category
             details.vendor = category
@@ -824,6 +849,54 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
         yOffset = yOffset - (textHeight + 10)  -- Further reduced spacing from 15 to 10
         contentHeight = contentHeight + (textHeight + 10)
     end
+
+    -- ── Trading Post info line ────────────────────────────────
+    local tpInfo = GetTradingPostInfo(mountInfo.mountID)
+    if tpInfo then
+        local tpText = ""
+        local tpColor = {0.4, 0.78, 0.95, 1} -- default: soft blue
+
+        if tpInfo.type == "purchase" then
+            if tpInfo.cost and tpInfo.month then
+                tpText = tpInfo.cost .. " Trader's Tender - " .. tpInfo.month
+            elseif tpInfo.cost then
+                tpText = tpInfo.cost .. " Trader's Tender"
+            elseif tpInfo.month then
+                tpText = "Trading Post - " .. tpInfo.month
+            end
+            tpColor = {0.3, 0.85, 0.4, 1} -- green
+        elseif tpInfo.type == "log" then
+            if tpInfo.month then
+                tpText = "Traveler's Log Reward - " .. tpInfo.month
+            else
+                tpText = "Traveler's Log Reward"
+            end
+            tpColor = {0.9, 0.75, 0.3, 1} -- gold/amber
+        elseif tpInfo.type == "yearly" then
+            if tpInfo.month then
+                tpText = "Yearly Bonus Reward - " .. tpInfo.month
+            else
+                tpText = "Yearly Bonus Reward"
+            end
+            tpColor = {0.85, 0.55, 0.9, 1} -- purple
+        elseif tpInfo.type == "datamined" then
+            tpText = "Upcoming - Not Yet Available"
+            tpColor = {0.6, 0.6, 0.6, 1} -- grey
+        end
+
+        if tpText ~= "" then
+            local tpLabel = parentFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            tpLabel:SetPoint("TOPLEFT", parentFrame, "TOPLEFT", 10, yOffset)
+            tpLabel:SetPoint("TOPRIGHT", parentFrame, "TOPRIGHT", -10, yOffset)
+            tpLabel:SetText(tpText)
+            tpLabel:SetTextColor(unpack(tpColor))
+            tpLabel:SetJustifyH("LEFT")
+
+            local tpHeight = tpLabel:GetStringHeight()
+            yOffset = yOffset - (tpHeight + 8)
+            contentHeight = contentHeight + (tpHeight + 8)
+        end
+    end
     
     -- Notes section (user-defined notes from MCLcore.mountNotes)
     local mountNote = GetMountNote(mountInfo.mountID)
@@ -1449,63 +1522,16 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                     coordValue:SetText(string.format("%.1f, %.1f", c.x, c.y))
                     coordValue:SetTextColor(0.8, 0.8, 0.85, 1)
 
-                    -- Waypoint button (pin icon)
+                    -- Waypoint button (pin icon) via widget factory
                     if c.m and c.m > 0 then
-                        local wpBtn = CreateFrame("Button", nil, detailsFrame, "BackdropTemplate")
-                        wpBtn:SetSize(80, 16)
-                        wpBtn:SetPoint("LEFT", coordValue, "RIGHT", 12, 0)
-                        wpBtn:SetBackdrop({
-                            bgFile = "Interface\\Buttons\\WHITE8x8",
-                            edgeFile = "Interface\\Buttons\\WHITE8x8",
-                            edgeSize = 1,
+                        MCLcore.Widgets:CreateWaypointButton({
+                            parent = detailsFrame,
+                            mapID  = c.m,
+                            x      = c.x,
+                            y      = c.y,
+                            title  = guideDropInfo.name or "Mount",
+                            anchor = { "LEFT", coordValue, "RIGHT", 12, 0 },
                         })
-                        wpBtn:SetBackdropColor(0.12, 0.12, 0.18, 0.9)
-                        wpBtn:SetBackdropBorderColor(0.2, 0.6, 0.9, 0.6)
-
-                        local wpIcon = wpBtn:CreateTexture(nil, "ARTWORK")
-                        wpIcon:SetSize(12, 12)
-                        wpIcon:SetPoint("LEFT", wpBtn, "LEFT", 4, 0)
-                        wpIcon:SetTexture("Interface\\AddOns\\MCL\\icons\\pin")
-                        wpIcon:SetVertexColor(0.2, 0.6, 0.9, 1)
-
-                        local wpText = wpBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                        wpText:SetPoint("LEFT", wpIcon, "RIGHT", 3, 0)
-                        wpText:SetText(L["Waypoint"] or "Waypoint")
-                        wpText:SetTextColor(0.4, 0.78, 0.95, 1)
-
-                        wpBtn:SetScript("OnEnter", function(self)
-                            self:SetBackdropBorderColor(0.3, 0.7, 1, 1)
-                            self:SetBackdropColor(0.18, 0.18, 0.26, 1)
-                        end)
-                        wpBtn:SetScript("OnLeave", function(self)
-                            self:SetBackdropBorderColor(0.2, 0.6, 0.9, 0.6)
-                            self:SetBackdropColor(0.12, 0.12, 0.18, 0.9)
-                        end)
-                        wpBtn:SetScript("OnClick", function()
-                            -- Try TomTom first
-                            if TomTom and TomTom.AddWaypoint then
-                                TomTom:AddWaypoint(c.m, c.x / 100, c.y / 100, {
-                                    title = guideDropInfo.name or "Mount",
-                                    persistent = false,
-                                    minimap = true,
-                                    world = true,
-                                })
-                            else
-                                -- Use Blizzard's built-in user waypoint
-                                local vector = CreateVector2D(c.x / 100, c.y / 100)
-                                C_Map.SetUserWaypoint(UiMapPoint.CreateFromVector2D(c.m, vector))
-                                C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-                            end
-                            -- Open map to the target zone so the pin is visible
-                            OpenWorldMap(c.m)
-                            -- Flash the button to confirm
-                            wpText:SetTextColor(0.3, 0.85, 0.4, 1)
-                            wpText:SetText("Set!")
-                            C_Timer.After(1.5, function()
-                                wpText:SetTextColor(0.4, 0.78, 0.95, 1)
-                                wpText:SetText(L["Waypoint"] or "Waypoint")
-                            end)
-                        end)
                     end
 
                     detailsYOffset = detailsYOffset - 16
@@ -1574,61 +1600,15 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                 vValue:SetText(string.format("%s (%.1f, %.1f)", rep.vendorName, rep.vendorX, rep.vendorY))
                 vValue:SetTextColor(0.8, 0.8, 0.85, 1)
 
-                -- Waypoint button
-                local vpBtn = CreateFrame("Button", nil, detailsFrame, "BackdropTemplate")
-                vpBtn:SetSize(80, 16)
-                vpBtn:SetPoint("LEFT", vValue, "RIGHT", 12, 0)
-                vpBtn:SetBackdrop({
-                    bgFile = "Interface\\Buttons\\WHITE8x8",
-                    edgeFile = "Interface\\Buttons\\WHITE8x8",
-                    edgeSize = 1,
+                -- Waypoint button via widget factory
+                MCLcore.Widgets:CreateWaypointButton({
+                    parent = detailsFrame,
+                    mapID  = rep.vendorMapId,
+                    x      = rep.vendorX,
+                    y      = rep.vendorY,
+                    title  = rep.vendorName or "Vendor",
+                    anchor = { "LEFT", vValue, "RIGHT", 12, 0 },
                 })
-                vpBtn:SetBackdropColor(0.12, 0.12, 0.18, 0.9)
-                vpBtn:SetBackdropBorderColor(0.2, 0.6, 0.9, 0.6)
-
-                local vpIcon = vpBtn:CreateTexture(nil, "ARTWORK")
-                vpIcon:SetSize(12, 12)
-                vpIcon:SetPoint("LEFT", vpBtn, "LEFT", 4, 0)
-                vpIcon:SetTexture("Interface\\AddOns\\MCL\\icons\\pin")
-                vpIcon:SetVertexColor(0.2, 0.6, 0.9, 1)
-
-                local vpText = vpBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                vpText:SetPoint("LEFT", vpIcon, "RIGHT", 3, 0)
-                vpText:SetText(L["Waypoint"] or "Waypoint")
-                vpText:SetTextColor(0.4, 0.78, 0.95, 1)
-
-                vpBtn:SetScript("OnEnter", function(self)
-                    self:SetBackdropBorderColor(0.3, 0.7, 1, 1)
-                    self:SetBackdropColor(0.18, 0.18, 0.26, 1)
-                end)
-                vpBtn:SetScript("OnLeave", function(self)
-                    self:SetBackdropBorderColor(0.2, 0.6, 0.9, 0.6)
-                    self:SetBackdropColor(0.12, 0.12, 0.18, 0.9)
-                end)
-                vpBtn:SetScript("OnClick", function()
-                    local vm = rep.vendorMapId
-                    local vx = rep.vendorX / 100
-                    local vy = rep.vendorY / 100
-                    if TomTom and TomTom.AddWaypoint then
-                        TomTom:AddWaypoint(vm, vx, vy, {
-                            title = rep.vendorName or "Vendor",
-                            persistent = false,
-                            minimap = true,
-                            world = true,
-                        })
-                    else
-                        local vector = CreateVector2D(vx, vy)
-                        C_Map.SetUserWaypoint(UiMapPoint.CreateFromVector2D(vm, vector))
-                        C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-                    end
-                    OpenWorldMap(vm)
-                    vpText:SetTextColor(0.3, 0.85, 0.4, 1)
-                    vpText:SetText("Set!")
-                    C_Timer.After(1.5, function()
-                        vpText:SetTextColor(0.4, 0.78, 0.95, 1)
-                        vpText:SetText(L["Waypoint"] or "Waypoint")
-                    end)
-                end)
 
                 detailsYOffset = detailsYOffset - 16
             end
@@ -1698,62 +1678,16 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                     end
                     vValue:SetTextColor(0.8, 0.8, 0.85, 1)
 
-                    -- Waypoint button (only if we have coordinates)
+                    -- Waypoint button (only if we have coordinates) via widget factory
                     if vd.m and vd.x and vd.y then
-                        local vwBtn = CreateFrame("Button", nil, detailsFrame, "BackdropTemplate")
-                        vwBtn:SetSize(80, 16)
-                        vwBtn:SetPoint("LEFT", vValue, "RIGHT", 12, 0)
-                        vwBtn:SetBackdrop({
-                            bgFile = "Interface\\Buttons\\WHITE8x8",
-                            edgeFile = "Interface\\Buttons\\WHITE8x8",
-                            edgeSize = 1,
+                        MCLcore.Widgets:CreateWaypointButton({
+                            parent = detailsFrame,
+                            mapID  = vd.m,
+                            x      = vd.x,
+                            y      = vd.y,
+                            title  = vd.npc or "Vendor",
+                            anchor = { "LEFT", vValue, "RIGHT", 12, 0 },
                         })
-                        vwBtn:SetBackdropColor(0.12, 0.12, 0.18, 0.9)
-                        vwBtn:SetBackdropBorderColor(0.2, 0.6, 0.9, 0.6)
-
-                        local vwIcon = vwBtn:CreateTexture(nil, "ARTWORK")
-                        vwIcon:SetSize(12, 12)
-                        vwIcon:SetPoint("LEFT", vwBtn, "LEFT", 4, 0)
-                        vwIcon:SetTexture("Interface\\AddOns\\MCL\\icons\\pin")
-                        vwIcon:SetVertexColor(0.2, 0.6, 0.9, 1)
-
-                        local vwText = vwBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                        vwText:SetPoint("LEFT", vwIcon, "RIGHT", 3, 0)
-                        vwText:SetText(L["Waypoint"] or "Waypoint")
-                        vwText:SetTextColor(0.4, 0.78, 0.95, 1)
-
-                        vwBtn:SetScript("OnEnter", function(self)
-                            self:SetBackdropBorderColor(0.3, 0.7, 1, 1)
-                            self:SetBackdropColor(0.18, 0.18, 0.26, 1)
-                        end)
-                        vwBtn:SetScript("OnLeave", function(self)
-                            self:SetBackdropBorderColor(0.2, 0.6, 0.9, 0.6)
-                            self:SetBackdropColor(0.12, 0.12, 0.18, 0.9)
-                        end)
-                        vwBtn:SetScript("OnClick", function()
-                            local vm = vd.m
-                            local vx = vd.x / 100
-                            local vy = vd.y / 100
-                            if TomTom and TomTom.AddWaypoint then
-                                TomTom:AddWaypoint(vm, vx, vy, {
-                                    title = vd.npc or "Vendor",
-                                    persistent = false,
-                                    minimap = true,
-                                    world = true,
-                                })
-                            else
-                                local vector = CreateVector2D(vx, vy)
-                                C_Map.SetUserWaypoint(UiMapPoint.CreateFromVector2D(vm, vector))
-                                C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-                            end
-                            OpenWorldMap(vm)
-                            vwText:SetTextColor(0.3, 0.85, 0.4, 1)
-                            vwText:SetText("Set!")
-                            C_Timer.After(1.5, function()
-                                vwText:SetTextColor(0.4, 0.78, 0.95, 1)
-                                vwText:SetText(L["Waypoint"] or "Waypoint")
-                            end)
-                        end)
                     end
 
                     detailsYOffset = detailsYOffset - 16
@@ -1843,62 +1777,17 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                 end
                 qnValue:SetTextColor(0.8, 0.8, 0.85, 1)
 
-                -- Waypoint button (only if we have coordinates)
+                -- Waypoint button (only if we have coordinates) via widget factory
                 if qd.m and qd.x and qd.y then
-                    local qwBtn = CreateFrame("Button", nil, detailsFrame, "BackdropTemplate")
-                    qwBtn:SetSize(80, 16)
-                    qwBtn:SetPoint("LEFT", qnValue, "RIGHT", 12, 0)
-                    qwBtn:SetBackdrop({
-                        bgFile = "Interface\\Buttons\\WHITE8x8",
-                        edgeFile = "Interface\\Buttons\\WHITE8x8",
-                        edgeSize = 1,
+                    MCLcore.Widgets:CreateWaypointButton({
+                        parent = detailsFrame,
+                        mapID  = qd.m,
+                        x      = qd.x,
+                        y      = qd.y,
+                        title  = qd.npc or "Quest Giver",
+                        anchor = { "LEFT", qnValue, "RIGHT", 12, 0 },
+                        style  = "quest",
                     })
-                    qwBtn:SetBackdropColor(0.12, 0.12, 0.18, 0.9)
-                    qwBtn:SetBackdropBorderColor(0.9, 0.7, 0.2, 0.6)
-
-                    local qwIcon = qwBtn:CreateTexture(nil, "ARTWORK")
-                    qwIcon:SetSize(12, 12)
-                    qwIcon:SetPoint("LEFT", qwBtn, "LEFT", 4, 0)
-                    qwIcon:SetTexture("Interface\\AddOns\\MCL\\icons\\pin")
-                    qwIcon:SetVertexColor(0.9, 0.7, 0.2, 1)
-
-                    local qwText = qwBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                    qwText:SetPoint("LEFT", qwIcon, "RIGHT", 3, 0)
-                    qwText:SetText(L["Waypoint"] or "Waypoint")
-                    qwText:SetTextColor(0.95, 0.82, 0.4, 1)
-
-                    qwBtn:SetScript("OnEnter", function(self)
-                        self:SetBackdropBorderColor(1, 0.8, 0.3, 1)
-                        self:SetBackdropColor(0.18, 0.18, 0.26, 1)
-                    end)
-                    qwBtn:SetScript("OnLeave", function(self)
-                        self:SetBackdropBorderColor(0.9, 0.7, 0.2, 0.6)
-                        self:SetBackdropColor(0.12, 0.12, 0.18, 0.9)
-                    end)
-                    qwBtn:SetScript("OnClick", function()
-                        local qm = qd.m
-                        local qx = qd.x / 100
-                        local qy = qd.y / 100
-                        if TomTom and TomTom.AddWaypoint then
-                            TomTom:AddWaypoint(qm, qx, qy, {
-                                title = qd.npc or "Quest Giver",
-                                persistent = false,
-                                minimap = true,
-                                world = true,
-                            })
-                        else
-                            local vector = CreateVector2D(qx, qy)
-                            C_Map.SetUserWaypoint(UiMapPoint.CreateFromVector2D(qm, vector))
-                            C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-                        end
-                        OpenWorldMap(qm)
-                        qwText:SetTextColor(0.3, 0.85, 0.4, 1)
-                        qwText:SetText("Set!")
-                        C_Timer.After(1.5, function()
-                            qwText:SetTextColor(0.95, 0.82, 0.4, 1)
-                            qwText:SetText(L["Waypoint"] or "Waypoint")
-                        end)
-                    end)
                 end
 
                 detailsYOffset = detailsYOffset - 16

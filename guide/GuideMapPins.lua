@@ -620,6 +620,17 @@ local function PopulateMiniCard(card, data)
         end
     end
 
+    -- ── Debug IDs ───────────────────────────────────────────
+    do
+        local debugParts = {}
+        if data.mountID then table.insert(debugParts, "Mount: " .. tostring(data.mountID)) end
+        if data.spellId then table.insert(debugParts, "Spell: " .. tostring(data.spellId)) end
+        if data.itemId  then table.insert(debugParts, "Item: "  .. tostring(data.itemId))  end
+        if #debugParts > 0 then
+            li, y = AddTextLine(card, li, y, table.concat(debugParts, "  |  "), {0.45, 0.45, 0.45}, 10)
+        end
+    end
+
     -- ── Footer ──────────────────────────────────────────────
     y = AddDivider(card, y, sep); sep = sep + 1
     li, y = AddTextLine(card, li, y, "Click to set waypoint  |  Right-click for mount card", COLOR_HINT, 10)
