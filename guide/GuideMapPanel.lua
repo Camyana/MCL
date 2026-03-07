@@ -219,39 +219,37 @@ end
 -- ================================================================
 -- Tab creation
 -- ================================================================
-local function GetPreferredTabAnchor()
-    -- Anchor below the last existing tab so we don't overlap other addons
-    if QuestMapFrame and QuestMapFrame.TabButtons then
-        local last
-        for _, btn in ipairs(QuestMapFrame.TabButtons) do
-            if btn ~= tabButton and btn:IsShown() then
-                last = btn
-            end
+
+-- Reposition ONLY MCL's tab below the last visible non-MCL tab.
+-- Runs after every ValidateTabs() call so MCL always lands in the
+-- correct slot regardless of addon load order.
+local TAB_SPACING = -3
+local function RepositionMCLTab()
+    if not tabButton then return end
+    if not QuestMapFrame or not QuestMapFrame.TabButtons then return end
+    local lastOther = nil
+    for _, btn in ipairs(QuestMapFrame.TabButtons) do
+        if btn ~= tabButton and (btn:IsShown() or (btn.GetAlpha and btn:GetAlpha() > 0)) then
+            lastOther = btn
         end
-        if last then return last end
     end
-    return QuestMapFrame and (QuestMapFrame.MapLegendTab
-        or QuestMapFrame.QuestsTab
-        or (QuestMapFrame.DetailsFrame and QuestMapFrame.DetailsFrame.BackFrame))
-        or nil
+    tabButton:ClearAllPoints()
+    if lastOther then
+        tabButton:SetPoint("TOP", lastOther, "BOTTOM", 0, TAB_SPACING)
+    else
+        -- Fallback: no other tabs visible, use default position
+        tabButton:SetPoint("TOPRIGHT", QuestMapFrame, "TOPRIGHT", -6, -55)
+    end
 end
 
-local function EnsureTab(parent, anchorTo)
+local function EnsureTab(parent)
     if tabButton and tabButton:GetParent() ~= parent then tabButton:SetParent(parent) end
-    if tabButton then
-        if anchorTo then
-            tabButton:ClearAllPoints()
-            tabButton:SetPoint("TOP", anchorTo, "BOTTOM", 0, -3)
-        end
-        return tabButton
-    end
+    if tabButton then return tabButton end
 
     tabButton = CreateFrame("Button", "MCL_MapPanelTab", parent, "QuestLogTabButtonTemplate")
-    if anchorTo then
-        tabButton:SetPoint("TOP", anchorTo, "BOTTOM", 0, -3)
-    else
-        tabButton:SetPoint("TOPRIGHT", -6, -100)
-    end
+    -- Position is managed by RepositionMCLTab(); set a temporary anchor
+    -- so the frame has valid geometry until the first layout pass.
+    tabButton:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -6, -100)
 
     -- Tab metadata used by Blizzard's tab system
     tabButton.activeAtlas   = "questlog-tab-icon-maplegend"
@@ -1497,8 +1495,7 @@ function f:TryInit()
     end
 
     -- Create the tab
-    local anchor = GetPreferredTabAnchor()
-    EnsureTab(parent, anchor)
+    EnsureTab(parent)
 
     -- Register panel as a content frame so Blizzard manages its visibility
     if QuestMapFrame.ContentFrames then
@@ -1520,6 +1517,17 @@ function f:TryInit()
 
     -- Recalculate tab layout
     if QuestMapFrame.ValidateTabs then QuestMapFrame:ValidateTabs() end
+
+    -- Hook ValidateTabs so MCL's tab re-anchors after any addon inserts one
+    if QuestMapFrame.ValidateTabs and not QuestMapFrame._mclRelayoutHook then
+        hooksecurefunc(QuestMapFrame, "ValidateTabs", RepositionMCLTab)
+        QuestMapFrame._mclRelayoutHook = true
+    end
+
+    -- Immediate layout pass + a delayed one to catch late-loading addons
+    RepositionMCLTab()
+    C_Timer.After(0.5, RepositionMCLTab)
+    C_Timer.After(2.0, RepositionMCLTab)
 
     -- Track display mode changes via EventRegistry
     if EventRegistry and not f._mclDisplayEvent then
