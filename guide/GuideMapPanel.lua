@@ -1497,11 +1497,23 @@ function f:TryInit()
     -- Create the tab
     EnsureTab(parent)
 
+    -- Register panel as a content frame so Blizzard manages its
+    -- Show/Hide when the display mode changes.  This is safe with
+    -- LibWorldMapTabs — the library only interferes with TabButtons,
+    -- not ContentFrames.
+    if QuestMapFrame.ContentFrames then
+        local exists = false
+        for _, frame in ipairs(QuestMapFrame.ContentFrames) do
+            if frame == panel then exists = true; break end
+        end
+        if not exists then table.insert(QuestMapFrame.ContentFrames, panel) end
+    end
+
     -- Check if LibWorldMapTabs is handling tab layout.
     -- If it is, it scans QuestMapFrame children and positions any
     -- "unofficial" tab automatically.  We must NOT also add our tab
-    -- to TabButtons / ContentFrames or reposition it ourselves,
-    -- because both systems would fight over the anchor point.
+    -- to TabButtons or reposition it ourselves, because both systems
+    -- would fight over the anchor point.
     local hasLibWorldMapTabs = LibStub and LibStub("LibWorldMapTabs", true)
 
     if hasLibWorldMapTabs then
@@ -1519,16 +1531,7 @@ function f:TryInit()
             end)
         end
     else
-        -- No library -- fall back to manual positioning.
-
-        -- Register panel as a content frame so Blizzard manages its visibility
-        if QuestMapFrame.ContentFrames then
-            local exists = false
-            for _, frame in ipairs(QuestMapFrame.ContentFrames) do
-                if frame == panel then exists = true; break end
-            end
-            if not exists then table.insert(QuestMapFrame.ContentFrames, panel) end
-        end
+        -- No library -- fall back to manual tab positioning.
 
         -- Register tab so Blizzard manages checked state
         if QuestMapFrame.TabButtons then
