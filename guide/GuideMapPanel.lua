@@ -1497,37 +1497,62 @@ function f:TryInit()
     -- Create the tab
     EnsureTab(parent)
 
-    -- Register panel as a content frame so Blizzard manages its visibility
-    if QuestMapFrame.ContentFrames then
-        local exists = false
-        for _, frame in ipairs(QuestMapFrame.ContentFrames) do
-            if frame == panel then exists = true; break end
+    -- Check if LibWorldMapTabs is handling tab layout.
+    -- If it is, it scans QuestMapFrame children and positions any
+    -- "unofficial" tab automatically.  We must NOT also add our tab
+    -- to TabButtons / ContentFrames or reposition it ourselves,
+    -- because both systems would fight over the anchor point.
+    local hasLibWorldMapTabs = LibStub and LibStub("LibWorldMapTabs", true)
+
+    if hasLibWorldMapTabs then
+        -- LibWorldMapTabs discovers our tab by scanning
+        -- QuestMapFrame:GetChildren() for frames with .displayMode
+        -- + .OnEnter + :IsShown().  Its initial PlaceTabs() ran on
+        -- WorldMapOnShow before MCL created its tab, so we must
+        -- trigger a re-scan now that our tab exists.
+        if hasLibWorldMapTabs.internal and hasLibWorldMapTabs.internal.PlaceTabs then
+            hasLibWorldMapTabs.internal:PlaceTabs()
+            -- Also re-scan after a brief delay in case other addons
+            -- are still creating their tabs.
+            C_Timer.After(0.2, function()
+                hasLibWorldMapTabs.internal:PlaceTabs()
+            end)
         end
-        if not exists then table.insert(QuestMapFrame.ContentFrames, panel) end
-    end
+    else
+        -- No library -- fall back to manual positioning.
 
-    -- Register tab so Blizzard manages checked state
-    if QuestMapFrame.TabButtons then
-        local present = false
-        for _, b in ipairs(QuestMapFrame.TabButtons) do
-            if b == tabButton then present = true; break end
+        -- Register panel as a content frame so Blizzard manages its visibility
+        if QuestMapFrame.ContentFrames then
+            local exists = false
+            for _, frame in ipairs(QuestMapFrame.ContentFrames) do
+                if frame == panel then exists = true; break end
+            end
+            if not exists then table.insert(QuestMapFrame.ContentFrames, panel) end
         end
-        if not present then table.insert(QuestMapFrame.TabButtons, tabButton) end
+
+        -- Register tab so Blizzard manages checked state
+        if QuestMapFrame.TabButtons then
+            local present = false
+            for _, b in ipairs(QuestMapFrame.TabButtons) do
+                if b == tabButton then present = true; break end
+            end
+            if not present then table.insert(QuestMapFrame.TabButtons, tabButton) end
+        end
+
+        -- Recalculate tab layout
+        if QuestMapFrame.ValidateTabs then QuestMapFrame:ValidateTabs() end
+
+        -- Hook ValidateTabs so MCL's tab re-anchors after any addon inserts one
+        if QuestMapFrame.ValidateTabs and not QuestMapFrame._mclRelayoutHook then
+            hooksecurefunc(QuestMapFrame, "ValidateTabs", RepositionMCLTab)
+            QuestMapFrame._mclRelayoutHook = true
+        end
+
+        -- Immediate layout pass + a delayed one to catch late-loading addons
+        RepositionMCLTab()
+        C_Timer.After(0.5, RepositionMCLTab)
+        C_Timer.After(2.0, RepositionMCLTab)
     end
-
-    -- Recalculate tab layout
-    if QuestMapFrame.ValidateTabs then QuestMapFrame:ValidateTabs() end
-
-    -- Hook ValidateTabs so MCL's tab re-anchors after any addon inserts one
-    if QuestMapFrame.ValidateTabs and not QuestMapFrame._mclRelayoutHook then
-        hooksecurefunc(QuestMapFrame, "ValidateTabs", RepositionMCLTab)
-        QuestMapFrame._mclRelayoutHook = true
-    end
-
-    -- Immediate layout pass + a delayed one to catch late-loading addons
-    RepositionMCLTab()
-    C_Timer.After(0.5, RepositionMCLTab)
-    C_Timer.After(2.0, RepositionMCLTab)
 
     -- Track display mode changes via EventRegistry
     if EventRegistry and not f._mclDisplayEvent then

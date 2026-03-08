@@ -1904,7 +1904,19 @@ function MCL_functions:updateFromSettings(setting, val)
         end
     end
     if setting == "opacity" then
-        MCLcore.MCL_MF.Bg:SetVertexColor(0,0,0,MCL_SETTINGS.opacity)
+        local val = MCL_SETTINGS.opacity or 0.85
+        if MCL_mainFrame and MCL_mainFrame.SetBackdropColor then
+            MCL_mainFrame:SetBackdropColor(0.10, 0.10, 0.18, val)
+        end
+        if MCL_mainFrame and MCL_mainFrame.headerBar then
+            MCL_mainFrame.headerBar:SetBackdropColor(0.08, 0.08, 0.12, val)
+        end
+        if MCLcore.MCL_MF_Nav then
+            MCLcore.MCL_MF_Nav:SetBackdropColor(0.06, 0.06, 0.09, val)
+            if MCLcore.MCL_MF_Nav.headerBar then
+                MCLcore.MCL_MF_Nav.headerBar:SetBackdropColor(0.08, 0.08, 0.12, val)
+            end
+        end
     elseif setting:lower() == "unobtainable" then
         for k,v in pairs(MCLcore.overviewFrames) do
             if v.name:lower() == setting:lower() then
