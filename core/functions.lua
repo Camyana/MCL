@@ -48,7 +48,15 @@ local function IsMountFactionSpecific(id)
     if string.sub(id, 1, 1) == "m" then
         mount_Id = string.sub(id, 2, -1)
     else
-        mount_Id = C_MountJournal.GetMountFromItem(id)
+        -- Use session cache to avoid unreliable GetMountFromItem
+        if MCLcore.itemToMountCache and MCLcore.itemToMountCache[id] then
+            mount_Id = MCLcore.itemToMountCache[id]
+        else
+            mount_Id = C_MountJournal.GetMountFromItem(id)
+            if mount_Id and MCLcore.itemToMountCache then
+                MCLcore.itemToMountCache[id] = mount_Id
+            end
+        end
     end
 
     -- Use pcall to execute GetMountInfoByIDChecked and capture any error
@@ -705,8 +713,9 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
             frame:HookScript("OnEnter", function()
                 -- Pre-check if dragonriding mount source data is available
                 local function isDragonridingSourceReady()
-                    local mountID = C_MountJournal.GetMountFromItem(id)
+                    local mountID = MCLcore.itemToMountCache and MCLcore.itemToMountCache[id] or C_MountJournal.GetMountFromItem(id)
                     if mountID then
+                        if MCLcore.itemToMountCache then MCLcore.itemToMountCache[id] = mountID end
                         local _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(mountID)
                         return source and source ~= "", mountID
                     end
@@ -735,7 +744,8 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
                     C_Timer.After(0.15, function()
                         -- Only show delayed tooltip if mouse is still over the frame
                         if frame:IsMouseOver() then
-                            local retryMountID = C_MountJournal.GetMountFromItem(id)
+                            local retryMountID = MCLcore.itemToMountCache and MCLcore.itemToMountCache[id] or C_MountJournal.GetMountFromItem(id)
+                            if retryMountID and MCLcore.itemToMountCache then MCLcore.itemToMountCache[id] = retryMountID end
                             local sourceText = "Unknown"
                             
                             if retryMountID then
@@ -793,7 +803,8 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
             end)
 
         else
-            local mountID = C_MountJournal.GetMountFromItem(id)
+            local mountID = (MCLcore.itemToMountCache and MCLcore.itemToMountCache[id]) or C_MountJournal.GetMountFromItem(id)
+            if mountID and MCLcore.itemToMountCache then MCLcore.itemToMountCache[id] = mountID end
             local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID, isSteadyFlight = C_MountJournal.GetMountInfoByID(mountID)
         
             -- Special handling for fallback cases (negative IDs)
@@ -1055,7 +1066,18 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
                     shouldProcessMount = false
                 end
             else
-                mount_Id = C_MountJournal.GetMountFromItem(val)
+                -- mount_Id was already resolved by GetMountID() above (which checks
+                -- the session cache). Only fall back to GetMountFromItem if it's nil.
+                if not mount_Id then
+                    if MCLcore.itemToMountCache and MCLcore.itemToMountCache[val] then
+                        mount_Id = MCLcore.itemToMountCache[val]
+                    else
+                        mount_Id = C_MountJournal.GetMountFromItem(val)
+                        if mount_Id and MCLcore.itemToMountCache then
+                            MCLcore.itemToMountCache[val] = mount_Id
+                        end
+                    end
+                end
                 if mount_Id then
                     mountName, spellID, icon, _, _, sourceType, _, isFactionSpecific, faction, _, isCollected, mountID, isSteadyFlight = C_MountJournal.GetMountInfoByID(mount_Id)
                     if mountName then
@@ -1596,6 +1618,16 @@ function MCL_functions:GetMountID(id)
     end
 
     if inputType == "number" then
+        -- ============================================================
+        -- Session cache: check itemToMountCache first for instant
+        -- resolution of previously-resolved item IDs.  This is the key
+        -- fix for mounts that were missed on first pass because the
+        -- item data wasn't cached yet.
+        -- ============================================================
+        if MCLcore.itemToMountCache and MCLcore.itemToMountCache[id] then
+            return MCLcore.itemToMountCache[id]
+        end
+        
         -- If the number is already a valid mount journal ID, use it.
         -- Use MountCache when available for cached lookups
         if MCLcore.MountCache then
@@ -1619,6 +1651,11 @@ function MCL_functions:GetMountID(id)
             if (not mount_Id or mount_Id == 0) and C_MountJournal.GetMountFromSpell then
                 mount_Id = C_MountJournal.GetMountFromSpell(id)
             end
+        end
+        
+        -- Persist successful resolution in session cache
+        if mount_Id and mount_Id ~= 0 and MCLcore.itemToMountCache then
+            MCLcore.itemToMountCache[id] = mount_Id
         end
     else
         -- Non-number inputs (defensive): try as item
@@ -1842,7 +1879,15 @@ function MCL_functions:UpdateCollection()
                             if string.sub(vvv, 1, 1) == "m" then
                                 mountID = tonumber(string.sub(vvv, 2, -1))
                             else
-                                mountID = C_MountJournal.GetMountFromItem(vvv)
+                                -- Use session cache first, then API
+                                if MCLcore.itemToMountCache and MCLcore.itemToMountCache[vvv] then
+                                    mountID = MCLcore.itemToMountCache[vvv]
+                                else
+                                    mountID = C_MountJournal.GetMountFromItem(vvv)
+                                    if mountID and MCLcore.itemToMountCache then
+                                        MCLcore.itemToMountCache[vvv] = mountID
+                                    end
+                                end
                             end
                             if mountID then
                                 local isCollected = IsMountCollected(mountID)

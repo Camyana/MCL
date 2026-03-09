@@ -12,6 +12,69 @@ local init_load = true
 local load_check = 0
 local region = GetCVar('portal')
 
+-- ===================================================================
+-- Item-to-Mount session cache
+-- Persists for the session so that once an item resolves, the mapping
+-- is never lost even if the item cache is evicted later.
+-- ===================================================================
+MCLcore.itemToMountCache = MCLcore.itemToMountCache or {}
+MCLcore.unresolvedMounts = MCLcore.unresolvedMounts or {}  -- {itemID = true}
+
+-- Collect every item-based ID from data.lua (excludes "m" prefix entries)
+local function CollectAllItemIDs()
+    local ids = {}
+    for _, section in pairs(MCLcore.mountList) do
+        for _, field in pairs(section) do
+            if type(field) == "table" then
+                for _, category in pairs(field) do
+                    if type(category) == "table" and category.mounts then
+                        for _, entry in ipairs(category.mounts) do
+                            if type(entry) == "number" then
+                                ids[entry] = true
+                            elseif type(entry) == "string" and not entry:match("^m") then
+                                local num = tonumber(entry)
+                                if num then ids[num] = true end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return ids
+end
+
+-- Request every item ID so the client starts caching them immediately
+local allItemIDs  -- populated once on ADDON_LOADED
+local function PreWarmAllItems()
+    allItemIDs = CollectAllItemIDs()
+    for itemID in pairs(allItemIDs) do
+        C_Item.RequestLoadItemDataByID(itemID)
+    end
+end
+
+-- Try to resolve all pending items and return how many are still unresolved
+local function ResolveItemCache()
+    if not allItemIDs then return 0, 0 end
+    local resolved, pending = 0, 0
+    for itemID in pairs(allItemIDs) do
+        if MCLcore.itemToMountCache[itemID] then
+            resolved = resolved + 1
+        else
+            local mountID = C_MountJournal.GetMountFromItem(itemID)
+            if mountID then
+                MCLcore.itemToMountCache[itemID] = mountID
+                resolved = resolved + 1
+            else
+                pending = pending + 1
+                -- Re-request to nudge the client
+                C_Item.RequestLoadItemDataByID(itemID)
+            end
+        end
+    end
+    return resolved, pending
+end
+
 -- New mount readiness tracking (Option A implementation)
 local mountInit = {
     attempts = 0,
@@ -61,14 +124,22 @@ local function PollMountJournalReadiness(callback)
         mountInit.lastIDsHash = hash
 
         if mountInit.stableChecks >= mountInit.requiredStableChecks then
-            mountInit.initialized = true
-            if callback then callback(true) end
-            return
+            -- Mount journal is stable. Now also try to resolve item cache.
+            local resolved, pending = ResolveItemCache()
+            if pending == 0 or mountInit.attempts >= 15 then
+                -- All items resolved OR we've waited long enough for the item cache
+                mountInit.initialized = true
+                if callback then callback(true) end
+                return
+            end
+            -- Items still pending - keep polling a bit longer for item cache
+            mountInit.stableChecks = mountInit.requiredStableChecks  -- don't reset
         end
     end
 
     if mountInit.attempts >= mountInit.maxAttempts then
         -- Give up waiting for perfect stability; proceed to avoid addon appearing broken.
+        ResolveItemCache()  -- one last attempt
         mountInit.initialized = true
         if callback then callback(false) end
         return
@@ -129,6 +200,7 @@ local validMounts = {}
 local function InitMounts()
     load_check = 0
     totalMountCount = 0
+    MCLcore.unresolvedMounts = {}
     
     -- Reset debug tracking
     if debugMode then
@@ -144,24 +216,36 @@ local function InitMounts()
                         if not IsRegionalFiltered(mountEntry) then
                             if not string.match(mountEntry, "^m") then
                                 totalMountCount = totalMountCount + 1
-                                C_Item.RequestLoadItemDataByID(mountEntry)
-                                local mountID = C_MountJournal.GetMountFromItem(mountEntry)
                                 
-                                if mountID ~= nil then
-                                    load_check = load_check + 1
+                                -- Check session cache first, then API
+                                local mountID = MCLcore.itemToMountCache[mountEntry]
+                                if not mountID then
+                                    C_Item.RequestLoadItemDataByID(mountEntry)
+                                    mountID = C_MountJournal.GetMountFromItem(mountEntry)
+                                    if mountID then
+                                        MCLcore.itemToMountCache[mountEntry] = mountID
+                                    end
+                                end
+                                
+                                -- Always count toward load_check to prevent infinite blocking,
+                                -- but track unresolved items for deferred resolution.
+                                load_check = load_check + 1
+                                if mountID then
                                     if debugMode then
                                         table.insert(validMounts, {itemID = mountEntry, mountID = mountID, expansion = section.name, category = category.name})
                                     end
                                 else
-                                    -- Mount doesn't exist in game, but we'll count it as "loaded" to prevent infinite waiting
-                                    load_check = load_check + 1
+                                    MCLcore.unresolvedMounts[mountEntry] = {
+                                        section = section.name,
+                                        category = category.name,
+                                    }
                                     if debugMode then
                                         local itemName = GetItemInfo(mountEntry) or "Unknown Item"
                                         table.insert(invalidMounts, {itemID = mountEntry, itemName = itemName, expansion = section.name, category = category.name})
                                     end
-                                end                            
+                                end
                             else
-                                -- Handle mountID entries (strings starting with "m")
+                                -- Handle mountID entries (strings starting with "m") - always available immediately
                                 totalMountCount = totalMountCount + 1
                                 load_check = load_check + 1
                                 if debugMode then
@@ -391,6 +475,9 @@ local function onevent(self, event, arg1, ...)
         EnsureCollectionsLoaded()
         ClearMountFilters()
         
+        -- Pre-warm all item IDs immediately so the client starts caching them
+        PreWarmAllItems()
+        
         -- Start initialization after readiness polling handled inside :Init
         MCL_Load:Init()
         
@@ -406,23 +493,143 @@ local function onevent(self, event, arg1, ...)
     end
 end
 
--- Listen for late mount data (item info) to trigger re-scan if needed
-local itemListener = CreateFrame("Frame")
-local pendingRescan
-itemListener:RegisterEvent("GET_ITEM_INFO_RECEIVED")
-itemListener:SetScript("OnEvent", function()
-    if not MCLcore.dataLoaded then return end
-    if pendingRescan then return end
-    pendingRescan = true
-    C_Timer.After(2, function()
-        pendingRescan = nil
-        if MCLcore.Function and MCLcore.Function.UpdateCollection then
-            MCLcore.Function:UpdateCollection()
+-- ===================================================================
+-- Deferred mount resolver
+-- After the UI is built, keep resolving unresolved item-based mounts
+-- in the background. When newly resolved mounts are detected, trigger
+-- a full section rebuild so the user sees all mounts.
+-- ===================================================================
+local deferredResolver = CreateFrame("Frame")
+local deferredTicks = 0
+local MAX_DEFERRED_TICKS = 40   -- retry for up to ~120 seconds (40 ticks * 3s)
+local deferredRunning = false
+
+local function RunDeferredResolver()
+    if deferredRunning then return end
+    deferredRunning = true
+    deferredTicks = 0
+    
+    local function tick()
+        deferredTicks = deferredTicks + 1
+        if not MCLcore.dataLoaded then
+            -- UI not built yet, keep waiting
+            if deferredTicks < MAX_DEFERRED_TICKS then
+                C_Timer.After(3, tick)
+            end
+            return
         end
-    end)
+        
+        -- Try to resolve any remaining unresolved mounts
+        local newlyResolved = 0
+        if MCLcore.unresolvedMounts then
+            for itemID, info in pairs(MCLcore.unresolvedMounts) do
+                local mountID = MCLcore.itemToMountCache[itemID]
+                if not mountID then
+                    mountID = C_MountJournal.GetMountFromItem(itemID)
+                    if mountID then
+                        MCLcore.itemToMountCache[itemID] = mountID
+                    else
+                        -- Re-request to nudge the client
+                        C_Item.RequestLoadItemDataByID(itemID)
+                    end
+                end
+                if mountID then
+                    MCLcore.unresolvedMounts[itemID] = nil
+                    newlyResolved = newlyResolved + 1
+                end
+            end
+        end
+        
+        if newlyResolved > 0 then
+            -- Mounts were newly resolved! Rebuild sections to add the missing frames.
+            if MCLcore.Function and MCLcore.Function.initSections and MCLcore.MCL_MF then
+                local currentTabName = nil
+                if MCLcore.currentlySelectedTab and MCLcore.currentlySelectedTab.section then
+                    currentTabName = MCLcore.currentlySelectedTab.section.name
+                end
+                
+                -- Rebuild sections (this re-creates all mount frames)
+                pcall(MCLcore.Function.initSections, MCLcore.Function)
+                
+                -- Update collection counts
+                if MCLcore.Function.UpdateCollection then
+                    pcall(MCLcore.Function.UpdateCollection, MCLcore.Function)
+                end
+                
+                -- Try to re-select the tab the user was on
+                if currentTabName and MCLcore.MCL_MF_Nav and MCLcore.MCL_MF_Nav.tabs then
+                    for _, tab in ipairs(MCLcore.MCL_MF_Nav.tabs) do
+                        if tab.section and tab.section.name == currentTabName then
+                            pcall(tab.GetScript, tab, "OnClick")
+                            if tab:GetScript("OnClick") then
+                                pcall(tab:GetScript("OnClick"), tab)
+                            end
+                            break
+                        end
+                    end
+                end
+            end
+        elseif MCLcore.Function and MCLcore.Function.UpdateCollection then
+            -- Even without new frames, update collection counts
+            -- (item data may have loaded, improving count accuracy)
+            pcall(MCLcore.Function.UpdateCollection, MCLcore.Function)
+        end
+        
+        -- Check if there are still unresolved mounts
+        local stillPending = 0
+        if MCLcore.unresolvedMounts then
+            for _ in pairs(MCLcore.unresolvedMounts) do
+                stillPending = stillPending + 1
+            end
+        end
+        
+        -- Continue if there are still pending mounts and haven't exceeded max ticks
+        if stillPending > 0 and deferredTicks < MAX_DEFERRED_TICKS then
+            C_Timer.After(3, tick)
+        else
+            deferredRunning = false
+        end
+    end
+    
+    -- Start the first tick after a delay to let the UI finish building
+    C_Timer.After(5, tick)
+end
+
+-- Listen for late mount data (item info) to populate session cache
+local itemListener = CreateFrame("Frame")
+itemListener:RegisterEvent("GET_ITEM_INFO_RECEIVED")
+itemListener:SetScript("OnEvent", function(_, _, itemID)
+    -- Opportunistically populate the cache when any item loads
+    if itemID and not MCLcore.itemToMountCache[itemID] then
+        local mountID = C_MountJournal.GetMountFromItem(itemID)
+        if mountID then
+            MCLcore.itemToMountCache[itemID] = mountID
+        end
+    end
+    
+    -- Start the deferred resolver if it's not already running
+    if MCLcore.unresolvedMounts and not deferredRunning then
+        local hasUnresolved = false
+        for _ in pairs(MCLcore.unresolvedMounts) do
+            hasUnresolved = true
+            break
+        end
+        if hasUnresolved then
+            RunDeferredResolver()
+        end
+    end
 end)
 
 -- Events
 f:RegisterEvent("ADDON_LOADED")
 f:RegisterEvent("PLAYER_LOGIN")
 f:SetScript("OnEvent", onevent)
+
+-- Start the deferred resolver on Init completion (belt-and-suspenders approach)
+hooksecurefunc(MCL_Load, "Init", function()
+    C_Timer.After(8, function()
+        if MCLcore.dataLoaded then
+            RunDeferredResolver()
+        end
+    end)
+end)
