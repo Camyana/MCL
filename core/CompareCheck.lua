@@ -887,7 +887,9 @@ function Compare:Activate(playerName, collectionSet)
         end)
     end
 
-    Compare:ApplyOverlay()
+    -- Full refresh: re-render all mount frames so backgrounds/pins are
+    -- up-to-date, then apply the compare overlay on the freshly built frames.
+    Compare:RefreshAllFrames()
     Compare:ShowBanner()
 end
 
@@ -900,6 +902,9 @@ function Compare:Deactivate()
     if Compare.pickerFrame and Compare.pickerFrame:IsShown() then
         Compare.pickerFrame:Hide()
     end
+
+    -- Refresh all frames to restore the normal (non-compare) rendering
+    Compare:RefreshAllFrames()
 end
 
 -- ============================================================
@@ -1023,6 +1028,43 @@ function Compare:ClearFrameTree(parent)
             if child:GetNumChildren() > 0 then
                 Compare:ClearFrameTree(child)
             end
+        end
+    end
+end
+
+-- ============================================================
+-- FULL FRAME REFRESH — ensures every mount frame is up-to-date
+-- Called on Activate (with overlay) and Deactivate (clean state).
+-- ============================================================
+
+function Compare:RefreshAllFrames()
+    -- 1. Re-run UpdateCollection so backgrounds, pins and stat bars
+    --    reflect the current collected state on every visible frame.
+    if MCLcore.Function and MCLcore.Function.UpdateCollection then
+        MCLcore.Function:UpdateCollection()
+    end
+
+    -- 2. Recalculate section statistics (progress bars, counts).
+    if MCLcore.Function and MCLcore.Function.CalculateSectionStats then
+        MCLcore.Function:CalculateSectionStats()
+    end
+
+    -- 3. If compare mode is active, apply the compare-indicator overlay
+    --    on top of the freshly rendered frames.
+    if Compare.active then
+        Compare:ApplyOverlay()
+    end
+
+    -- 4. Kick a layout refresh so scroll children and content frames
+    --    are sized / anchored correctly after the rebuild.
+    if MCLcore.Frames and MCLcore.Frames.RefreshLayout then
+        MCLcore.Frames:RefreshLayout()
+        -- RefreshLayout calls SetTabs internally which rebuilds content
+        -- frames, so re-apply the overlay once more on the new frames.
+        if Compare.active then
+            C_Timer.After(0.15, function()
+                Compare:ApplyOverlay()
+            end)
         end
     end
 end

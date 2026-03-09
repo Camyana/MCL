@@ -811,7 +811,7 @@ MCLcore.mountList[15] = {
 		},
 		BlizzardStore = {
 			name = "Blizzard Store",
-			mounts = {54811, 69846, 78924, 97989, 107951, 112326, 122469, 147901, 156564, 160589, 166775, 166774, 166776, "m1266", "m1267", "m1290", "m1346", "m1291", "m1456", "m1330", "m1531", "m1581", "m1312", "m1594", "m1583", "m1797", 203727, "m1795", "m1692", 212229, 228751, 229128, 219450, 224574, "m2237", 229418, 230184, 230200, 230201, 230185, 227362, 235344, 231297, 233285, 233284, 233282, 233283, 233286, 238943, 238994, 238966, 221270, 190581, 212228, 225250, 206167, 246698, 247848, 258427, 258423, 258425, 243194, 248088, 242795, 252679, 252681, 258477, 248681, 239076, 262661, "m2700", "m2701", "m2702", "m2703", 233019, 233020},
+			mounts = {54811, 69846, 78924, 97989, 107951, 112326, 122469, 147901, 156564, 160589, 166775, 166774, 166776, "m1266", "m1267", "m1290", "m1346", "m1291", "m1456", "m1330", "m1531", "m1581", "m1312", "m1594", "m1583", "m1797", 203727, "m1795", "m1692", 212229, 228751, 229128, 219450, 224574, "m2237", 229418, 230184, 230200, 230201, 230185, 227362, 235344, 231297, 233285, 233284, 233282, 233283, 233286, 238943, 238994, 238966, 221270, 190581, 212228, 225250, 206167, 246698, 247848, 258427, 258423, 258425, 243194, 248088, 242795, 252679, 252681, 258477, 248681, 239076, 262661, "m2700", "m2701", "m2702", "m2703", 233019, 233020, 190636},
 			mountID = {1266, 1267, 1290, 1346, 1291, 1456, 1330, 1531, 1581}
 		},
 		CollectorsEdition = {
@@ -936,7 +936,7 @@ MCLcore.mountList[16] = {
 		},
 		TradingPostTBA = {
 			name = "Future Trading Post",
-			mounts = {226044, 235554, 235557, 235659, 238902, 238901, 238968, 238900, 243593, 243597, 243590, 243592, 190636, 247791, 246919, 247794, 247722, 247720, 246917, 246920, 250108, 250106, 250928, 250927, 250105, 260896, 260893, 262707, 260894, 262706, 263449, 263450, 260895, 262708, 262705},
+			mounts = {226044, 235554, 235557, 235659, 238902, 238901, 238968, 238900, 243593, 243597, 243590, 243592, 247791, 246919, 247794, 247722, 247720, 246917, 246920, 250108, 250106, 250928, 250927, 250105, 260896, 260893, 262707, 260894, 262706, 263449, 263450, 260895, 262708, 262705},
 			mountID = {}
 		},
 		Warlock = {
@@ -1861,9 +1861,9 @@ MCLcore.mountNotes = {
 	["m861"] = "Priest class mount. Complete the Legionfall campaign and Breaching the Tomb achievement, then complete the Priest-specific quest chain starting from The Sunken Vault.",
 	["m868"] = "Demon Hunter class mount. Complete the Legionfall campaign and Breaching the Tomb achievement, then complete the Demon Hunter-specific quest chain. A fel-infused felbat mount.",
 	["m898"] = "Warlock class mount (base version). Complete the Legionfall campaign and Breaching the Tomb achievement, then complete the Warlock-specific quest chain in the Dreadscar Rift. This is the green-themed Wrathsteed.",
-	[33977] = "Drops from Keg-Shaped Treasure Chest (Coren Direbrew kill) during Brewfest. Also purchasable for 100 Brewfest Prize Tokens from Ram Racing Apprentice vendors. Once per day per character. ~4% drop rate.",
+	[33977] = "Drops from Keg-Shaped Treasure Chest (Coren Direbrew kill) during Brewfest. Also purchasable for 100 Brewfest Prize Tokens from Ram Racing Apprentice vendors. Once per day per character. ~1% drop rate from the chest. Run on all eligible alts daily.",
 	[37012] = "Drops from Loot-Filled Pumpkin (Headless Horseman kill) during Hallow's End. Very rare drop (~0.4-0.8%). Once per day per character. Run on all eligible alts for best chances.",
-	[37828] = "Drops from Keg-Shaped Treasure Chest (Coren Direbrew kill) during Brewfest. Once per day per character. ~1-4% drop rate. Run on all eligible alts daily for best chances.",
+	[37828] = "Drops from Keg-Shaped Treasure Chest (Coren Direbrew kill) during Brewfest. Once per day per character. ~1% drop rate. Run on all eligible alts daily for best chances.",
 	[44177] = "Reward from the achievement What a Long, Strange Trip It's Been. Requires completing all 8 seasonal holiday meta achievements over the course of a full year.",
 	[50250] = "Drops from Heart-Shaped Box (Apothecary Hummel kill) during Love is in the Air. Extremely rare (~0.09% drop rate). One of the rarest mounts in the game. Once per day per character. Run on all eligible alts daily.",
 	[72140] = "Sold by Lhara on Darkmoon Island for 180 Darkmoon Prize Tickets. Faire runs the first week of each month. Earn tickets from dailies, profession quests, and games. Ground mount.",
@@ -1942,7 +1942,7 @@ MCLcore.mountNotes = {
 	[190231] = "Trading Post Traveler's Log reward (February 2023). Earned by completing the monthly activities bar.",
 	[190539] = "Promotional mount from a Razer product partnership.",
 	[190613] = "Trading Post Traveler's Log reward (May 2023). Earned by completing the monthly activities bar.",
-	[190636] = "Datamined for the Trading Post (Patch 10.1.5). Not yet offered in any monthly rotation.",
+	[190636] = "Purchased from the In-Game Shop.",
 	[190767] = "Trading Post (January 2024) for 800 Trader's Tender.",
 	[191566] = "Blood Elf Paladin only. Quest reward from the Blood Knight heritage questline in Ghostlands. Horde only.",
 	[192766] = "Trading Post (May 2024) for 600 Trader's Tender.",
@@ -1983,7 +1983,7 @@ MCLcore.mountNotes = {
 	[235646] = "Trading Post (March 2025) for 325 Trader's Tender.",
 	[235650] = "Trading Post (March 2025) for 700 Trader's Tender.",
 	[235657] = "Trading Post (March 2025) for 700 Trader's Tender.",
-	[235658] = "Drops from Heart-Shaped Box during the Love is in the Air holiday event.",
+	[235658] = "Drops from Heart-Shaped Box (Apothecary Hummel kill) during Love is in the Air. Extremely rare drop. Once per day per character. Run on all eligible alts daily.",
 	[235659] = "Datamined for the Trading Post (Patch 11.1.0). Not yet offered in any monthly rotation.",
 	[235662] = "Trading Post (April 2025) for 325 Trader's Tender.",
 	[236415] = "Trading Post (June 2025) for 325 Trader's Tender.",
@@ -2008,7 +2008,7 @@ MCLcore.mountNotes = {
 	[246920] = "Datamined for the Trading Post (Patch 11.2.0). Not yet offered in any monthly rotation.",
 	[246921] = "Trading Post Traveler's Log reward (October 2025). Earned by completing the monthly activities bar.",
 	[247720] = "Datamined for the Trading Post (Patch 11.2.0). Not yet offered in any monthly rotation.",
-	[247721] = "Drops from the Loot-Filled Pumpkin during the Hallow's End holiday event.",
+	[247721] = "Drops from Loot-Filled Pumpkin (Headless Horseman kill) during Hallow's End. Once per day per character. Run on all eligible alts daily.",
 	[247722] = "Datamined for the Trading Post (Patch 11.2.0). Not yet offered in any monthly rotation.",
 	[247723] = "Trading Post (October 2025) for 700 Trader's Tender.",
 	[247791] = "Datamined for the Trading Post (Patch 11.2.0). Not yet offered in any monthly rotation.",
@@ -2073,7 +2073,7 @@ MCLcore.tradingPostData = {
 	[190231] = {month = "February 2023", type = "log"},
 
 	[190613] = {month = "May 2023", type = "log"},
-	[190636] = {type = "datamined"},
+
 	[190767] = {cost = 800, month = "January 2024", type = "purchase"},
 	[192766] = {cost = 600, month = "May 2024", type = "purchase"},
 	[206027] = {cost = 650, month = "July 2023", type = "purchase"},

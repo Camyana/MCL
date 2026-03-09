@@ -18,6 +18,7 @@ Guide.zoneMounts    = {}    -- mapID   → { spellId, ... }
 Guide.spellToMount  = {}    -- spellId → mountId  (WoW journal)
 Guide.mountToSpell  = {}    -- mountId → spellId
 Guide.collectedNames = {}   -- lowercase mount name → true (for deduping legacy mounts)
+Guide.unobtainableSpells = {}  -- spellId → true for unobtainable mounts
 
 -- Settings defaults
 MCL_GUIDE_SETTINGS = MCL_GUIDE_SETTINGS or {}
@@ -61,6 +62,42 @@ local function BuildSpellMountMap()
             -- (different spellID, same name) are also treated as collected
             if isCollected and name then
                 Guide.collectedNames[name:lower()] = true
+            end
+        end
+    end
+end
+
+-- ─── Build set of unobtainable spell IDs ─────────────────────
+-- Scans MCLcore.mountList[17] (the "Unobtainable" section) and
+-- resolves each entry to a spell ID so we can filter these mounts
+-- out of map pins and the zone panel.
+local function BuildUnobtainableSet()
+    Guide.unobtainableSpells = {}
+    if not MCLcore or not MCLcore.mountList or not MCLcore.mountList[17] then return end
+    local unobt = MCLcore.mountList[17]
+    if not unobt.categories then return end
+    for _, catData in pairs(unobt.categories) do
+        if catData.mounts then
+            for _, rawId in ipairs(catData.mounts) do
+                local spellId = nil
+                if type(rawId) == "string" and rawId:sub(1, 1) == "m" then
+                    local mountID = tonumber(rawId:sub(2))
+                    if mountID then
+                        spellId = Guide.mountToSpell[mountID]
+                    end
+                elseif type(rawId) == "number" then
+                    -- Check if it's a known spell ID first
+                    if Guide.spellToMount[rawId] then
+                        spellId = rawId
+                    else
+                        -- Try as mount journal ID
+                        local sid = Guide.mountToSpell[rawId]
+                        if sid then spellId = sid end
+                    end
+                end
+                if spellId then
+                    Guide.unobtainableSpells[spellId] = true
+                end
             end
         end
     end
@@ -503,6 +540,8 @@ function Guide:GetMountsForZone(mapID, includeChildren)
                         end
                         if rec.isCollected == true then
                             -- skip collected mounts from map pins & zone panel
+                        elseif Guide.unobtainableSpells[spellId] then
+                            -- skip unobtainable mounts from map pins & zone panel
                         else
                             n = n + 1
                             results[n] = rec
@@ -588,6 +627,7 @@ frame:SetScript("OnEvent", function(self, event, ...)
         -- Delay to allow MCL and mount journal to initialise
         C_Timer.After(4, function()
             BuildSpellMountMap()
+            BuildUnobtainableSet()
             BuildMountLookup()
             Guide.ready = true
 
