@@ -81,6 +81,7 @@ local function BuildUnobtainableSet()
             for _, rawId in ipairs(catData.mounts) do
                 local spellId = nil
                 if type(rawId) == "string" and rawId:sub(1, 1) == "m" then
+                    -- "m123" format → mount journal ID
                     local mountID = tonumber(rawId:sub(2))
                     if mountID then
                         spellId = Guide.mountToSpell[mountID]
@@ -92,7 +93,22 @@ local function BuildUnobtainableSet()
                     else
                         -- Try as mount journal ID
                         local sid = Guide.mountToSpell[rawId]
-                        if sid then spellId = sid end
+                        if sid then
+                            spellId = sid
+                        else
+                            -- Try as item ID → mount journal ID → spell ID
+                            local ok, mid = pcall(C_MountJournal.GetMountFromItem, rawId)
+                            if ok and mid and mid ~= 0 then
+                                spellId = Guide.mountToSpell[mid]
+                            end
+                            -- Try via GetMountFromSpell API as last resort
+                            if not spellId and C_MountJournal.GetMountFromSpell then
+                                ok, mid = pcall(C_MountJournal.GetMountFromSpell, rawId)
+                                if ok and mid and mid ~= 0 then
+                                    spellId = Guide.mountToSpell[mid]
+                                end
+                            end
+                        end
                     end
                 end
                 if spellId then
@@ -538,9 +554,21 @@ function Guide:GetMountsForZone(mapID, includeChildren)
                                 rec.isCollected = true
                             end
                         end
+                        -- Check if the mount belongs to the Unobtainable section
+                        local isUnobtainable = false
+                        if Guide.unobtainableSpells[spellId] then
+                            isUnobtainable = true
+                        elseif rec.mountID and Guide.MapPins and Guide.MapPins.GetSectionInfo then
+                            local section = Guide.MapPins:GetSectionInfo(rec.mountID)
+                            if section == "Unobtainable" then
+                                isUnobtainable = true
+                                -- Cache for future lookups
+                                Guide.unobtainableSpells[spellId] = true
+                            end
+                        end
                         if rec.isCollected == true then
                             -- skip collected mounts from map pins & zone panel
-                        elseif Guide.unobtainableSpells[spellId] then
+                        elseif isUnobtainable then
                             -- skip unobtainable mounts from map pins & zone panel
                         else
                             n = n + 1
