@@ -1,4 +1,5 @@
 local _, MCLcore = ...;
+local L = MCLcore.L or {}
 
 -- Initialize search functionality when the addon loads
 local function InitializeSearch()
@@ -226,7 +227,7 @@ local function InitializeSearch()
             header:Show()
 
             if #self.searchResults == 0 then
-                header:SetText("No mounts found matching '" .. self.currentSearchTerm .. "'")
+                header:SetText(string.format(L["No mounts found matching '%s'"], self.currentSearchTerm))
                 dd.scrollChild:SetHeight(headerHeight + 8)
                 dd:SetHeight(headerHeight + 20)
                 dd:Show()

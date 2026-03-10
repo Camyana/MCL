@@ -11,6 +11,7 @@
 -- =============================================================
 
 local _, MCLcore = ...
+local L = MCLcore.L or {}
 local Guide = MCL_GUIDE
 
 Guide.MapPanel = Guide.MapPanel or {}
@@ -200,7 +201,7 @@ local function EnsurePanel(parent)
     -- Title above the border
     local title = panel:CreateFontString(nil, "OVERLAY", "Game15Font_Shadow")
     title:SetPoint("BOTTOM", bf, "TOP", -1, 3)
-    title:SetText("MCL Zone Mounts")
+    title:SetText(L["MCL Zone Mounts"])
     panel.Title = title
 
     scrollBox = content
@@ -553,7 +554,7 @@ local function PopulatePanel()
     if not mapID then
         local msg = scrollBox:CreateFontString(nil, "OVERLAY", "GameFontDisable")
         msg:SetPoint("TOPLEFT", 10, -10)
-        msg:SetText("Open the World Map to a zone.")
+        msg:SetText(L["Open the World Map to a zone."])
         scrollBox:SetHeight(40)
         return
     end
@@ -568,7 +569,7 @@ local function PopulatePanel()
     if #mounts == 0 then
         local msg = scrollBox:CreateFontString(nil, "OVERLAY", "GameFontDisable")
         msg:SetPoint("TOPLEFT", 10, -10)
-        msg:SetText("No mounts found for this zone.")
+        msg:SetText(L["No mounts found for this zone."])
         scrollBox:SetHeight(40)
         return
     end
@@ -661,7 +662,7 @@ local function EnsureCardView()
     local bt = bb:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     bt:SetPoint("LEFT")
     bt:SetJustifyH("LEFT")
-    bt:SetText("< Back")
+    bt:SetText(L["< Back"])
     bt:SetTextColor(0.4, 0.78, 0.95, 1)
     bb:SetScript("OnClick", function() MapPanel:ShowListView() end)
     bb:SetScript("OnEnter", function() bt:SetTextColor(1, 1, 1, 1) end)
@@ -748,7 +749,7 @@ local function MakeWaypointBtn(parent, mapId, wx, wy, label, xPos, yPos)
         end
         OpenWorldMap(mapId)
         tx:SetTextColor(0.3, 0.85, 0.4, 1)
-        tx:SetText("Set!")
+        tx:SetText(L["Set!"] or "Set!")
         C_Timer.After(1.5, function()
             tx:SetTextColor(0.4, 0.78, 0.95, 1)
             tx:SetText(label or "Waypoint")
@@ -899,7 +900,7 @@ local function PopulateCard(data)
     prevBtn:SetBackdropBorderColor(0.25, 0.4, 0.6, 0.6)
     local prevTxt = prevBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     prevTxt:SetAllPoints()
-    prevTxt:SetText("Preview")
+    prevTxt:SetText(L["Preview"])
     prevTxt:SetTextColor(0.4, 0.78, 0.95, 1)
     prevBtn:SetScript("OnClick", function() DressUpMount(mountID) end)
     prevBtn:SetScript("OnEnter", function(s) s:SetBackdropBorderColor(0.35, 0.55, 0.8, 0.9); prevTxt:SetTextColor(1, 1, 1, 1) end)
@@ -918,7 +919,7 @@ local function PopulateCard(data)
     whBtn:SetBackdropBorderColor(0.6, 0.45, 0.15, 0.6)
     local whTxt = whBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     whTxt:SetAllPoints()
-    whTxt:SetText("Wowhead")
+    whTxt:SetText(L["Wowhead"])
     whTxt:SetTextColor(0.9, 0.6, 0.2, 1)
     whBtn:SetScript("OnClick", function()
         -- Lazy-create copy popup
@@ -957,10 +958,10 @@ local function PopulateCard(data)
         cardView._copyEB:SetFocus()
         cardView._copyEB:HighlightText()
         whTxt:SetTextColor(0.3, 0.85, 0.4, 1)
-        whTxt:SetText("Copied!")
+        whTxt:SetText(L["Copied!"])
         C_Timer.After(1.5, function()
             whTxt:SetTextColor(0.9, 0.6, 0.2, 1)
-            whTxt:SetText("Wowhead")
+            whTxt:SetText(L["Wowhead"])
         end)
     end)
     whBtn:SetScript("OnEnter", function(s) s:SetBackdropBorderColor(0.8, 0.6, 0.2, 0.9); whTxt:SetTextColor(1, 0.8, 0.3, 1) end)
@@ -1259,7 +1260,7 @@ local function PopulateCard(data)
 
             local il = ib:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             il:SetPoint("LEFT", ii, "RIGHT", 4, 0)
-            il:SetText("Instructions")
+            il:SetText(L["Instructions"])
             il:SetTextColor(0.5, 0.75, 0.95, 1)
 
             local ic = ib:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -1372,7 +1373,7 @@ local function PopulateCard(data)
 
             local cbl = cb:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             cbl:SetPoint("LEFT", cbi, "RIGHT", 4, 0)
-            cbl:SetText("Collapse")
+            cbl:SetText(L["Collapse"])
             cbl:SetTextColor(0.5, 0.75, 0.95, 1)
 
             cb:SetScript("OnClick", function()
@@ -1414,7 +1415,7 @@ function MapPanel:ShowMountCard(mountData)
 
     -- Hide list, show card
     if panel.Scroll then panel.Scroll:Hide() end
-    if panel.Title then panel.Title:SetText("MCL  -  Mount Details") end
+    if panel.Title then panel.Title:SetText(L["MCL - Mount Details"]) end
     cardView:Show()
     cardView:SetFrameLevel((panel:GetFrameLevel() or 1) + 5)
 

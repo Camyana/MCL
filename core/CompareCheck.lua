@@ -8,6 +8,7 @@ local _, MCLcore = ...
 
 MCLcore.Compare = {}
 local Compare = MCLcore.Compare
+local L = MCLcore.L or {}
 
 -- ============================================================
 -- STYLING CONSTANTS (MCL brand palette)
@@ -417,18 +418,18 @@ function Compare:ShowConsentPopup(requester, channel)
     local f = CreateConsentFrame()
     local cc = GetClassColorForPlayer(requester)
     local colorHex = string.format("|cFF%02x%02x%02x", cc.r * 255, cc.g * 255, cc.b * 255)
-    f.bodyText:SetText(colorHex .. ShortName(requester) .. "|r\nwants to compare mount collections.")
+    f.bodyText:SetText(string.format(L["%s\nwants to compare mount collections."], colorHex .. ShortName(requester) .. "|r"))
 
     -- 30-second auto-decline countdown
     local remaining = 30
-    f.timerText:SetText("Auto-declining in " .. remaining .. "s")
+    f.timerText:SetText(string.format(L["Auto-declining in %ds"], remaining))
     if f.consentTimer then f.consentTimer:Cancel() end
     f.consentTimer = C_Timer.NewTicker(1, function()
         remaining = remaining - 1
         if remaining <= 0 then
             Compare:DeclineConsent()
         else
-            f.timerText:SetText("Auto-declining in " .. remaining .. "s")
+            f.timerText:SetText(string.format(L["Auto-declining in %ds"], remaining))
         end
     end, 30)
 
@@ -569,7 +570,7 @@ local function CreatePickerFrame()
     local listHeader = listFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     listHeader:SetPoint("TOPLEFT", listFrame, "TOPLEFT", 4, 0)
     listHeader:SetTextColor(unpack(S.mutedText))
-    listHeader:SetText("Select a player to compare with:")
+    listHeader:SetText(L["Select a player to compare with:"])
     f.listHeader = listHeader
 
     -- Scroll frame for player rows
@@ -609,7 +610,7 @@ local function CreatePickerFrame()
     f.scrollChild = scrollChild
 
     -- Cancel / Rescan button at the bottom
-    local rescanBtn = CreateActionButton(listFrame, 120, "Rescan Group", function()
+    local rescanBtn = CreateActionButton(listFrame, 120, L["Rescan Group"], function()
         Compare:ScanGroup()
     end)
     rescanBtn:SetPoint("BOTTOM", listFrame, "BOTTOM", 0, 0)
@@ -639,8 +640,8 @@ local function PopulatePlayerRows(users)
         f:StopSpinner()
         f.statusPanel:Show()
         f.playerList:Hide()
-        f.statusText:SetText("No MCL users found")
-        f.statusSub:SetText("No other group members have MCL installed.")
+        f.statusText:SetText(L["No MCL users found"])
+        f.statusSub:SetText(L["No other group members have MCL installed."])
         return
     end
 
@@ -844,9 +845,9 @@ function Compare:RequestCollection(nameOrIndex)
                     f:StopSpinner()
                     f.statusPanel:Show()
                     f.playerList:Hide()
-                    f.statusText:SetText("No Response")
+                    f.statusText:SetText(L["No Response"])
                     f.statusText:SetTextColor(unpack(S.redText))
-                    f.statusSub:SetText(ShortName(target) .. " did not respond.\nThey may not have the compare feature.")
+                    f.statusSub:SetText(string.format(L["%s did not respond.\nThey may not have the compare feature."], ShortName(target)))
                     C_Timer.After(3, function()
                         if f.statusText then f.statusText:SetTextColor(unpack(S.titleText)) end
                     end)
@@ -878,9 +879,9 @@ function Compare:Activate(playerName, collectionSet)
         f:StopSpinner()
         f.statusPanel:Show()
         f.playerList:Hide()
-        f.statusText:SetText("Connected!")
+        f.statusText:SetText(L["Connected!"])
         f.statusText:SetTextColor(unpack(S.greenText))
-        f.statusSub:SetText("Received " .. count .. " mounts from " .. ShortName(playerName))
+        f.statusSub:SetText(string.format(L["Received %d mounts from %s"], count, ShortName(playerName)))
         C_Timer.After(1.5, function()
             if f and f:IsShown() then f:Hide() end
             if f.statusText then f.statusText:SetTextColor(unpack(S.titleText)) end
@@ -1115,7 +1116,7 @@ function Compare:ShowBanner()
             self:SetBackdropBorderColor(unpack(S.btnCloseHover))
             self.text:SetTextColor(1, 1, 1, 1)
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
-            GameTooltip:SetText("Exit comparison mode")
+            GameTooltip:SetText(L["Exit comparison mode"])
             GameTooltip:Show()
         end)
         closeBtn:SetScript("OnLeave", function(self)
@@ -1136,7 +1137,7 @@ function Compare:ShowBanner()
 
         local greenLabel = banner:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         greenLabel:SetPoint("LEFT", greenDot, "RIGHT", 3, 0)
-        greenLabel:SetText("Has")
+        greenLabel:SetText(L["Has"])
         greenLabel:SetTextColor(0.7, 1, 0.7, 1)
 
         local redDot = banner:CreateTexture(nil, "OVERLAY")
@@ -1146,7 +1147,7 @@ function Compare:ShowBanner()
 
         local redLabel = banner:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         redLabel:SetPoint("LEFT", redDot, "RIGHT", 3, 0)
-        redLabel:SetText("Missing")
+        redLabel:SetText(L["Missing"])
         redLabel:SetTextColor(1, 0.7, 0.7, 1)
 
         Compare.bannerFrame = banner
@@ -1156,7 +1157,7 @@ function Compare:ShowBanner()
     local colorCode = string.format("|cFF%02x%02x%02x", cc.r * 255, cc.g * 255, cc.b * 255)
 
     Compare.bannerFrame.text:SetText(
-        "|cFF" .. "66C7F2" .. "Comparing with  " .. colorCode .. ShortName(Compare.targetName) .. "|r"
+        "|cFF66C7F2" .. string.format(L["Comparing with  %s"], colorCode .. ShortName(Compare.targetName) .. "|r")
     )
     Compare.bannerFrame:Show()
 end
@@ -1218,9 +1219,9 @@ local function OnAddonMessage(prefix, message, distribution, sender)
                 f:StopSpinner()
                 f.statusPanel:Show()
                 f.playerList:Hide()
-                f.statusText:SetText("Declined")
+                f.statusText:SetText(L["Declined"])
                 f.statusText:SetTextColor(unpack(S.redText))
-                f.statusSub:SetText(ShortName(sender) .. " declined the compare request.")
+                f.statusSub:SetText(string.format(L["%s declined the compare request."], ShortName(sender)))
                 C_Timer.After(3, function()
                     if f.statusText then f.statusText:SetTextColor(unpack(S.titleText)) end
                     PopulatePlayerRows(Compare._lastScanUsers or {})

@@ -9,6 +9,7 @@
 -- =============================================================
 
 local _, MCLcore = ...
+local L = MCLcore.L or {}
 local Guide = MCL_GUIDE
 
 Guide.MapPins = Guide.MapPins or {}
@@ -409,9 +410,9 @@ local function PopulateMiniCard(card, data)
     card.mountName:SetTextColor(COLOR_TITLE[1], COLOR_TITLE[2], COLOR_TITLE[3])
 
     if data.isCollected then
-        card.collectedBadge:SetText("|cFF4CE04CCollected|r")
+        card.collectedBadge:SetText("|cFF4CE04C" .. L["Collected"] .. "|r")
     else
-        card.collectedBadge:SetText("|cFFFF6666Not Collected|r")
+        card.collectedBadge:SetText("|cFFFF6666" .. L["Not Collected"] .. "|r")
     end
     card.collectedBadge:Show()
 

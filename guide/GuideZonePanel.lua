@@ -10,6 +10,8 @@
 -- Shift+Click the tab to toggle child-map mount visibility.
 -- =============================================================
 
+local _, MCLcore = ...
+local L = MCLcore.L or {}
 local Guide = MCL_GUIDE
 
 Guide.ZonePanel = Guide.ZonePanel or {}
@@ -349,18 +351,18 @@ local function GetPanelFrame()
 
     tabButton:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:AddLine("MCL Guide")
+        GameTooltip:AddLine(L["MCL Guide"])
         if panelFrame and panelFrame.zoneName then
             GameTooltip:AddLine(panelFrame.zoneName, 0.7, 0.7, 0.7)
         end
         if panelFrame and panelFrame.mountCount then
-            GameTooltip:AddLine(panelFrame.mountCount .. " mount(s) in zone", 1, 1, 1)
+            GameTooltip:AddLine(string.format(L["%s mount(s) in zone"], panelFrame.mountCount), 1, 1, 1)
         end
         GameTooltip:AddLine(" ")
-        GameTooltip:AddLine("|cFFFFFFFFClick|r to " .. (panelExpanded and "collapse" or "expand"), 0.5, 0.5, 0.5)
-        GameTooltip:AddLine("|cFFFFFFFFShift+Click|r to toggle child-map mounts (" .. (MCL_GUIDE_SETTINGS.showChildMapPins and "|cFF00FF00ON|r" or "|cFFFF4444OFF|r") .. ")", 0.5, 0.5, 0.5)
-        GameTooltip:AddLine("|cFFFFFFFFCtrl+Drag|r to move", 0.5, 0.5, 0.5)
-        GameTooltip:AddLine("|cFFFFFFFFAlt+Click|r to change direction (" .. GetFlyout() .. ")", 0.5, 0.5, 0.5)
+        GameTooltip:AddLine(panelExpanded and L["Click to collapse"] or L["Click to expand"], 0.5, 0.5, 0.5)
+        GameTooltip:AddLine(string.format(L["Shift+Click to toggle child-map mounts (%s)"], MCL_GUIDE_SETTINGS.showChildMapPins and ("|cFF00FF00" .. L["ON"] .. "|r") or ("|cFFFF4444" .. L["OFF"] .. "|r")), 0.5, 0.5, 0.5)
+        GameTooltip:AddLine(L["Ctrl+Drag to move"], 0.5, 0.5, 0.5)
+        GameTooltip:AddLine(string.format(L["Alt+Click to change direction (%s)"], GetFlyout()), 0.5, 0.5, 0.5)
         GameTooltip:Show()
     end)
     tabButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -408,9 +410,9 @@ local function GetPanelFrame()
     end)
     pinToggleButton:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        local state = (MCL_GUIDE_SETTINGS.showMapPins ~= false) and "|cFF00FF00ON|r" or "|cFFFF4444OFF|r"
-        GameTooltip:AddLine("Map Icons (" .. state .. ")")
-        GameTooltip:AddLine("|cFFFFFFFFClick|r to toggle mount pins on the map", 0.5, 0.5, 0.5)
+        local state = (MCL_GUIDE_SETTINGS.showMapPins ~= false) and ("|cFF00FF00" .. L["ON"] .. "|r") or ("|cFFFF4444" .. L["OFF"] .. "|r")
+        GameTooltip:AddLine(string.format(L["Map Icons (%s)"], state))
+        GameTooltip:AddLine(L["Click to toggle mount pins on the map"], 0.5, 0.5, 0.5)
         GameTooltip:Show()
     end)
     pinToggleButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -454,32 +456,32 @@ function Panel:ShowIconTooltip(btn)
 
     -- ── MCL source data ──
     GameTooltip:AddLine(" ")
-    GameTooltip:AddLine("|cFF1FB7EB--- MCL Guide ---|r")
+    GameTooltip:AddLine("|cFF1FB7EB" .. L["--- MCL Guide ---"] .. "|r")
 
     if data.method then
-        GameTooltip:AddLine("Source: " .. Guide:GetMethodText(data.method), COLOR_HEADER.r, COLOR_HEADER.g, COLOR_HEADER.b)
+        GameTooltip:AddLine(L["Source:"] .. " " .. Guide:GetMethodText(data.method), COLOR_HEADER.r, COLOR_HEADER.g, COLOR_HEADER.b)
     end
 
     if data.chance then
         local txt = "1/" .. data.chance
         if data.groupSize then txt = txt .. " (group " .. data.groupSize .. ")" end
-        GameTooltip:AddLine("Drop chance: " .. txt, 1, 1, 1)
+        GameTooltip:AddLine(L["Drop chance:"] .. " " .. txt, 1, 1, 1)
     end
 
     if data.lockBossName then
-        GameTooltip:AddLine("Boss: " .. data.lockBossName, 1, 0.82, 0)
+        GameTooltip:AddLine(L["Boss:"] .. " " .. data.lockBossName, 1, 0.82, 0)
     end
 
     local diff = Guide:GetDifficultyText(data.instanceDifficulties)
     if diff then
-        GameTooltip:AddLine("Difficulty: " .. diff, 0.7, 0.7, 0.7)
+        GameTooltip:AddLine(L["Difficulty:"] .. " " .. diff, 0.7, 0.7, 0.7)
     end
 
     if data.faction then
-        GameTooltip:AddLine("Faction: " .. data.faction, 0.7, 0.7, 0.7)
+        GameTooltip:AddLine(L["Faction:"] .. " " .. data.faction, 0.7, 0.7, 0.7)
     end
     if data.covenant then
-        GameTooltip:AddLine("Covenant: " .. data.covenant, 0.7, 0.7, 0.7)
+        GameTooltip:AddLine(L["Covenant:"] .. " " .. data.covenant, 0.7, 0.7, 0.7)
     end
 
     if data.rep then
@@ -499,7 +501,7 @@ function Panel:ShowIconTooltip(btn)
         if vi.x and vi.y then
             vendorText = vendorText .. string.format(" (%.1f, %.1f)", vi.x, vi.y)
         end
-        GameTooltip:AddLine("Vendor: " .. vendorText, 0.8, 0.7, 1.0)
+        GameTooltip:AddLine(L["Vendor:"] .. " " .. vendorText, 0.8, 0.7, 1.0)
     end
 
     if data.achievementId then
@@ -507,12 +509,12 @@ function Panel:ShowIconTooltip(btn)
         if achName then
             local c = achDone and "|cFF00FF00" or "|cFFFFFF00"
             local s = achDone and " (Completed)" or ""
-            GameTooltip:AddLine("Achievement: " .. c .. achName .. s .. "|r", 1, 1, 1)
+            GameTooltip:AddLine(L["Achievement:"] .. " " .. c .. achName .. s .. "|r", 1, 1, 1)
         end
     end
 
     if data.blackMarket then
-        GameTooltip:AddLine("Black Market AH: |cFF00FF00Yes|r", 0.8, 0.8, 0.8)
+        GameTooltip:AddLine(L["Black Market AH:"] .. " |cFF00FF00" .. L["Yes"] .. "|r", 0.8, 0.8, 0.8)
     end
 
     -- Section + Category from MCL data
@@ -521,7 +523,7 @@ function Panel:ShowIconTooltip(btn)
         if sec then
             local origin = sec
             if cat then origin = origin .. " > " .. cat end
-            GameTooltip:AddLine("Origin: " .. origin, 0.6, 0.6, 0.6)
+            GameTooltip:AddLine(L["Origin:"] .. " " .. origin, 0.6, 0.6, 0.6)
         end
     end
 
@@ -533,9 +535,9 @@ function Panel:ShowIconTooltip(btn)
     end
     GameTooltip:AddLine(" ")
     if hasCoords then
-        GameTooltip:AddLine("|cFF00FF00Click to set waypoint|r")
+        GameTooltip:AddLine("|cFF00FF00" .. L["Click to set waypoint"] .. "|r")
     end
-    GameTooltip:AddLine("|cFF888888Ctrl+Click to preview|r")
+    GameTooltip:AddLine("|cFF888888" .. L["Ctrl+Click to preview"] .. "|r")
 
     GameTooltip:Show()
 end

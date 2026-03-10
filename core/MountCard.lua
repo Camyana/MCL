@@ -470,15 +470,15 @@ function MountCard:CreateMountCard()
 
     f.reportBtnText = f.reportBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     f.reportBtnText:SetAllPoints(f.reportBtn)
-    f.reportBtnText:SetText("|TInterface\\HELPFRAME\\HelpIcon-Bug:12:12|t Report")
+    f.reportBtnText:SetText("|TInterface\\HELPFRAME\\HelpIcon-Bug:12:12|t " .. L["Report"])
     f.reportBtnText:SetTextColor(0.9, 0.4, 0.4, 1)
     f.reportBtnText:SetJustifyH("RIGHT")
 
     f.reportBtn:SetScript("OnEnter", function(self)
         f.reportBtnText:SetTextColor(1, 0.5, 0.5, 1)
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:AddLine("Report Issue", 1, 0.4, 0.4)
-        GameTooltip:AddLine("Click to copy a pre-filled report URL for this mount", 0.6, 0.6, 0.6)
+        GameTooltip:AddLine(L["Report Issue"], 1, 0.4, 0.4)
+        GameTooltip:AddLine(L["Click to copy a pre-filled report URL for this mount"], 0.6, 0.6, 0.6)
         GameTooltip:Show()
     end)
     f.reportBtn:SetScript("OnLeave", function(self)
@@ -494,10 +494,10 @@ function MountCard:CreateMountCard()
             f.copyEditBox:HighlightText()
         end
         f.reportBtnText:SetTextColor(0.3, 0.85, 0.4, 1)
-        f.reportBtnText:SetText("|TInterface\\HELPFRAME\\HelpIcon-Bug:12:12|t Copied!")
+        f.reportBtnText:SetText("|TInterface\\HELPFRAME\\HelpIcon-Bug:12:12|t " .. L["Copied!"])
         C_Timer.After(1.5, function()
             f.reportBtnText:SetTextColor(0.9, 0.4, 0.4, 1)
-            f.reportBtnText:SetText("|TInterface\\HELPFRAME\\HelpIcon-Bug:12:12|t Report")
+            f.reportBtnText:SetText("|TInterface\\HELPFRAME\\HelpIcon-Bug:12:12|t " .. L["Report"])
         end)
     end)
 
@@ -511,15 +511,15 @@ function MountCard:CreateMountCard()
 
     f.wowheadBtnText = f.wowheadBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     f.wowheadBtnText:SetAllPoints(f.wowheadBtn)
-    f.wowheadBtnText:SetText("|TInterface\\HELPFRAME\\HelpIcon-KnowledgeBase:12:12|t Wowhead")
+    f.wowheadBtnText:SetText("|TInterface\\HELPFRAME\\HelpIcon-KnowledgeBase:12:12|t " .. L["Wowhead"])
     f.wowheadBtnText:SetTextColor(0.9, 0.6, 0.2, 1)
     f.wowheadBtnText:SetJustifyH("RIGHT")
 
     f.wowheadBtn:SetScript("OnEnter", function(self)
         f.wowheadBtnText:SetTextColor(1, 0.8, 0.3, 1)
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:AddLine("Wowhead", 1, 0.82, 0)
-        GameTooltip:AddLine("Click to copy Wowhead URL", 0.6, 0.6, 0.6)
+        GameTooltip:AddLine(L["Wowhead"], 1, 0.82, 0)
+        GameTooltip:AddLine(L["Click to copy Wowhead URL"], 0.6, 0.6, 0.6)
         GameTooltip:Show()
     end)
     f.wowheadBtn:SetScript("OnLeave", function(self)
@@ -538,10 +538,10 @@ function MountCard:CreateMountCard()
                 card.copyEditBox:HighlightText()
             end
             f.wowheadBtnText:SetTextColor(0.3, 0.85, 0.4, 1)
-            f.wowheadBtnText:SetText("|TInterface\\HELPFRAME\\HelpIcon-KnowledgeBase:12:12|t Copied!")
+            f.wowheadBtnText:SetText("|TInterface\\HELPFRAME\\HelpIcon-KnowledgeBase:12:12|t " .. L["Copied!"])
             C_Timer.After(1.5, function()
                 f.wowheadBtnText:SetTextColor(0.9, 0.6, 0.2, 1)
-                f.wowheadBtnText:SetText("|TInterface\\HELPFRAME\\HelpIcon-KnowledgeBase:12:12|t Wowhead")
+                f.wowheadBtnText:SetText("|TInterface\\HELPFRAME\\HelpIcon-KnowledgeBase:12:12|t " .. L["Wowhead"])
             end)
         end
     end)
@@ -549,7 +549,7 @@ function MountCard:CreateMountCard()
     -- Click-to-copy hint
     f.copyHint = f.titleFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     f.copyHint:SetPoint("RIGHT", f.wowheadBtn, "LEFT", -8, 0)
-    f.copyHint:SetText("Click to copy")
+    f.copyHint:SetText(L["Click to copy"])
     f.copyHint:SetTextColor(0.5, 0.5, 0.5, 0)
 
     -- Inline copy popup anchored to the title bar
@@ -607,9 +607,9 @@ function MountCard:CreateMountCard()
                 ChatEdit_InsertLink(name)
                 -- Brief flash to confirm
                 f.copyHint:SetTextColor(0, 1, 0, 1)
-                f.copyHint:SetText("Linked!")
+                f.copyHint:SetText(L["Linked!"])
                 C_Timer.After(1, function()
-                    f.copyHint:SetText("Click to copy")
+                    f.copyHint:SetText(L["Click to copy"])
                     if f.titleFrame:IsMouseOver() then
                         f.copyHint:SetTextColor(0.5, 0.5, 0.5, 0.8)
                     else
@@ -785,7 +785,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
         -- Show error message
         local errorText = parentFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         errorText:SetPoint("CENTER", parentFrame, "CENTER", 0, 0)
-        errorText:SetText("Mount information not available")
+        errorText:SetText(L["Mount information not available"])
         errorText:SetTextColor(1, 0.5, 0.5, 1)
         print("MCL Debug: No mountInfo found for ID:", mountData.mountID or mountData.id)
         return
@@ -1073,7 +1073,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
 
             local instrLabel = instrBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             instrLabel:SetPoint("LEFT", instrIcon, "RIGHT", 4, 0)
-            instrLabel:SetText("Instructions")
+            instrLabel:SetText(L["Instructions"])
             instrLabel:SetTextColor(0.5, 0.75, 0.95, 1)
 
             local instrCount = instrBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -1301,7 +1301,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
 
         local collapseLabel = collapseBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         collapseLabel:SetPoint("LEFT", collapseIcon, "RIGHT", 4, 0)
-        collapseLabel:SetText("Collapse Instructions")
+        collapseLabel:SetText(L["Collapse Instructions"])
         collapseLabel:SetTextColor(0.5, 0.75, 0.95, 1)
 
         collapseBtn:SetScript("OnClick", function()
@@ -1564,7 +1564,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
             -- Row 2: Required | Current  (two-column)
             local reqLabel = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             reqLabel:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
-            reqLabel:SetText("Required:")
+            reqLabel:SetText(L["Required:"])
             reqLabel:SetTextColor(0.5, 0.55, 0.65, 1)
 
             local reqValue = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -1575,7 +1575,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
             -- Current standing on the right side
             local curLabel = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             curLabel:SetPoint("LEFT", reqValue, "RIGHT", 16, 0)
-            curLabel:SetText("Current:")
+            curLabel:SetText(L["Current:"])
             curLabel:SetTextColor(0.5, 0.55, 0.65, 1)
 
             local curValue = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -1592,7 +1592,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
             if rep.vendorName and rep.vendorMapId and rep.vendorX and rep.vendorY then
                 local vLabel = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 vLabel:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
-                vLabel:SetText("Vendor:")
+                vLabel:SetText(L["Vendor:"])
                 vLabel:SetTextColor(0.5, 0.55, 0.65, 1)
 
                 local vValue = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -1696,7 +1696,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                     if vd.zone and vd.zone ~= "" then
                         local vzLabel = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                         vzLabel:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
-                        vzLabel:SetText("Location:")
+                        vzLabel:SetText(L["Location:"])
                         vzLabel:SetTextColor(0.5, 0.55, 0.65, 1)
 
                         local vzValue = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -1722,7 +1722,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
             -- Quest name label
             local qLabel = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             qLabel:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
-            qLabel:SetText("Quest:")
+            qLabel:SetText(L["Quest:"])
             qLabel:SetTextColor(0.5, 0.55, 0.65, 1)
 
             -- Quest name as a clickable button (opens quest in Wowhead)
@@ -1765,7 +1765,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
             if qd.npc and qd.npc ~= "" then
                 local qnLabel = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 qnLabel:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
-                qnLabel:SetText("Quest Giver:")
+                qnLabel:SetText(L["Quest Giver:"])
                 qnLabel:SetTextColor(0.5, 0.55, 0.65, 1)
 
                 local qnValue = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -1797,7 +1797,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
             if qd.zone and qd.zone ~= "" then
                 local qzLabel = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 qzLabel:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
-                qzLabel:SetText("Quest Zone:")
+                qzLabel:SetText(L["Quest Zone:"])
                 qzLabel:SetTextColor(0.5, 0.55, 0.65, 1)
 
                 local qzValue = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -1825,7 +1825,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                 -- "Cost:" label on the same line as the first cost entry
                 local costHeader = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 costHeader:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
-                costHeader:SetText("Cost:")
+                costHeader:SetText(L["Cost:"])
                 costHeader:SetTextColor(0.5, 0.55, 0.65, 1)
                 local headerWidth = costHeader:GetStringWidth() or 30
                 local costInlineOffset = headerWidth + 6
@@ -1996,9 +1996,9 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                     -- Custom achievement tooltip with manual criteria tracking
                     GameTooltip:AddLine(achName, 1, 1, 1)
                     if achCompleted then
-                        GameTooltip:AddLine("Achievement completed", 0.3, 0.85, 0.4)
+                        GameTooltip:AddLine(L["Achievement completed"], 0.3, 0.85, 0.4)
                     else
-                        GameTooltip:AddLine("Achievement in progress", 0.9, 0.9, 0.2)
+                        GameTooltip:AddLine(L["Achievement in progress"], 0.9, 0.9, 0.2)
                     end
                     if achDesc and achDesc ~= "" then
                         GameTooltip:AddLine(" ")
@@ -2194,7 +2194,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
         -- Model controls text
         local modelControlsText = modelFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         modelControlsText:SetPoint("BOTTOM", mountModel, "BOTTOM", 0, -25)
-        modelControlsText:SetText("LMB: rotate | RMB: pan | Scroll: zoom | MMB: reset")
+        modelControlsText:SetText(L["LMB: rotate | RMB: pan | Scroll: zoom | MMB: reset"])
         modelControlsText:SetTextColor(0.5, 0.55, 0.65, 0.8)
     else
         -- Fallback: show large mount icon if no model available
@@ -2210,7 +2210,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
         -- No model available text
         local noModelText = modelFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         noModelText:SetPoint("BOTTOM", largeIconFrame, "BOTTOM", 0, -15)
-        noModelText:SetText("3D Model not available")
+        noModelText:SetText(L["3D Model not available"])
         noModelText:SetTextColor(0.5, 0.55, 0.65, 0.8)
     end
     

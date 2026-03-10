@@ -625,7 +625,7 @@ local function AddOriginTooltipLine(frame, isPinned)
             origin = frame.category
         end
         if origin then
-            GameTooltip:AddLine("Origin: " .. origin, 0.5, 0.7, 1)
+            GameTooltip:AddLine(L["Origin:"] .. " " .. origin, 0.5, 0.7, 1)
         end
     end
 end

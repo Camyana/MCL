@@ -395,7 +395,7 @@ function W:CreateWaypointButton(opts)
         OpenWorldMap(mapID)
         -- Flash confirmation
         wpText:SetTextColor(unpack(textFlash))
-        wpText:SetText("Set!")
+        wpText:SetText(GetL()["Set!"] or "Set!")
         C_Timer.After(C.TIMING.WAYPOINT_FLASH, function()
             if wpText then
                 wpText:SetTextColor(unpack(textColor))

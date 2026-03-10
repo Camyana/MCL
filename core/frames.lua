@@ -615,8 +615,8 @@ function MCL_frames:CreateMainFrame()
         self:SetBackdropBorderColor(0.9, 0.3, 0.3, 1)
         self.icon:SetVertexColor(1, 0.5, 0.5, 1)
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:SetText("Report Issue", 1, 1, 1)
-        GameTooltip:AddLine("Report a missing or incorrect mount", 0.7, 0.7, 0.7)
+        GameTooltip:SetText(L["Report Issue"], 1, 1, 1)
+        GameTooltip:AddLine(L["Report a missing or incorrect mount"], 0.7, 0.7, 0.7)
         GameTooltip:Show()
     end)
     MCL_mainFrame.report:SetScript("OnLeave", function(self)
@@ -1588,7 +1588,7 @@ function MCL_frames:createContentFrame(relativeFrame, title, sectionIcon)
         -- Sort label (rightmost)
         local sortLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         sortLabel:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -15, -10)
-        sortLabel:SetText("Sort:")
+        sortLabel:SetText(L["Sort:"])
         sortLabel:SetTextColor(0.5, 0.55, 0.65, 1)
 
         local sortBtn = CreateFrame("Button", nil, frame, "BackdropTemplate")
@@ -1657,11 +1657,11 @@ function MCL_frames:createContentFrame(relativeFrame, title, sectionIcon)
         local function updateFilterBtnState(btn)
             if MCL_SETTINGS.hideCollectedMounts then
                 btn:SetBackdropBorderColor(0.3, 0.6, 0.9, 1)
-                btn.text:SetText("Uncollected Only")
+                btn.text:SetText(L["Uncollected Only"])
                 btn.text:SetTextColor(0.5, 0.85, 1, 1)
             else
                 btn:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.8)
-                btn.text:SetText("Show All")
+                btn.text:SetText(L["Show All"])
                 btn.text:SetTextColor(0.7, 0.78, 0.88, 1)
             end
         end
@@ -1676,11 +1676,11 @@ function MCL_frames:createContentFrame(relativeFrame, title, sectionIcon)
             end
             self:SetBackdropColor(0.15, 0.18, 0.25, 0.9)
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
-            GameTooltip:SetText("Filter Collected", 1, 1, 1)
+            GameTooltip:SetText(L["Filter Collected"], 1, 1, 1)
             if MCL_SETTINGS.hideCollectedMounts then
-                GameTooltip:AddLine("Currently hiding collected mounts.\nClick to show all mounts.", 0.7, 0.7, 0.7, true)
+                GameTooltip:AddLine(L["Currently hiding collected mounts.\nClick to show all mounts."], 0.7, 0.7, 0.7, true)
             else
-                GameTooltip:AddLine("Currently showing all mounts.\nClick to hide collected mounts.", 0.7, 0.7, 0.7, true)
+                GameTooltip:AddLine(L["Currently showing all mounts.\nClick to hide collected mounts."], 0.7, 0.7, 0.7, true)
             end
             GameTooltip:Show()
         end)
@@ -2038,7 +2038,7 @@ function MCL_frames:createRepFilterFrame(relativeFrame)
     -- Title
     frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     frame.title:SetPoint("TOPLEFT", frame, "TOPLEFT", 24, -10)
-    frame.title:SetText("Reputation Mounts")
+    frame.title:SetText(L["Reputation Mounts"])
     frame.title:SetTextColor(0.4, 0.78, 0.95, 1)
 
     -- Reputation icon next to title
@@ -2060,7 +2060,7 @@ function MCL_frames:createRepFilterFrame(relativeFrame)
     frame.affordCheck:SetChecked(false)
     frame.affordCheck.text = frame.affordCheck:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     frame.affordCheck.text:SetPoint("RIGHT", frame.affordCheck, "LEFT", -4, 0)
-    frame.affordCheck.text:SetText("Can Afford")
+    frame.affordCheck.text:SetText(L["Can Afford"])
     frame.affordCheck.text:SetTextColor(0.7, 0.78, 0.88, 1)
     frame.affordCheck:SetScript("OnClick", function(self)
         frame.canAfford = self:GetChecked()
@@ -2068,8 +2068,8 @@ function MCL_frames:createRepFilterFrame(relativeFrame)
     end)
     frame.affordCheck:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:AddLine("Can Afford", 1, 1, 1)
-        GameTooltip:AddLine("Only show mounts you have the currency/gold to purchase right now.", 0.7, 0.78, 0.88, true)
+        GameTooltip:AddLine(L["Can Afford"], 1, 1, 1)
+        GameTooltip:AddLine(L["Only show mounts you have the currency/gold to purchase right now."], 0.7, 0.78, 0.88, true)
         GameTooltip:Show()
     end)
     frame.affordCheck:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -2406,16 +2406,16 @@ function MCL_frames:RefreshRepFilter()
 
     -- Summary
     local totalUnlocked = #mounts
-    frame.subLabel:SetText(string.format("%d unlocked uncollected", totalUnlocked) ..
-        (frame.canAfford and string.format("  —  %d affordable", shownCount) or ""))
+    frame.subLabel:SetText(string.format(L["%d unlocked uncollected"], totalUnlocked) ..
+        (frame.canAfford and string.format("  —  " .. L["%d affordable"], shownCount) or ""))
 
     if shownCount == 0 then
         local noData = container:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         noData:SetPoint("TOPLEFT", container, "TOPLEFT", 15, 0)
         if frame.canAfford then
-            noData:SetText("No affordable mounts found. Uncheck 'Can Afford' to see all unlocked mounts.")
+            noData:SetText(L["No affordable mounts found. Uncheck 'Can Afford' to see all unlocked mounts."])
         elseif totalUnlocked == 0 then
-            noData:SetText("No unlocked uncollected reputation mounts found.")
+            noData:SetText(L["No unlocked uncollected reputation mounts found."])
         end
         noData:SetTextColor(0.5, 0.55, 0.65, 1)
         container._noDataText = noData
@@ -2506,7 +2506,7 @@ function MCL_frames:createAboutFrame(relativeFrame)
         link:SetScript("OnEnter", function(self)
             self.text:SetText("|cFF66DDFF" .. url .. "|r")
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
-            GameTooltip:AddLine("Click to copy link", 1, 1, 1)
+            GameTooltip:AddLine(L["Click to copy link"], 1, 1, 1)
             GameTooltip:Show()
         end)
         link:SetScript("OnLeave", function(self)
@@ -2522,7 +2522,7 @@ function MCL_frames:createAboutFrame(relativeFrame)
     -- ── Title ──
     frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     frame.title:SetPoint("TOPLEFT", frame, "TOPLEFT", 24, yOffset)
-    frame.title:SetText("About MCL")
+    frame.title:SetText(L["About MCL"])
     frame.title:SetTextColor(0.4, 0.78, 0.95, 1)
 
     frame.aboutIcon = frame:CreateTexture(nil, "ARTWORK")
@@ -2535,14 +2535,14 @@ function MCL_frames:createAboutFrame(relativeFrame)
     versionText:SetPoint("TOPLEFT", frame.title, "BOTTOMLEFT", 0, -4)
     versionText:SetTextColor(0.6, 0.65, 0.75, 1)
     local tocVersion = C_AddOns and C_AddOns.GetAddOnMetadata and C_AddOns.GetAddOnMetadata("MCL", "Version")
-    versionText:SetText("Version: " .. (tocVersion or "unknown"))
+    versionText:SetText(L["Version:"] .. " " .. (tocVersion or "unknown"))
 
     yOffset = -50
 
     -- ══════════════════════════════════════════════════════
     -- Card 1 — Disclaimer / Data Quality
     -- ══════════════════════════════════════════════════════
-    local disclaimerCard = createCard(frame, "Data Disclaimer", yOffset, 150)
+    local disclaimerCard = createCard(frame, L["Data Disclaimer"], yOffset, 150)
 
     local disclaimerLines = {
         "|cFFFFCC00This addon's location and source data is a work in progress.|r",
@@ -2578,7 +2578,7 @@ function MCL_frames:createAboutFrame(relativeFrame)
     -- ══════════════════════════════════════════════════════
     -- Card 2 — How to Help
     -- ══════════════════════════════════════════════════════
-    local helpCard = createCard(frame, "Help Improve MCL", yOffset, 180)
+    local helpCard = createCard(frame, L["Help Improve MCL"], yOffset, 180)
 
     local helpLines = {
         "Community contributions are what make this addon better for everyone.",
@@ -2623,7 +2623,7 @@ function MCL_frames:createAboutFrame(relativeFrame)
     -- ══════════════════════════════════════════════════════
     -- Card 3 — Credits / Thank You
     -- ══════════════════════════════════════════════════════
-    local creditsCard = createCard(frame, "Credits", yOffset, 100)
+    local creditsCard = createCard(frame, L["Credits"], yOffset, 100)
 
     local creditsLines = {
         "Created by |cFF1FB7EBCamyam|r",
@@ -3150,7 +3150,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     else
         local texNote = progressCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         texNote:SetPoint("TOPLEFT", progressCard, "TOPLEFT", 12, -34)
-        texNote:SetText("LibSharedMedia not available")
+        texNote:SetText(L["LibSharedMedia not available"])
         texNote:SetTextColor(0.5, 0.4, 0.4, 1)
     end
     
@@ -3837,7 +3837,7 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
     -- Title label
     local totalTitle = totalFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     totalTitle:SetPoint("TOPLEFT", totalFrame, "TOPLEFT", 8, -6)
-    totalTitle:SetText("Total Mounts")
+    totalTitle:SetText(L["Total Mounts"])
     totalTitle:SetTextColor(0.5, 0.85, 1, 1)
 
     -- Count label (right-aligned)
