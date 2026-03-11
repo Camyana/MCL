@@ -486,8 +486,8 @@ function Panel:ShowIconTooltip(btn)
 
     if data.rep then
         local ri = data.rep
-        local label = ri.renown and "Renown" or "Reputation"
-        local text = ri.factionName or "Unknown"
+        local label = ri.renown and L["Renown"] or L["Reputation"]
+        local text = ri.factionName or L["Unknown"]
         if ri.levelName then text = text .. " - " .. ri.levelName end
         local live = Guide.Reputation and Guide.Reputation:GetStandingText(ri) or nil
         if live then text = text .. " |cFF888888(" .. live .. ")|r" end
@@ -497,7 +497,7 @@ function Panel:ShowIconTooltip(btn)
     -- Vendor / Quartermaster location
     if data.vendorInfo then
         local vi = data.vendorInfo
-        local vendorText = vi.npc or "Vendor"
+        local vendorText = vi.npc or L["Vendor"]
         if vi.x and vi.y then
             vendorText = vendorText .. string.format(" (%.1f, %.1f)", vi.x, vi.y)
         end
@@ -508,7 +508,7 @@ function Panel:ShowIconTooltip(btn)
         local _, achName, _, achDone = GetAchievementInfo(data.achievementId)
         if achName then
             local c = achDone and "|cFF00FF00" or "|cFFFFFF00"
-            local s = achDone and " (Completed)" or ""
+            local s = achDone and (" " .. L["(Completed)"]) or ""
             GameTooltip:AddLine(L["Achievement:"] .. " " .. c .. achName .. s .. "|r", 1, 1, 1)
         end
     end
@@ -521,8 +521,8 @@ function Panel:ShowIconTooltip(btn)
     if Guide.MapPins then
         local sec, cat = Guide.MapPins:GetSectionInfo(data.mountID)
         if sec then
-            local origin = sec
-            if cat then origin = origin .. " > " .. cat end
+            local origin = L[sec]
+            if cat then origin = origin .. " > " .. L[cat] end
             GameTooltip:AddLine(L["Origin:"] .. " " .. origin, 0.6, 0.6, 0.6)
         end
     end
@@ -558,7 +558,7 @@ function Panel:Refresh()
     end
     if not mapID then mapID = Guide:GetCurrentMapID() end
 
-    local zoneName = "Unknown"
+    local zoneName = L["Unknown"]
     if mapID then
         local mapInfo = C_Map.GetMapInfo(mapID)
         zoneName = mapInfo and mapInfo.name or ("Map " .. mapID)
@@ -644,7 +644,7 @@ SlashCmdList["MCLGUIDE"] = function(msg)
         if WorldMapFrame and WorldMapFrame:IsShown() then
             Panel:Refresh()
         else
-            print("|cFF1FB7EBMCL|r Guide: Panel will show when you open the map.")
+            print("|cFF1FB7EBMCL|r Guide: " .. L["MCL_GUIDE_PANEL_WILL_SHOW"])
         end
     else
         MCL_GUIDE_SETTINGS.showZonePanel = not MCL_GUIDE_SETTINGS.showZonePanel
@@ -652,13 +652,13 @@ SlashCmdList["MCLGUIDE"] = function(msg)
             if WorldMapFrame and WorldMapFrame:IsShown() then
                 Panel:Refresh()
             else
-                print("|cFF1FB7EBMCL|r Guide: Panel enabled -- open your map to see it.")
+                print("|cFF1FB7EBMCL|r Guide: " .. L["MCL_GUIDE_PANEL_ENABLED"])
             end
         else
             if panelFrame then panelFrame:Hide() end
             if tabButton then tabButton:Hide() end
             if pinToggleButton then pinToggleButton:Hide() end
-            print("|cFF1FB7EBMCL|r Guide: Panel hidden.")
+            print("|cFF1FB7EBMCL|r Guide: " .. L["MCL_GUIDE_PANEL_HIDDEN"])
         end
     end
 end

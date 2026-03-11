@@ -192,7 +192,7 @@ local function EnsureToastFrame()
     -- "Mount Collected!" text  (top-right of header)
     toastFrame.headerRight = toastFrame.header:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     toastFrame.headerRight:SetPoint("RIGHT", toastFrame.header, "RIGHT", -8, 0)
-    toastFrame.headerRight:SetText(L["Mount Collected!"] or "Mount Collected!")
+    toastFrame.headerRight:SetText(L["Mount Collected!"])
     toastFrame.headerRight:SetTextColor(0.3, 0.85, 0.4, 1)
 
     -- Mount icon (centered in content area below header)
@@ -399,7 +399,7 @@ function Toast:ShowToast(mountID)
     -- Queue the mount-collected toast
     QueueToast(function()
         DisplayToast("collected",
-            L["Mount Collected!"] or "Mount Collected!",
+            L["Mount Collected!"],
             icon, nil, mountName, catLine, sectionLine, sectionName)
     end)
 
@@ -411,10 +411,10 @@ function Toast:ShowToast(mountID)
             local secIcon = section and section.icon or nil
             QueueToast(function()
                 DisplayToast("category",
-                    L["Category Complete!"] or "Category Complete!",
+                    L["Category Complete!"],
                     secIcon, { 0, 1, 0, 1 },
                     catName,
-                    catTotal .. "/" .. catTotal .. " " .. (L["mounts collected"] or "mounts collected"),
+                    catTotal .. "/" .. catTotal .. " " .. (L["mounts collected"]),
                     secName, secName)
             end)
         end
@@ -428,11 +428,11 @@ function Toast:ShowToast(mountID)
                 local secIcon = section.icon or nil
                 QueueToast(function()
                     DisplayToast("section",
-                        L["Section Complete!"] or "Section Complete!",
+                        L["Section Complete!"],
                         secIcon, { 0, 1, 0, 1 },
                         section.name,
-                        stats.total .. "/" .. stats.total .. " " .. (L["mounts collected"] or "mounts collected"),
-                        L["Legendary!"] or "Legendary!", section.name)
+                        stats.total .. "/" .. stats.total .. " " .. (L["mounts collected"]),
+                        L["Legendary!"], section.name)
                 end)
             end
         end
@@ -456,8 +456,8 @@ function Toast:ToggleUnlock()
 
         frame:Show()
         frame:SetAlpha(1)
-        frame.mountName:SetText(L["Drag to reposition"] or "Drag to reposition")
-        frame.categoryText:SetText(L["Click 'Lock Toast' when done"] or "Click 'Lock Toast' when done")
+        frame.mountName:SetText(L["Drag to reposition"])
+        frame.categoryText:SetText(L["Click 'Lock Toast' when done"])
         frame.sectionText:SetText("")
         frame.icon:SetTexture("Interface\\AddOns\\MCL\\mcl-logo-32")
         frame.icon:SetTexCoord(0, 1, 0, 1)
@@ -804,7 +804,7 @@ function Toast:ShowZoneAlert(mapID)
         moreRow:SetPoint("TOPLEFT", f, "TOPLEFT", 8, yOff)
         moreRow.text = moreRow:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         moreRow.text:SetPoint("LEFT", 0, 0)
-        moreRow.text:SetText(string.format("... +%d %s", overflow, L["more"] or "more"))
+        moreRow.text:SetText(string.format("... +%d %s", overflow, L["more"]))
         moreRow.text:SetTextColor(0.5, 0.55, 0.65, 1)
         table.insert(f.rows, moreRow)
         yOff = yOff - ZONE_TOAST_ROW_H

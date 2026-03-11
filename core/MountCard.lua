@@ -161,50 +161,50 @@ local function GetMountSourceDetails(mountInfo, mountData)
         -- Map MCL categories to display information
         if category == "Vendor" or category == "Guild Vendor" or category == "Kun-Lai Vendor" then
             details.method = category
-            details.vendor = "Available from " .. category
+            details.vendor = string.format(L["Available from %s"], category)
         elseif category == "Achievement" then
-            details.method = "Achievement"
-            details.vendor = "Achievement Reward"
+            details.method = L["Achievement"]
+            details.vendor = L["Achievement Reward"]
         elseif category == "Reputation" or category == "Paragon Reputation" then
             details.method = category
-            details.vendor = category .. " Reward"
+            details.vendor = string.format(L["%s Reward"], category)
         elseif category == "Dungeon Drop" then
-            details.method = "Dungeon"
-            details.vendor = "Dungeon Drop"
+            details.method = L["Dungeon"]
+            details.vendor = L["Dungeon Drop"]
         elseif category == "Raid Drop" then
-            details.method = "Raid"
-            details.vendor = "Raid Drop"
+            details.method = L["Raid"]
+            details.vendor = L["Raid Drop"]
         elseif category == "Rare Spawn" then
-            details.method = "Rare Spawn"
-            details.vendor = "Rare Mob Drop"
+            details.method = L["Rare Spawn"]
+            details.vendor = L["Rare Mob Drop"]
         elseif category == "Treasures" then
-            details.method = "Treasure"
-            details.vendor = "Treasure Chest"
+            details.method = L["Treasure"]
+            details.vendor = L["Treasure Chest"]
         elseif category == "Adventures" then
-            details.method = "Mission Table"
-            details.vendor = "Mission Table Reward"
+            details.method = L["Mission Table"]
+            details.vendor = L["Mission Table Reward"]
         elseif category == "Zone" then
-            details.method = "Zone Drop"
-            details.vendor = "Zone Activity"
+            details.method = L["Zone Drop"]
+            details.vendor = L["Zone Activity"]
         elseif category == "Daily Activities" then
-            details.method = "Daily"
-            details.vendor = "Daily Activity"
+            details.method = L["Daily"]
+            details.vendor = L["Daily Activity"]
         elseif category == "Tormentors" then
-            details.method = "Event"
-            details.vendor = "Tormentors of Torghast"
+            details.method = L["Event"]
+            details.vendor = L["Tormentors of Torghast"]
         elseif category == "Maw Assaults" then
-            details.method = "Event"
-            details.vendor = "Maw Assault"
+            details.method = L["Event"]
+            details.vendor = L["Maw Assault"]
         elseif category == "Covenant Feature" then
-            details.method = "Covenant"
-            details.vendor = "Covenant Feature"
+            details.method = L["Covenant"]
+            details.vendor = L["Covenant Feature"]
         elseif string.find(category, "Night Fae") or string.find(category, "Kyrian") or 
                string.find(category, "Necrolord") or string.find(category, "Venthyr") then
-            details.method = "Covenant"
-            details.vendor = category .. " Covenant"
+            details.method = L["Covenant"]
+            details.vendor = string.format(L["%s Covenant"], category)
         elseif category == "TradingPostTBA" or category == "Future Trading Post" then
-            details.method = "Trading Post"
-            details.vendor = "Future Trading Post (Datamined)"
+            details.method = L["Trading Post"]
+            details.vendor = L["Future Trading Post (Datamined)"]
         else
             details.method = category
             details.vendor = category
@@ -212,33 +212,33 @@ local function GetMountSourceDetails(mountInfo, mountData)
         
         -- Map sections to zones
         if section == "SL" then
-            details.zone = "Shadowlands"
+            details.zone = L["Shadowlands"]
         elseif section == "DF" then
-            details.zone = "Dragon Isles"
+            details.zone = L["Dragon Isles"]
         elseif section == "TWW" then
-            details.zone = "Khaz Algar"
+            details.zone = L["Khaz Algar"]
         elseif section == "BFA" then
-            details.zone = "Kul Tiras / Zandalar"
+            details.zone = L["Kul Tiras / Zandalar"]
         elseif section == "Legion" then
-            details.zone = "Broken Isles"
+            details.zone = L["Broken Isles"]
         elseif section == "WoD" then
-            details.zone = "Draenor"
+            details.zone = L["Draenor"]
         elseif section == "Mists" then
-            details.zone = "Pandaria"
+            details.zone = L["Pandaria"]
         elseif section == "Cata" then
-            details.zone = "Cataclysm Zones"
+            details.zone = L["Cataclysm Zones"]
         elseif section == "Wrath" then
-            details.zone = "Northrend"
+            details.zone = L["Northrend"]
         elseif section == "BC" then
-            details.zone = "Outland"
+            details.zone = L["Outland"]
         elseif section == "Classic" then
-            details.zone = "Eastern Kingdoms / Kalimdor"
+            details.zone = L["Eastern Kingdoms / Kalimdor"]
         elseif section == "Holiday" then
-            details.zone = "Holiday Event"
+            details.zone = L["Holiday Event"]
         elseif section == "Promotion" then
-            details.zone = "Promotional"
+            details.zone = L["Promotional"]
         elseif section == "Other" then
-            details.zone = "Various"
+            details.zone = L["Various"]
         else
             details.zone = section
         end
@@ -249,7 +249,7 @@ local function GetMountSourceDetails(mountInfo, mountData)
         local source = mountInfo.source
         
         -- If we still have unknown vendor, try to parse from source
-        if details.vendor == "Unknown" then
+        if details.vendor == L["Unknown"] then
             local vendorPatterns = {
                 "Sold by ([^,%.]+)",
                 "Available from ([^,%.]+)",
@@ -262,14 +262,14 @@ local function GetMountSourceDetails(mountInfo, mountData)
                 local vendorMatch = string.match(source, pattern)
                 if vendorMatch then
                     details.vendor = vendorMatch:gsub("^%s*(.-)%s*$", "%1") -- Trim whitespace
-                    details.method = "Vendor"
+                    details.method = L["Vendor"]
                     break
                 end
             end
         end
         
         -- If we still have unknown zone, try to parse from source
-        if details.zone == "Unknown" then
+        if details.zone == L["Unknown"] then
             local zonePatterns = {
                 "in ([^,%.]+)",
                 "from ([^,%.]+)",
@@ -287,25 +287,25 @@ local function GetMountSourceDetails(mountInfo, mountData)
         end
         
         -- Enhanced method detection from source
-        if details.method == "Unknown" then
+        if details.method == L["Unknown"] then
             if string.find(source:lower(), "drop") then
-                details.method = "Drop"
+                details.method = L["Drop"]
             elseif string.find(source:lower(), "achievement") then
-                details.method = "Achievement"
+                details.method = L["Achievement"]
             elseif string.find(source:lower(), "reputation") then
-                details.method = "Reputation"
+                details.method = L["Reputation"]
             elseif string.find(source:lower(), "quest") then
-                details.method = "Quest"
+                details.method = L["Quest"]
             elseif string.find(source:lower(), "rare") then
-                details.method = "Rare Spawn"
+                details.method = L["Rare Spawn"]
             elseif string.find(source:lower(), "treasure") then
-                details.method = "Treasure"
+                details.method = L["Treasure"]
             elseif string.find(source:lower(), "dungeon") then
-                details.method = "Dungeon"
+                details.method = L["Dungeon"]
             elseif string.find(source:lower(), "raid") then
-                details.method = "Raid"
-            elseif details.vendor ~= "Unknown" then
-                details.method = "Vendor"
+                details.method = L["Raid"]
+            elseif details.vendor ~= L["Unknown"] then
+                details.method = L["Vendor"]
             end
         end
         
@@ -337,15 +337,15 @@ local function GetMountSourceDetails(mountInfo, mountData)
                 -- Try to determine currency type from icon path
                 if iconPath then
                     if string.find(iconPath:lower(), "gold") then
-                        details.cost = numericCost .. " Gold"
+                        details.cost = numericCost .. " " .. L["Gold"]
                     elseif string.find(iconPath:lower(), "honor") then
-                        details.cost = numericCost .. " Honor"
+                        details.cost = numericCost .. " " .. L["Honor"]
                     elseif string.find(iconPath:lower(), "conquest") then
-                        details.cost = numericCost .. " Conquest"
+                        details.cost = numericCost .. " " .. L["Conquest"]
                     elseif string.find(iconPath:lower(), "azerite") then
-                        details.cost = numericCost .. " Residual Memories"
+                        details.cost = numericCost .. " " .. L["Residual Memories"]
                     elseif string.find(iconPath:lower(), "currency") then
-                        details.cost = numericCost .. " Currency"
+                        details.cost = numericCost .. " " .. L["Currency"]
                     else
                         -- Generic fallback - just show the number
                         details.cost = numericCost
@@ -571,7 +571,7 @@ function MountCard:CreateMountCard()
     -- Ctrl+C label
     local copyLabel = f.copyPopup:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     copyLabel:SetPoint("LEFT", f.copyPopup, "LEFT", 6, 0)
-    copyLabel:SetText("Ctrl+C:")
+    copyLabel:SetText(L["Ctrl+C:"])
     copyLabel:SetTextColor(0.5, 0.5, 0.5, 1)
 
     -- EditBox inside the popup
@@ -862,25 +862,25 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
             elseif tpInfo.cost then
                 tpText = tpInfo.cost .. " Trader's Tender"
             elseif tpInfo.month then
-                tpText = "Trading Post - " .. tpInfo.month
+                tpText = string.format(L["Trading Post - %s"], tpInfo.month)
             end
             tpColor = {0.3, 0.85, 0.4, 1} -- green
         elseif tpInfo.type == "log" then
             if tpInfo.month then
-                tpText = "Traveler's Log Reward - " .. tpInfo.month
+                tpText = string.format(L["Traveler's Log Reward - %s"], tpInfo.month)
             else
-                tpText = "Traveler's Log Reward"
+                tpText = L["Traveler's Log Reward"]
             end
             tpColor = {0.9, 0.75, 0.3, 1} -- gold/amber
         elseif tpInfo.type == "yearly" then
             if tpInfo.month then
-                tpText = "Yearly Bonus Reward - " .. tpInfo.month
+                tpText = string.format(L["Yearly Bonus Reward - %s"], tpInfo.month)
             else
-                tpText = "Yearly Bonus Reward"
+                tpText = L["Yearly Bonus Reward"]
             end
             tpColor = {0.85, 0.55, 0.9, 1} -- purple
         elseif tpInfo.type == "datamined" then
-            tpText = "Upcoming - Not Yet Available"
+            tpText = L["Upcoming - Not Yet Available"]
             tpColor = {0.6, 0.6, 0.6, 1} -- grey
         end
 
@@ -1391,17 +1391,17 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
 
     -- Method label lookup
     local GUIDE_METHOD_LABELS = {
-        NPC        = "Rare / NPC Drop",
-        BOSS       = "Boss Drop",
-        ZONE       = "Zone Drop",
-        USE        = "Container / Use",
-        FISHING    = "Fishing",
-        ARCH       = "Archaeology",
-        SPECIAL    = "Special",
-        MINING     = "Mining",
-        COLLECTION = "Collection",
-        VENDOR     = "Vendor",
-        QUEST      = "Quest",
+        NPC        = L["Rare / NPC Drop"],
+        BOSS       = L["Boss Drop"],
+        ZONE       = L["Zone Drop"],
+        USE        = L["Container / Use"],
+        FISHING    = L["Fishing"],
+        ARCH       = L["Archaeology"],
+        SPECIAL    = L["Special"],
+        MINING     = L["Mining"],
+        COLLECTION = L["Collection"],
+        VENDOR     = L["Vendor"],
+        QUEST      = L["Quest"],
     }
 
     if guideDropInfo then
@@ -1420,12 +1420,12 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
         if guideDropInfo.method then
             local methodLabel = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             methodLabel:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
-            methodLabel:SetText(L["Source:"] or "Source:")
+            methodLabel:SetText(L["Source:"])
             methodLabel:SetTextColor(0.5, 0.55, 0.65, 1)
 
             local methodValue = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             methodValue:SetPoint("LEFT", methodLabel, "RIGHT", 4, 0)
-            methodValue:SetText(GUIDE_METHOD_LABELS[guideDropInfo.method] or guideDropInfo.method or "Unknown")
+            methodValue:SetText(GUIDE_METHOD_LABELS[guideDropInfo.method] or guideDropInfo.method or L["Unknown"])
             methodValue:SetTextColor(0.4, 0.78, 0.95, 1)
             detailsYOffset = detailsYOffset - 16
         end
@@ -1434,7 +1434,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
         if guideDropInfo.chance and guideDropInfo.chance > 0 then
             local chanceLabel = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             chanceLabel:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
-            chanceLabel:SetText(L["Drop Rate:"] or "Drop Rate:")
+            chanceLabel:SetText(L["Drop Rate:"])
             chanceLabel:SetTextColor(0.5, 0.55, 0.65, 1)
 
             local pct = (1 / guideDropInfo.chance) * 100
@@ -1473,7 +1473,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                 if npcDisplayName then
                     local npcLabel = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                     npcLabel:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
-                    npcLabel:SetText(L["NPC:"] or "NPC:")
+                    npcLabel:SetText(L["NPC:"])
                     npcLabel:SetTextColor(0.5, 0.55, 0.65, 1)
 
                     local npcValue = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -1497,7 +1497,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                 if zoneMapInfo and zoneMapInfo.name then
                     local zoneLabel = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                     zoneLabel:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
-                    zoneLabel:SetText(L["Zone:"] or "Zone:")
+                    zoneLabel:SetText(L["Zone:"])
                     zoneLabel:SetTextColor(0.5, 0.55, 0.65, 1)
 
                     local zoneValue = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -1514,7 +1514,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                 if c.x and c.y then
                     local coordLabel = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                     coordLabel:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
-                    coordLabel:SetText(L["Coords:"] or "Coords:")
+                    coordLabel:SetText(L["Coords:"])
                     coordLabel:SetTextColor(0.5, 0.55, 0.65, 1)
 
                     local coordValue = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -1849,11 +1849,11 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                     elseif cost.type == "item" and cost.id > 0 then
                         -- Query item info
                         local itemName, _, _, _, _, _, _, _, _, itemTexture = C_Item.GetItemInfo(cost.id)
-                        costName = itemName or ("Item " .. cost.id)
+                        costName = itemName or (string.format(L["Item %d"], cost.id))
                         costIcon = itemTexture
                         playerHas = C_Item.GetItemCount(cost.id, true) or 0
                     elseif cost.type == "gold" then
-                        costName = "Gold"
+                        costName = L["Gold"]
                         costIcon = "Interface\\MoneyFrame\\UI-GoldIcon"
                         playerHas = (GetMoney() or 0)
                     end
@@ -1954,7 +1954,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
 
                 local achLabel = achBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 achLabel:SetPoint("LEFT", achBtn, "LEFT", 0, 0)
-                achLabel:SetText(L["Achievement:"] or "Achievement:")
+                achLabel:SetText(L["Achievement:"])
                 achLabel:SetTextColor(0.5, 0.55, 0.65, 1)
 
                 local achValue = achBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -2038,7 +2038,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                     end
 
                     GameTooltip:AddLine(" ")
-                    GameTooltip:AddLine("|cFF00FF00Click to view achievement|r")
+                    GameTooltip:AddLine("|cFF00FF00" .. L["Click to view achievement"] .. "|r")
                     GameTooltip:Show()
                 end)
                 achBtn:SetScript("OnLeave", function()

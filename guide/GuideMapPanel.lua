@@ -509,9 +509,9 @@ local function CreateMountRow(parent, data, width)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         local name = self.data and (self.data.mountName or self.data.name) or "Mount"
         GameTooltip:AddLine(name, 0.40, 0.78, 0.95)
-        GameTooltip:AddLine("Left-click: Open mount details", 0.70, 0.70, 0.70)
-        GameTooltip:AddLine("Right-click: Set waypoint", 0.70, 0.70, 0.70)
-        GameTooltip:AddLine("Ctrl+click: Preview mount", 0.70, 0.70, 0.70)
+        GameTooltip:AddLine(L["Left-click: Open mount details"], 0.70, 0.70, 0.70)
+        GameTooltip:AddLine(L["Right-click: Set waypoint"], 0.70, 0.70, 0.70)
+        GameTooltip:AddLine(L["Ctrl+click: Preview mount"], 0.70, 0.70, 0.70)
         GameTooltip:Show()
     end)
     row:SetScript("OnLeave", function(self)
@@ -562,7 +562,7 @@ local function PopulatePanel()
     -- Zone title
     local mapInfo = C_Map.GetMapInfo(mapID)
     local zoneName = mapInfo and mapInfo.name or ("Map " .. mapID)
-    if panel.Title then panel.Title:SetText("MCL  -  " .. zoneName) end
+    if panel.Title then panel.Title:SetText(string.format(L["MCL  -  %s"], zoneName)) end
 
     local mounts = GetFilteredMounts(mapID)
 
@@ -749,7 +749,7 @@ local function MakeWaypointBtn(parent, mapId, wx, wy, label, xPos, yPos)
         end
         OpenWorldMap(mapId)
         tx:SetTextColor(0.3, 0.85, 0.4, 1)
-        tx:SetText(L["Set!"] or "Set!")
+        tx:SetText(L["Set!"])
         C_Timer.After(1.5, function()
             tx:SetTextColor(0.4, 0.78, 0.95, 1)
             tx:SetText(label or "Waypoint")
@@ -1024,9 +1024,9 @@ local function PopulateCard(data)
         if not instCoords and not bossOnly and gd.coords and gd.coords[1] and gd.coords[1].m then
             local co = gd.coords[1]
             local zi = C_Map.GetMapInfo(co.m)
-            if zi and zi.name then Row("Zone:", zi.name) end
+            if zi and zi.name then Row(L["Zone:"], zi.name) end
             if co.x and co.y then
-                Row("Coords:", string.format("%.1f, %.1f", co.x, co.y))
+                Row(L["Coords:"], string.format("%.1f, %.1f", co.x, co.y))
                 MakeWaypointBtn(P, co.m, co.x, co.y,
                     string.format("%s (%.1f, %.1f)", zi and zi.name or "Go", co.x, co.y), 10, y)
                 y = y - 22
@@ -1039,13 +1039,13 @@ local function PopulateCard(data)
         local rep = MCL_GUIDE_GET_REP_INFO(spellID)
         if rep then
             y = y - 4
-            local rl = rep.isFriendship and "Friendship:" or rep.isRenown and "Renown:" or "Reputation:"
+            local rl = rep.isFriendship and L["Friendship:"] or rep.isRenown and L["Renown:"] or L["Reputation:"]
             Row(rl, rep.factionName, nil, {0.4, 0.78, 0.95, 1})
-            Row("Required:", rep.requiredText, nil, {0.9, 0.9, 0.2, 1})
+            Row(L["Required:"], rep.requiredText, nil, {0.9, 0.9, 0.2, 1})
             local curClr = rep.isMet and {0.3, 0.85, 0.4, 1} or {0.9, 0.25, 0.25, 1}
-            Row("Current:", rep.currentText, nil, curClr)
+            Row(L["Current:"], rep.currentText, nil, curClr)
             if rep.vendorName and rep.vendorMapId and rep.vendorX and rep.vendorY then
-                Row("Vendor:", string.format("%s (%.1f, %.1f)", rep.vendorName, rep.vendorX, rep.vendorY))
+                Row(L["Vendor:"], string.format("%s (%.1f, %.1f)", rep.vendorName, rep.vendorX, rep.vendorY))
                 MakeWaypointBtn(P, rep.vendorMapId, rep.vendorX, rep.vendorY, rep.vendorName, 10, y)
                 y = y - 22
             end
@@ -1071,9 +1071,9 @@ local function PopulateCard(data)
                     if inf then cn = inf.name or cn; ci = inf.iconFileID; ph = inf.quantity or 0 end
                 elseif cost.type == "item" and cost.id > 0 then
                     local n, _, _, _, _, _, _, _, _, t = C_Item.GetItemInfo(cost.id)
-                    cn = n or ("Item " .. cost.id); ci = t; ph = C_Item.GetItemCount(cost.id, true) or 0
+                    cn = n or (string.format(L["Item %d"], cost.id)); ci = t; ph = C_Item.GetItemCount(cost.id, true) or 0
                 elseif cost.type == "gold" then
-                    cn = "Gold"; ci = "Interface\\MoneyFrame\\UI-GoldIcon"; ph = GetMoney() or 0
+                    cn = L["Gold"]; ci = "Interface\\MoneyFrame\\UI-GoldIcon"; ph = GetMoney() or 0
                 end
                 local dh = cost.type == "gold" and math.floor(ph / 10000) or ph
                 local dn = cost.type == "gold" and math.floor(rq / 10000) or rq
@@ -1134,7 +1134,7 @@ local function PopulateCard(data)
             if achName then
                 y = y - 4
                 local achClr = achDone and {0.3, 0.85, 0.4, 1} or {0.9, 0.9, 0.2, 1}
-                local _, achVal = Row("Achievement:", achName, nil, achClr)
+                local _, achVal = Row(L["Achievement:"], achName, nil, achClr)
 
                 -- Make clickable
                 local achBtn = CreateFrame("Button", nil, P)
@@ -1156,9 +1156,9 @@ local function PopulateCard(data)
                     achVal:SetTextColor(1, 1, 1, 1)
                     GameTooltip:SetOwner(achBtn, "ANCHOR_RIGHT")
                     GameTooltip:AddLine(achName, 1, 1, 1)
-                    GameTooltip:AddLine(achDone and "Completed" or "In progress",
+                    GameTooltip:AddLine(achDone and L["Completed"] or L["In progress"],
                         achDone and 0.3 or 0.9, achDone and 0.85 or 0.9, achDone and 0.4 or 0.2)
-                    GameTooltip:AddLine("|cFF00FF00Click to view|r")
+                    GameTooltip:AddLine("|cFF00FF00" .. L["Click to view"] .. "|r")
                     GameTooltip:Show()
                 end)
                 achBtn:SetScript("OnLeave", function()

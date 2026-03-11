@@ -11,6 +11,8 @@
 -- ─── Global addon table ──────────────────────────────────────
 MCL_GUIDE = MCL_GUIDE or {}
 local Guide = MCL_GUIDE
+local _, MCLcore = ...
+local L = MCLcore.L or {}
 
 Guide.ready         = false
 Guide.mountLookup   = {}    -- spellId → merged data record
@@ -605,33 +607,37 @@ end
 
 -- ─── Method text helpers ─────────────────────────────────────
 local METHOD_LABELS = {
-    NPC        = "Rare / NPC Drop",
-    BOSS       = "Boss Drop",
-    ZONE       = "Zone Drop",
-    USE        = "Container / Use",
-    FISHING    = "Fishing",
-    ARCH       = "Archaeology",
-    SPECIAL    = "Special",
-    MINING     = "Mining",
-    COLLECTION = "Collection",
-    VENDOR     = "Vendor",
-    QUEST      = "Quest",
+    NPC        = L["Rare / NPC Drop"],
+    BOSS       = L["Boss Drop"],
+    ZONE       = L["Zone Drop"],
+    USE        = L["Container / Use"],
+    FISHING    = L["Fishing"],
+    ARCH       = L["Archaeology"],
+    SPECIAL    = L["Special"],
+    MINING     = L["Mining"],
+    COLLECTION = L["Collection"],
+    VENDOR     = L["Vendor"],
+    QUEST      = L["Quest"],
+    Treasure   = L["Treasure"],
+    Chest      = L["Chest"],
+    Dungeon    = L["Dungeon"],
+    ["Grand Hunt"] = L["Grand Hunt"],
 }
 
 function Guide:GetMethodText(method)
-    return METHOD_LABELS[method] or method or "Unknown"
+    return METHOD_LABELS[method] or method or L["Unknown"]
 end
 
 -- ─── Difficulty labels ───────────────────────────────────────
 local DIFF_LABELS = {
-    [2]  = "Heroic",
-    [14] = "Normal",
-    [15] = "Heroic",
-    [16] = "Mythic",
-    [17] = "LFR",
-    [23] = "Mythic+",
-    [24] = "Timewalking",
-    [33] = "TW Raid",
+    [2]  = L["Heroic"],
+    [14] = L["Normal"],
+    [15] = L["Heroic"],
+    [16] = L["Mythic"],
+    [17] = L["LFR"],
+    [23] = L["Mythic+"],
+    [24] = L["Timewalking"],
+    [33] = L["TW Raid"],
 }
 
 function Guide:GetDifficultyText(difficulties)

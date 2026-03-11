@@ -14,13 +14,7 @@ local main_frame_width = 800
 local main_frame_height = 600
 
 -- Sort modes for mount lists within categories
-local SORT_MODES = {
-    { key = "default",   label = "Default" },
-    { key = "name_asc",  label = "Name A-Z" },
-    { key = "name_desc", label = "Name Z-A" },
-    { key = "collected", label = "Collected First" },
-    { key = "uncollected", label = "Uncollected First" },
-}
+local SORT_MODES
 
 -- Resolve a mount entry (item ID, "mXXX" string, etc.) into a sortable name and collected flag
 local function ResolveMountSortInfo(mountId)
@@ -69,6 +63,14 @@ end
 local r,g,b,a
 
 local L = MCLcore.L
+
+SORT_MODES = {
+    { key = "default",     label = L["Default"] },
+    { key = "name_asc",    label = L["Name A-Z"] },
+    { key = "name_desc",   label = L["Name Z-A"] },
+    { key = "collected",   label = L["Collected First"] },
+    { key = "uncollected", label = L["Uncollected First"] },
+}
 
 -- Recursively release all children of a frame.
 -- Children are hidden, stripped of scripts, and orphaned so they stop
@@ -567,8 +569,8 @@ function MCL_frames:CreateMainFrame()
     -- SA button
     MCL_mainFrame.sa = CreateHeaderButton(
         MCL_mainFrame.headerBar, 30, "SA",
-        L["Simple Armory"] or "Simple Armory",
-        L["Copy your Simple Armory profile link"] or "Copy your Simple Armory profile link",
+        L["Simple Armory"],
+        L["Copy your Simple Armory profile link"],
         function()
             if MCLcore.Function and MCLcore.Function.simplearmoryLink then
                 MCLcore.Function:simplearmoryLink()
@@ -580,8 +582,8 @@ function MCL_frames:CreateMainFrame()
     -- DFA button
     MCL_mainFrame.dfa = CreateHeaderButton(
         MCL_mainFrame.headerBar, 30, "DFA",
-        L["Data for Azeroth"] or "Data for Azeroth",
-        L["Copy your Data for Azeroth profile link"] or "Copy your Data for Azeroth profile link",
+        L["Data for Azeroth"],
+        L["Copy your Data for Azeroth profile link"],
         function()
             if MCLcore.Function and MCLcore.Function.dfaLink then
                 MCLcore.Function:dfaLink()
@@ -593,8 +595,8 @@ function MCL_frames:CreateMainFrame()
     -- Report button (bug icon)
     MCL_mainFrame.report = CreateHeaderButton(
         MCL_mainFrame.headerBar, 22, "",
-        "Report Issue",
-        "Report a missing or incorrect mount",
+        L["Report Issue"],
+        L["Report a missing or incorrect mount"],
         function()
             if MCLcore.Function and MCLcore.Function.reportLink then
                 MCLcore.Function:reportLink()
@@ -628,9 +630,9 @@ function MCL_frames:CreateMainFrame()
 
     -- Compare button (group compare feature)
     MCL_mainFrame.compare = CreateHeaderButton(
-        MCL_mainFrame.headerBar, 60, "Compare",
-        "Compare Collections",
-        "Compare your mount collection with a party or raid member",
+        MCL_mainFrame.headerBar, 60, L["Compare"],
+        L["Compare Collections"],
+        L["Compare your mount collection with a party or raid member"],
         function()
             if MCLcore.Compare and MCLcore.Compare.ShowUserPicker then
                 MCLcore.Compare:ShowUserPicker()
@@ -1228,7 +1230,7 @@ function MCL_frames:SetTabs()
         StyleNavButton(tab, false)  -- Use our styling function
         tab.text = tab:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         tab.text:SetPoint("LEFT", 10, 0)
-        tab.text:SetText(L["Settings"] or "Settings")
+        tab.text:SetText(L["Settings"])
         tab.section = {name = "Settings"}
         tab.content = MCLcore.Frames:createSettingsFrame(MCL_mainFrame.ScrollChild)
         tab.content:Hide()
@@ -1252,7 +1254,7 @@ function MCL_frames:SetTabs()
     -- 8. About tab
     do
         local tab = CreateFrame("Button", nil, tabFrame, "BackdropTemplate")
-        local aboutText = L["About"] or "About"
+        local aboutText = L["About"]
         tab:SetSize(nav_width + 8, 32)
         tab:SetPoint("TOPLEFT", tabFrame, "TOPLEFT", 1, navYOffset)
         StyleNavButton(tab, false)
@@ -1564,7 +1566,7 @@ function MCL_frames:createContentFrame(relativeFrame, title, sectionIcon)
         local instructionsText = instructionsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         instructionsText:SetPoint("LEFT", instructionsFrame, "LEFT", 10, 0)
         -- Use color codes to make "Ctrl + Right Click" bold and orange
-        instructionsText:SetText(L["Pin Instructions Text"] or "|cffFF8800|TInterface\\GossipFrame\\AvailableQuestIcon:0:0:0:0:32:32:0:32:0:32|t Ctrl + Right Click|r to pin/unpin mounts")
+        instructionsText:SetText(L["Pin Instructions Text"])
         instructionsText:SetTextColor(0.9, 0.9, 1, 1)  -- Light blue-white for the rest of the text
         
         -- Adjust frame height to accommodate instructions
@@ -1723,7 +1725,7 @@ function MCL_frames:createZoneDropsFrame(relativeFrame)
     -- Title
     frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     frame.title:SetPoint("TOPLEFT", frame, "TOPLEFT", 24, -10)
-    frame.title:SetText(L["Current Zone"] or "Current Zone")
+    frame.title:SetText(L["Current Zone"])
     frame.title:SetTextColor(0.4, 0.78, 0.95, 1)
 
     -- Map icon next to title
@@ -1797,7 +1799,7 @@ function MCL_frames:RefreshZoneDrops()
         -- Show "no mounts" message
         local noData = container:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         noData:SetPoint("TOPLEFT", container, "TOPLEFT", 15, 0)
-        noData:SetText(L["No drop mounts found for this zone."] or "No drop mounts found for this zone.")
+        noData:SetText(L["No drop mounts found for this zone."])
         noData:SetTextColor(0.5, 0.55, 0.65, 1)
         local dummyRow = CreateFrame("Frame", nil, container)
         dummyRow:SetSize(1, 30)
@@ -2011,7 +2013,7 @@ function MCL_frames:RefreshZoneDrops()
     -- Summary line
     local totalInZone = uncollectedCount + collectedCount
     if totalInZone > 0 then
-        frame.zoneLabel:SetText(string.format("%s  —  %d/%d " .. (L["collected"] or "collected"),
+        frame.zoneLabel:SetText(string.format("%s  —  %d/%d " .. (L["collected"]),
             zoneName, collectedCount, totalInZone))
     end
 
@@ -2137,30 +2139,30 @@ function MCL_frames:RefreshRepFilter()
     local function GetRepStatus(repInfo)
         if not repInfo or not repInfo.factionId then return nil end
         local result = {
-            factionName  = repInfo.factionName or "Unknown",
+            factionName  = repInfo.factionName or L["Unknown"],
             isRenown     = repInfo.renown or false,
             isMet        = false,
-            currentText  = "Unknown",
-            requiredText = "Unknown",
+            currentText  = L["Unknown"],
+            requiredText = L["Unknown"],
         }
         if repInfo.renown then
             local required = repInfo.level or 0
-            result.requiredText = "Renown " .. required
+            result.requiredText = L["Renown"] .. " " .. required
             if C_MajorFactions and C_MajorFactions.GetMajorFactionData then
                 local data = C_MajorFactions.GetMajorFactionData(repInfo.factionId)
                 if data then
                     local current = data.renownLevel or 0
-                    result.currentText = "Renown " .. current
+                    result.currentText = L["Renown"] .. " " .. current
                     result.isMet = current >= required
                 end
             end
         else
             local reqId = STANDING_IDS[repInfo.levelName] or 8
-            result.requiredText = repInfo.levelName or "Exalted"
+            result.requiredText = repInfo.levelName or L["Exalted"]
             if C_Reputation and C_Reputation.GetFactionDataByID then
                 local data = C_Reputation.GetFactionDataByID(repInfo.factionId)
                 if data then
-                    local standingName = STANDING_LABELS[data.reaction] or ("Standing " .. (data.reaction or "?"))
+                    local standingName = STANDING_LABELS[data.reaction] or (L["Standing"] .. " " .. (data.reaction or "?"))
                     local progressText = ""
                     if data.nextReactionThreshold and data.nextReactionThreshold > 0 then
                         progressText = " (" .. (data.currentStanding or 0) .. "/" .. data.nextReactionThreshold .. ")"
@@ -2325,9 +2327,9 @@ function MCL_frames:RefreshRepFilter()
             -- Required standing (below name)
             local reqLabel
             if m.isRenown then
-                reqLabel = "Renown " .. (m.repInfo.level or "?")
+                reqLabel = L["Renown"] .. " " .. (m.repInfo.level or "?")
             else
-                reqLabel = m.repInfo.levelName or "Exalted"
+                reqLabel = m.repInfo.levelName or L["Exalted"]
             end
             row.reqText = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
             row.reqText:SetPoint("TOPLEFT", row.nameText, "BOTTOMLEFT", 0, -1)
@@ -2343,11 +2345,11 @@ function MCL_frames:RefreshRepFilter()
                         table.insert(costParts, string.format("%dg", cost.amount))
                     elseif cost.type == "currency" then
                         local info = C_CurrencyInfo and C_CurrencyInfo.GetCurrencyInfo(cost.id)
-                        local cname = info and info.name or ("Currency " .. cost.id)
+                        local cname = info and info.name or (L["Currency"] .. " " .. cost.id)
                         local have = info and info.quantity or 0
                         table.insert(costParts, string.format("%d/%d %s", have, cost.amount, cname))
                     elseif cost.type == "item" then
-                        local iname = C_Item and C_Item.GetItemNameByID and C_Item.GetItemNameByID(cost.id) or ("Item " .. cost.id)
+                        local iname = C_Item and C_Item.GetItemNameByID and C_Item.GetItemNameByID(cost.id) or (L["Item"] .. " " .. cost.id)
                         local have = C_Item and C_Item.GetItemCount and C_Item.GetItemCount(cost.id, true) or GetItemCount(cost.id, true) or 0
                         table.insert(costParts, string.format("%d/%d %s", have, cost.amount, iname))
                     end
@@ -2544,16 +2546,11 @@ function MCL_frames:createAboutFrame(relativeFrame)
     -- ══════════════════════════════════════════════════════
     local disclaimerCard = createCard(frame, L["Data Disclaimer"], yOffset, 150)
 
-    local disclaimerLines = {
-        "|cFFFFCC00This addon's location and source data is a work in progress.|r",
-        "",
-        "Zone coordinates, vendor locations, drop sources and reputation requirements",
-        "are continuously being reviewed and corrected. Some entries may be inaccurate,",
-        "outdated, or missing entirely — especially for older content and faction-specific",
-        "NPCs that have been relocated across patches.",
-        "",
-        "If you spot something wrong, please let us know using the links below!",
-    }
+    local disclaimerText = L["DATA_DISCLAIMER"]
+    local disclaimerLines = {}
+    for line in disclaimerText:gmatch("([^\n]*)\n?") do
+        table.insert(disclaimerLines, line)
+    end
 
     local textY = -34
     for _, line in ipairs(disclaimerLines) do
@@ -2580,13 +2577,11 @@ function MCL_frames:createAboutFrame(relativeFrame)
     -- ══════════════════════════════════════════════════════
     local helpCard = createCard(frame, L["Help Improve MCL"], yOffset, 180)
 
-    local helpLines = {
-        "Community contributions are what make this addon better for everyone.",
-        "Whether it's a wrong zone name, a missing mount, or coordinates that",
-        "point to the wrong NPC — every report helps.",
-        "",
-        "Here's how you can contribute:",
-    }
+    local helpText = L["HELP_IMPROVE_BODY"]
+    local helpLines = {}
+    for line in helpText:gmatch("([^\n]*)\n?") do
+        table.insert(helpLines, line)
+    end
 
     textY = -34
     for _, line in ipairs(helpLines) do
@@ -2625,12 +2620,11 @@ function MCL_frames:createAboutFrame(relativeFrame)
     -- ══════════════════════════════════════════════════════
     local creditsCard = createCard(frame, L["Credits"], yOffset, 100)
 
-    local creditsLines = {
-        "Created by |cFF1FB7EBCamyam|r",
-        "",
-        "Data sourced from Wowhead, wago.tools, and community contributions.",
-        "Thank you to everyone who has submitted corrections and reports!",
-    }
+    local creditsText = L["CREDITS_BODY"]
+    local creditsLines = {}
+    for line in creditsText:gmatch("([^\n]*)\n?") do
+        table.insert(creditsLines, line)
+    end
 
     textY = -34
     for _, line in ipairs(creditsLines) do
@@ -2673,7 +2667,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     -- Title text (placed first so icon can anchor to it)
     frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     frame.title:SetPoint("TOPLEFT", frame, "TOPLEFT", 24, -10)
-    frame.title:SetText(L["Settings"] or "Settings")
+    frame.title:SetText(L["Settings"])
     frame.title:SetTextColor(0.4, 0.78, 0.95, 1)
     frame.name = "Settings"
     
@@ -2898,7 +2892,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     -- =====================================================
     -- CARD 1: Display Options
     -- =====================================================
-    local displayCard = createCard(frame, L["Display Options"] or "Display Options", yPos, 160)
+    local displayCard = createCard(frame, L["Display Options"], yPos, 160)
     
     local displayY = -34
     
@@ -2911,7 +2905,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     styleCheckbox(hideCheck)
     local hideLabel = displayCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     hideLabel:SetPoint("LEFT", hideCheck, "RIGHT", 8, 0)
-    hideLabel:SetText(L["Hide Collected Mounts"] or "Hide Collected Mounts")
+    hideLabel:SetText(L["Hide Collected Mounts"])
     hideLabel:SetTextColor(0.7, 0.78, 0.88, 1)
     displayY = displayY - 30
     
@@ -2924,7 +2918,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     styleCheckbox(unobtCheck)
     local unobtLabel = displayCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     unobtLabel:SetPoint("LEFT", unobtCheck, "RIGHT", 8, 0)
-    unobtLabel:SetText(L["Show Unobtainable Mounts"] or "Show Unobtainable Mounts")
+    unobtLabel:SetText(L["Show Unobtainable Mounts"])
     unobtLabel:SetTextColor(0.7, 0.78, 0.88, 1)
     displayY = displayY - 30
     
@@ -2937,7 +2931,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     styleCheckbox(hoverCheck)
     local hoverLabel = displayCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     hoverLabel:SetPoint("LEFT", hoverCheck, "RIGHT", 8, 0)
-    hoverLabel:SetText(L["Enable Mount Card on Hover"] or "Enable Mount Card on Hover")
+    hoverLabel:SetText(L["Enable Mount Card on Hover"])
     hoverLabel:SetTextColor(0.7, 0.78, 0.88, 1)
     displayY = displayY - 30
     
@@ -2961,7 +2955,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     styleCheckbox(minimapCheck)
     local minimapLabel = displayCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     minimapLabel:SetPoint("LEFT", minimapCheck, "RIGHT", 8, 0)
-    minimapLabel:SetText(L["Show Minimap Icon"] or "Show Minimap Icon")
+    minimapLabel:SetText(L["Show Minimap Icon"])
     minimapLabel:SetTextColor(0.7, 0.78, 0.88, 1)
     
     yPos = yPos - 170
@@ -2969,11 +2963,11 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     -- =====================================================
     -- CARD 3: Layout
     -- =====================================================
-    local layoutCard = createCard(frame, L["Layout Options"] or "Layout", yPos, 120)
+    local layoutCard = createCard(frame, L["Layout Options"], yPos, 120)
     
     local mountsLabel = layoutCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     mountsLabel:SetPoint("TOPLEFT", layoutCard, "TOPLEFT", 12, -34)
-    mountsLabel:SetText((L["Mounts Per Row"] or "Mounts Per Row") .. ": " .. (MCL_SETTINGS.mountsPerRow or 12))
+    mountsLabel:SetText((L["Mounts Per Row"]) .. ": " .. (MCL_SETTINGS.mountsPerRow or 12))
     mountsLabel:SetTextColor(0.7, 0.78, 0.88, 1)
     
     local mountsSlider = CreateFrame("Slider", nil, layoutCard)
@@ -2999,7 +2993,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     
     mountsSlider.originalOnValueChanged = function(self, value)
         MCL_SETTINGS.mountsPerRow = math.floor(value)
-        mountsLabel:SetText((L["Mounts Per Row"] or "Mounts Per Row") .. ": " .. MCL_SETTINGS.mountsPerRow)
+        mountsLabel:SetText((L["Mounts Per Row"]) .. ": " .. MCL_SETTINGS.mountsPerRow)
         if not self.reloadNote then
             self.reloadNote = layoutCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             self.reloadNote:SetPoint("TOPLEFT", mountsSlider, "BOTTOMLEFT", 0, -20)
@@ -3014,7 +3008,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     -- =====================================================
     -- CARD 4: Progress Bar
     -- =====================================================
-    local progressCard = createCard(frame, L["Progress Bar Options"] or "Progress Bar", yPos, 240)
+    local progressCard = createCard(frame, L["Progress Bar Options"], yPos, 240)
     
     -- Texture selector
     if not MCLcore.media then
@@ -3025,7 +3019,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     if MCLcore.media then
         local texLabel = progressCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         texLabel:SetPoint("TOPLEFT", progressCard, "TOPLEFT", 12, -34)
-        texLabel:SetText(L["Progress Bar Texture"] or "Texture:")
+        texLabel:SetText(L["Progress Bar Texture"])
         texLabel:SetTextColor(0.7, 0.78, 0.88, 1)
         
         -- Dropdown button
@@ -3159,7 +3153,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     -- -----------------------------------------------------------------
     local colorLabel = progressCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     colorLabel:SetPoint("TOPLEFT", progressCard, "TOPLEFT", 12, -100)
-    colorLabel:SetText(L["Progress Colors"] or "Progress Colors:")
+    colorLabel:SetText(L["Progress Colors"])
     colorLabel:SetTextColor(0.7, 0.78, 0.88, 1)
     
     -- Helper: create a color swatch + label that opens the WoW color picker
@@ -3212,10 +3206,10 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     end
     
     local swatchY = -120
-    local sw1 = createColorSwatch(progressCard,  12, swatchY, "low",      L["< 33%"] or "< 33%")
-    local sw2 = createColorSwatch(progressCard, 110, swatchY, "medium",   L["< 66%"] or "< 66%")
-    local sw3 = createColorSwatch(progressCard, 208, swatchY, "high",     L["< 100%"] or "< 100%")
-    local sw4 = createColorSwatch(progressCard, 306, swatchY, "complete", L["100%"] or "100%")
+    local sw1 = createColorSwatch(progressCard,  12, swatchY, "low",      L["< 33%"])
+    local sw2 = createColorSwatch(progressCard, 110, swatchY, "medium",   L["< 66%"])
+    local sw3 = createColorSwatch(progressCard, 208, swatchY, "high",     L["< 100%"])
+    local sw4 = createColorSwatch(progressCard, 306, swatchY, "complete", L["100%"])
     
     -- Reset Colors button
     local resetColorsBtn = CreateFrame("Button", nil, progressCard, "BackdropTemplate")
@@ -3230,7 +3224,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     resetColorsBtn:SetBackdropBorderColor(0.2, 0.5, 0.8, 0.6)
     local rcText = resetColorsBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     rcText:SetPoint("CENTER")
-    rcText:SetText(L["Reset Colors"] or "Reset Colors")
+    rcText:SetText(L["Reset Colors"])
     rcText:SetTextColor(0.4, 0.78, 0.95, 1)
     resetColorsBtn:SetScript("OnEnter", function(self)
         self:SetBackdropColor(0.15, 0.25, 0.4, 0.9); self:SetBackdropBorderColor(0.3, 0.6, 0.9, 1)
@@ -3261,7 +3255,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     resetTexBtn:SetBackdropBorderColor(0.2, 0.5, 0.8, 0.6)
     local rtText = resetTexBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     rtText:SetPoint("CENTER")
-    rtText:SetText(L["Reset Texture"] or "Reset Texture")
+    rtText:SetText(L["Reset Texture"])
     rtText:SetTextColor(0.4, 0.78, 0.95, 1)
     resetTexBtn:SetScript("OnEnter", function(self)
         self:SetBackdropColor(0.15, 0.25, 0.4, 0.9); self:SetBackdropBorderColor(0.3, 0.6, 0.9, 1)
@@ -3278,12 +3272,12 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     -- =====================================================
     -- CARD 5: Window Opacity
     -- =====================================================
-    local opacityCard = createCard(frame, L["Window Opacity"] or "Window Opacity", yPos, 110)
+    local opacityCard = createCard(frame, L["Window Opacity"], yPos, 110)
     
     local opacityValue = MCL_SETTINGS.opacity or 0.85
     local opacityLabel = opacityCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     opacityLabel:SetPoint("TOPLEFT", opacityCard, "TOPLEFT", 12, -34)
-    opacityLabel:SetText((L["Opacity"] or "Opacity") .. ": " .. math.floor(opacityValue * 100) .. "%")
+    opacityLabel:SetText((L["Opacity"]) .. ": " .. math.floor(opacityValue * 100) .. "%")
     opacityLabel:SetTextColor(0.7, 0.78, 0.88, 1)
     
     local opacitySlider = CreateFrame("Slider", nil, opacityCard)
@@ -3307,7 +3301,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     
     opacitySlider.originalOnValueChanged = function(self, value)
         MCL_SETTINGS.opacity = value
-        opacityLabel:SetText((L["Opacity"] or "Opacity") .. ": " .. math.floor(value * 100) .. "%")
+        opacityLabel:SetText((L["Opacity"]) .. ": " .. math.floor(value * 100) .. "%")
         -- Main frame body
         if MCL_mainFrame and MCL_mainFrame.SetBackdropColor then
             MCL_mainFrame:SetBackdropColor(0.10, 0.10, 0.18, value)
@@ -3340,7 +3334,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     resetOpBtn:SetBackdropBorderColor(0.2, 0.5, 0.8, 0.6)
     local roText = resetOpBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     roText:SetPoint("CENTER")
-    roText:SetText(L["Reset Opacity"] or "Reset Opacity")
+    roText:SetText(L["Reset Opacity"])
     roText:SetTextColor(0.4, 0.78, 0.95, 1)
     resetOpBtn:SetScript("OnEnter", function(self)
         self:SetBackdropColor(0.15, 0.25, 0.4, 0.9); self:SetBackdropBorderColor(0.3, 0.6, 0.9, 1)
@@ -3352,7 +3346,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         MCLcore.Function:updateFromDefaults("Opacity")
         local def = 0.85
         opacitySlider:SetValue(def)
-        opacityLabel:SetText((L["Opacity"] or "Opacity") .. ": " .. math.floor(def * 100) .. "%")
+        opacityLabel:SetText((L["Opacity"]) .. ": " .. math.floor(def * 100) .. "%")
     end)
     
     yPos = yPos - 120
@@ -3361,7 +3355,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     -- CARD 6: Collection Toast
     -- =====================================================
     local toastCardHeight = (MCL_GUIDE_DATA and MCL_GUIDE_DATA.zones) and 400 or 350
-    local toastCard = createCard(frame, L["Collection Toast"] or "Collection Toast", yPos, toastCardHeight)
+    local toastCard = createCard(frame, L["Collection Toast"], yPos, toastCardHeight)
     
     local toastY = -34
     local toastXInput, toastYInput  -- forward declarations for coord inputs
@@ -3385,7 +3379,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     -- Mount Collected  (blue section)
     local mountHeader = toastCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     mountHeader:SetPoint("TOPLEFT", toastCard, "TOPLEFT", 12, toastY)
-    mountHeader:SetText("|cFF33AAEE" .. (L["Mount Collected"] or "Mount Collected") .. "|r")
+    mountHeader:SetText("|cFF33AAEE" .. (L["Mount Collected"]) .. "|r")
     toastY = toastY - 20
     
     addToastCheckbox(toastCard, toastY, "enableCollectedToast", "Collection Toast", {0.7, 0.78, 0.88, 1})
@@ -3396,7 +3390,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     -- Category Complete  (purple section)
     local catHeader = toastCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     catHeader:SetPoint("TOPLEFT", toastCard, "TOPLEFT", 12, toastY)
-    catHeader:SetText("|cFFAA55FF" .. (L["Category Complete"] or "Category Complete") .. "|r")
+    catHeader:SetText("|cFFAA55FF" .. (L["Category Complete"]) .. "|r")
     toastY = toastY - 20
     
     addToastCheckbox(toastCard, toastY, "enableCategoryCompleteToast", "Category Complete Toast", {0.7, 0.78, 0.88, 1})
@@ -3407,7 +3401,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     -- Section Complete  (orange section)
     local secHeader = toastCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     secHeader:SetPoint("TOPLEFT", toastCard, "TOPLEFT", 12, toastY)
-    secHeader:SetText("|cFFFF8800" .. (L["Section Complete"] or "Section Complete") .. "|r")
+    secHeader:SetText("|cFFFF8800" .. (L["Section Complete"]) .. "|r")
     toastY = toastY - 20
     
     addToastCheckbox(toastCard, toastY, "enableSectionCompleteToast", "Section Complete Toast", {0.7, 0.78, 0.88, 1})
@@ -3419,7 +3413,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     if MCL_GUIDE_DATA and MCL_GUIDE_DATA.zones then
         local zoneHeader = toastCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         zoneHeader:SetPoint("TOPLEFT", toastCard, "TOPLEFT", 12, toastY)
-        zoneHeader:SetText("|cFF33CCAA" .. (L["Zone Alert"] or "Zone Alert") .. "|r")
+        zoneHeader:SetText("|cFF33CCAA" .. (L["Zone Alert"]) .. "|r")
         toastY = toastY - 20
         
         addToastCheckbox(toastCard, toastY, "enableZoneToast", "Zone Alert Toast", {0.7, 0.78, 0.88, 1}, false)
@@ -3440,7 +3434,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     
     local unlockText = unlockBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     unlockText:SetPoint("CENTER")
-    unlockText:SetText(L["Unlock Toast Position"] or "Unlock Toast Position")
+    unlockText:SetText(L["Unlock Toast Position"])
     unlockText:SetTextColor(0.4, 0.78, 0.95, 1)
     
     unlockBtn:SetScript("OnEnter", function(self)
@@ -3455,11 +3449,11 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         if MCLcore.Toast then
             local isUnlocked = MCLcore.Toast:ToggleUnlock()
             if isUnlocked then
-                unlockText:SetText(L["Lock Toast Position"] or "Lock Toast Position")
+                unlockText:SetText(L["Lock Toast Position"])
                 unlockBtn:SetBackdropColor(0.25, 0.15, 0.08, 0.8)
                 unlockBtn:SetBackdropBorderColor(0.8, 0.6, 0.2, 0.8)
             else
-                unlockText:SetText(L["Unlock Toast Position"] or "Unlock Toast Position")
+                unlockText:SetText(L["Unlock Toast Position"])
                 unlockBtn:SetBackdropColor(0.1, 0.15, 0.25, 0.8)
                 unlockBtn:SetBackdropBorderColor(0.2, 0.5, 0.8, 0.6)
                 -- Refresh X/Y inputs after dragging
@@ -3485,7 +3479,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     resetPosBtn:SetBackdropBorderColor(0.2, 0.5, 0.8, 0.6)
     local resetPosText = resetPosBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     resetPosText:SetPoint("CENTER")
-    resetPosText:SetText(L["Reset Position"] or "Reset Position")
+    resetPosText:SetText(L["Reset Position"])
     resetPosText:SetTextColor(0.4, 0.78, 0.95, 1)
     resetPosBtn:SetScript("OnEnter", function(self)
         self:SetBackdropColor(0.15, 0.25, 0.4, 0.9)
@@ -3508,7 +3502,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     -- X / Y coordinate inputs
     local coordLabel = toastCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     coordLabel:SetPoint("TOPLEFT", toastCard, "TOPLEFT", 12, toastY)
-    coordLabel:SetText(L["Toast Position"] or "Toast Position")
+    coordLabel:SetText(L["Toast Position"])
     coordLabel:SetTextColor(0.7, 0.78, 0.88, 1)
     toastY = toastY - 22
     
@@ -3573,7 +3567,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     applyBtn:SetBackdropBorderColor(0.2, 0.5, 0.8, 0.6)
     local applyText = applyBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     applyText:SetPoint("CENTER")
-    applyText:SetText(L["Apply"] or "Apply")
+    applyText:SetText(L["Apply"])
     applyText:SetTextColor(0.4, 0.78, 0.95, 1)
     applyBtn:SetScript("OnEnter", function(self)
         self:SetBackdropColor(0.15, 0.25, 0.4, 0.9)
@@ -3611,7 +3605,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     -- CARD 7: Map Pin Options
     -- =====================================================
     if MCL_GUIDE_DATA and MCL_GUIDE_DATA.zones then
-        local pinCard = createCard(frame, L["Map Pin Options"] or "Map Pin Options", yPos, 200)
+        local pinCard = createCard(frame, L["Map Pin Options"], yPos, 200)
         
         local pinY = -34
         
@@ -3629,7 +3623,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         styleCheckbox(showPinsCheck)
         local showPinsLabel = pinCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         showPinsLabel:SetPoint("LEFT", showPinsCheck, "RIGHT", 8, 0)
-        showPinsLabel:SetText(L["Show Map Icons"] or "Show Map Icons")
+        showPinsLabel:SetText(L["Show Map Icons"])
         showPinsLabel:SetTextColor(0.7, 0.78, 0.88, 1)
         pinY = pinY - 30
         
@@ -3651,7 +3645,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         styleCheckbox(showPanelCheck)
         local showPanelLabel = pinCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         showPanelLabel:SetPoint("LEFT", showPanelCheck, "RIGHT", 8, 0)
-        showPanelLabel:SetText(L["Show Mount List on Map"] or "Show Mount List on Map")
+        showPanelLabel:SetText(L["Show Mount List on Map"])
         showPanelLabel:SetTextColor(0.7, 0.78, 0.88, 1)
         pinY = pinY - 30
         
@@ -3672,13 +3666,13 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         styleCheckbox(showChildCheck)
         local showChildLabel = pinCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         showChildLabel:SetPoint("LEFT", showChildCheck, "RIGHT", 8, 0)
-        showChildLabel:SetText(L["Show Child-Map Mounts"] or "Show Child-Map Mounts")
+        showChildLabel:SetText(L["Show Child-Map Mounts"])
         showChildLabel:SetTextColor(0.7, 0.78, 0.88, 1)
         pinY = pinY - 30
         
         -- Slider: Map Pin Size
         local pinScaleValue = (MCL_GUIDE_SETTINGS and MCL_GUIDE_SETTINGS.mapPinScale) or 2.0
-        local mapPinSizePrefix = L["Map Pin Size:"] or "Map Pin Size:"
+        local mapPinSizePrefix = L["Map Pin Size:"]
         local pinLabel = pinCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         pinLabel:SetPoint("TOPLEFT", pinCard, "TOPLEFT", 12, pinY)
         pinLabel:SetText(mapPinSizePrefix .. " " .. string.format("%.1fx", pinScaleValue))
@@ -3721,7 +3715,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     -- =====================================================
     -- CARD 8: Reset
     -- =====================================================
-    local resetCard = createCard(frame, L["Danger Zone"] or "Danger Zone", yPos, 60)
+    local resetCard = createCard(frame, L["Danger Zone"], yPos, 60)
     -- Red accent line for danger zone
     local dangerAccent = resetCard:CreateTexture(nil, "ARTWORK", nil, 2)
     dangerAccent:SetHeight(1)
@@ -3742,7 +3736,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     
     local resetText = resetBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     resetText:SetPoint("CENTER")
-    resetText:SetText(L["Reset Settings"] or "Reset Settings")
+    resetText:SetText(L["Reset Settings"])
     resetText:SetTextColor(0.9, 0.6, 0.6, 1)
     
     resetBtn:SetScript("OnEnter", function(self)
@@ -3759,9 +3753,9 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     
     -- Popup dialogs
     StaticPopupDialogs["MCL_RESET_SETTINGS"] = {
-        text = L["Are you sure you want to reset all MCL settings?"] or "Are you sure you want to reset all MCL settings?",
-        button1 = L["Yes"] or "Yes",
-        button2 = L["No"] or "No",
+        text = L["Are you sure you want to reset all MCL settings?"],
+        button1 = L["Yes"],
+        button2 = L["No"],
         OnAccept = function()
             MCL_SETTINGS.hideCollectedMounts = false
             MCL_SETTINGS.unobtainable = false
@@ -3782,9 +3776,9 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         timeout = 0, whileDead = true, hideOnEscape = true, preferredIndex = 3,
     }
     StaticPopupDialogs["MCL_RELOAD_WARNING"] = {
-        text = L["This setting requires a UI reload to take effect. Reload now?"] or "This setting requires a UI reload to take effect. Reload now?",
-        button1 = L["Reload Now"] or "Reload Now",
-        button2 = L["Later"] or "Later",
+        text = L["This setting requires a UI reload to take effect. Reload now?"],
+        button1 = L["Reload Now"],
+        button2 = L["Later"],
         OnAccept = function() ReloadUI() end,
         timeout = 0, whileDead = true, hideOnEscape = true, preferredIndex = 3,
     }

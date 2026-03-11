@@ -234,7 +234,7 @@ local function InitializeSearch()
                 return
             end
 
-            header:SetText(string.format("%d result%s", #self.searchResults, #self.searchResults == 1 and "" or "s"))
+            header:SetText(#self.searchResults == 1 and string.format(L["%d result"], #self.searchResults) or string.format(L["%d results"], #self.searchResults))
 
             -- Build rows
             local rowHeight = 24
@@ -294,10 +294,10 @@ local function InitializeSearch()
                 nameText:SetJustifyH("LEFT")
                 nameText:SetWordWrap(false)
                 if result.isCollected then
-                    nameText:SetText(result.mountName or "Unknown")
+                    nameText:SetText(result.mountName or L["Unknown"])
                     nameText:SetTextColor(0.7, 0.78, 0.88, 1)
                 else
-                    nameText:SetText(result.mountName or "Unknown")
+                    nameText:SetText(result.mountName or L["Unknown"])
                     nameText:SetTextColor(0.45, 0.5, 0.55, 1)
                 end
 
@@ -306,7 +306,7 @@ local function InitializeSearch()
                 sourceText:SetPoint("RIGHT", row, "RIGHT", -4, 0)
                 sourceText:SetJustifyH("RIGHT")
                 sourceText:SetTextColor(0.4, 0.45, 0.5, 1)
-                local shortSource = result.category or result.section or ""
+                local shortSource = (result.category and L[result.category] or result.category) or (result.section and L[result.section] or result.section) or ""
                 if #shortSource > 20 then
                     shortSource = shortSource:sub(1, 18) .. ".."
                 end
@@ -412,7 +412,7 @@ local function InitializeSearch()
             end)
             
             -- Print info for user feedback
-            print("|cff00CCFFMount Collection Log:|r Found '" .. result.mountName .. "' in " .. result.section .. " > " .. result.category)
+            print("|cff00CCFFMount Collection Log:|r " .. string.format(L["MCL_SEARCH_FOUND"], result.mountName, L[result.section] or result.section, L[result.category] or result.category))
         end
 
         function MCLcore.Search:ClearHighlighting()
@@ -587,14 +587,14 @@ SLASH_MCL1 = "/mcl";
 SlashCmdList["MCL"] = function(msg)
     local cmd = msg:lower()
     if cmd == "help" then
-        print("|cff00CCFFMount Collection Log Commands:")
-        print("|cffFF0000Show:|cffFFFFFF Shows your mount collection log")
-        print("|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon")
-        print("|cffFF0000Config:|cffFFFFFF Opens the settings")
-        print("|cffFF0000Party:|cffFFFFFF Check party/raid MCL users & mount counts")
-        print("|cffFF0000Compare:|cffFFFFFF Compare your collection with a group member")
-        print("|cffFF0000Compare clear:|cffFFFFFF Exit comparison mode")
-        print("|cffFF0000Help:|cffFFFFFF Shows commands")
+        print("|cff00CCFF" .. L["MCL_HELP_HEADER"])
+        print("|cffFF0000Show:|cffFFFFFF " .. L["MCL_HELP_SHOW"])
+        print("|cffFF0000Icon:|cffFFFFFF " .. L["MCL_HELP_ICON"])
+        print("|cffFF0000Config:|cffFFFFFF " .. L["MCL_HELP_CONFIG"])
+        print("|cffFF0000Party:|cffFFFFFF " .. L["MCL_HELP_PARTY"])
+        print("|cffFF0000Compare:|cffFFFFFF " .. L["MCL_HELP_COMPARE"])
+        print("|cffFF0000Compare clear:|cffFFFFFF " .. L["MCL_HELP_COMPARE_CLEAR"])
+        print("|cffFF0000Help:|cffFFFFFF " .. L["MCL_HELP_HELP"])
     elseif cmd == "show" or cmd == "" then
         MCLcore.Main.Toggle();
     elseif cmd == "icon" then
