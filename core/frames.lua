@@ -3754,8 +3754,8 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     -- Popup dialogs
     StaticPopupDialogs["MCL_RESET_SETTINGS"] = {
         text = L["Are you sure you want to reset all MCL settings?"],
-        button1 = L["Yes"],
-        button2 = L["No"],
+        button1 = L["YES"],
+        button2 = L["NO"],
         OnAccept = function()
             MCL_SETTINGS.hideCollectedMounts = false
             MCL_SETTINGS.unobtainable = false
