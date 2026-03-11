@@ -141,7 +141,7 @@ end
 --- Combat check: returns true if safe to proceed, prints a message if not
 local function CombatGuard(action)
     if InCombatLockdown() or UnitAffectingCombat("player") then
-        print("|cff00CCFF[MCL]|r Cannot " .. (action or "do that") .. " during combat.")
+        print("|cff00CCFF[MCL]|r " .. string.format(L["Cannot %s during combat."], action or L["do that"]))
         return false
     end
     return true
@@ -336,7 +336,7 @@ local function CreateConsentFrame()
     f:SetBackdropBorderColor(unpack(S.mainBorder))
 
     -- Header
-    local header = CreateHeader(f, 28, "Compare Request")
+    local header = CreateHeader(f, 28, L["Compare Request"])
     header:EnableMouse(true)
     header:RegisterForDrag("LeftButton")
     header:SetScript("OnDragStart", function() f:StartMoving() end)
@@ -497,7 +497,7 @@ local function CreatePickerFrame()
     f:SetBackdropBorderColor(unpack(S.mainBorder))
 
     -- Header bar
-    local header = CreateHeader(f, HEADER_H, "Compare Collections")
+    local header = CreateHeader(f, HEADER_H, L["Compare Collections"])
 
     -- Make draggable from header
     header:EnableMouse(true)
@@ -752,13 +752,13 @@ function Compare:ScanGroup()
     if not CombatGuard("compare") then return end
     local channel = GetGroupChannel()
     if not channel then
-        print("|cff00CCFF[MCL]|r You are not in a party or raid.")
+        print("|cff00CCFF[MCL]|r " .. L["You are not in a party or raid."])
         return
     end
 
     local f = CreatePickerFrame()
     f:Show()
-    f:StartSpinner("Scanning", "Looking for MCL users in your group")
+    f:StartSpinner(L["Scanning"], L["Looking for MCL users in your group"])
 
     scanPending   = true
     scanResponses = {}
@@ -818,7 +818,7 @@ function Compare:RequestCollection(nameOrIndex)
 
     local channel = GetGroupChannel()
     if not channel then
-        print("|cff00CCFF[MCL]|r You are not in a party or raid.")
+        print("|cff00CCFF[MCL]|r " .. L["You are not in a party or raid."])
         return
     end
 
@@ -829,7 +829,7 @@ function Compare:RequestCollection(nameOrIndex)
     -- Show loading state in picker
     local f = Compare.pickerFrame
     if f and f:IsShown() then
-        f:StartSpinner("Requesting", "Waiting for " .. ShortName(target) .. " to respond")
+        f:StartSpinner(L["Requesting"], string.format(L["Waiting for %s to respond"], ShortName(target)))
     end
 
     C_ChatInfo.SendAddonMessage(PREFIX, MSG_REQDATA .. "|" .. target, channel)
@@ -1266,8 +1266,7 @@ local function OnAddonMessage(prefix, message, distribution, sender)
                 if entry.chunks[ii] then received = received + 1 end
             end
             f.statusSub:SetText(
-                "Receiving data from " .. ShortName(sender) ..
-                "  (" .. received .. "/" .. total .. " chunks)"
+                string.format(L["Receiving data from %s (%s)"], ShortName(sender), received .. "/" .. total .. " chunks")
             )
         end
 

@@ -4,8 +4,9 @@
 -- * each player's collected mount totals.
 -- * ------------------------------------------------------
 local _, MCLcore = ...
+local L = MCLcore.L or {}
 
-MCLcore.PartyCheck = {}
+MCLcore.PartyCheck= {}
 local PartyCheck = MCLcore.PartyCheck
 
 -- Addon message prefix (max 16 chars)
@@ -136,14 +137,14 @@ end
 -- --------------------------------------------------------
 
 local function PrintHeader()
-    print("|cff00CCFF[MCL]|r |cFFFFFFFFMount Collection – Party Check|r")
+    print("|cff00CCFF[MCL]|r |cFFFFFFFF" .. L["Mount Collection – Party Check"] .. "|r")
 end
 
 local function PrintResults()
     PrintHeader()
 
     if not next(responses) then
-        print("|cff00CCFF[MCL]|r No other MCL users responded.")
+        print("|cff00CCFF[MCL]|r " .. L["No other MCL users responded."])
         return
     end
 
@@ -181,7 +182,7 @@ end
 function PartyCheck:SendRequest()
     local channel = GetGroupChannel()
     if not channel then
-        print("|cff00CCFF[MCL]|r You are not in a party or raid.")
+        print("|cff00CCFF[MCL]|r " .. L["You are not in a party or raid."])
         return
     end
 
@@ -196,7 +197,7 @@ function PartyCheck:SendRequest()
     -- Ask the group
     C_ChatInfo.SendAddonMessage(PREFIX, MSG_REQUEST, channel)
 
-    print("|cff00CCFF[MCL]|r Scanning group for MCL users...")
+    print("|cff00CCFF[MCL]|r " .. L["Scanning group for MCL users..."])
 
     -- After the timeout, show results
     if timerHandle then

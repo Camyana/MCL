@@ -212,7 +212,7 @@ function KethoEditBox_Show(text)
         -- Ctrl+C label
         local copyLabel = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         copyLabel:SetPoint("LEFT", f, "LEFT", 10, 0)
-        copyLabel:SetText("Ctrl+C:")
+        copyLabel:SetText(L["Ctrl+C:"])
         copyLabel:SetTextColor(0.5, 0.5, 0.5, 1)
 
         -- EditBox
@@ -286,7 +286,7 @@ function MCL_functions:compareLink()
             targetRealm = realmName
         end
     else
-        KethoEditBox_Show("Mount off requires a target")
+        KethoEditBox_Show(L["Mount off requires a target"])
         return
     end
     
@@ -617,12 +617,14 @@ end
 local function AddOriginTooltipLine(frame, isPinned)
     if isPinned and frame.section and frame.category then
         local origin
+        local sec = L[frame.section]
+        local cat = L[frame.category]
         if frame.section ~= "Unknown" and frame.category ~= "Unknown" then
-            origin = frame.section .. " > " .. frame.category
+            origin = sec .. " > " .. cat
         elseif frame.section ~= "Unknown" then
-            origin = frame.section
+            origin = sec
         elseif frame.category ~= "Unknown" then
-            origin = frame.category
+            origin = cat
         end
         if origin then
             GameTooltip:AddLine(L["Origin:"] .. " " .. origin, 0.5, 0.7, 1)
@@ -663,20 +665,21 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
                     -- Only show delayed tooltip if mouse is still over the frame
                     if frame:IsMouseOver() then
                         local _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(id)
-                        local sourceText = source and source ~= "" and source or "Unknown"
+                        local sourceText = source and source ~= "" and source or nil
                         
-                        -- If still no Blizzard source, use MCL fallback
-                        if sourceText == "Unknown" then
+                        -- If no Blizzard source, use MCL section/category fallback
+                        if not sourceText then
                             if frame.section and frame.category then
                                 if frame.section ~= "Unknown" and frame.category ~= "Unknown" then
-                                    sourceText = frame.section .. " - " .. frame.category
+                                    sourceText = L[frame.section] .. " - " .. L[frame.category]
                                 elseif frame.section ~= "Unknown" then
-                                    sourceText = frame.section
+                                    sourceText = L[frame.section]
                                 elseif frame.category ~= "Unknown" then
-                                    sourceText = frame.category
+                                    sourceText = L[frame.category]
                                 end
                             end
                         end
+                        sourceText = sourceText or L["Unknown"]
                         
                         GameTooltip:SetOwner(frame, "ANCHOR_TOPLEFT")
                         if (spellID) then
@@ -746,7 +749,7 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
                         if frame:IsMouseOver() then
                             local retryMountID = MCLcore.itemToMountCache and MCLcore.itemToMountCache[id] or C_MountJournal.GetMountFromItem(id)
                             if retryMountID and MCLcore.itemToMountCache then MCLcore.itemToMountCache[id] = retryMountID end
-                            local sourceText = "Unknown"
+                            local sourceText = nil
                             
                             if retryMountID then
                                 local _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(retryMountID)
@@ -756,22 +759,23 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
                             end
                             
                             -- Fallback to MCL's category/section information if still no source
-                            if sourceText == "Unknown" then
+                            if not sourceText then
                                 if frame.section and frame.category then
                                     if frame.section ~= "Unknown" and frame.category ~= "Unknown" then
-                                        sourceText = frame.section .. " - " .. frame.category
+                                        sourceText = L[frame.section] .. " - " .. L[frame.category]
                                     elseif frame.section ~= "Unknown" then
-                                        sourceText = frame.section
+                                        sourceText = L[frame.section]
                                     elseif frame.category ~= "Unknown" then
-                                        sourceText = frame.category
+                                        sourceText = L[frame.category]
                                     end
                                 end
                             end
                             
                             -- Final fallback to the passed source parameter
-                            if sourceText == "Unknown" and frame.source then
+                            if not sourceText and frame.source then
                                 sourceText = frame.source
                             end
+                            sourceText = sourceText or L["Unknown"]
                             
                             GameTooltip:SetOwner(frame, "ANCHOR_TOPLEFT")
                             if (id) then
@@ -790,7 +794,7 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
                     local mountData = {
                         mountID = id,
                         id = id,
-                        name = item or "Unknown Mount",
+                        name = item or L["Unknown Mount"],
                         category = frame.category,
                         section = frame.section
                     }
@@ -816,13 +820,13 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
                     GameTooltip:SetOwner(frame, "ANCHOR_TOP")
                     if itemLink then
                         GameTooltip:SetHyperlink(itemLink)
-                        GameTooltip:AddLine("|cFFFF0000[MCL] Mount data not fully loaded|r")
-                        GameTooltip:AddLine("|cFFFFFF00Try reloading UI or restarting game|r")
+                        GameTooltip:AddLine("|cFFFF0000" .. L["[MCL] Mount data not fully loaded"] .. "|r")
+                        GameTooltip:AddLine("|cFFFFFF00" .. L["Try reloading UI or restarting game"] .. "|r")
                         GameTooltip:Show()
                         frame:SetHyperlinksEnabled(true)
                     else
                         GameTooltip:SetText(string.format("Item ID: %d", originalItemId))
-                        GameTooltip:AddLine("|cFFFF0000[MCL] Mount data not available|r")
+                        GameTooltip:AddLine("|cFFFF0000" .. L["[MCL] Mount data not available"] .. "|r")
                         GameTooltip:Show()
                     end
                 end)
@@ -858,20 +862,21 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
                         -- Only show delayed tooltip if mouse is still over the frame
                         if frame:IsMouseOver() then
                             local _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(mountID)
-                            local sourceText = source and source ~= "" and source or "Unknown"
+                            local sourceText = source and source ~= "" and source or nil
                             
                             -- Fallback to MCL's category/section information if still no source
-                            if sourceText == "Unknown" then
+                            if not sourceText then
                                 if frame.section and frame.category then
                                     if frame.section ~= "Unknown" and frame.category ~= "Unknown" then
-                                        sourceText = frame.section .. " - " .. frame.category
+                                        sourceText = L[frame.section] .. " - " .. L[frame.category]
                                     elseif frame.section ~= "Unknown" then
-                                        sourceText = frame.section
+                                        sourceText = L[frame.section]
                                     elseif frame.category ~= "Unknown" then
-                                        sourceText = frame.category
+                                        sourceText = L[frame.category]
                                     end
                                 end
                             end
+                            sourceText = sourceText or L["Unknown"]
                             
                             GameTooltip:SetOwner(frame, "ANCHOR_TOP")
                             if (itemLink) then
@@ -1059,7 +1064,7 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
                 if mountName then
                     -- Get the source text from the extra info
                     local _, description, source = C_MountJournal.GetMountInfoExtraByID(mount_Id)
-                    sourceText = source or "Unknown"
+                    sourceText = source or L["Unknown"]
                     success = true
                 else
                     table.insert(invalidMounts, {id = val, context = "Mount info retrieval failed"})
@@ -1083,7 +1088,7 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
                     if mountName then
                         -- Get the source text from the extra info
                         local _, description, source = C_MountJournal.GetMountInfoExtraByID(mount_Id)
-                        sourceText = source or "Unknown"
+                        sourceText = source or L["Unknown"]
                         success = true
                     else
                         table.insert(invalidMounts, {id = val, context = "Item-based mount info retrieval failed"})
@@ -1191,17 +1196,17 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
                     -- Section line (below pin icon on the right)
                     frame.sectionLine = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
                     frame.sectionLine:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -30, -8)
-                    frame.sectionLine:SetText(vv.section)
+                    frame.sectionLine:SetText(L[vv.section])
 
                     -- Category line (under section on the right)
                     frame.categoryLine = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
                     frame.categoryLine:SetPoint("TOPRIGHT", frame.sectionLine, "BOTTOMRIGHT", 0, -2)
-                    frame.categoryLine:SetText(vv.category)
+                    frame.categoryLine:SetText(L[vv.category])
                     
                     -- Acquisition line (under mount name, full width)
                     frame.acquisitionLine = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
                     frame.acquisitionLine:SetPoint("TOPLEFT", frame.mountName, "BOTTOMLEFT", 0, -4)
-                    frame.acquisitionLine:SetText(sourceText or "Unknown")
+                    frame.acquisitionLine:SetText(sourceText or L["Unknown"])
                     frame.acquisitionLine:SetJustifyH("LEFT")
                     frame.acquisitionLine:SetWordWrap(true)
                     frame.acquisitionLine:SetWidth(600)
@@ -1339,7 +1344,7 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
         
         -- Get the actual source from the game API
         local _, _, sourceText = C_MountJournal.GetMountInfoExtraByID(mount_Id)
-        sourceText = sourceText or "Unknown"
+        sourceText = sourceText or L["Unknown"]
 
         -- Create frame parented to the Pinned section, not to the previous frame
         local frame = CreateFrame("Button", nil, MCLcore.pinnedFrame, "BackdropTemplate");
@@ -1378,17 +1383,17 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
         -- Section line (below pin icon on the right)
         frame.sectionLine = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         frame.sectionLine:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -30, -8)  -- Below pin icon area
-        frame.sectionLine:SetText(section)
+        frame.sectionLine:SetText(L[section])
 
         -- Category line (under section on the right)
         frame.categoryLine = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         frame.categoryLine:SetPoint("TOPRIGHT", frame.sectionLine, "BOTTOMRIGHT", 0, -2)  -- Under section
-        frame.categoryLine:SetText(category)
+        frame.categoryLine:SetText(L[category])
         
         -- Acquisition line (under mount name, full width)
         frame.acquisitionLine = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         frame.acquisitionLine:SetPoint("TOPLEFT", frame.mountName, "BOTTOMLEFT", 0, -4)
-        frame.acquisitionLine:SetText(sourceText or "Unknown")  -- Removed "Acquisition:" label
+        frame.acquisitionLine:SetText(sourceText or L["Unknown"])  -- Removed "Acquisition:" label
         frame.acquisitionLine:SetJustifyH("LEFT")
         frame.acquisitionLine:SetWordWrap(true)  -- Allow wrapping to show full text
         frame.acquisitionLine:SetWidth(600)  -- Adjust width to not overlap with category section

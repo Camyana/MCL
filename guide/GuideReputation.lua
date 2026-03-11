@@ -10,20 +10,22 @@
 -- =============================================================
 
 local Guide = MCL_GUIDE
+local _, MCLcore = ...
+local L = MCLcore.L or {}
 
 Guide.Reputation = Guide.Reputation or {}
 local Rep = Guide.Reputation
 
 -- ─── Standing ID → label mapping (classic reputation) ───────
 local STANDING_LABELS = {
-    [1] = "Hated",
-    [2] = "Hostile",
-    [3] = "Unfriendly",
-    [4] = "Neutral",
-    [5] = "Friendly",
-    [6] = "Honored",
-    [7] = "Revered",
-    [8] = "Exalted",
+    [1] = L["Hated"],
+    [2] = L["Hostile"],
+    [3] = L["Unfriendly"],
+    [4] = L["Neutral"],
+    [5] = L["Friendly"],
+    [6] = L["Honored"],
+    [7] = L["Revered"],
+    [8] = L["Exalted"],
 }
 
 -- ─── Query current reputation standing ──────────────────────
@@ -37,7 +39,7 @@ function Rep:GetFactionStanding(factionId)
             return {
                 name       = data.name,
                 standingId = data.reaction,
-                standing   = STANDING_LABELS[data.reaction] or ("Standing " .. (data.reaction or "?")),
+                standing   = STANDING_LABELS[data.reaction] or ((L["Standing"]) .. " " .. (data.reaction or "?")),
                 current    = data.currentStanding or 0,
                 max        = data.nextReactionThreshold or 0,
                 earned     = data.currentReactionThreshold or 0,
@@ -52,7 +54,7 @@ function Rep:GetFactionStanding(factionId)
             return {
                 name       = name,
                 standingId = standingId,
-                standing   = STANDING_LABELS[standingId] or ("Standing " .. (standingId or "?")),
+                standing   = STANDING_LABELS[standingId] or ((L["Standing"]) .. " " .. (standingId or "?")),
                 current    = barValue - barMin,
                 max        = barMax - barMin,
                 earned     = barValue,
@@ -147,11 +149,11 @@ function Rep:GetStandingText(repInfo)
             else
                 color = "|cFFFF4444"
             end
-            local curName = data.standing or ("Rank " .. current)
-            local reqName = repInfo.levelName or ("Rank " .. required)
+            local curName = data.standing or ((L["Rank"]) .. " " .. current)
+            local reqName = repInfo.levelName or ((L["Rank"]) .. " " .. required)
             return color .. curName .. " (" .. current .. "/" .. required .. ") / " .. reqName .. "|r"
         end
-        return "|cFFAAAAAAnot discovered|r"
+        return "|cFFAAAAAA" .. L["not discovered"] .. "|r"
     elseif repInfo.renown then
         local data = self:GetRenownLevel(repInfo.factionId)
         if data then
@@ -163,7 +165,7 @@ function Rep:GetStandingText(repInfo)
             else
                 color = "|cFFFF4444"   -- red = not met
             end
-            return color .. "Renown " .. current .. "/" .. required .. "|r"
+            return color .. L["Renown"] .. " " .. current .. "/" .. required .. "|r"
         end
     else
         local data = self:GetFactionStanding(repInfo.factionId)
@@ -181,8 +183,8 @@ function Rep:GetStandingText(repInfo)
             else
                 color = "|cFFFF4444"
             end
-            local standingName = data.standing or "Unknown"
-            local targetName = repInfo.levelName or STANDING_LABELS[required] or "Exalted"
+            local standingName = data.standing or L["Unknown"]
+            local targetName = repInfo.levelName or STANDING_LABELS[required] or L["Exalted"]
             local progressText = ""
             if data.max and data.max > 0 then
                 progressText = " (" .. data.current .. "/" .. data.max .. ")"
@@ -191,7 +193,7 @@ function Rep:GetStandingText(repInfo)
         end
     end
 
-    return "|cFFAAAAAAnot discovered|r"
+    return "|cFFAAAAAA" .. L["not discovered"] .. "|r"
 end
 
 -- ─── Resolve faction-specific rep entry from data ───────────
@@ -239,21 +241,21 @@ function Rep:GetTooltipBlock(spellId)
 
     local lines = {}
 
-    local label = repInfo.friendship and "Friendship Required"
-                or repInfo.renown and "Renown Required"
-                or "Reputation Required"
+    local label = repInfo.friendship and L["Friendship Required"]
+                or repInfo.renown and L["Renown Required"]
+                or L["Reputation Required"]
     table.insert(lines, "|cFF1FB7EB" .. label .. "|r")
 
-    local factionName = repInfo.factionName or "Unknown Faction"
+    local factionName = repInfo.factionName or L["Unknown Faction"]
     table.insert(lines, "  " .. factionName)
 
     if repInfo.levelName then
-        table.insert(lines, "  Required: " .. repInfo.levelName)
+        table.insert(lines, "  " .. L["Required:"] .. " " .. repInfo.levelName)
     end
 
     local standing = self:GetStandingText(repInfo)
     if standing then
-        table.insert(lines, "  Current: " .. standing)
+        table.insert(lines, "  " .. L["Current:"] .. " " .. standing)
     end
 
     if repInfo.note and repInfo.note ~= "" then
@@ -273,7 +275,7 @@ function Rep:GetTooltipBlock(spellId)
         end
     end
     if vi then
-        local vendorText = "  Vendor: " .. (vi.npc or "Unknown")
+        local vendorText = "  " .. L["Vendor:"] .. " " .. (vi.npc or L["Unknown"])
         if vi.x and vi.y then
             vendorText = vendorText .. string.format(" (%.1f, %.1f)", vi.x, vi.y)
         end
@@ -339,16 +341,16 @@ hookFrame:SetScript("OnEvent", function()
                 if data then
                     local current = data.currentLevel or 0
                     local required = repInfo.level or 0
-                    local curName = data.standing or ("Rank " .. current)
-                    local reqName = repInfo.levelName or ("Rank " .. required)
+                    local curName = data.standing or ((L["Rank"]) .. " " .. current)
+                    local reqName = repInfo.levelName or ((L["Rank"]) .. " " .. required)
                     result.currentText  = curName .. " (" .. current .. ")"
                     result.requiredText = reqName .. " (" .. required .. ")"
                     result.isMet        = current >= required
                     result.progressCur  = math.min(current, required)
                     result.progressMax  = required
                 else
-                    result.currentText  = "Unknown"
-                    result.requiredText = repInfo.levelName or ("Rank " .. (repInfo.level or "?"))
+                    result.currentText  = L["Unknown"]
+                    result.requiredText = repInfo.levelName or (L["Rank"] .. " " .. (repInfo.level or "?"))
                     result.isMet        = false
                     result.progressCur  = 0
                     result.progressMax  = repInfo.level or 1
@@ -358,15 +360,15 @@ hookFrame:SetScript("OnEvent", function()
                 if data then
                     local current = data.renownLevel or 0
                     local required = repInfo.level or 0
-                    result.currentText  = "Renown " .. current
-                    result.requiredText = "Renown " .. required
+                    result.currentText  = L["Renown"] .. " " .. current
+                    result.requiredText = L["Renown"] .. " " .. required
                     result.isMet        = current >= required
                     -- Progress: renown level as fraction of required
                     result.progressCur = math.min(current, required)
                     result.progressMax = required
                 else
-                    result.currentText  = "Unknown"
-                    result.requiredText = "Renown " .. (repInfo.level or "?")
+                    result.currentText  = L["Unknown"]
+                    result.requiredText = L["Renown"] .. " " .. (repInfo.level or "?")
                     result.isMet        = false
                     result.progressCur  = 0
                     result.progressMax  = repInfo.level or 1
@@ -374,7 +376,7 @@ hookFrame:SetScript("OnEvent", function()
             else
                 local data = Rep:GetFactionStanding(repInfo.factionId)
                 if data then
-                    local standingName = data.standing or "Unknown"
+                    local standingName = data.standing or L["Unknown"]
                     local progressText = ""
                     if data.max and data.max > 0 then
                         progressText = " (" .. data.current .. "/" .. data.max .. ")"
@@ -386,7 +388,7 @@ hookFrame:SetScript("OnEvent", function()
                         reqId = STANDING_IDS[repInfo.levelName] or 8
                     end
                     reqId = reqId or 8
-                    result.requiredText = repInfo.levelName or STANDING_LABELS[reqId] or "Exalted"
+                    result.requiredText = repInfo.levelName or STANDING_LABELS[reqId] or L["Exalted"]
                     result.isMet = (data.standingId or 0) >= reqId
 
                     -- Progress: standing tiers (1-8) as fraction
@@ -399,8 +401,8 @@ hookFrame:SetScript("OnEvent", function()
                     result.progressCur = math.min(curStanding - 1 + partial, reqId - 1)
                     result.progressMax = reqId - 1  -- standing 1 (Hated) is the baseline
                 else
-                    result.currentText  = "Not discovered"
-                    result.requiredText = repInfo.levelName or "Exalted"
+                    result.currentText  = L["Not discovered"]
+                    result.requiredText = repInfo.levelName or L["Exalted"]
                     result.isMet        = false
                     result.progressCur  = 0
                     result.progressMax  = 1

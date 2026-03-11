@@ -2,6 +2,7 @@
 -- *  Namespaces
 -- * ------------------------------------------------------
 local MCL, MCLcore = ...;
+local L = MCLcore.L or {}
 
 -- * ------------------------------------------------------
 -- * Variables
@@ -240,7 +241,7 @@ local function InitMounts()
                                         category = category.name,
                                     }
                                     if debugMode then
-                                        local itemName = GetItemInfo(mountEntry) or "Unknown Item"
+                                        local itemName = GetItemInfo(mountEntry) or L["Unknown Item"]
                                         table.insert(invalidMounts, {itemID = mountEntry, itemName = itemName, expansion = section.name, category = category.name})
                                     end
                                 end

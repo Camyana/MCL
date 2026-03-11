@@ -40,7 +40,7 @@ function Pins:PinMount(mountData)
 
     if not best then
         -- No exact coords — just inform the user
-        print("|cFF1FB7EBMCL|r Guide: No exact coordinates available for " .. (mountData.mountName or mountData.name))
+        print("|cFF1FB7EBMCL|r " .. string.format(L["Guide: No exact coordinates available for %s"], mountData.mountName or mountData.name))
         return
     end
 
@@ -59,8 +59,7 @@ function Pins:PinMount(mountData)
 
     -- Get NPC name from the waypoint if available
     local npcInfo = best.n and (" — " .. best.n) or ""
-    print("|cFF1FB7EBMCL|r Guide: Waypoint set for " .. (mountData.mountName or mountData.name) .. npcInfo
-          .. " at " .. string.format("%.1f, %.1f", best.x, best.y))
+    print("|cFF1FB7EBMCL|r " .. string.format(L["Guide: Waypoint set for %s%s at %s"], mountData.mountName or mountData.name, npcInfo, string.format("%.1f, %.1f", best.x, best.y)))
 end
 
 -- ─── Clear the active waypoint ──────────────────────────────
@@ -441,28 +440,28 @@ local function PopulateMiniCard(card, data)
     -- ── Source / Method ─────────────────────────────────────
     local methodText = Guide:GetMethodText(data.method)
     if methodText and methodText ~= "Unknown" then
-        li, y = AddInfoRow(card, li, y, "Source", methodText, COLOR_LABEL, COLOR_METHOD)
+        li, y = AddInfoRow(card, li, y, L["Source"], methodText, COLOR_LABEL, COLOR_METHOD)
     end
 
     -- Drop chance
     if data.chance then
         local chanceText = "1/" .. tostring(data.chance)
         if data.chance <= 20 then
-            chanceText = chanceText .. "  (rare!)"
+            chanceText = chanceText .. "  " .. L["(rare!)"]
         end
-        li, y = AddInfoRow(card, li, y, "Drop Chance", chanceText, COLOR_LABEL, COLOR_VALUE)
+        li, y = AddInfoRow(card, li, y, L["Drop Chance"], chanceText, COLOR_LABEL, COLOR_VALUE)
     end
 
     -- Boss
     if data.lockBossName then
-        li, y = AddInfoRow(card, li, y, "Boss", data.lockBossName, COLOR_LABEL, COLOR_GOLD)
+        li, y = AddInfoRow(card, li, y, L["Boss"], data.lockBossName, COLOR_LABEL, COLOR_GOLD)
     end
 
     -- Dungeon / raid difficulty
     if data.instanceDifficulties then
         local diffText = Guide:GetDifficultyText(data.instanceDifficulties)
         if diffText then
-            li, y = AddInfoRow(card, li, y, "Difficulty", diffText, COLOR_LABEL, COLOR_DIFF)
+            li, y = AddInfoRow(card, li, y, L["Difficulty"], diffText, COLOR_LABEL, COLOR_DIFF)
         end
     end
 
@@ -470,7 +469,7 @@ local function PopulateMiniCard(card, data)
     if data.coords then
         for _, wp in ipairs(data.coords) do
             if wp.n then
-                li, y = AddInfoRow(card, li, y, "NPC", wp.n, COLOR_LABEL, COLOR_VALUE)
+                li, y = AddInfoRow(card, li, y, L["NPC"], wp.n, COLOR_LABEL, COLOR_VALUE)
                 break
             end
         end
@@ -480,15 +479,15 @@ local function PopulateMiniCard(card, data)
     if data.itemId then
         local itemName, itemLink = C_Item.GetItemInfo(data.itemId)
         if itemName then
-            li, y = AddInfoRow(card, li, y, "Item", itemLink or itemName, COLOR_LABEL, COLOR_ITEM)
+            li, y = AddInfoRow(card, li, y, L["Item"], itemLink or itemName, COLOR_LABEL, COLOR_ITEM)
         end
     end
 
     -- Reputation
     if data.rep then
         local repInfo = data.rep
-        local label = repInfo.renown and "Renown" or "Reputation"
-        local text = repInfo.factionName or "Unknown"
+        local label = repInfo.renown and L["Renown"] or L["Reputation"]
+        local text = repInfo.factionName or L["Unknown"]
         if repInfo.levelName then
             text = text .. " — " .. repInfo.levelName
         end
@@ -503,11 +502,11 @@ local function PopulateMiniCard(card, data)
     if data.vendorInfo then
         local vi = data.vendorInfo
         if vi[1] and type(vi[1]) == "table" then vi = vi[1] end
-        local vendorText = vi.npc or "Vendor"
+        local vendorText = vi.npc or L["Vendor"]
         if vi.x and vi.y then
             vendorText = vendorText .. string.format("  (%.1f, %.1f)", vi.x, vi.y)
         end
-        li, y = AddInfoRow(card, li, y, "Vendor", vendorText, COLOR_LABEL, { 0.80, 0.70, 1.00 })
+        li, y = AddInfoRow(card, li, y, L["Vendor"], vendorText, COLOR_LABEL, { 0.80, 0.70, 1.00 })
     end
 
     -- Currency / Cost
@@ -529,12 +528,12 @@ local function PopulateMiniCard(card, data)
                         local costStr = icon .. info.name .. "  |cFF" .. progressColor .. tostring(current) .. " / " .. tostring(needed) .. "|r"
                         table.insert(parts, costStr)
                     else
-                        table.insert(parts, tostring(entry.amount) .. " Currency")
+                        table.insert(parts, tostring(entry.amount) .. " " .. L["Currency"])
                     end
                 end
             end
             if #parts > 0 then
-                li, y = AddInfoRow(card, li, y, "Cost", table.concat(parts, ", "), COLOR_LABEL, COLOR_GOLD)
+                li, y = AddInfoRow(card, li, y, L["Cost"], table.concat(parts, ", "), COLOR_LABEL, COLOR_GOLD)
             end
         end
     end
@@ -544,32 +543,32 @@ local function PopulateMiniCard(card, data)
         local _, achName, _, achCompleted = GetAchievementInfo(data.achievementId)
         if achName then
             local achColor = achCompleted and COLOR_ACH_DONE or COLOR_ACH
-            local achStatus = achCompleted and " (Done)" or ""
-            li, y = AddInfoRow(card, li, y, "Achievement", achName .. achStatus, COLOR_LABEL, achColor)
+            local achStatus = achCompleted and (" " .. L["(Done)"]) or ""
+            li, y = AddInfoRow(card, li, y, L["Achievement"], achName .. achStatus, COLOR_LABEL, achColor)
         end
     end
 
     -- Quest
     if data.questInfo then
         local qi = data.questInfo
-        local questText = qi.quest or "Quest"
+        local questText = qi.quest or L["Quest"]
         if qi.npc then
-            questText = questText .. "  (from " .. qi.npc .. ")"
+            questText = questText .. "  " .. string.format(L["(from %s)"], qi.npc)
         end
-        li, y = AddInfoRow(card, li, y, "Quest", questText, COLOR_LABEL, COLOR_QUEST)
+        li, y = AddInfoRow(card, li, y, L["Quest"], questText, COLOR_LABEL, COLOR_QUEST)
     end
 
     -- Black Market Auction House
     if data.blackMarket then
-        li, y = AddInfoRow(card, li, y, "BMAH", "Available on Black Market AH", COLOR_LABEL, COLOR_BMAH)
+        li, y = AddInfoRow(card, li, y, L["BMAH"], L["Available on Black Market AH"], COLOR_LABEL, COLOR_BMAH)
     end
 
     -- Origin (section > category)
     local sec, cat = Pins:GetSectionInfo(data.mountID)
     if sec then
-        local origin = sec
-        if cat then origin = origin .. " > " .. cat end
-        li, y = AddInfoRow(card, li, y, "Origin", origin, COLOR_LABEL, COLOR_ORIGIN)
+        local origin = L[sec]
+        if cat then origin = origin .. " > " .. L[cat] end
+        li, y = AddInfoRow(card, li, y, L["Origin"], origin, COLOR_LABEL, COLOR_ORIGIN)
     end
 
     -- ── Notes / Instructions ────────────────────────────────
@@ -577,7 +576,7 @@ local function PopulateMiniCard(card, data)
     if note then
         y = AddDivider(card, y, sep); sep = sep + 1
 
-        li, y = AddTextLine(card, li, y, "How to Get:", COLOR_SECTION_HDR, 10)
+        li, y = AddTextLine(card, li, y, L["How to Get:"], COLOR_SECTION_HDR, 10)
 
         -- Clean template tags and format for display
         local cleanNote = CleanNoteText(note)
@@ -624,9 +623,9 @@ local function PopulateMiniCard(card, data)
     -- ── Debug IDs ───────────────────────────────────────────
     do
         local debugParts = {}
-        if data.mountID then table.insert(debugParts, "Mount: " .. tostring(data.mountID)) end
-        if data.spellId then table.insert(debugParts, "Spell: " .. tostring(data.spellId)) end
-        if data.itemId  then table.insert(debugParts, "Item: "  .. tostring(data.itemId))  end
+        if data.mountID then table.insert(debugParts, L["Mount"] .. ": " .. tostring(data.mountID)) end
+        if data.spellId then table.insert(debugParts, L["Spell"] .. ": " .. tostring(data.spellId)) end
+        if data.itemId  then table.insert(debugParts, L["Item"] .. ": " .. tostring(data.itemId))  end
         if #debugParts > 0 then
             li, y = AddTextLine(card, li, y, table.concat(debugParts, "  |  "), {0.45, 0.45, 0.45}, 10)
         end
@@ -634,7 +633,7 @@ local function PopulateMiniCard(card, data)
 
     -- ── Footer ──────────────────────────────────────────────
     y = AddDivider(card, y, sep); sep = sep + 1
-    li, y = AddTextLine(card, li, y, "Click to set waypoint  |  Right-click for mount card", COLOR_HINT, 10)
+    li, y = AddTextLine(card, li, y, L["Click to set waypoint | Right-click for mount card"], COLOR_HINT, 10)
 
     -- Clean up unused elements
     HideLinesFrom(li)
@@ -663,17 +662,21 @@ end
 -- ─── Pin sizing & colours by source type ────────────────────
 local PIN_STYLES = {
     -- method        = { size, borderR, borderG, borderB, label, labelR, labelG, labelB }
-    NPC              = { 36, 0.64, 0.21, 0.93, "Rare",   0.78, 0.43, 1.00 },
-    BOSS             = { 36, 0.90, 0.49, 0.13, "Boss",   1.00, 0.65, 0.20 },
-    ZONE             = { 36, 0.64, 0.21, 0.93, "Zone",   0.78, 0.43, 1.00 },
-    VENDOR           = { 26, 0.85, 0.72, 0.26, "Vendor", 1.00, 0.84, 0.30 },
-    QUEST            = { 30, 0.98, 0.82, 0.00, "Quest",  1.00, 0.90, 0.30 },
-    FISHING          = { 28, 0.30, 0.70, 0.90, "Fish",   0.40, 0.80, 1.00 },
-    USE              = { 30, 0.50, 0.80, 0.50, "Loot",   0.55, 0.90, 0.55 },
-    SPECIAL          = { 30, 0.90, 0.80, 0.20, "Special",0.95, 0.85, 0.30 },
-    MINING           = { 28, 0.70, 0.55, 0.35, "Mining", 0.80, 0.65, 0.40 },
-    COLLECTION       = { 30, 0.40, 0.75, 0.95, "Collect",0.50, 0.85, 1.00 },
-    ARCH             = { 28, 0.75, 0.60, 0.40, "Arch",   0.85, 0.70, 0.45 },
+    NPC              = { 36, 0.64, 0.21, 0.93, L["Rare"],     0.78, 0.43, 1.00 },
+    BOSS             = { 36, 0.90, 0.49, 0.13, L["Boss"],     1.00, 0.65, 0.20 },
+    ZONE             = { 36, 0.64, 0.21, 0.93, L["Zone"],     0.78, 0.43, 1.00 },
+    VENDOR           = { 26, 0.85, 0.72, 0.26, L["Vendor"], 1.00, 0.84, 0.30 },
+    QUEST            = { 30, 0.98, 0.82, 0.00, L["Quest"],   1.00, 0.90, 0.30 },
+    FISHING          = { 28, 0.30, 0.70, 0.90, L["Fish"],     0.40, 0.80, 1.00 },
+    USE              = { 30, 0.50, 0.80, 0.50, L["Loot"],     0.55, 0.90, 0.55 },
+    SPECIAL          = { 30, 0.90, 0.80, 0.20, L["Special"],0.95, 0.85, 0.30 },
+    MINING           = { 28, 0.70, 0.55, 0.35, L["Mining"], 0.80, 0.65, 0.40 },
+    COLLECTION       = { 30, 0.40, 0.75, 0.95, L["Collect"],0.50, 0.85, 1.00 },
+    ARCH             = { 28, 0.75, 0.60, 0.40, L["Arch"],     0.85, 0.70, 0.45 },
+    Treasure         = { 30, 0.85, 0.65, 0.13, L["Treasure"], 0.95, 0.75, 0.20 },
+    Chest            = { 30, 0.85, 0.65, 0.13, L["Chest"],    0.95, 0.75, 0.20 },
+    Dungeon          = { 36, 0.90, 0.49, 0.13, L["Dungeon"],  1.00, 0.65, 0.20 },
+    ["Grand Hunt"]   = { 30, 0.64, 0.21, 0.93, L["Grand Hunt"], 0.78, 0.43, 1.00 },
 }
 local DEFAULT_STYLE  = { 28, 0.50, 0.50, 0.50, "",       0.60, 0.60, 0.60 }
 
