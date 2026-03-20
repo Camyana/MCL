@@ -362,7 +362,10 @@ MCL_GUIDE_VENDOR_DATA = {
     [1062] = { { npc = "Quartermaster Alcorn", zone = "Drustvar", m = 896, x = 37.8, y = 49 } },  -- Dusky Waycrest Gryphon
     [1063] = { { npc = "Sister Lilyana", zone = "Stormsong Valley", m = 942, x = 59.2, y = 69.4 } },  -- Stormsong Coastwatcher
     [1064] = { { npc = "Provisioner Fray", zone = "Tiragarde Sound", m = 84, x = 56, y = 17.4 } },  -- Proudmoore Sea Scout
-    [1179] = { { npc = "Talutu", zone = "Zuldazar", m = 1165, x = 48.4, y = 87.2 } },  -- Palehide Direhorn
+    [1179] = {  -- Palehide Direhorn
+        { npc = "Talutu", zone = "Zuldazar", faction = "Horde", m = 1165, x = 48.4, y = 87.2 },
+        { npc = "Tricky Nick", zone = "Boralus", faction = "Alliance", m = 1161, x = 56.7, y = 47 },
+    },
     [1194] = { { npc = "Necrolord Sipe", zone = "Stormwind City", m = 84, x = 76.8, y = 65.4 } },  -- Vicious White Warsaber
     [1195] = { { npc = "Necrolord Sipe", zone = "Stormwind City", m = 84, x = 76.8, y = 65.4 } },  -- Vicious Black Warsaber
     [1196] = { { npc = "Deathguard Netharian", zone = "Orgrimmar", m = 85, x = 41.8, y = 73 } },  -- Vicious Black Bonesteed
