@@ -680,6 +680,42 @@ local PIN_STYLES = {
 }
 local DEFAULT_STYLE  = { 28, 0.50, 0.50, 0.50, "",       0.60, 0.60, 0.60 }
 
+-- ── Hover slide-away animation settings ─────────────────────
+local SLIDE_DURATION      = 0.18   -- seconds for slide animation
+local SLIDE_DISTANCE_MULT = 1.4    -- slide distance as multiple of pin size
+
+-- ── Cluster spread settings ─────────────────────────────────
+local CLUSTER_OVERLAP_MULT = 1.5   -- within N × pin-width = same cluster
+local SPREAD_RADIUS_MULT   = 2.2   -- spread distance as multiple of pin width
+
+-- Forward declarations for cluster functions (defined after mixin)
+local FindClusterPins, SpreadCluster, CollapseCluster, CollapseClusterImmediate
+local spreadCluster = {}           -- pins in the current spread
+local spreadActive  = false
+local clusterCollapseTimer = nil
+local COLLAPSE_DIST_MULT   = 4.0   -- collapse when cursor is N × pin-width from centre
+
+-- Cursor-distance collapse tracker
+local clusterCenterX, clusterCenterY = 0, 0
+local clusterCollapseThreshSq = 0
+local distanceWatcher = CreateFrame("Frame")
+distanceWatcher:Hide()
+distanceWatcher:SetScript("OnUpdate", function()
+    if not spreadActive then distanceWatcher:Hide() return end
+    local cx, cy = GetCursorPosition()
+    local uiScale = UIParent:GetEffectiveScale()
+    cx, cy = cx / uiScale, cy / uiScale
+    local dx = cx - clusterCenterX
+    local dy = cy - clusterCenterY
+    if (dx * dx + dy * dy) > clusterCollapseThreshSq then
+        CollapseCluster()
+    end
+end)
+
+-- Pin pool & active-pin tracking (forward-declared for cluster code)
+local pinPool = {}
+local activePins = {}
+
 local MCL_GuidePinMixin = {}
 
 function MCL_GuidePinMixin:OnLoad()
@@ -690,20 +726,39 @@ end
 function MCL_GuidePinMixin:OnAcquired(mountData)
     self.mountData = mountData
 
+    -- ── Visual container (slides on hover) ─────────────────
+    -- Created as a Button so it can receive clicks during cluster spread.
+    if not self.visual then
+        self.visual = CreateFrame("Button", nil, self)
+        self.visual:EnableMouse(false)
+        self.visual:RegisterForClicks("LeftButtonUp", "RightButtonDown")
+    end
+    self:SetScript("OnUpdate", nil)
+    self._slidOut = false
+    self._inCluster = false
+    self:EnableMouse(true)                -- ensure restored after any prior spread
+    self.visual:EnableMouse(false)
+    self.visual:SetScript("OnEnter", nil)
+    self.visual:SetScript("OnLeave", nil)
+    self.visual:SetScript("OnClick", nil)
+
     local style = PIN_STYLES[mountData.method] or DEFAULT_STYLE
     local scale = MCL_GUIDE_SETTINGS and MCL_GUIDE_SETTINGS.mapPinScale or 2.0
     local pinSize = math.floor(style[1] * scale + 0.5)
 
     -- Resize pin to match source type
     self:SetSize(pinSize, pinSize)
+    self.visual:SetSize(pinSize, pinSize)
+    self.visual:ClearAllPoints()
+    self.visual:SetPoint("CENTER")
 
     -- ── Thin coloured edge border ──────────────────────────
     local bdr = math.max(2, math.floor(1.5 * scale + 0.5))
     if not self.borderTop then
-        self.borderTop    = self:CreateTexture(nil, "OVERLAY")
-        self.borderBottom = self:CreateTexture(nil, "OVERLAY")
-        self.borderLeft   = self:CreateTexture(nil, "OVERLAY")
-        self.borderRight  = self:CreateTexture(nil, "OVERLAY")
+        self.borderTop    = self.visual:CreateTexture(nil, "OVERLAY")
+        self.borderBottom = self.visual:CreateTexture(nil, "OVERLAY")
+        self.borderLeft   = self.visual:CreateTexture(nil, "OVERLAY")
+        self.borderRight  = self.visual:CreateTexture(nil, "OVERLAY")
         self.borderTop:SetColorTexture(1, 1, 1, 1)
         self.borderBottom:SetColorTexture(1, 1, 1, 1)
         self.borderLeft:SetColorTexture(1, 1, 1, 1)
@@ -720,13 +775,13 @@ function MCL_GuidePinMixin:OnAcquired(mountData)
     self.borderBottom:SetHeight(bdr)
 
     self.borderLeft:ClearAllPoints()
-    self.borderLeft:SetPoint("TOPLEFT", self, "TOPLEFT", 0, -bdr)
-    self.borderLeft:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", 0, bdr)
+    self.borderLeft:SetPoint("TOPLEFT", self.visual, "TOPLEFT", 0, -bdr)
+    self.borderLeft:SetPoint("BOTTOMLEFT", self.visual, "BOTTOMLEFT", 0, bdr)
     self.borderLeft:SetWidth(bdr)
 
     self.borderRight:ClearAllPoints()
-    self.borderRight:SetPoint("TOPRIGHT", self, "TOPRIGHT", 0, -bdr)
-    self.borderRight:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", 0, bdr)
+    self.borderRight:SetPoint("TOPRIGHT", self.visual, "TOPRIGHT", 0, -bdr)
+    self.borderRight:SetPoint("BOTTOMRIGHT", self.visual, "BOTTOMRIGHT", 0, bdr)
     self.borderRight:SetWidth(bdr)
 
     local br, bg, bb = style[2], style[3], style[4]
@@ -737,11 +792,11 @@ function MCL_GuidePinMixin:OnAcquired(mountData)
 
     -- ── Mount icon ──────────────────────────────────────────
     if not self.icon then
-        self.icon = self:CreateTexture(nil, "ARTWORK")
+        self.icon = self.visual:CreateTexture(nil, "ARTWORK")
     end
     self.icon:ClearAllPoints()
-    self.icon:SetPoint("TOPLEFT", self, "TOPLEFT", bdr, -bdr)
-    self.icon:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", -bdr, bdr)
+    self.icon:SetPoint("TOPLEFT", self.visual, "TOPLEFT", bdr, -bdr)
+    self.icon:SetPoint("BOTTOMRIGHT", self.visual, "BOTTOMRIGHT", -bdr, bdr)
 
     if mountData.icon then
         self.icon:SetTexture(mountData.icon)
@@ -751,8 +806,8 @@ function MCL_GuidePinMixin:OnAcquired(mountData)
 
     -- ── Source label badge ──────────────────────────────────
     if not self.badge then
-        self.badge = self:CreateFontString(nil, "OVERLAY")
-        self.badge:SetPoint("BOTTOM", self, "BOTTOM", 0, -2)
+        self.badge = self.visual:CreateFontString(nil, "OVERLAY")
+        self.badge:SetPoint("BOTTOM", self.visual, "BOTTOM", 0, -2)
     end
     local badgeFontSize = math.max(9, math.floor(9 * scale + 0.5))
     self.badge:SetFont(STANDARD_TEXT_FONT, badgeFontSize, "OUTLINE")
@@ -784,19 +839,253 @@ function MCL_GuidePinMixin:OnAcquired(mountData)
         self.borderRight:SetAlpha(1.0)
         if self.badge then self.badge:SetAlpha(1.0) end
     end
+
+    -- ── Hover reference dot (stays when pin slides away) ───
+    local dotSize = math.max(6, math.floor(6 * scale + 0.5))
+    if not self.dot then
+        self.dot = self:CreateTexture(nil, "ARTWORK")
+        self.dot:SetPoint("CENTER")
+    end
+    self.dot:SetSize(dotSize, dotSize)
+    self.dot:SetColorTexture(br, bg, bb, 0.9)
+    self.dot:Hide()
 end
 
 function MCL_GuidePinMixin:OnReleased()
     self.mountData = nil
+    self:SetScript("OnUpdate", nil)
+    self._slidOut = false
+    self._inCluster = false
+    self:EnableMouse(true)
+    if self.visual then
+        self.visual:EnableMouse(false)
+        self.visual:SetScript("OnEnter", nil)
+        self.visual:SetScript("OnLeave", nil)
+        self.visual:SetScript("OnClick", nil)
+        self.visual:ClearAllPoints()
+        self.visual:SetPoint("CENTER")
+    end
+    if self.dot then self.dot:Hide() end
 end
 
+-- ── Single-pin handlers (non-cluster) ───────────────────────
 function MCL_GuidePinMixin:OnMouseEnter()
     if not self.mountData then return end
-    ShowMiniCard(self, self.mountData)
+
+    -- Cancel any pending cluster collapse
+    if clusterCollapseTimer then
+        clusterCollapseTimer:Cancel()
+        clusterCollapseTimer = nil
+    end
+
+    -- Collapse any previous cluster instantly
+    if spreadActive then
+        CollapseClusterImmediate()
+    end
+
+    -- Detect overlapping pins
+    local cluster = FindClusterPins(self)
+
+    if #cluster <= 1 then
+        -- Isolated pin: slide left (tooltip appears on the right)
+        self:SlideVisual(-1, 0, self:GetWidth() * SLIDE_DISTANCE_MULT)
+        ShowMiniCard(self, self.mountData)
+    else
+        -- Multi-pin cluster: radial spread with interactive visuals
+        SpreadCluster(cluster, self)
+    end
 end
 
 function MCL_GuidePinMixin:OnMouseLeave()
     HideMiniCard()
+
+    if not self._inCluster then
+        self:SlideVisualBack()
+    end
+    -- Cluster stays open: collapse is handled by hovering a
+    -- different mount pin, or by map change / close.
+end
+
+-- ── Visual slide animation ──────────────────────────────────
+function MCL_GuidePinMixin:SlideVisual(dx, dy, dist)
+    if self._slidOut then return end
+    self._slidOut = true
+    self._slideDist = dist
+    self._slideDX = dx
+    self._slideDY = dy
+
+    if self.dot then self.dot:Show() end
+
+    local elapsed = 0
+    local vis = self.visual
+    self:SetScript("OnUpdate", function(_, dt)
+        elapsed = elapsed + dt
+        local t = math.min(elapsed / SLIDE_DURATION, 1)
+        t = 1 - (1 - t) * (1 - t)  -- ease-out quadratic
+
+        local offset = dist * t
+        vis:ClearAllPoints()
+        vis:SetPoint("CENTER", self, "CENTER", dx * offset, dy * offset)
+
+        if t >= 1 then self:SetScript("OnUpdate", nil) end
+    end)
+end
+
+function MCL_GuidePinMixin:SlideVisualBack()
+    if not self._slidOut then return end
+    self._slidOut = false
+
+    local startDist = self._slideDist or 0
+    local dx = self._slideDX or -1
+    local dy = self._slideDY or 0
+
+    if startDist == 0 then
+        if self.dot then self.dot:Hide() end
+        return
+    end
+
+    local elapsed = 0
+    local vis = self.visual
+    self:SetScript("OnUpdate", function(_, dt)
+        elapsed = elapsed + dt
+        local t = math.min(elapsed / SLIDE_DURATION, 1)
+        t = t * t  -- ease-in quadratic
+
+        local offset = startDist * (1 - t)
+        vis:ClearAllPoints()
+        vis:SetPoint("CENTER", self, "CENTER", dx * offset, dy * offset)
+
+        if t >= 1 then
+            self:SetScript("OnUpdate", nil)
+            vis:ClearAllPoints()
+            vis:SetPoint("CENTER")
+            if self.dot then self.dot:Hide() end
+        end
+    end)
+end
+
+-- ── Cluster detection & interactive radial spread ───────────
+
+FindClusterPins = function(hoveredPin)
+    local hx, hy = hoveredPin._canvasX, hoveredPin._canvasY
+    if not hx then return { hoveredPin } end
+    local comp = hoveredPin:GetScale()
+    if comp <= 0 then comp = 1 end
+    local threshold = hoveredPin:GetWidth() * comp * CLUSTER_OVERLAP_MULT
+    local threshSq  = threshold * threshold
+    local cluster = {}
+    for _, pin in ipairs(activePins) do
+        if pin:IsShown() and pin._canvasX then
+            local ddx = pin._canvasX - hx
+            local ddy = pin._canvasY - hy
+            if (ddx * ddx + ddy * ddy) <= threshSq then
+                cluster[#cluster + 1] = pin
+            end
+        end
+    end
+    return cluster
+end
+
+SpreadCluster = function(cluster, triggerPin)
+    spreadActive = true
+    wipe(spreadCluster)
+
+    local n = #cluster
+    local refPin  = cluster[1]
+    local dist    = refPin:GetWidth() * SPREAD_RADIUS_MULT
+
+    -- Record screen-space cluster centre for distance collapse
+    local cScale = refPin:GetEffectiveScale()
+    local cX, cY = refPin:GetCenter()
+    if cX and cY then
+        clusterCenterX = cX * cScale
+        clusterCenterY = cY * cScale
+        local uiScale = UIParent:GetEffectiveScale()
+        clusterCenterX = clusterCenterX / uiScale
+        clusterCenterY = clusterCenterY / uiScale
+        local threshold = refPin:GetWidth() * cScale / uiScale * COLLAPSE_DIST_MULT
+        clusterCollapseThreshSq = threshold * threshold
+    end
+    distanceWatcher:Show()
+
+    -- ── Spread each pin ──────────────────────────────────────
+    for i, pin in ipairs(cluster) do
+        pin._inCluster = true
+        spreadCluster[#spreadCluster + 1] = pin
+
+        -- Disable the button's mouse so stacked buttons don't fight
+        pin:EnableMouse(false)
+
+        -- Enable the visual as an interactive element
+        pin.visual:EnableMouse(true)
+        pin.visual:SetFrameLevel(pin:GetFrameLevel() + 1)
+
+        -- Per-pin closures for visual hover / click
+        pin.visual:SetScript("OnEnter", function()
+            if clusterCollapseTimer then
+                clusterCollapseTimer:Cancel()
+                clusterCollapseTimer = nil
+            end
+            ShowMiniCard(pin.visual, pin.mountData)
+        end)
+        pin.visual:SetScript("OnLeave", function()
+            HideMiniCard()
+        end)
+        pin.visual:SetScript("OnClick", function(_, button)
+            pin:OnClick(button)
+        end)
+
+        -- 180° arc to the left (π/2 → 3π/2), evenly spaced
+        local angle = (math.pi / 2) + (math.pi * (i - 1)) / math.max(n - 1, 1)
+        local dx = math.cos(angle)
+        local dy = math.sin(angle)
+        pin:SlideVisual(dx, dy, dist)
+    end
+
+    -- Show tooltip for the pin that triggered the spread
+    if triggerPin and triggerPin.visual and triggerPin.mountData then
+        ShowMiniCard(triggerPin.visual, triggerPin.mountData)
+    end
+end
+
+CollapseCluster = function()
+    spreadActive = false
+    distanceWatcher:Hide()
+    for _, pin in ipairs(spreadCluster) do
+        pin._inCluster = false
+        pin:EnableMouse(true)
+        pin.visual:EnableMouse(false)
+        pin.visual:SetScript("OnEnter", nil)
+        pin.visual:SetScript("OnLeave", nil)
+        pin.visual:SetScript("OnClick", nil)
+        pin:SlideVisualBack()
+    end
+    wipe(spreadCluster)
+end
+
+CollapseClusterImmediate = function()
+    spreadActive = false
+    distanceWatcher:Hide()
+    if clusterCollapseTimer then
+        clusterCollapseTimer:Cancel()
+        clusterCollapseTimer = nil
+    end
+    for _, pin in ipairs(spreadCluster) do
+        pin._inCluster = false
+        pin._slidOut = false
+        pin:SetScript("OnUpdate", nil)
+        pin:EnableMouse(true)
+        pin.visual:EnableMouse(false)
+        pin.visual:SetScript("OnEnter", nil)
+        pin.visual:SetScript("OnLeave", nil)
+        pin.visual:SetScript("OnClick", nil)
+        if pin.visual then
+            pin.visual:ClearAllPoints()
+            pin.visual:SetPoint("CENTER")
+        end
+        if pin.dot then pin.dot:Hide() end
+    end
+    wipe(spreadCluster)
 end
 
 function MCL_GuidePinMixin:OnClick(button)
@@ -828,8 +1117,6 @@ end
 
 -- ─── Data Provider for WorldMapFrame ────────────────────────
 local dataProvider = nil
-local pinPool = {}
-local activePins = {}
 
 -- Damping factor: 0 = pins stay perfectly constant regardless of
 -- zoom, 1 = pins scale linearly with zoom (old behaviour).
@@ -838,9 +1125,26 @@ local ZOOM_DAMPING = 0.25
 
 local function ReleasePins()
     HideMiniCard()
+    -- Clear cluster state first
+    if spreadActive then
+        CollapseClusterImmediate()
+    end
     for _, pin in ipairs(activePins) do
         pin:Hide()
         pin:ClearAllPoints()
+        pin:SetScript("OnUpdate", nil)
+        pin._slidOut = false
+        pin._inCluster = false
+        pin:EnableMouse(true)
+        if pin.visual then
+            pin.visual:EnableMouse(false)
+            pin.visual:SetScript("OnEnter", nil)
+            pin.visual:SetScript("OnLeave", nil)
+            pin.visual:SetScript("OnClick", nil)
+            pin.visual:ClearAllPoints()
+            pin.visual:SetPoint("CENTER")
+        end
+        if pin.dot then pin.dot:Hide() end
         pin.mountData = nil
         pin:SetScale(1)
         table.insert(pinPool, pin)

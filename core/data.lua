@@ -1151,7 +1151,7 @@ MCLcore.mountList[20] = {
 	categories = {
 		Achievement = {
 			name = "Achievement",
-			mounts = {252011, 262620, 262621, 257145, 260228, 246594, 260887, 257144},
+			mounts = {252011, 262620, 262621, 257145, 260228, 246594, 260887, 257144, 260697},
 			mountID = {}
 		},
 		Delves = {
@@ -1176,7 +1176,7 @@ MCLcore.mountList[20] = {
 		},
 		Quest = {
 			name = "Quest",
-			mounts = {257240},
+			mounts = {257240, 257143, 260233},
 			mountID = {}
 		},
 		Raid = {
@@ -1611,7 +1611,7 @@ MCLcore.mountNotes = {
 	[166428] = "Drops from {{npc:149652,Blackpaw}} in Darkshore during the Warfront at approximately 3-5% drop rate {{m:62,49.7,24.3}}. Horde-controlled phase.",
 	[166432] = "Drops from {{npc:148787,Alash'anir}} in Darkshore during the Warfront at approximately 3% drop rate {{m:62,56.3,30.8}}. Horde-controlled phase. Can also drop from Darkshore Warfront completion cache.",
 	[166433] = "Drops from {{npc:148787,Alash'anir}} in Darkshore during the Warfront at approximately 3% drop rate {{m:62,56.3,30.8}}. Also drops from other Darkshore rares at lower rates. Horde only.",
-	[166434] = "Drops from {{npc:148787,Alash'anir}} in Darkshore during the Warfront at approximately 3-5% drop rate {{m:62,56.3,30.8}}. Drops when your faction controls Darkshore.",
+	[166434] = "Drops from {{npc:147701,Moxo the Beheader}} {{m:62,63.5,20.0}} (Alliance phase) or {{npc:148037,Athil Dewfire}} {{m:62,40.7,73.7}} (Horde phase) in Darkshore during the Warfront at approximately 5% drop rate.",
 	[166435] = "Drops from {{npc:148790,Frightened Kodo}} in Darkshore during the Warfront at approximately 3-5% drop rate {{m:62,41.4,76.1}}. Drops when your faction controls Darkshore.",
 	[166436] = "Purchased for 750 7th Legion Service Medals (Alliance) or Honorbound Service Medals (Horde) from {{npc:135446,Provisioner Stoutforge}} in Boralus or {{npc:135447,Provisioner Mukra}} in Dazar'alor.",
 	[166438] = "Drops from {{npc:149652,Blackpaw}} in Darkshore during the Warfront at approximately 3-5% drop rate {{m:62,49.7,24.3}}. Drops when your faction controls Darkshore.",
@@ -2017,6 +2017,7 @@ MCLcore.mountNotes = {
 	[259463] = "Sold by Collector Ta'steld in Oribos for 5,000 Timewarped Badges during Shadowlands Timewalking. Ground mount.",
 	[260409] = "Trading Post (January 2026) for 500 Trader's Tender.",
 	[260580] = "Trading Post (February 2026) for 600 Trader's Tender.",
+	[260697] = "Reward from the achievement \"Staring Into The Void.\" Fully unlock the Research Console in Voidstorm.",
 	[260893] = "Datamined for the Trading Post (Patch 12.0.0). Not yet offered in any monthly rotation.",
 	[260894] = "Datamined for the Trading Post (Patch 12.0.0). Not yet offered in any monthly rotation.",
 	[260895] = "Datamined for the Trading Post (Patch 12.0.0). Not yet offered in any monthly rotation.",
