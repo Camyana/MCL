@@ -1151,7 +1151,7 @@ MCLcore.mountList[20] = {
 	categories = {
 		Achievement = {
 			name = "Achievement",
-			mounts = {252011, 262620, 262621, 257145, 260228, 246594, 260887, 257144, 260697},
+			mounts = {252011, 262620, 262621, 257145, 260228, 246594, 260887, 257144, 260697, 257199},
 			mountID = {}
 		},
 		Delves = {
@@ -2003,6 +2003,7 @@ MCLcore.mountNotes = {
 	[257180] = "Drops from Victorious Stormarion Cache obtained by completing the Stormarion Assault event in Voidstorm. Can drop from both the blue (world quest) and purple (Pinnacle) cache variants.",
 	[257191] = "Preyseeker's Journey Rank 5",
 	[257192] = "Preyseeker's Journey Rank 10",
+	[257199] = "Reward from the achievement \"Glory of the Midnight Delver.\" Complete all Midnight delve achievements.",
 	[257223] = "After you've interacted with the cache, you have to go find four urns across the zone, kill the guardian that spawns from them, and bring back the key-items they drop:\n{{m:2437,32.69,83.50}} Nalorakk's Chosen\n{{m:2437,34.55,33.46}} Halazzi's Chosen\n{{m:2437,54.78,22.39}} Jan'alai's Chosen\n{{m:2437,51.58,84.92}} Akil'zon's Chosen",
 	[257240] = "Part of the main storyline for Arator's Journey",
 	[257446] = "Inside the cave you'll find a bunch of broken eggs forming a maze. The eggs emit lightning. If you're hit by lightning you return to the entrance, and at the end of the maze you'll find Final Clutch of Predaxas.",
