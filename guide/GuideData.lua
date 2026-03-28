@@ -3826,6 +3826,11 @@ MCL_GUIDE_DATA.mounts = {
 		name = "Spectral Hawkstrider",
 		method = "NPC",
 		itemId = 262914,
+		lockBossName = "The Restless Heart",
+		groupSize = 5,
+		coords = {
+			{ m = 2395, x = 36, y = 79.1, i = true },
+		},
 	},
 	[1265784] = {
 		name = "Lucent Hawkstrider",
