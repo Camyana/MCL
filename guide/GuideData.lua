@@ -9,7 +9,7 @@ MCL_GUIDE_DATA.mounts = {
 		lockBossName = "Lord Aurius Rivendare",
 		blackMarket = true,
 		coords = {
-			{ m = 317, x = 38.6, y = 20, i = true },
+			{ m = 23, x = 26.8, y = 11.6 },
 		},
 	},
 	[23509] = {
@@ -27,7 +27,7 @@ MCL_GUIDE_DATA.mounts = {
 		method = "NPC",
 		itemId = 19872,
 		coords = {
-			{ m = 233, x = 60.4, y = 79.9, i = true },
+			{ m = 50, x = 69.7, y = 42.4 },
 		},
 	},
 	[25953] = {
@@ -41,7 +41,7 @@ MCL_GUIDE_DATA.mounts = {
 		itemId = 21321,
 		chance = 100,
 		coords = {
-			{ m = 319, i = true },
+			{ m = 81, x = 22.0, y = 93.8 },
 		},
 	},
 	[26055] = {
@@ -67,7 +67,7 @@ MCL_GUIDE_DATA.mounts = {
 		lockBossName = "Attumen the Huntsman",
 		blackMarket = true,
 		coords = {
-			{ m = 350, x = 46.6, y = 82.6, i = true },
+			{ m = 42, x = 46.9, y = 74.7 },
 		},
 	},
 	[40192] = {
@@ -86,7 +86,7 @@ MCL_GUIDE_DATA.mounts = {
 		lockBossName = "Anzu",
 		blackMarket = true,
 		coords = {
-			{ m = 258, x = 32.6, y = 54.5, i = true },
+			{ m = 108, x = 44.9, y = 65.6 },
 		},
 		instanceDifficulties = { 2, 24 },
 	},
@@ -162,7 +162,7 @@ MCL_GUIDE_DATA.mounts = {
 		lockBossName = "Malygos",
 		blackMarket = true,
 		coords = {
-			{ m = 141, x = 39, y = 51.8, i = true },
+			{ m = 114, x = 27.5, y = 26.0 },
 		},
 	},
 	[59568] = {
@@ -173,7 +173,7 @@ MCL_GUIDE_DATA.mounts = {
 		lockBossName = "Malygos",
 		blackMarket = true,
 		coords = {
-			{ m = 141, x = 39, y = 51.8, i = true },
+			{ m = 114, x = 27.5, y = 26.0 },
 		},
 	},
 	[59569] = {
@@ -194,7 +194,7 @@ MCL_GUIDE_DATA.mounts = {
 		itemId = 43986,
 		lockBossName = "Sartharion",
 		coords = {
-			{ m = 155, x = 50.5, y = 47.7, i = true },
+			{ m = 115, x = 60.1, y = 56.7 },
 		},
 	},
 	[59996] = {
@@ -256,7 +256,7 @@ MCL_GUIDE_DATA.mounts = {
 		lockBossName = "Yogg-Saron",
 		blackMarket = true,
 		coords = {
-			{ m = 150, x = 68, y = 40.8, i = true },
+			{ m = 120, x = 41.6, y = 17.8 },
 		},
 		instanceDifficulties = { 14 },
 	},
@@ -268,7 +268,7 @@ MCL_GUIDE_DATA.mounts = {
 		lockBossName = "Onyxia",
 		blackMarket = true,
 		coords = {
-			{ m = 248, x = 68, y = 31.4, i = true },
+			{ m = 70, x = 52.0, y = 76.8 },
 		},
 	},
 	[71342] = {
@@ -289,7 +289,7 @@ MCL_GUIDE_DATA.mounts = {
 		lockBossName = "The Lich King",
 		blackMarket = true,
 		coords = {
-			{ m = 191, x = 49.8, y = 52.8, i = true },
+			{ m = 118, x = 53.2, y = 86.4 },
 		},
 		instanceDifficulties = { 6 },
 	},
@@ -317,7 +317,7 @@ MCL_GUIDE_DATA.mounts = {
 		lockBossName = "Altairus",
 		blackMarket = true,
 		coords = {
-			{ m = 249, x = 77, y = 85, i = true },
+			{ m = 249, x = 76.6, y = 84.3 },
 		},
 		instanceDifficulties = { 1, 2, 24 },
 	},
@@ -329,7 +329,7 @@ MCL_GUIDE_DATA.mounts = {
 		lockBossName = "Al'Akir",
 		blackMarket = true,
 		coords = {
-			{ m = 249, x = 37, y = 81, i = true },
+			{ m = 249, x = 38.3, y = 80.6 },
 		},
 		instanceDifficulties = { 3, 4, 5, 6 },
 	},
@@ -341,7 +341,7 @@ MCL_GUIDE_DATA.mounts = {
 		lockBossName = "Slabhide",
 		blackMarket = true,
 		coords = {
-			{ m = 207, x = 48, y = 52, i = true },
+			{ m = 207, x = 47.7, y = 52.0 },
 		},
 	},
 	[88750] = {
@@ -361,7 +361,7 @@ MCL_GUIDE_DATA.mounts = {
 		lockBossName = "Bloodlord Mandokir",
 		blackMarket = true,
 		coords = {
-			{ m = 224, x = 64, y = 22, i = true },
+			{ m = 50, x = 69.7, y = 42.4 },
 		},
 		instanceDifficulties = { 1, 2 },
 	},
@@ -373,7 +373,7 @@ MCL_GUIDE_DATA.mounts = {
 		lockBossName = "High Priestess Kilnara",
 		blackMarket = true,
 		coords = {
-			{ m = 224, x = 64, y = 22, i = true },
+			{ m = 50, x = 69.7, y = 42.4 },
 		},
 	},
 	[97493] = {
@@ -384,7 +384,7 @@ MCL_GUIDE_DATA.mounts = {
 		lockBossName = "Ragnaros",
 		blackMarket = true,
 		coords = {
-			{ m = 198, x = 46, y = 79, i = true },
+			{ m = 198, x = 47.3, y = 78.0 },
 		},
 		instanceDifficulties = { 3, 4, 5, 6 },
 	},
@@ -412,7 +412,7 @@ MCL_GUIDE_DATA.mounts = {
 		lockBossName = "Alysrazor",
 		blackMarket = true,
 		coords = {
-			{ m = 367, x = 64.3, y = 38, i = true },
+			{ m = 198, x = 47.3, y = 78.0 },
 		},
 	},
 	[107842] = {
@@ -423,7 +423,7 @@ MCL_GUIDE_DATA.mounts = {
 		lockBossName = "Madness of Deathwing",
 		blackMarket = true,
 		coords = {
-			{ m = 71, x = 65, y = 50, i = true },
+			{ m = 71, x = 66.7, y = 49.7 },
 		},
 		instanceDifficulties = { 3, 4, 5, 6 },
 	},
@@ -435,7 +435,7 @@ MCL_GUIDE_DATA.mounts = {
 		lockBossName = "Madness of Deathwing",
 		blackMarket = true,
 		coords = {
-			{ m = 71, x = 65, y = 50, i = true },
+			{ m = 71, x = 66.7, y = 49.7 },
 		},
 		instanceDifficulties = { 5, 6 },
 	},
@@ -447,7 +447,7 @@ MCL_GUIDE_DATA.mounts = {
 		lockBossName = "Ultraxion",
 		blackMarket = true,
 		coords = {
-			{ m = 71, x = 65, y = 50, i = true },
+			{ m = 71, x = 66.7, y = 49.7 },
 		},
 		instanceDifficulties = { 3, 4, 5, 6 },
 	},
@@ -530,7 +530,7 @@ MCL_GUIDE_DATA.mounts = {
 		lockBossName = "Elegon",
 		blackMarket = true,
 		coords = {
-			{ m = 471, x = 21.7, y = 51.1, i = true },
+			{ m = 379, x = 59.6, y = 39.2 },
 		},
 		instanceDifficulties = { 3, 4, 5, 6 },
 	},
@@ -658,7 +658,7 @@ MCL_GUIDE_DATA.mounts = {
 		lockBossName = "Horridon",
 		blackMarket = true,
 		coords = {
-			{ m = 508, x = 26.8, y = 78.7, i = true },
+			{ m = 504, x = 63.6, y = 32.2 },
 		},
 		instanceDifficulties = { 3, 4, 5, 6 },
 	},
@@ -746,7 +746,7 @@ MCL_GUIDE_DATA.mounts = {
 		lockBossName = "Ji-Kun",
 		blackMarket = true,
 		coords = {
-			{ m = 510, x = 49.7, y = 41.6, i = true },
+			{ m = 504, x = 63.6, y = 32.2 },
 		},
 		instanceDifficulties = { 3, 4, 5, 6 },
 	},
@@ -773,7 +773,7 @@ MCL_GUIDE_DATA.mounts = {
 		lockBossName = "Garrosh Hellscream",
 		blackMarket = true,
 		coords = {
-			{ m = 567, x = 49.4, y = 71.3, i = true },
+			{ m = 390, x = 74.0, y = 42.2 },
 		},
 		instanceDifficulties = { 16 },
 	},
@@ -833,7 +833,7 @@ MCL_GUIDE_DATA.mounts = {
 		blackMarket = true,
 		groupSize = 10,
 		coords = {
-			{ m = 600, x = 48.4, y = 34.5, i = true },
+			{ m = 543, x = 51.4, y = 27.4 },
 		},
 		instanceDifficulties = { 16 },
 	},
@@ -949,7 +949,7 @@ MCL_GUIDE_DATA.mounts = {
 		chance = 100,
 		lockBossName = "Gul'dan",
 		coords = {
-			{ m = 772, i = true },
+			{ m = 680, x = 44.8, y = 60.2 },
 		},
 		instanceDifficulties = { 16 },
 	},
@@ -1060,7 +1060,7 @@ MCL_GUIDE_DATA.mounts = {
 		blackMarket = true,
 		groupSize = 10,
 		coords = {
-			{ m = 670, x = 58.4, y = 53.3, i = true },
+			{ m = 534, x = 45.5, y = 53.4 },
 		},
 		instanceDifficulties = { 16 },
 	},
@@ -1127,7 +1127,7 @@ MCL_GUIDE_DATA.mounts = {
 		lockBossName = "Gul'dan",
 		blackMarket = true,
 		coords = {
-			{ m = 764, i = true },
+			{ m = 680, x = 44.8, y = 60.2 },
 		},
 	},
 	[211135] = {
@@ -1151,7 +1151,7 @@ MCL_GUIDE_DATA.mounts = {
 		lockBossName = "Gul'dan",
 		blackMarket = true,
 		coords = {
-			{ m = 772, i = true },
+			{ m = 680, x = 44.8, y = 60.2 },
 		},
 		instanceDifficulties = { 14 },
 	},
@@ -1250,7 +1250,7 @@ MCL_GUIDE_DATA.mounts = {
 		chance = 100,
 		lockBossName = "Attumen the Huntsman",
 		coords = {
-			{ m = 794, i = true },
+			{ m = 42, x = 46.9, y = 74.7 },
 		},
 		instanceDifficulties = { 23 },
 	},
@@ -1261,7 +1261,7 @@ MCL_GUIDE_DATA.mounts = {
 		chance = 20,
 		lockBossName = "Nightbane",
 		coords = {
-			{ m = 794, i = true },
+			{ m = 42, x = 46.9, y = 74.7 },
 		},
 		instanceDifficulties = { 23 },
 	},
@@ -1322,7 +1322,7 @@ MCL_GUIDE_DATA.mounts = {
 		lockBossName = "Mistress Sassz'ine",
 		blackMarket = true,
 		coords = {
-			{ m = 851, i = true },
+			{ m = 646, x = 63.8, y = 22.4 },
 		},
 	},
 	[233364] = {
@@ -1427,7 +1427,7 @@ MCL_GUIDE_DATA.mounts = {
 		lockBossName = "Argus the Unmaker",
 		blackMarket = true,
 		coords = {
-			{ m = 910, i = true },
+			{ m = 885, x = 54.8, y = 62.2 },
 		},
 		instanceDifficulties = { 16 },
 	},
@@ -1510,7 +1510,7 @@ MCL_GUIDE_DATA.mounts = {
 		chance = 100,
 		lockBossName = "Felhounds of Sargeras",
 		coords = {
-			{ m = 910, i = true },
+			{ m = 885, x = 54.8, y = 62.2 },
 		},
 	},
 	[253106] = {
@@ -1595,7 +1595,7 @@ MCL_GUIDE_DATA.mounts = {
 		chance = 200,
 		lockBossName = "Harlan Sweete",
 		coords = {
-			{ m = 936, i = true },
+			{ m = 895, x = 84.6, y = 78.9 },
 		},
 		instanceDifficulties = { 23 },
 	},
@@ -1677,7 +1677,7 @@ MCL_GUIDE_DATA.mounts = {
 		chance = 200,
 		lockBossName = "Dazar, The First King",
 		coords = {
-			{ m = 1004, i = true },
+			{ m = 862, x = 37.8, y = 39.0 },
 		},
 		instanceDifficulties = { 23 },
 	},
@@ -1708,7 +1708,7 @@ MCL_GUIDE_DATA.mounts = {
 		chance = 200,
 		lockBossName = "Unbound Abomination",
 		coords = {
-			{ m = 1042, i = true },
+			{ m = 863, x = 51.9, y = 65.8 },
 		},
 		instanceDifficulties = { 23 },
 	},
@@ -1963,7 +1963,7 @@ MCL_GUIDE_DATA.mounts = {
 		chance = 100,
 		lockBossName = "Lady Jaina Proudmoore",
 		coords = {
-			{ m = 1364, i = true },
+			{ m = 862, x = 54.3, y = 29.5 },
 		},
 		instanceDifficulties = { 14 },
 	},
@@ -1979,7 +1979,7 @@ MCL_GUIDE_DATA.mounts = {
 		chance = 100,
 		lockBossName = "Lady Jaina Proudmoore",
 		coords = {
-			{ m = 1364, i = true },
+			{ m = 862, x = 54.3, y = 29.5 },
 		},
 		instanceDifficulties = { 16 },
 	},
@@ -2083,7 +2083,7 @@ MCL_GUIDE_DATA.mounts = {
 		chance = 200,
 		lockBossName = "HK-8 Aerial Oppression Unit",
 		coords = {
-			{ m = 1490, i = true },
+			{ m = 1462, x = 72.0, y = 36.9 },
 		},
 		instanceDifficulties = { 23 },
 	},
@@ -2156,7 +2156,7 @@ MCL_GUIDE_DATA.mounts = {
 		chance = 100,
 		lockBossName = "N'Zoth the Corruptor",
 		coords = {
-			{ m = 1582, i = true },
+			{ m = 1530, x = 15.0, y = 55.0 },
 		},
 		instanceDifficulties = { 16 },
 	},
@@ -2167,6 +2167,7 @@ MCL_GUIDE_DATA.mounts = {
 		chance = 33,
 		coords = {
 			{ m = 390, x = 49.1, y = 53.5 },
+			{ m = 1530, x = 29.5, y = 38.0 },
 		},
 	},
 	[312753] = {
@@ -2238,15 +2239,17 @@ MCL_GUIDE_DATA.mounts = {
 		method = "NPC",
 		itemId = 174752,
 		coords = {
+			{ m = 1530, x = 12.0, y = 34.0 },
 			{ m = 390, x = 3.6, y = 61.8 },
 		},
 	},
 	[315427] = {
 		name = "Rajani Warserpent",
-		method = "",
+		method = "VENDOR",
 		itemId = 174649,
 		coords = {
 			{ m = 390 },
+			{ m = 1530, x = 44.4, y = 75.2 },
 		},
 	},
 	[315847] = {
@@ -2320,6 +2323,7 @@ MCL_GUIDE_DATA.mounts = {
 		chance = 33,
 		coords = {
 			{ m = 390, x = 8.8, y = 35.6 },
+			{ m = 1530, x = 12.1, y = 30.9 },
 		},
 	},
 	[316723] = {
@@ -2329,6 +2333,7 @@ MCL_GUIDE_DATA.mounts = {
 		chance = 33,
 		coords = {
 			{ m = 390, x = 33.4, y = 67.4 },
+			{ m = 1530, x = 34.1, y = 68.0 },
 		},
 	},
 	[316802] = {
@@ -2583,7 +2588,7 @@ MCL_GUIDE_DATA.mounts = {
 		chance = 100,
 		lockBossName = "Nalthor the Rimebinder",
 		coords = {
-			{ m = 1666, i = true },
+			{ m = 1533, x = 39.2, y = 38.6 },
 		},
 		instanceDifficulties = { 23 },
 	},
@@ -2767,7 +2772,7 @@ MCL_GUIDE_DATA.mounts = {
 		chance = 100,
 		lockBossName = "Sylvanas Windrunner",
 		coords = {
-			{ m = 1998, i = true },
+			{ m = 1543, x = 70.0, y = 32.0 },
 		},
 		instanceDifficulties = { 16 },
 	},
@@ -2805,7 +2810,7 @@ MCL_GUIDE_DATA.mounts = {
 		chance = 50,
 		lockBossName = "So'leah",
 		coords = {
-			{ m = 1989, i = true },
+			{ m = 1670, x = 60.0, y = 44.0 },
 		},
 		instanceDifficulties = { 23 },
 	},
@@ -2854,7 +2859,7 @@ MCL_GUIDE_DATA.mounts = {
 		chance = 100,
 		lockBossName = "The Nine",
 		coords = {
-			{ m = 1998, i = true },
+			{ m = 1543, x = 70.0, y = 32.0 },
 		},
 		instanceDifficulties = { 14 },
 	},
@@ -3178,7 +3183,7 @@ MCL_GUIDE_DATA.mounts = {
 		chance = 100,
 		lockBossName = "The Jailer",
 		coords = {
-			{ m = 2047, i = true },
+			{ m = 1970, x = 34.1, y = 48.4 },
 		},
 		instanceDifficulties = { 16 },
 	},
@@ -3338,7 +3343,7 @@ MCL_GUIDE_DATA.mounts = {
 		lockBossName = "Fyrakk the Blazing",
 		groupSize = 5,
 		coords = {
-			{ m = 2232, i = true },
+			{ m = 2200, x = 27.0, y = 31.0 },
 		},
 		instanceDifficulties = { 16 },
 	},
@@ -3448,7 +3453,7 @@ MCL_GUIDE_DATA.mounts = {
 		lockBossName = "The Darkness",
 		groupSize = 5,
 		coords = {
-			{ m = 2303, i = true },
+			{ m = 2214, x = 55.5, y = 21.6 },
 		},
 		instanceDifficulties = { 23 },
 	},
@@ -3465,7 +3470,7 @@ MCL_GUIDE_DATA.mounts = {
 		lockBossName = "Queen Ansurek",
 		groupSize = 5,
 		coords = {
-			{ m = 2291, i = true },
+			{ m = 2255, x = 46.2, y = 17.4 },
 		},
 	},
 	[451491] = {
@@ -3907,6 +3912,7 @@ MCL_GUIDE_DATA.zones = {
 	[1355] = { 275623, 294038, 300149, 300150 },
 	[1462] = { 290718, 291492, 297157 },
 	[1525] = { 332882, 332905 },
+	[1530] = { 312751, 315014, 315427, 316722, 316723 },
 	[1533] = { 312765 },
 	[1536] = { 327405, 332457, 332466, 332478, 332480, 336042, 336045, 344228, 344574, 344575, 344576 },
 	[1543] = { 312762, 332904, 347810, 351195, 352309, 352441, 352742, 354351, 354352, 354353, 354359 },

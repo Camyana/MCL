@@ -34,6 +34,7 @@ local DEFAULT_SETTINGS = {
     showChildMapPins   = false,     -- project child-map mounts onto the parent map
     zonePanelFlyout    = "DOWN",    -- icon strip direction: DOWN, UP, RIGHT, LEFT
     zonePanelAnchor    = nil,       -- { point, x, y } saved anchor for the tab button
+    debugShowAll       = false,     -- debug: show ALL map pins (collected + unobtainable)
 }
 
 local function ApplyDefaults()
@@ -568,9 +569,10 @@ function Guide:GetMountsForZone(mapID, includeChildren)
                                 Guide.unobtainableSpells[spellId] = true
                             end
                         end
-                        if rec.isCollected == true then
+                        local debugAll = MCL_GUIDE_SETTINGS.debugShowAll
+                        if not debugAll and rec.isCollected == true then
                             -- skip collected mounts from map pins & zone panel
-                        elseif isUnobtainable then
+                        elseif not debugAll and isUnobtainable then
                             -- skip unobtainable mounts from map pins & zone panel
                         else
                             n = n + 1

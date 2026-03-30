@@ -634,6 +634,17 @@ SLASH_MCLGUIDE1 = "/mclguide"
 SLASH_MCLGUIDE2 = "/mcg"
 SlashCmdList["MCLGUIDE"] = function(msg)
     msg = (msg or ""):lower():trim()
+    if msg == "debug" then
+        MCL_GUIDE_SETTINGS.debugShowAll = not MCL_GUIDE_SETTINGS.debugShowAll
+        if MCL_GUIDE_SETTINGS.debugShowAll then
+            print("|cFF1FB7EBMCL|r Debug: showing ALL map pins (collected + unobtainable)")
+        else
+            print("|cFF1FB7EBMCL|r Debug: showing only uncollected map pins")
+        end
+        if Guide.MapPins then Guide.MapPins:RefreshPins() end
+        Panel:Refresh()
+        return
+    end
     if msg == "hide" then
         MCL_GUIDE_SETTINGS.showZonePanel = false
         if panelFrame then panelFrame:Hide() end
