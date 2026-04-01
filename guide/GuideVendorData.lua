@@ -284,7 +284,7 @@ MCL_GUIDE_VENDOR_DATA = {
     [545] = { { npc = "Hiren Loresong", zone = "Isle of Thunder", m = 118, x = 76.2, y = 19.6 } },  -- Golden Primal Direhorn
     [546] = { { npc = "Vasarin Redmorn", zone = "Isle of Thunder", m = 118, x = 76.2, y = 19.6 } },  -- Crimson Primal Direhorn
     [550] = { { npc = "Paul North", zone = "Brawl'gar Arena", m = 418, x = 48.4, y = 29.2 } },  -- Brawler's Burly Mushan Beast
-    [552] = { { npc = "Auzin", zone = "Dalaran", m = 84, x = 49.2, y = 46.4 } },  -- Ironbound Wraithcharger
+    [552] = { { npc = "Auzin", zone = "Dalaran", m = 125, x = 51.0, y = 47.6 } },  -- Ironbound Wraithcharger
     [554] = { { npc = "Necrolord Sipe", zone = "Stormwind City", m = 84, x = 76.8, y = 65.4 } },  -- Vicious Kaldorei Warsaber
     [555] = { { npc = "Deathguard Netharian", zone = "Orgrimmar", m = 85, x = 41.8, y = 73 } },  -- Vicious Skeletal Warhorse
     [560] = { { npc = "Speaker Gulan", zone = "Timeless Isle", m = 554, x = 74.6, y = 44.4 } },  -- Ashhide Mushan Beast
@@ -346,7 +346,7 @@ MCL_GUIDE_VENDOR_DATA = {
     [966] = { { npc = "Toraan the Revered", zone = "Argus", m = 882, x = 55.4, y = 28.6 } },  -- Beryl Ruinstrider
     [967] = { { npc = "Toraan the Revered", zone = "Argus", m = 882, x = 55.4, y = 28.6 } },  -- Umber Ruinstrider
     [968] = { { npc = "Toraan the Revered", zone = "Argus", m = 882, x = 55.4, y = 28.6 } },  -- Russet Ruinstrider
-    [1010] = { { npc = "Provisioner Fray", zone = "Tiragarde Sound", m = 84, x = 56, y = 17.4 } },  -- Admiralty Stallion
+    [1010] = { { npc = "Provisioner Fray", zone = "Boralus", m = 1161, x = 67.6, y = 21.6 } },  -- Admiralty Stallion
     [1012] = { { npc = "Gottum", zone = "Nazmir", m = 863, x = 70.8, y = 56.4 } },  -- Green Marsh Hopper
     [1015] = { { npc = "Sister Lilyana", zone = "Stormsong Valley", m = 942, x = 59.2, y = 69.4 } },  -- Dapple Gray
     [1016] = { { npc = "Quartermaster Alcorn", zone = "Drustvar", m = 896, x = 37.8, y = 49 } },  -- Smoky Charger
@@ -361,7 +361,7 @@ MCL_GUIDE_VENDOR_DATA = {
     [1061] = { { npc = "Provisioner Lija", zone = "Nazmir", m = 863, x = 39, y = 79.4 } },  -- Expedition Bloodswarmer
     [1062] = { { npc = "Quartermaster Alcorn", zone = "Drustvar", m = 896, x = 37.8, y = 49 } },  -- Dusky Waycrest Gryphon
     [1063] = { { npc = "Sister Lilyana", zone = "Stormsong Valley", m = 942, x = 59.2, y = 69.4 } },  -- Stormsong Coastwatcher
-    [1064] = { { npc = "Provisioner Fray", zone = "Tiragarde Sound", m = 84, x = 56, y = 17.4 } },  -- Proudmoore Sea Scout
+    [1064] = { { npc = "Provisioner Fray", zone = "Boralus", m = 1161, x = 67.6, y = 21.6 } },  -- Proudmoore Sea Scout
     [1179] = {
         { npc = "Talutu", zone = "Zuldazar", faction = "Horde", m = 1165, x = 48.4, y = 87.2 },
         { npc = "Tricky Nick", zone = "Boralus", faction = "Alliance", m = 1161, x = 56.7, y = 47 },
@@ -510,7 +510,7 @@ MCL_GUIDE_VENDOR_DATA = {
     [2294] = { { npc = "Lab Assistant Laszly", zone = "Undermine", m = 2346, x = 27.2, y = 72.4 } },  -- Mean Green Flying Machine
     [2299] = { { npc = "Deathguard Netharian", zone = "Orgrimmar", m = 85, x = 41.8, y = 73 } },
     [2300] = { { npc = "Necrolord Sipe", zone = "Stormwind City", m = 84, x = 76.8, y = 65.4 } },
-    [2317] = { { npc = "Auzin", zone = "Dalaran", m = 84, x = 49.2, y = 46.4 } },  -- Enchanted Spellweave Carpet
+    [2317] = { { npc = "Auzin", zone = "Dalaran", m = 125, x = 51.0, y = 47.6 } },  -- Enchanted Spellweave Carpet
     [2321] = { { npc = "Any Timewalking Vendor", zone = "" } },  -- Timely Buzzbee
     [2327] = { { npc = "Lunar Festival Vendor", zone = "" } },  -- Lunar Launcher
     [2333] = { { npc = "Soweezi", zone = "Siren Isle", m = 2369, x = 70, y = 48.6 } },  -- Soweezi's Vintage Waveshredder

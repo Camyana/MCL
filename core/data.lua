@@ -811,7 +811,7 @@ MCLcore.mountList[15] = {
 		},
 		BlizzardStore = {
 			name = "Blizzard Store",
-			mounts = {54811, 69846, 78924, 97989, 107951, 112326, 122469, 147901, 156564, 160589, 166775, 166774, 166776, "m1266", "m1267", "m1290", "m1346", "m1291", "m1456", "m1330", "m1531", "m1581", "m1312", "m1594", "m1583", "m1797", 203727, "m1795", "m1692", 212229, 228751, 229128, 219450, 224574, "m2237", 229418, 230184, 230200, 230201, 230185, 227362, 235344, 231297, 233285, 233284, 233282, 233283, 233286, 238943, 238994, 238966, 221270, 190581, 212228, 225250, 206167, 246698, 247848, 258427, 258423, 258425, 243194, 248088, 242795, 252679, 252681, 258477, 248681, 239076, 262661, "m2700", "m2701", "m2702", "m2703", 233019, 233020, 190636},
+			mounts = {54811, 69846, 78924, 97989, 107951, 112326, 122469, 147901, 156564, 160589, 166775, 166774, 166776, "m1266", "m1267", "m1290", "m1346", "m1291", "m1456", "m1330", "m1531", "m1581", "m1312", "m1594", "m1583", "m1797", 203727, "m1795", "m1692", 228751, 229128, 219450, 224574, "m2237", 229418, 230184, 230200, 230201, 230185, 227362, 235344, 231297, 233285, 233284, 233282, 233283, 233286, 238943, 238994, 238966, 221270, 190581, 212228, 225250, 206167, 246698, 247848, 258427, 258423, 258425, 243194, 248088, 242795, 252679, 252681, 258477, 248681, 239076, 262661, "m2700", "m2701", "m2702", "m2703", 233019, 233020, 190636},
 			mountID = {1266, 1267, 1290, 1346, 1291, 1456, 1330, 1531, 1581}
 		},
 		CollectorsEdition = {
@@ -884,11 +884,6 @@ MCLcore.mountList[16] = {
 			mounts = {259238, 259227},
 			mountID = {}
 		},
-		CurrentTradingPost = {
-			name = "Current Trading Post",
-			mounts = {},
-			mountID = {}
-		},
 		DeathKnight = {
 			name = "Death Knight",
 			mounts = {40775},
@@ -927,16 +922,6 @@ MCLcore.mountList[16] = {
 		Toy = {
 			name = "Toy",
 			mounts = {140500},
-			mountID = {}
-		},
-		TradingPost = {
-			name = "Trading Post",
-			mounts = {190231, 190168, 190767, 190613, 206156, 137576, 208598, 211074, 210919, 212227, 212630, 212920, 192766, 226041, 226040, 226506, 223449, 223469, 187674, 233023, 233354, 212631, 223285, 221814, 207821, 190169, 189978, 206976, 206027, "m1595", 235646, 235650, 235555, 235556, 235657, 235662, 238967, 238897, 238941, 236415, 243594, 243572, 243591, 245936, 243596, 76755, 207964, 207963, 210141, 137615, 54860, 247793, 247792, 246921, 247795, 247723, 260580, 250926, 248994, 250929, 260409, 263451, 263452, 211085},
-			mountID = {}
-		},
-		TradingPostTBA = {
-			name = "Future Trading Post",
-			mounts = {226044, 235554, 235557, 235659, 238902, 238901, 238968, 238900, 243593, 243597, 243590, 243592, 247791, 246919, 247794, 247722, 247720, 246917, 246920, 250108, 250106, 250928, 250927, 250105, 260896, 260893, 262707, 260894, 262706, 263449, 263450, 260895, 262708, 262705},
 			mountID = {}
 		},
 		Warlock = {
@@ -1206,6 +1191,211 @@ MCLcore.mountList[20] = {
 		},
 	}
 }
+MCLcore.mountList[21] = {
+	name = "Trading Post",
+	categories = {
+		CurrentTradingPost = {
+			name = "Current Trading Post",
+			mounts = {235662, 238897, 260893, 262705},
+			mountID = {}
+		},
+		Feb2023 = {
+			name = "February 2023",
+			mounts = {190231},
+			mountID = {}
+		},
+		Apr2023 = {
+			name = "April 2023",
+			mounts = {189978},
+			mountID = {}
+		},
+		May2023 = {
+			name = "May 2023",
+			mounts = {190613},
+			mountID = {}
+		},
+		Jun2023 = {
+			name = "June 2023",
+			mounts = {190169, 206976},
+			mountID = {}
+		},
+		Jul2023 = {
+			name = "July 2023",
+			mounts = {206156, 76755, 206027},
+			mountID = {}
+		},
+		Aug2023 = {
+			name = "August 2023",
+			mounts = {207821, 207963, 207964},
+			mountID = {}
+		},
+		Sep2023 = {
+			name = "September 2023",
+			mounts = {190168},
+			mountID = {}
+		},
+		Oct2023 = {
+			name = "October 2023",
+			mounts = {208598},
+			mountID = {}
+		},
+		Nov2023 = {
+			name = "November 2023",
+			mounts = {137615},
+			mountID = {}
+		},
+		Dec2023 = {
+			name = "December 2023",
+			mounts = {210919},
+			mountID = {}
+		},
+		Jan2024 = {
+			name = "January 2024",
+			mounts = {190767, 211074},
+			mountID = {}
+		},
+		Feb2024 = {
+			name = "February 2024",
+			mounts = {212227, 54860},
+			mountID = {}
+		},
+		Mar2024 = {
+			name = "March 2024",
+			mounts = {212630},
+			mountID = {}
+		},
+		Apr2024 = {
+			name = "April 2024",
+			mounts = {212920},
+			mountID = {}
+		},
+		May2024 = {
+			name = "May 2024",
+			mounts = {192766},
+			mountID = {}
+		},
+		Jun2024 = {
+			name = "June 2024",
+			mounts = {221814},
+			mountID = {}
+		},
+		Jul2024 = {
+			name = "July 2024",
+			mounts = {223285},
+			mountID = {}
+		},
+		Aug2024 = {
+			name = "August 2024",
+			mounts = {223449, 223469},
+			mountID = {}
+		},
+		Sep2024 = {
+			name = "September 2024",
+			mounts = {226040, 226041},
+			mountID = {}
+		},
+		Oct2024 = {
+			name = "October 2024",
+			mounts = {187674, 226506},
+			mountID = {}
+		},
+		Nov2024 = {
+			name = "November 2024",
+			mounts = {},
+			mountID = {}
+		},
+		Jan2025 = {
+			name = "January 2025",
+			mounts = {233354, 212631},
+			mountID = {}
+		},
+		Dec2024 = {
+			name = "December 2024",
+			mounts = {212229, 137576},
+			mountID = {}
+		},
+		Feb2025 = {
+			name = "February 2025",
+			mounts = {},
+			mountID = {}
+		},
+		Mar2025 = {
+			name = "March 2025",
+			mounts = {235657},
+			mountID = {}
+		},
+		Apr2025 = {
+			name = "April 2025",
+			mounts = {235646, 235650, 235555, 235556},
+			mountID = {}
+		},
+		May2025 = {
+			name = "May 2025",
+			mounts = {210141},
+			mountID = {}
+		},
+		Jun2025 = {
+			name = "June 2025",
+			mounts = {238967, 238941, 236415},
+			mountID = {}
+		},
+		Jul2025 = {
+			name = "July 2025",
+			mounts = {243594, 243596, 245936},
+			mountID = {}
+		},
+		Aug2025 = {
+			name = "August 2025",
+			mounts = {243572, 243591},
+			mountID = {}
+		},
+		Sep2025 = {
+			name = "September 2025",
+			mounts = {247792, 247793, 247795},
+			mountID = {}
+		},
+		Oct2025 = {
+			name = "October 2025",
+			mounts = {246921, 247723},
+			mountID = {}
+		},
+		Nov2025 = {
+			name = "November 2025",
+			mounts = {250926, 250929},
+			mountID = {}
+		},
+		Dec2025 = {
+			name = "December 2025",
+			mounts = {248994},
+			mountID = {}
+		},
+		Jan2026 = {
+			name = "January 2026",
+			mounts = {260409},
+			mountID = {}
+		},
+		Feb2026 = {
+			name = "February 2026",
+			mounts = {233023, 260580},
+			mountID = {}
+		},
+		Mar2026 = {
+			name = "March 2026",
+			mounts = {263452},
+			mountID = {}
+		},
+		BonusRewards = {
+			name = "Bonus Rewards",
+			mounts = {211085, 263451},
+			mountID = {}
+		},
+		TradingPostTBA = {
+			name = "Future Trading Post",
+			mounts = {"m1595", 226044, 235554, 235557, 235659, 238902, 238901, 238968, 238900, 243593, 243597, 243590, 243592, 247791, 246919, 247794, 247722, 247720, 246917, 246920, 250108, 250106, 250928, 250927, 250105, 260896, 262707, 260894, 262706, 263449, 263450, 260895, 262708},
+			mountID = {}
+		},
+	}
+}
 MCLcore.sectionNames[1] = {
 	name = "Midnight",
 	mounts = MCLcore.mountList[20],
@@ -1315,24 +1505,30 @@ MCLcore.sectionNames[18] = {
 	isExpansion = false,
 }
 MCLcore.sectionNames[19] = {
+	name = "Trading Post",
+	mounts = MCLcore.mountList[21],
+	icon = "Interface\\AddOns\\MCL\\icons\\other.blp",
+	isExpansion = false,
+}
+MCLcore.sectionNames[20] = {
 	name = "Other",
 	mounts = MCLcore.mountList[16],
 	icon = "Interface\\AddOns\\MCL\\icons\\other.blp",
 	isExpansion = false,
 }
-MCLcore.sectionNames[20] = {
+MCLcore.sectionNames[21] = {
 	name = "Unobtainable",
 	mounts = MCLcore.mountList[17],
 	icon = "Interface\\AddOns\\MCL\\icons\\unobtainable.blp",
 	isExpansion = false,
 }
-MCLcore.sectionNames[21] = {
+MCLcore.sectionNames[22] = {
 	name = "Pinned",
 	mounts = {MCL_PINNED},
 	icon = "Interface\\AddOns\\MCL\\icons\\pin.blp",
 	isExpansion = false,
 }
-MCLcore.sectionNames[22] = {
+MCLcore.sectionNames[23] = {
 	name = "Overview",
 	mounts = {},
 	icon = "Interface\\AddOns\\MCL\\icons\\mcl.blp",
@@ -1517,7 +1713,7 @@ MCLcore.mountNotes = {
 	[137573] = "Reward from a quest chain starting with Nighthuntress Syrenne's quest in Suramar. The fox mount is obtained by looting a Torn Invitation from Withered Army Training in Suramar, then completing a short quest series. The Torn Invitation can drop anytime during the training scenario.",
 	[137574] = "Drops from Gul'dan in The Nighthold on Normal, Heroic, or Mythic difficulty. Estimated ~1% drop chance. Cannot be bonus rolled. Also available on the Black Market Auction House. {{m:680,44.8,60.2}}",
 	[137575] = "Drops from Gul'dan in The Nighthold on Mythic difficulty only. This is the Mythic-only color variant. Also available on the Black Market Auction House. {{m:680,44.8,60.2}}",
-	[137576] = "Trading Post (November 2023) for 650 Trader's Tender.",
+	[137576] = "Trading Post (December 2024) for 700 Trader's Tender.",
 	[137577] = "Complete the Falcosaur pet quest chain starting with the Bloodgazer Falcosaur pet in Azsuna. Adopt the Sharptalon Hatchling orphan from a world quest, then complete a long series of pet battle and feeding quests over several weeks.",
 	[137578] = "Complete the Falcosaur pet quest chain starting with the Snowfeather Falcosaur pet in Highmountain. Adopt the Snowfeather Hatchling orphan from a world quest, then complete a long series of pet battle and feeding quests over several weeks.",
 	[137579] = "Complete the Falcosaur pet quest chain starting with the Direbeak Falcosaur pet in Stormheim. Adopt the Direbeak Hatchling orphan from a world quest, then complete a long series of pet battle and feeding quests over several weeks.",
@@ -1931,6 +2127,7 @@ MCLcore.mountNotes = {
 	[211084] = "Purchased from Ms. Xiulan at the Black Market Auction House for 1,200,000g. Available in Valdrakken and Dornogal.",
 	[211085] = "Trading Post bonus reward for 2025. Earned by filling the Traveler's Log every month for the full year.",
 	[212227] = "Trading Post (February 2024) for 750 Trader's Tender.",
+	[212229] = "Trading Post (December 2024) for 750 Trader's Tender.",
 	[212599] = "Drops from Loot-Filled Basket (Daetan Swiftplume boss kill) during Noblegarden. ~4% drop rate. Once per day per character. Flying mount.",
 	[212630] = "Trading Post (March 2024) for 750 Trader's Tender.",
 	[212631] = "Trading Post (January 2025) for 750 Trader's Tender.",
@@ -1971,7 +2168,7 @@ MCLcore.mountNotes = {
 	[232926] = "Drops from Heart-Shaped Box (Apothecary Hummel kill) during Love is in the Air. Low drop rate (~0.15%). Once per day per character. Run on all eligible alts daily.",
 	[233019] = "Purchased from the In-Game Shop.",
 	[233020] = "Purchased from the In-Game Shop.",
-	[233023] = "Trading Post (February 2025) for 600 Trader's Tender.",
+	[233023] = "Trading Post (February 2026) for 600 Trader's Tender.",
 	[233354] = "Trading Post (January 2025) for 500 Trader's Tender.",
 	[234716] = "Sold by Kronnus in Warspear (Horde) or Tempra in Stormshield (Alliance) for 5,000 Timewarped Badges during Warlords of Draenor Timewalking.",
 	[234721] = "Sold by Aridormi in Dalaran (Broken Isles) for 5,000 Timewarped Badges during Legion Timewalking. Flying mount.",
@@ -2083,7 +2280,7 @@ MCLcore.mountNotes = {
 	["m150"] = "Paladin only. Automatically learned by Blood Elf Paladins. Basic Thalassian mount. Horde.",
 	["m1545"] = "Requires Renown 25 with Maruuk Centaur and completing the Lizis Reins questline.\n\n1. Complete the questline starting with Sneaking Out from Initiate Radiya to unlock Godoloto {{m:2023,56.2,75.8}}\n2. Collect 3x {{item:201929}} from Balakar Khan (last boss of Nokhud Offensive, any difficulty)\n3. Get 1x {{item:191507}} (Tier 3) - crafted by Alchemists or buy from the Auction House\n4. Get 1x {{item:201323}} from Quartermaster Huseng (Renown 7, costs 1x {{item:194562}} + 50 Dragon Isles Supplies)\n\n{{item:194562}} drops from Time-Lost mobs in Thaldraszus (~5-10%% drop) {{m:2025,60.0,82.0}}\n\nDo NOT use the {{item:201323}} early - it will be consumed.\n\nTurn in quest A Whispering Breeze to Ohnahra {{m:2023,57.59,31.92}}",
 	["m1568"] = "Paladin only. Automatically learned by Lightforged Draenei Paladins. Alliance.",
-	["m1595"] = "Available from the Trading Post for Trader's Tender. Items rotate monthly.",
+	["m1595"] = "Datamined for the Trading Post. Not yet offered in any monthly rotation.",
 	["m17"] = "Warlock only. Automatically learned at level 20. The basic Warlock mount.",
 	["m2233"] = "Paladin only. Automatically learned by Earthen Paladins. Added in The War Within.",
 	["m2700"] = "Blizzard Store mount. Part of the Scurrywind Groveglider Collection ($25 individually, $50 for all four). Added in Patch 12.0.1.",

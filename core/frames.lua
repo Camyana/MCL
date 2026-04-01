@@ -1069,11 +1069,11 @@ function MCL_frames:SetTabs()
         btn.content = MCLcore.Frames:createContentFrame(MCL_mainFrame.ScrollChild, v.name, v.icon)
         -- Populate expansion tab content
         if v.mounts then
-            if v.mounts.categories then
-                MCLcore.Frames:createCategoryFrame(v.mounts.categories, btn.content, v.name)
+            local cats = v.mounts.categories or v.mounts
+            if v.name == "Trading Post" then
+                MCLcore.Frames:createTimelineCategoryFrame(cats, btn.content, v.name)
             else
-                -- For some sections, mounts might be directly in v.mounts
-                MCLcore.Frames:createCategoryFrame(v.mounts, btn.content, v.name)
+                MCLcore.Frames:createCategoryFrame(cats, btn.content, v.name)
             end
         end
         btn.content:Hide()
@@ -1126,10 +1126,11 @@ function MCL_frames:SetTabs()
         tab.content = MCLcore.Frames:createContentFrame(MCL_mainFrame.ScrollChild, v.name, v.icon)
         -- Populate other tab content if available
         if v.mounts then
-            if v.mounts.categories then
-                MCLcore.Frames:createCategoryFrame(v.mounts.categories, tab.content, v.name)
+            local cats = v.mounts.categories or v.mounts
+            if v.name == "Trading Post" then
+                MCLcore.Frames:createTimelineCategoryFrame(cats, tab.content, v.name)
             else
-                MCLcore.Frames:createCategoryFrame(v.mounts, tab.content, v.name)
+                MCLcore.Frames:createCategoryFrame(cats, tab.content, v.name)
             end
         end
         tab.content:Hide()
@@ -4112,6 +4113,37 @@ end
 
 table.sort(sortedCategoryNames)
 
+-- Custom sort for Trading Post: reverse chronological (newest first),
+-- with Current Trading Post pinned to top and Future/Bonus at the bottom.
+if sectionName == "Trading Post" then
+    local monthOrder = {Jan=1, Feb=2, Mar=3, Apr=4, May=5, Jun=6, Jul=7, Aug=8, Sep=9, Oct=10, Nov=11, Dec=12}
+    local function parseDateKey(key)
+        local mon, year = key:match("^(%a+)(%d+)$")
+        if mon and year and monthOrder[mon] then
+            return tonumber(year) * 100 + monthOrder[mon]
+        end
+        return nil
+    end
+    table.sort(sortedCategoryNames, function(a, b)
+        -- CurrentTradingPost always first
+        if a == "CurrentTradingPost" then return true end
+        if b == "CurrentTradingPost" then return false end
+        -- TradingPostTBA and BonusRewards always last
+        local aSpecial = (a == "TradingPostTBA" or a == "BonusRewards")
+        local bSpecial = (b == "TradingPostTBA" or b == "BonusRewards")
+        if aSpecial and not bSpecial then return false end
+        if bSpecial and not aSpecial then return true end
+        if aSpecial and bSpecial then return a < b end
+        -- Date-based keys: sort descending (newest first)
+        local aDate = parseDateKey(a)
+        local bDate = parseDateKey(b)
+        if aDate and bDate then return aDate > bDate end
+        if aDate then return true end
+        if bDate then return false end
+        return a < b
+    end)
+end
+
 -- Initialize collapsed categories storage
 if not MCL_SETTINGS.collapsedCategories then
     MCL_SETTINGS.collapsedCategories = {}
@@ -4461,6 +4493,309 @@ end
     local maxY = math.min(leftColumnY, rightColumnY)
     local requiredHeight = math.abs(maxY) + 20  -- Reduced padding for tighter layout
     relativeFrame:SetHeight(requiredHeight)
+end
+
+----------------------------------------------------------------
+-- Timeline layout for the Trading Post section.
+-- Full-width rows, one per month, with mount icons inline.
+----------------------------------------------------------------
+function MCL_frames:createTimelineCategoryFrame(set, relativeFrame, sectionName)
+    if not set then return end
+
+    -- Gather and sort category keys using the same Trading Post sort logic
+    local monthOrder = {Jan=1, Feb=2, Mar=3, Apr=4, May=5, Jun=6, Jul=7, Aug=8, Sep=9, Oct=10, Nov=11, Dec=12}
+    local function parseDateKey(key)
+        local mon, year = key:match("^(%a+)(%d+)$")
+        if mon and year and monthOrder[mon] then
+            return tonumber(year) * 100 + monthOrder[mon]
+        end
+        return nil
+    end
+
+    local sortedKeys = {}
+    for k, v in pairs(set) do
+        if type(v) == "table" then
+            table.insert(sortedKeys, k)
+        end
+    end
+
+    table.sort(sortedKeys, function(a, b)
+        if a == "CurrentTradingPost" then return true end
+        if b == "CurrentTradingPost" then return false end
+        local aSpecial = (a == "TradingPostTBA" or a == "BonusRewards")
+        local bSpecial = (b == "TradingPostTBA" or b == "BonusRewards")
+        if aSpecial and not bSpecial then return false end
+        if bSpecial and not aSpecial then return true end
+        if aSpecial and bSpecial then return a < b end
+        local aDate = parseDateKey(a)
+        local bDate = parseDateKey(b)
+        if aDate and bDate then return aDate > bDate end
+        if aDate then return true end
+        if bDate then return false end
+        return a < b
+    end)
+
+    -- Collapsed state storage
+    if not MCL_SETTINGS.collapsedCategories then
+        MCL_SETTINGS.collapsedCategories = {}
+    end
+
+    -- Layout constants
+    local currentWidth, _ = MCL_frames:GetCurrentFrameDimensions()
+    local rowWidth = currentWidth - 40
+    local yOffset = -50
+    local ROW_PADDING = 6
+    local MOUNT_SIZE = 36
+    local MOUNT_SPACING = 4
+    local LABEL_WIDTH = 160
+    local MOUNT_AREA_START = 280
+    local ROW_COLLAPSED_HEIGHT = 28
+    local allRowFrames = {}
+    local layoutOrder = {}  -- ordered list of {type="divider"|"row", frame=...}
+
+    -- Detect year boundaries to insert year headers
+    local function getYear(key)
+        local _, year = key:match("^(%a+)(%d+)$")
+        return year and tonumber(year) or nil
+    end
+
+    local lastYear = nil
+
+    for _, categoryName in ipairs(sortedKeys) do
+        local categoryData = set[categoryName]
+
+        -- ── Year divider ──
+        local thisYear = getYear(categoryName)
+        local isDateCategory = (thisYear ~= nil)
+        if isDateCategory and thisYear ~= lastYear then
+            lastYear = thisYear
+            local divider = CreateFrame("Frame", nil, relativeFrame)
+            divider:SetSize(rowWidth, 22)
+            divider:SetPoint("TOPLEFT", relativeFrame, "TOPLEFT", 0, yOffset)
+            divider.isYearDivider = true
+            local yearText = divider:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+            yearText:SetPoint("LEFT", 6, 0)
+            yearText:SetText(tostring(thisYear))
+            yearText:SetTextColor(0.55, 0.6, 0.7, 1)
+            local line = divider:CreateTexture(nil, "ARTWORK")
+            line:SetHeight(1)
+            line:SetPoint("LEFT", yearText, "RIGHT", 8, 0)
+            line:SetPoint("RIGHT", divider, "RIGHT", -4, 0)
+            line:SetColorTexture(0.25, 0.25, 0.3, 0.6)
+            table.insert(layoutOrder, {type = "divider", frame = divider})
+            yOffset = yOffset - 26
+        end
+
+        -- ── Count mounts ──
+        local mountList = {}
+        if categoryData.mounts then
+            for _, m in ipairs(categoryData.mounts) do table.insert(mountList, m) end
+        end
+        if categoryData.mountID then
+            for _, m in ipairs(categoryData.mountID) do table.insert(mountList, m) end
+        end
+
+        local totalMounts, collectedMounts, displayedMounts = 0, 0, 0
+        for _, mountId in ipairs(mountList) do
+            local mount_Id = MCLcore.Function:GetMountID(mountId)
+            if mount_Id then
+                local faction, faction_specific = MCLcore.Function.IsMountFactionSpecific(mountId)
+                local playerFaction = UnitFactionGroup("player")
+                local allowed = not faction_specific
+                if faction_specific then
+                    if faction == 0 then faction = "Horde" elseif faction == 1 then faction = "Alliance" end
+                    allowed = (faction == playerFaction)
+                end
+                if allowed then
+                    totalMounts = totalMounts + 1
+                    if IsMountCollected(mount_Id) then collectedMounts = collectedMounts + 1 end
+                    if not (MCL_SETTINGS.hideCollectedMounts and IsMountCollected(mount_Id)) then
+                        displayedMounts = displayedMounts + 1
+                    end
+                end
+            end
+        end
+
+        -- Skip fully-collected when filter is active
+        if MCL_SETTINGS.hideCollectedMounts and totalMounts > 0 and displayedMounts == 0 then
+            -- skip
+        else
+
+        SortMountList(mountList, MCL_SETTINGS.mountSortMode)
+
+        local mountCountForLayout = displayedMounts
+        if mountCountForLayout == 0 and #mountList > 0 then
+            mountCountForLayout = #mountList
+        end
+
+        -- Calculate row height: label row + mount grid
+        local mountsPerRow = math.floor((rowWidth - MOUNT_AREA_START - 10) / (MOUNT_SIZE + MOUNT_SPACING))
+        mountsPerRow = math.max(2, mountsPerRow)
+        local numRows = math.ceil(mountCountForLayout / mountsPerRow)
+        local expandedHeight = math.max(ROW_COLLAPSED_HEIGHT, 10 + numRows * (MOUNT_SIZE + MOUNT_SPACING) + 6)
+
+        -- ── Row frame ──
+        local collapseKey = (sectionName or "Trading Post") .. ":" .. (categoryData.name or categoryName)
+        local isCollapsed = MCL_SETTINGS.collapsedCategories[collapseKey] or false
+
+        local row = CreateFrame("Frame", nil, relativeFrame, "BackdropTemplate")
+        row:SetWidth(rowWidth)
+        row:SetHeight(isCollapsed and ROW_COLLAPSED_HEIGHT or expandedHeight)
+        row:SetPoint("TOPLEFT", relativeFrame, "TOPLEFT", 0, yOffset)
+        row:SetBackdrop({
+            bgFile = "Interface\\Buttons\\WHITE8x8",
+            edgeFile = "Interface\\Buttons\\WHITE8x8",
+            edgeSize = 1,
+            insets = { left = 1, right = 1, top = 1, bottom = 1 },
+        })
+        row:SetBackdropColor(0.06, 0.06, 0.09, 0.9)
+        row:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.8)
+        row.collapseKey = collapseKey
+        row.expandedHeight = expandedHeight
+        row.isCollapsed = isCollapsed
+
+        -- +/− toggle
+        row.toggleBtn = CreateFrame("Frame", nil, row, "BackdropTemplate")
+        row.toggleBtn:SetSize(14, 14)
+        row.toggleBtn:SetPoint("LEFT", row, "LEFT", 4, 0)
+        row.toggleBtn:SetBackdrop({
+            bgFile = "Interface\\Buttons\\WHITE8x8",
+            edgeFile = "Interface\\Buttons\\WHITE8x8",
+            edgeSize = 1,
+            insets = { left = 1, right = 1, top = 1, bottom = 1 },
+        })
+        row.toggleBtn:SetBackdropColor(0.10, 0.10, 0.15, 0.9)
+        row.toggleBtn:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.8)
+        row.toggleLabel = row.toggleBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        row.toggleLabel:SetPoint("CENTER", 0, 1)
+        row.toggleLabel:SetTextColor(0.5, 0.55, 0.65, 1)
+        row.toggleLabel:SetText(isCollapsed and "+" or "\226\136\146")
+
+        -- Month label
+        row.title = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        row.title:SetPoint("LEFT", row, "LEFT", 22, 0)
+        row.title:SetWidth(LABEL_WIDTH - 26)
+        row.title:SetJustifyH("LEFT")
+        row.title:SetText(L[categoryData.name] or categoryData.name or categoryName)
+        row.title:SetTextColor(0.7, 0.78, 0.88, 1)
+
+        -- Inline count
+        row.inlineCount = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        row.inlineCount:SetPoint("LEFT", row.title, "RIGHT", 4, 0)
+        row.inlineCount:SetText(string.format("|cff888888(%d/%d)|r", collectedMounts, totalMounts))
+
+        -- Progress pip (small coloured bar next to count)
+        if totalMounts > 0 then
+            local pipWidth = 60
+            local pipHeight = 4
+            local pip = CreateFrame("Frame", nil, row, "BackdropTemplate")
+            pip:SetSize(pipWidth, pipHeight)
+            pip:SetPoint("LEFT", row.inlineCount, "RIGHT", 6, 0)
+            pip:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8x8"})
+            pip:SetBackdropColor(0.12, 0.12, 0.15, 0.8)
+            local fill = pip:CreateTexture(nil, "OVERLAY")
+            fill:SetHeight(pipHeight)
+            fill:SetPoint("LEFT", pip, "LEFT", 0, 0)
+            fill:SetWidth(math.max(1, pipWidth * (collectedMounts / totalMounts)))
+            local percentage = (collectedMounts / totalMounts) * 100
+            local cols = MCL_SETTINGS.progressColors
+            if cols then
+                if percentage >= 100 then
+                    fill:SetColorTexture(cols.complete.r, cols.complete.g, cols.complete.b, 1)
+                elseif percentage >= 66 then
+                    fill:SetColorTexture(cols.high.r, cols.high.g, cols.high.b, 1)
+                elseif percentage >= 33 then
+                    fill:SetColorTexture(cols.medium.r, cols.medium.g, cols.medium.b, 1)
+                else
+                    fill:SetColorTexture(cols.low.r, cols.low.g, cols.low.b, 1)
+                end
+            else
+                fill:SetColorTexture(0.5, 0.5, 0.5, 1)
+            end
+            row.pip = pip
+        end
+
+        -- ── Mount icons ──
+        local mountGridHeight = numRows * (MOUNT_SIZE + MOUNT_SPACING)
+        local mountStartX = MOUNT_AREA_START
+        local mountStartY = -math.max(4, (expandedHeight - mountGridHeight) / 2)
+        local mountConfig = {
+            maxDisplayMounts = #mountList,
+            mountsPerRow = mountsPerRow,
+            mountSize = MOUNT_SIZE,
+            actualSpacing = MOUNT_SPACING,
+            rowSpacing = MOUNT_SPACING,
+            mountStartX = mountStartX,
+            mountStartY = mountStartY,
+            categoryName = categoryData.name or categoryName,
+            sectionName = sectionName or "Trading Post",
+        }
+        ThrottledMountCreation(mountList, row, mountConfig, function() end)
+
+        -- Collapse helpers
+        local function SetRowCollapsed(r, collapsed)
+            r.isCollapsed = collapsed
+            r:SetHeight(collapsed and ROW_COLLAPSED_HEIGHT or r.expandedHeight)
+            r.toggleLabel:SetText(collapsed and "+" or "\226\136\146")
+            for _, child in ipairs({r:GetChildren()}) do
+                if child ~= r.titleBtn and child ~= r.toggleBtn and child ~= r.pip then
+                    if collapsed then child:Hide() else child:Show() end
+                end
+            end
+        end
+
+        if isCollapsed then SetRowCollapsed(row, true) end
+
+        -- Clickable title area
+        row.titleBtn = CreateFrame("Button", nil, row)
+        row.titleBtn:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
+        row.titleBtn:SetPoint("TOPRIGHT", row, "TOPRIGHT", 0, 0)
+        row.titleBtn:SetHeight(ROW_COLLAPSED_HEIGHT)
+        row.titleBtn:SetFrameLevel(row:GetFrameLevel() + 5)
+        row.titleBtn:SetScript("OnEnter", function()
+            row.title:SetTextColor(0.4, 0.78, 0.95, 1)
+            row:SetBackdropBorderColor(0.3, 0.6, 0.9, 0.8)
+            row.toggleBtn:SetBackdropBorderColor(0.3, 0.6, 0.9, 0.8)
+            row.toggleLabel:SetTextColor(0.4, 0.78, 0.95, 1)
+        end)
+        row.titleBtn:SetScript("OnLeave", function()
+            row.title:SetTextColor(0.7, 0.78, 0.88, 1)
+            row:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.8)
+            row.toggleBtn:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.8)
+            row.toggleLabel:SetTextColor(0.5, 0.55, 0.65, 1)
+        end)
+
+        table.insert(allRowFrames, row)
+        table.insert(layoutOrder, {type = "row", frame = row})
+
+        -- Advance Y
+        local effectiveH = isCollapsed and ROW_COLLAPSED_HEIGHT or expandedHeight
+        yOffset = yOffset - (effectiveH + ROW_PADDING)
+
+        -- Toggle click
+        row.titleBtn:SetScript("OnClick", function()
+            local newState = not row.isCollapsed
+            MCL_SETTINGS.collapsedCategories[row.collapseKey] = newState or nil
+            SetRowCollapsed(row, newState)
+            -- Reflow all elements in layout order
+            local y = -50
+            for _, entry in ipairs(layoutOrder) do
+                entry.frame:ClearAllPoints()
+                entry.frame:SetPoint("TOPLEFT", relativeFrame, "TOPLEFT", 0, y)
+                if entry.type == "divider" then
+                    y = y - 26
+                else
+                    local h = entry.frame.isCollapsed and ROW_COLLAPSED_HEIGHT or entry.frame.expandedHeight
+                    y = y - (h + ROW_PADDING)
+                end
+            end
+            relativeFrame:SetHeight(math.abs(y) + 20)
+        end)
+
+        end -- hide-collected else
+    end
+
+    relativeFrame:SetHeight(math.abs(yOffset) + 20)
 end
 
 -- Helper function to get current frame dimensions
