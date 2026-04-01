@@ -1196,7 +1196,7 @@ MCLcore.mountList[21] = {
 	categories = {
 		CurrentTradingPost = {
 			name = "Current Trading Post",
-			mounts = {235662, 238897, 260893, 262705},
+			mounts = {235662, 238897},
 			mountID = {}
 		},
 		Feb2023 = {
@@ -1382,6 +1382,11 @@ MCLcore.mountList[21] = {
 		Mar2026 = {
 			name = "March 2026",
 			mounts = {263452},
+			mountID = {}
+		},
+		Apr2026 = {
+			name = "April 2026",
+			mounts = {260893, 262705},
 			mountID = {}
 		},
 		BonusRewards = {
@@ -2257,12 +2262,12 @@ MCLcore.mountNotes = {
 	[260409] = "Trading Post (January 2026) for 500 Trader's Tender.",
 	[260580] = "Trading Post (February 2026) for 600 Trader's Tender.",
 	[260697] = "Reward from the achievement \"Staring Into The Void.\" Fully unlock the Research Console in Voidstorm.",
-	[260893] = "Datamined for the Trading Post (Patch 12.0.0). Not yet offered in any monthly rotation.",
+	[260893] = "Trading Post (April 2026) for 550 Trader's Tender.",
 	[260894] = "Datamined for the Trading Post (Patch 12.0.0). Not yet offered in any monthly rotation.",
 	[260895] = "Datamined for the Trading Post (Patch 12.0.0). Not yet offered in any monthly rotation.",
 	[260896] = "Datamined for the Trading Post (Patch 12.0.0). Not yet offered in any monthly rotation.",
 	[262500] = "Delver's Journey Rank 5",
-	[262705] = "Datamined for the Trading Post (Patch 12.0.0). Not yet offered in any monthly rotation.",
+	[262705] = "Trading Post (April 2026) for 600 Trader's Tender.",
 	[262706] = "Datamined for the Trading Post (Patch 12.0.0). Not yet offered in any monthly rotation.",
 	[262707] = "Datamined for the Trading Post (Patch 12.0.0). Not yet offered in any monthly rotation.",
 	[262708] = "Datamined for the Trading Post (Patch 12.0.0). Not yet offered in any monthly rotation.",

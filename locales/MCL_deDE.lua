@@ -604,4 +604,21 @@ if L then
     L["Conquest"] = "Conquest"
     L["Residual Memories"] = "Residual Memories"
     L["Currency"] = "Currency"
+
+
+
+    -- Trading Post months
+    L["Bonus Rewards"] = "Bonusbelohnungen"
+    L["January"] = "Januar"
+    L["February"] = "Februar"
+    L["March"] = "März"
+    L["April"] = "April"
+    L["May"] = "Mai"
+    L["June"] = "Juni"
+    L["July"] = "Juli"
+    L["August"] = "August"
+    L["September"] = "September"
+    L["October"] = "Oktober"
+    L["November"] = "November"
+    L["December"] = "Dezember"
 end

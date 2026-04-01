@@ -607,4 +607,21 @@ if L then
     L["Conquest"] = "征服点数"
     L["Residual Memories"] = "残余记忆"
     L["Currency"] = "货币"
+
+
+
+    -- Trading Post months
+    L["Bonus Rewards"] = "额外奖励"
+    L["January"] = "1月"
+    L["February"] = "2月"
+    L["March"] = "3月"
+    L["April"] = "4月"
+    L["May"] = "5月"
+    L["June"] = "6月"
+    L["July"] = "7月"
+    L["August"] = "8月"
+    L["September"] = "9月"
+    L["October"] = "10月"
+    L["November"] = "11月"
+    L["December"] = "12月"
 end

@@ -4676,7 +4676,15 @@ function MCL_frames:createTimelineCategoryFrame(set, relativeFrame, sectionName)
         row.title:SetPoint("LEFT", row, "LEFT", 22, 0)
         row.title:SetWidth(LABEL_WIDTH - 26)
         row.title:SetJustifyH("LEFT")
-        row.title:SetText(L[categoryData.name] or categoryData.name or categoryName)
+        -- Split "Month Year" into L["Month"] .. " " .. year for localization
+        local displayName = categoryData.name or categoryName
+        local month, year = (displayName):match("^(%a+)%s+(%d+)$")
+        if month and year and L[month] then
+            displayName = L[month] .. " " .. year
+        else
+            displayName = L[displayName] or displayName
+        end
+        row.title:SetText(displayName)
         row.title:SetTextColor(0.7, 0.78, 0.88, 1)
 
         -- Inline count

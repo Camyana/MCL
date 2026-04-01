@@ -20,6 +20,7 @@ if L then
     L["Blacksmith"] = "Blacksmith"
     L["Blizzard Store"] = "Blizzard Store"
     L["Blood Elf"] = "Blood Elf"
+    L["Bonus Rewards"] = "Bonus Rewards"
     L["Brawler's Guild"] = "Brawler's Guild"
     L["BrewFest"] = "BrewFest"
     L["Brewfest"] = "Brewfest"
@@ -578,6 +579,19 @@ if L then
     L["Achievement Reward"] = "Achievement Reward"
     L["%s Reward"] = "%s Reward"
     L["Item %d"] = "Item %d"
+    -- Trading Post months
+    L["January"] = "January"
+    L["February"] = "February"
+    L["March"] = "March"
+    L["April"] = "April"
+    L["May"] = "May"
+    L["June"] = "June"
+    L["July"] = "July"
+    L["August"] = "August"
+    L["September"] = "September"
+    L["October"] = "October"
+    L["November"] = "November"
+    L["December"] = "December"
 
     -- Difficulty Labels
     L["Heroic"] = "Heroic"
