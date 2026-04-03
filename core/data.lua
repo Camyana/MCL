@@ -1194,11 +1194,6 @@ MCLcore.mountList[20] = {
 MCLcore.mountList[21] = {
 	name = "Trading Post",
 	categories = {
-		CurrentTradingPost = {
-			name = "Current Trading Post",
-			mounts = {235662, 238897},
-			mountID = {}
-		},
 		Feb2023 = {
 			name = "February 2023",
 			mounts = {190231},
@@ -1386,7 +1381,7 @@ MCLcore.mountList[21] = {
 		},
 		Apr2026 = {
 			name = "April 2026",
-			mounts = {260893, 262705},
+			mounts = {260893, 262705, 235662, 238897},
 			mountID = {}
 		},
 		BonusRewards = {
