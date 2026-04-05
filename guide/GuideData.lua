@@ -3655,6 +3655,10 @@ MCL_GUIDE_DATA.mounts = {
 		itemId = 243061,
 		lockBossName = "Dimensius, the All-Devouring",
 	},
+	[1236262] = {
+		name = "Shaohao's Sage Serpent",
+		method = "",
+	},
 	[1240632] = {
 		name = "Pearlescent Krolusk",
 		method = "NPC",
@@ -3819,6 +3823,11 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 2437, x = 44.7, y = 44.1 },
 		},
 	},
+	[1261579] = {
+		name = "Ravenous Shredclaw",
+		method = "",
+		itemId = 257445,
+	},
 	[1261583] = {
 		name = "Reins of the Insatiable Shredclaw",
 		method = "Treasure",
@@ -3850,6 +3859,11 @@ MCL_GUIDE_DATA.mounts = {
 		name = "Sanguine Harrower",
 		method = "USE",
 		itemId = 260635,
+	},
+	[1266702] = {
+		name = "Voidbound Stormray",
+		method = "",
+		itemId = 260696,
 	},
 }
 

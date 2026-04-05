@@ -153,12 +153,14 @@ MCL_GUIDE_REP_DATA = {
     [1243593] = { { factionId = 2704, factionName = "Hara'ti", renown = true, level = 17, note = "" } },
     [1251630] = { { factionId = 2696, factionName = "Amani Tribe", renown = true, level = 19, note = "" } },
     [1253929] = { { factionId = 2704, factionName = "Hara'ti", renown = true, level = 19, note = "" } },
+    [1261579] = { { factionId = 2699, factionName = "The Singularity", renown = true, level = 17, note = "" } }, -- Ravenous Shredclaw
     [1261291] = { { factionId = 2710, factionName = "Silvermoon Court", renown = true, level = 19, note = "" } },
     [1261322] = { { factionId = 2710, factionName = "Silvermoon Court", renown = true, level = 17, note = "" } },
     [1261332] = { { factionId = 2770, factionName = "Slayer's Duellum", renown = false, levelName = "Paragon", note = "" } },
     [1261357] = { { factionId = 2696, factionName = "Amani Tribe", renown = true, level = 17, note = "" } },
     [1261584] = { { factionId = 2770, factionName = "Slayer's Duellum", renown = false, levelName = "Exalted", note = "" } }, -- Prowling Shredclaw
     [1261585] = { { factionId = 2770, factionName = "Slayer's Duellum", renown = false, levelName = "Exalted", note = "" } }, -- Frenzied Shredclaw
+    [1266702] = { { factionId = 2699, factionName = "The Singularity", renown = true, level = 19, note = "" } }, -- Voidbound Stormray
 }
 
 -- Quartermaster / vendor locations by factionId
@@ -227,6 +229,7 @@ MCL_GUIDE_REP_VENDORS = {
     [2677] = { npc = "Lab Assistant Laszly", m = 2346, x = 27.2, y = 72.4 },
     [2679] = { npc = "Quartermaster Riggs", npcId = 234890, m = 2346, x = 54, y = 55 },
     [2685] = { npc = "Ando the Gat", npcId = 235621, m = 0, x = 0, y = 0 },
+    [2699] = { npc = "Void Researcher Anomander", npcId = 248328, m = 2664, x = 47.1, y = 66.2 },
     [2736] = { npc = "Quartermaster Riggs", npcId = 234890, m = 2346, x = 54, y = 55 },
     [2770] = { npc = "Vendor NPC", m = 2346, x = 54, y = 55 },
 }

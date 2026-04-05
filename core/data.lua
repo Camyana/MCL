@@ -861,8 +861,8 @@ MCLcore.mountList[15] = {
 		},
 		WowClassic = {
 			name = "WoW Classic",
-			mounts = {248090, 258475, 235287, 210008, 253573, 258476, 252950, 235286},
-			mountID = {}
+			mounts = {248090, 258475, 235287, 210008, 253573, 258476, 252950, 235286, "m2582"},
+			mountID = {2582}
 		},
 		anniversary = {
 			name = "WoW Anniversary Mounts",
@@ -1176,7 +1176,7 @@ MCLcore.mountList[20] = {
 		},
 		Reputation = {
 			name = "Reputation",
-			mounts = {257219, 250889, 252014, 257154, 257176, 246734, 257142, 257448, 257447},
+			mounts = {257219, 250889, 252014, 257154, 257176, 246734, 257142, 257448, 257447, 257445, 260696},
 			mountID = {}
 		},
 		Treasure = {
@@ -2243,6 +2243,7 @@ MCLcore.mountNotes = {
 	[257199] = "Reward from the achievement \"Glory of the Midnight Delver.\" Complete all Midnight delve achievements.",
 	[257223] = "After you've interacted with the cache, you have to go find four urns across the zone, kill the guardian that spawns from them, and bring back the key-items they drop:\n{{m:2437,32.69,83.50}} Nalorakk's Chosen\n{{m:2437,34.55,33.46}} Halazzi's Chosen\n{{m:2437,54.78,22.39}} Jan'alai's Chosen\n{{m:2437,51.58,84.92}} Akil'zon's Chosen",
 	[257240] = "Part of the main storyline for Arator's Journey",
+	[257445] = "Sold by Void Researcher Anomander in Voidstorm for 6,000 Voidlight Marl. Requires Renown 17 with The Singularity. Ground mount.",
 	[257446] = "Inside the cave you'll find a bunch of broken eggs forming a maze. The eggs emit lightning. If you're hit by lightning you return to the entrance, and at the end of the maze you'll find Final Clutch of Predaxas.",
 	[257511] = "Reward from the achievement Master of the Turbulent Timeways IV, or selectable from Ta'readon's Mount Voucher. Complete Turbulent Timeways meta achievements.",
 	[257513] = "Reward from the achievement Master of the Turbulent Timeways IV, or selectable from Ta'readon's Mount Voucher. Complete Turbulent Timeways meta achievements.",
@@ -2256,6 +2257,7 @@ MCLcore.mountNotes = {
 	[260231] = "Drops from the final boss of Magisters' Terrace (Midnight). Low drop rate.",
 	[260409] = "Trading Post (January 2026) for 500 Trader's Tender.",
 	[260580] = "Trading Post (February 2026) for 600 Trader's Tender.",
+	[260696] = "Sold by Void Researcher Anomander in Voidstorm for 8,000 Voidlight Marl. Requires Renown 19 with The Singularity.",
 	[260697] = "Reward from the achievement \"Staring Into The Void.\" Fully unlock the Research Console in Voidstorm.",
 	[260893] = "Trading Post (April 2026) for 550 Trader's Tender.",
 	[260894] = "Datamined for the Trading Post (Patch 12.0.0). Not yet offered in any monthly rotation.",
@@ -2283,6 +2285,7 @@ MCLcore.mountNotes = {
 	["m1595"] = "Datamined for the Trading Post. Not yet offered in any monthly rotation.",
 	["m17"] = "Warlock only. Automatically learned at level 20. The basic Warlock mount.",
 	["m2233"] = "Paladin only. Automatically learned by Earthen Paladins. Added in The War Within.",
+	["m2582"] = "Promotion: Mists of Pandaria Classic. Automatically added to your mount collection.",
 	["m2700"] = "Blizzard Store mount. Part of the Scurrywind Groveglider Collection ($25 individually, $50 for all four). Added in Patch 12.0.1.",
 	["m2701"] = "Blizzard Store mount. Part of the Scurrywind Groveglider Collection ($25 individually, $50 for all four). Added in Patch 12.0.1.",
 	["m2702"] = "Blizzard Store mount. Part of the Scurrywind Groveglider Collection ($25 individually, $50 for all four). Added in Patch 12.0.1.",
