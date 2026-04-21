@@ -1139,6 +1139,11 @@ MCLcore.mountList[20] = {
 			mounts = {252011, 262620, 262621, 257145, 260228, 246594, 260887, 257144, 260697, 257199},
 			mountID = {}
 		},
+		DecorDuels = {
+			name = "Decor Duels",
+			mounts = {"m2933"},
+			mountID = {2933}
+		},
 		Delves = {
 			name = "Delves",
 			mounts = {263222, 262496, 262500, 262502},
@@ -1179,10 +1184,20 @@ MCLcore.mountList[20] = {
 			mounts = {257219, 250889, 252014, 257154, 257176, 246734, 257142, 257448, 257447, 257445, 260696},
 			mountID = {}
 		},
+		RitualSites = {
+			name = "Ritual Sites",
+			mounts = {"m2935", "m2965", "m2964", "m2961", "m2779"},
+			mountID = {2935, 2965, 2964, 2961, 2779}
+		},
 		Treasure = {
 			name = "Treasures",
 			mounts = {252017, 257223, 257444, 257446, 256423, "m2912"},
 			mountID = {2912}
+		},
+		VoidAssaults = {
+			name = "Void Assaults",
+			mounts = {"m2915"},
+			mountID = {2915}
 		},
 		Zone = {
 			name = "Zone",
@@ -1396,6 +1411,26 @@ MCLcore.mountList[21] = {
 		},
 	}
 }
+MCLcore.mountList[22] = {
+	name = "Patch 12.0.5",
+	categories = {
+		DecorDuels = {
+			name = "Decor Duels",
+			mounts = {"m2933"},
+			mountID = {2933}
+		},
+		RitualSites = {
+			name = "Ritual Sites",
+			mounts = {"m2935", "m2965", "m2964", "m2961", "m2779"},
+			mountID = {2935, 2965, 2964, 2961, 2779}
+		},
+		VoidAssaults = {
+			name = "Void Assaults",
+			mounts = {"m2915"},
+			mountID = {2915}
+		},
+	}
+}
 MCLcore.sectionNames[1] = {
 	name = "Midnight",
 	mounts = MCLcore.mountList[20],
@@ -1534,6 +1569,16 @@ MCLcore.sectionNames[23] = {
 	icon = "Interface\\AddOns\\MCL\\icons\\mcl.blp",
 	isExpansion = false,
 }
+local _, _, _, tocVersion = GetBuildInfo()
+if tocVersion == 120005 then
+	MCLcore.sectionNames[24] = {
+		name = "12.0.5 - What's New?",
+		mounts = MCLcore.mountList[22],
+		icon = "Interface\\AddOns\\MCL\\icons\\midnight.blp",
+		isExpansion = false,
+		hiddenFromOverview = true,
+	}
+end
 
 MCLcore.regionalFilter = {
 	['CN'] = {210077},

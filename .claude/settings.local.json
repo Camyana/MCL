@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:wago.tools)",
+      "WebFetch(domain:www.wowhead.com)",
+      "Bash(curl -s \"https://wago.tools/db2/Mount/csv?sort%5BID%5D=desc&filter%5BID%5D=&search=waste+marauder\")",
+      "Bash(curl -s \"https://wago.tools/db2/Mount/csv?sort%5BID%5D=desc&filter%5BID%5D=&search=malevolent+drone\")"
+    ]
+  }
+}

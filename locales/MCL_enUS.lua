@@ -2,6 +2,7 @@ local MCL, core = ...
 local AceLocale = LibStub("AceLocale-3.0")
 local L = AceLocale:NewLocale("MCL", "enUS", true)  -- 'true' makes this the default locale
 if L then
+    L["12.0.5 - What's New?"] = "12.0.5 - What's New?"
     L["Achievement"] = "Achievement"
     L["Adventures"] = "Adventures"
     L["Ahead of the Curve"] = "Ahead of the Curve"
@@ -39,6 +40,7 @@ if L then
     L["Dark Iron Dwarf"] = "Dark Iron Dwarf"
     L["Darkmoon Faire"] = "Darkmoon Faire"
     L["Death Knight"] = "Death Knight"
+    L["Decor Duels"] = "Decor Duels"
     L["Delves"] = "Delves"
     L["Demon Hunter"] = "Demon Hunter"
     L["Diablo IV"] = "Diablo IV"
@@ -126,6 +128,7 @@ if L then
     L["Reputation"] = "Reputation"
     L["Riddle"] = "Riddle"
     L["Riddles"] = "Riddles"
+    L["Ritual Sites"] = "Ritual Sites"
     L["SL"] = "SL"
     L["Scroll of Resurrection"] = "Scroll of Resurrection"
     L["Secret"] = "Secret"
@@ -161,6 +164,7 @@ if L then
     L["Venthyr"] = "Venthyr"
     L["Vicious Saddle"] = "Vicious Saddle"
     L["Visions"] = "Visions"
+    L["Void Assaults"] = "Void Assaults"
     L["WOD"] = "WOD"
     L["WOTLK"] = "WOTLK"
     L["Warcraft III Reforged"] = "Warcraft III Reforged"

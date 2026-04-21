@@ -2,6 +2,10 @@ local MCL, MCLcore = ...
 local AceLocale = LibStub("AceLocale-3.0")
 local L = AceLocale:NewLocale("MCL", "deDE")
 if L then
+    L["12.0.5 - What's New?"] = "12.0.5 - Was ist neu?"
+    L["Decor Duels"] = "Dekor-Duelle"
+    L["Ritual Sites"] = "Ritualstätten"
+    L["Void Assaults"] = "Angriffe aus der Leere"
     L["Achievement"] = "Erfolg"
     L["Adventures"] = "Abenteuer"
     L["Ahead of the Curve"] = "Der Zeit voraus"

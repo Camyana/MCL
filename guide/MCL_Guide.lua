@@ -209,12 +209,18 @@ local function BuildMountLookup()
             end
         end
 
+        -- Flag unobtainable mounts so they are excluded from pins
+        if Guide.unobtainableSpells[spellId] then
+            record.isUnobtainable = true
+        end
+
         Guide.mountLookup[spellId] = record
 
         -- ── Auto-register coords into zone index ─────────────────
         -- Ensures any mount with coordinates shows on the map even
         -- if its zone isn't listed in the static zones table.
-        if record.coords then
+        -- Skip unobtainable mounts so they never become pin candidates.
+        if record.coords and not record.isUnobtainable then
             for _, wp in ipairs(record.coords) do
                 if wp.m and wp.x and wp.y then
                     if not Guide.zoneMounts[wp.m] then
@@ -239,12 +245,14 @@ local function BuildMountLookup()
                 Guide.zoneMounts[mapID] = {}
             end
             for _, sid in ipairs(spells) do
-                local found = false
-                for _, existing in ipairs(Guide.zoneMounts[mapID]) do
-                    if existing == sid then found = true; break end
-                end
-                if not found then
-                    table.insert(Guide.zoneMounts[mapID], sid)
+                if not Guide.unobtainableSpells[sid] then
+                    local found = false
+                    for _, existing in ipairs(Guide.zoneMounts[mapID]) do
+                        if existing == sid then found = true; break end
+                    end
+                    if not found then
+                        table.insert(Guide.zoneMounts[mapID], sid)
+                    end
                 end
             end
         end
@@ -299,8 +307,9 @@ local function BuildMountLookup()
                 end
 
                 -- Add to the vendor's zone index (if not already there)
+                -- Skip unobtainable mounts
                 local rec = Guide.mountLookup[spellId]
-                if rec and vendorMapID then
+                if rec and vendorMapID and not Guide.unobtainableSpells[spellId] then
                     if not Guide.zoneMounts[vendorMapID] then
                         Guide.zoneMounts[vendorMapID] = {}
                     end
@@ -374,8 +383,8 @@ local function BuildMountLookup()
                     end
                 end
 
-                -- Add to quest zone index
-                if questEntry.m then
+                -- Add to quest zone index (skip unobtainable)
+                if questEntry.m and not Guide.unobtainableSpells[spellId] then
                     local qMapID = questEntry.m
                     if not Guide.zoneMounts[qMapID] then
                         Guide.zoneMounts[qMapID] = {}
@@ -471,8 +480,8 @@ local function BuildMountLookup()
                 end
             end
 
-            -- Add to each vendor's zone index
-            if spellId and Guide.mountLookup[spellId] then
+            -- Add to each vendor's zone index (skip unobtainable)
+            if spellId and Guide.mountLookup[spellId] and not Guide.unobtainableSpells[spellId] then
                 for _, ve in ipairs(vendorList) do
                     local vendorMapID = ve.m
                     if vendorMapID then
@@ -558,14 +567,15 @@ function Guide:GetMountsForZone(mapID, includeChildren)
                             end
                         end
                         -- Check if the mount belongs to the Unobtainable section
-                        local isUnobtainable = false
-                        if Guide.unobtainableSpells[spellId] then
+                        local isUnobtainable = rec.isUnobtainable
+                        if not isUnobtainable and Guide.unobtainableSpells[spellId] then
                             isUnobtainable = true
-                        elseif rec.mountID and Guide.MapPins and Guide.MapPins.GetSectionInfo then
+                            rec.isUnobtainable = true
+                        elseif not isUnobtainable and rec.mountID and Guide.MapPins and Guide.MapPins.GetSectionInfo then
                             local section = Guide.MapPins:GetSectionInfo(rec.mountID)
                             if section == "Unobtainable" then
                                 isUnobtainable = true
-                                -- Cache for future lookups
+                                rec.isUnobtainable = true
                                 Guide.unobtainableSpells[spellId] = true
                             end
                         end

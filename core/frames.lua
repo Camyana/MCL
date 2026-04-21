@@ -3807,7 +3807,7 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
     local grandTotal = 0
     local grandCollected = 0
     for _, v in pairs(set) do
-        if v.name ~= "Overview" and v.name ~= "Pinned" then
+        if v.name ~= "Overview" and v.name ~= "Pinned" and not v.hiddenFromOverview then
             local s = MCLcore.stats and MCLcore.stats[v.name]
             if s then
                 grandTotal     = grandTotal     + (s.total     or 0)
@@ -3874,7 +3874,7 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
 
     -- Create sections similar to how categories are created in other tabs
     for k, v in pairs(set) do
-        if (v.name ~= "Overview") and (v.name ~= "Pinned") then
+        if (v.name ~= "Overview") and (v.name ~= "Pinned") and (not v.hiddenFromOverview) then
             sectionIndex = sectionIndex + 1
             
             -- Determine which column to use (alternate left/right)

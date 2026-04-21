@@ -2,6 +2,10 @@ local MCL, MCLcore = ...
 local AceLocale = LibStub("AceLocale-3.0")
 local L = AceLocale:NewLocale("MCL", "koKR")
 if L then
+    L["12.0.5 - What's New?"] = "12.0.5 - 새로운 소식?"
+    L["Decor Duels"] = "장식 대결"
+    L["Ritual Sites"] = "의식 장소"
+    L["Void Assaults"] = "공허 습격"
     L["Achievement"] = "업적"
     L["Adventures"] = "모험"
     L["Ahead of the Curve"] = "최전선"

@@ -485,4 +485,7 @@ MCL_GUIDE_CURRENCY_DATA = {
     [1268924] = { { type = "currency", id = 3316, amount = 10 } }, -- Silvermoon's Arcane Defender
     [1268926] = { { type = "currency", id = 2803, amount = 10000 } }, -- Elven Arcane Guardian
     [1270675] = { { type = "currency", id = 3385, amount = 10 } }, -- Vivid Chloroceros
+    [1271698] = { { type = "currency", id = 3405, amount = 200 } }, -- Unbound Manawyrm
+    [1282471] = { { type = "currency", id = 3393, amount = 500 } }, -- Breaker Bee
+    [1282936] = { { type = "currency", id = 3405, amount = 50 } }, -- Void-Corrupted Hawkstrider
 }

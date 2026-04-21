@@ -558,4 +558,7 @@ MCL_GUIDE_VENDOR_DATA = {
     [2840] = { { npc = "Telemancer Astrandis", zone = "Silvermoon City", m = 2393, x = 52.5, y = 78.8 } },  -- Silvermoon's Arcane Defender
     [2841] = { { npc = "Naleidea Rivergleam", zone = "Silvermoon City", m = 2393, x = 52.7, y = 78 } },  -- Elven Arcane Guardian
     [2913] = { { npc = "Mothkeeper Wew'tam", zone = "Harandar", m = 2413, x = 49.3, y = 54.3 } },  -- Vivid Chloroceros
+    [2915] = { { npc = "Sergeant Vornin", zone = "Silvermoon City", m = 2393, x = 48.6, y = 50.6 } },  -- Unbound Manawyrm
+    [2933] = { { npc = "Gamesmaster Fleurian", zone = "Silvermoon City", m = 2393 } },  -- Breaker Bee (Decor Duels)
+    [2935] = { { npc = "Sergeant Vornin", zone = "Silvermoon City", m = 2393, x = 48.6, y = 50.6 } },  -- Void-Corrupted Hawkstrider
 }
