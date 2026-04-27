@@ -24,6 +24,12 @@ end
 -- =========================================================
 function W:GetStatusBarTexture()
     local tex = C.TEXTURES.STATUS_BAR
+    -- Lazy-load LibSharedMedia: the settings panel was the only place that did
+    -- this, so frames built before the user opened settings reverted to default.
+    if not MCLcore.media then
+        local ok, media = pcall(LibStub, "LibSharedMedia-3.0", true)
+        if ok and media then MCLcore.media = media end
+    end
     if MCL_SETTINGS and MCL_SETTINGS.statusBarTexture and MCLcore.media then
         local custom = MCLcore.media:Fetch("statusbar", MCL_SETTINGS.statusBarTexture)
         if custom then tex = custom end

@@ -2893,7 +2893,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     -- =====================================================
     -- CARD 1: Display Options
     -- =====================================================
-    local displayCard = createCard(frame, L["Display Options"], yPos, 160)
+    local displayCard = createCard(frame, L["Display Options"], yPos, 190)
     
     local displayY = -34
     
@@ -2958,8 +2958,29 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     minimapLabel:SetPoint("LEFT", minimapCheck, "RIGHT", 8, 0)
     minimapLabel:SetText(L["Show Minimap Icon"])
     minimapLabel:SetTextColor(0.7, 0.78, 0.88, 1)
-    
-    yPos = yPos - 170
+    displayY = displayY - 30
+
+    -- Hide Total Mounts Bar
+    local totalBarCheck = CreateFrame("CheckButton", nil, displayCard)
+    totalBarCheck:SetSize(18, 18)
+    totalBarCheck:SetPoint("TOPLEFT", displayCard, "TOPLEFT", 12, displayY)
+    totalBarCheck:SetChecked(MCL_SETTINGS.hideTotalMounts or false)
+    totalBarCheck.originalOnClick = function(self)
+        MCL_SETTINGS.hideTotalMounts = self:GetChecked()
+        if not self.reloadNote then
+            self.reloadNote = displayCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            self.reloadNote:SetPoint("LEFT", self, "RIGHT", 180, 0)
+            self.reloadNote:SetText("|cFFFF6B6BReload UI required (/reload)|r")
+        end
+        self.reloadNote:Show()
+    end
+    styleCheckbox(totalBarCheck)
+    local totalBarLabel = displayCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    totalBarLabel:SetPoint("LEFT", totalBarCheck, "RIGHT", 8, 0)
+    totalBarLabel:SetText(L["Hide Total Mounts Bar"])
+    totalBarLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+
+    yPos = yPos - 200
     
     -- =====================================================
     -- CARD 3: Layout
@@ -3816,50 +3837,57 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
         end
     end
 
-    -- Container
-    local totalFrame = CreateFrame("Frame", nil, relativeFrame, "BackdropTemplate")
-    totalFrame:SetHeight(56)
-    totalFrame:SetPoint("TOPLEFT", relativeFrame, "TOPLEFT", 10, -10)
-    totalFrame:SetPoint("TOPRIGHT", relativeFrame, "TOPRIGHT", -10, -10)
-    totalFrame:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    totalFrame:SetBackdropColor(0.08, 0.08, 0.12, 0.85)
-    totalFrame:SetBackdropBorderColor(0.3, 0.6, 0.9, 0.7)
+    local hideTotalBar = MCL_SETTINGS and MCL_SETTINGS.hideTotalMounts
 
-    -- Title label
-    local totalTitle = totalFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    totalTitle:SetPoint("TOPLEFT", totalFrame, "TOPLEFT", 8, -6)
-    totalTitle:SetText(L["Total Mounts"])
-    totalTitle:SetTextColor(0.5, 0.85, 1, 1)
+    if not hideTotalBar then
+        -- Container
+        local totalFrame = CreateFrame("Frame", nil, relativeFrame, "BackdropTemplate")
+        totalFrame:SetHeight(56)
+        totalFrame:SetPoint("TOPLEFT", relativeFrame, "TOPLEFT", 10, -10)
+        totalFrame:SetPoint("TOPRIGHT", relativeFrame, "TOPRIGHT", -10, -10)
+        totalFrame:SetBackdrop({
+            bgFile   = "Interface\\Buttons\\WHITE8x8",
+            edgeFile = "Interface\\Buttons\\WHITE8x8",
+            edgeSize = 1,
+        })
+        totalFrame:SetBackdropColor(0.08, 0.08, 0.12, 0.85)
+        totalFrame:SetBackdropBorderColor(0.3, 0.6, 0.9, 0.7)
 
-    -- Count label (right-aligned)
-    local totalCount = totalFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    totalCount:SetPoint("TOPRIGHT", totalFrame, "TOPRIGHT", -8, -8)
-    if grandTotal > 0 then
-        local pct = math.floor((grandCollected / grandTotal) * 100)
-        totalCount:SetText(string.format("|cffffffff%d|r / |cff888888%d|r  |cff66ccff(%d%%)|r", grandCollected, grandTotal, pct))
+        -- Title label
+        local totalTitle = totalFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+        totalTitle:SetPoint("TOPLEFT", totalFrame, "TOPLEFT", 8, -6)
+        totalTitle:SetText(L["Total Mounts"])
+        totalTitle:SetTextColor(0.5, 0.85, 1, 1)
+
+        -- Count label (right-aligned)
+        local totalCount = totalFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        totalCount:SetPoint("TOPRIGHT", totalFrame, "TOPRIGHT", -8, -8)
+        if grandTotal > 0 then
+            local pct = math.floor((grandCollected / grandTotal) * 100)
+            totalCount:SetText(string.format("|cffffffff%d|r / |cff888888%d|r  |cff66ccff(%d%%)|r", grandCollected, grandTotal, pct))
+        else
+            totalCount:SetText("|cff8888880 / 0|r")
+        end
+
+        -- Progress bar
+        local totalBarContainer = CreateFrame("Frame", nil, totalFrame)
+        totalBarContainer:SetHeight(18)
+        totalBarContainer:SetPoint("TOPLEFT", totalFrame, "TOPLEFT", 8, -28)
+        totalBarContainer:SetPoint("TOPRIGHT", totalFrame, "TOPRIGHT", -8, -28)
+
+        local totalBar = MCLcore.Widgets:CreateProgressBar({
+            parent    = totalBarContainer,
+            total     = grandTotal,
+            collected = grandCollected,
+        })
+
+        -- Store references so SetTabs can refresh
+        MCLcore.overviewTotalBar   = totalBar
+        MCLcore.overviewTotalCount = totalCount
     else
-        totalCount:SetText("|cff8888880 / 0|r")
+        MCLcore.overviewTotalBar   = nil
+        MCLcore.overviewTotalCount = nil
     end
-
-    -- Progress bar
-    local totalBarContainer = CreateFrame("Frame", nil, totalFrame)
-    totalBarContainer:SetHeight(18)
-    totalBarContainer:SetPoint("TOPLEFT", totalFrame, "TOPLEFT", 8, -28)
-    totalBarContainer:SetPoint("TOPRIGHT", totalFrame, "TOPRIGHT", -8, -28)
-
-    local totalBar = MCLcore.Widgets:CreateProgressBar({
-        parent    = totalBarContainer,
-        total     = grandTotal,
-        collected = grandCollected,
-    })
-
-    -- Store references so SetTabs can refresh
-    MCLcore.overviewTotalBar   = totalBar
-    MCLcore.overviewTotalCount = totalCount
     MCLcore.overviewTotalGrand = { total = grandTotal, collected = grandCollected }
 
     ----------------------------------------------------------------
@@ -3868,8 +3896,8 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
     local leftColumnX = 10  -- Start with padding from left edge
     local rightColumnX = leftColumnX + columnWidth + columnSpacing
     
-    local leftColumnY = -76  -- Push down below total bar (10 top + 56 height + 10 gap)
-    local rightColumnY = -76
+    local leftColumnY = hideTotalBar and -10 or -76  -- -76 pushes below total bar (10 top + 56 height + 10 gap)
+    local rightColumnY = leftColumnY
     local sectionIndex = 0
 
     -- Create sections similar to how categories are created in other tabs

@@ -2010,19 +2010,32 @@ local icon = LibStub("LibDBIcon-1.0")
 MCLcore.minimapAddon = MCL_MM
 MCLcore.minimapIcon  = icon
 
-function MCL_MM:OnInitialize() -- Obviously you'll need a ## SavedVariables: BunniesDB line in your TOC, duh!
-    local AceDB = LibStub("AceDB-3.0", true)
-    if AceDB and type(AceDB.New) == "function" then
-        self.db = AceDB:New("MCL_DB", { profile = { minimap = { hide = false } } })
-    else
-        MCL_DB = MCL_DB or {}
-        MCL_DB.profile = MCL_DB.profile or {}
-        MCL_DB.profile.minimap = MCL_DB.profile.minimap or { hide = false }
-        self.db = MCL_DB
+function MCL_MM:OnInitialize()
+    -- Store minimap state in MCL_SETTINGS (account-wide) rather than AceDB's
+    -- default per-character profile, which caused the icon to re-enable on
+    -- every character after each update.
+    MCL_SETTINGS = MCL_SETTINGS or {}
+
+    if not MCL_SETTINGS.minimap then
+        local migrated = { hide = false }
+        if type(MCL_DB) == "table" and type(MCL_DB.profiles) == "table" then
+            for _, profile in pairs(MCL_DB.profiles) do
+                if type(profile) == "table" and type(profile.minimap) == "table" then
+                    migrated.minimapPos = migrated.minimapPos or profile.minimap.minimapPos
+                    migrated.radius     = migrated.radius     or profile.minimap.radius
+                    migrated.lock       = migrated.lock       or profile.minimap.lock
+                    if profile.minimap.hide then migrated.hide = true end
+                end
+            end
+        end
+        MCL_SETTINGS.minimap = migrated
     end
 
+    -- Legacy alias so existing callsites (settings UI, toggle) keep working.
+    self.db = { profile = { minimap = MCL_SETTINGS.minimap } }
+
     if icon and type(icon.Register) == "function" then
-        icon:Register("MCL!", MCL_LDB, self.db.profile.minimap)
+        icon:Register("MCL!", MCL_LDB, MCL_SETTINGS.minimap)
     end
 end
 

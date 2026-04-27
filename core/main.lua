@@ -292,6 +292,79 @@ end
 -- Set a maximum number of initialization retries
 local MAX_INIT_RETRIES = 3
 
+-- ===================================================================
+-- Loading indicator
+-- Shown while the addon is waiting for the mount journal to populate
+-- so the user knows their /mcl command was received.
+-- ===================================================================
+local loadingFrame
+local loadingTicker
+local loadingDots = 0
+
+local function CreateLoadingFrame()
+    local LL = MCLcore.L or L or {}
+    local f = CreateFrame("Frame", "MCL_LoadingFrame", UIParent, "BackdropTemplate")
+    f:SetSize(340, 90)
+    f:SetPoint("CENTER", UIParent, "CENTER", 0, 120)
+    f:SetFrameStrata("DIALOG")
+    f:SetBackdrop({
+        bgFile   = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+    })
+    f:SetBackdropColor(0.06, 0.06, 0.10, 0.95)
+    f:SetBackdropBorderColor(0.3, 0.6, 0.9, 0.7)
+
+    local header = f:CreateTexture(nil, "ARTWORK")
+    header:SetColorTexture(0.10, 0.10, 0.16, 0.9)
+    header:SetHeight(22)
+    header:SetPoint("TOPLEFT", f, "TOPLEFT", 1, -1)
+    header:SetPoint("TOPRIGHT", f, "TOPRIGHT", -1, -1)
+
+    local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    title:SetPoint("LEFT", header, "LEFT", 10, 0)
+    title:SetText("|cFF1FB7EBMCL|r " .. (LL["Mount Collection Log"] or "Mount Collection Log"))
+    title:SetTextColor(0.5, 0.85, 1, 1)
+
+    local msg = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    msg:SetPoint("CENTER", f, "CENTER", 0, -4)
+    msg:SetTextColor(0.85, 0.9, 1, 1)
+    f.msg = msg
+
+    local sub = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    sub:SetPoint("BOTTOM", f, "BOTTOM", 0, 10)
+    sub:SetTextColor(0.6, 0.65, 0.75, 1)
+    sub:SetText(LL["Waiting for the game to finish loading mounts..."]
+        or "Waiting for the game to finish loading mounts...")
+    f.sub = sub
+
+    f:Hide()
+    return f
+end
+
+function MCL_Load:ShowLoadingIndicator()
+    if not loadingFrame then loadingFrame = CreateLoadingFrame() end
+    local LL = MCLcore.L or L or {}
+    local base = LL["Loading mount data"] or "Loading mount data"
+    loadingDots = 0
+    loadingFrame.msg:SetText(base)
+    loadingFrame:Show()
+    if loadingTicker then loadingTicker:Cancel() end
+    loadingTicker = C_Timer.NewTicker(0.4, function()
+        if not loadingFrame or not loadingFrame:IsShown() then return end
+        loadingDots = (loadingDots + 1) % 4
+        loadingFrame.msg:SetText(base .. string.rep(".", loadingDots))
+    end)
+end
+
+function MCL_Load:HideLoadingIndicator()
+    if loadingTicker then
+        loadingTicker:Cancel()
+        loadingTicker = nil
+    end
+    if loadingFrame then loadingFrame:Hide() end
+end
+
 -- Initialization function
 function MCL_Load:Init(force, showOnComplete)
     local function proceed()
@@ -382,13 +455,16 @@ function MCL_Load:Init(force, showOnComplete)
                 if showOnComplete and MCLcore.MCL_MF then
                     MCLcore.MCL_MF:Show()
                 end
-                
+
+                MCL_Load:HideLoadingIndicator()
                 init_load = false -- Ensure that the initialization does not repeat unnecessarily.
             else
                 retries = retries + 1
                 if retries < MAX_INIT_RETRIES then
                     -- Retry the initialization process after a delay
                     C_Timer.After(1, repeatCheck)
+                else
+                    MCL_Load:HideLoadingIndicator()
                 end
             end
         end
@@ -420,11 +496,15 @@ end
 function MCL_Load:Toggle()
     -- Check preload status and if false, attempt initialization
     if MCLcore.dataLoaded == false then
+        MCL_Load:ShowLoadingIndicator()
         MCL_Load:Init(false, true) -- Initialize and show when complete
         return
-    end 
+    end
     if MCLcore.MCL_MF == nil then
-        return -- Immune to function calls before the initialization process is complete, as the frame doesn't exist yet.
+        -- Init is still in progress (e.g. waiting on mount journal). Surface
+        -- feedback so a second /mcl press isn't silently ignored.
+        MCL_Load:ShowLoadingIndicator()
+        return
     else
         MCLcore.MCL_MF:SetShown(not MCLcore.MCL_MF:IsShown()) -- The addon's frame exists and can be toggled.
     end
