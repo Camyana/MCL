@@ -77,6 +77,9 @@ MCL_GUIDE_DATA.mounts = {
 		chance = 100,
 		lockBossName = "Kael'thas Sunstrider",
 		blackMarket = true,
+		coords = {
+			{ m = 109, x = 67, y = 64 },
+		},
 	},
 	[41252] = {
 		name = "Raven Lord",
