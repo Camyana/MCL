@@ -2177,9 +2177,9 @@ MCL_GUIDE_DATA.mounts = {
 		name = "Hopecrusher Gargon",
 		method = "NPC",
 		itemId = 180581,
-		chance = 150,
+		chance = 100,
 		coords = {
-			{ m = 1525 },
+			{ m = 1525, x = 52, y = 52 },
 		},
 	},
 	[312754] = {
