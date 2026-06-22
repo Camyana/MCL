@@ -779,6 +779,11 @@ MCLcore.mountList[14] = {
 			mounts = {232901},
 			mountID = {}
 		},
+		Midsummer = {
+			name = "Midsummer Fire Festival",
+			mounts = {275464},
+			mountID = {}
+		},
 		NobleGarden = {
 			name = "Noblegarden",
 			mounts = {72145, 212599},
@@ -786,7 +791,7 @@ MCLcore.mountList[14] = {
 		},
 		TimeWalking = {
 			name = "Timewalking",
-			mounts = {129923, 129922, 87775, 167894, 167895, 133543, 188674, 187595, 231374, 224398, 224399, 234730, 232624, 205208, 234721, 234716, 234740, 238739, 245694, 245695, 257513, 257514, 257516, 257511, 258515, 258488, 259463},
+			mounts = {129923, 129922, 87775, 167894, 167895, 133543, 188674, 187595, 231374, 224398, 224399, 234730, 232624, 205208, 234721, 234716, 234740, 238739, 245694, 245695, 257513, 257514, 257516, 257511, 258515, 258488, 259463, 258884},
 			mountID = {}
 		},
 		WinterVeil = {
@@ -1171,7 +1176,7 @@ MCLcore.mountList[20] = {
 		},
 		Raid = {
 			name = "Raid",
-			mounts = {246590},
+			mounts = {246590, 269240},
 			mountID = {}
 		},
 		RareSpawn = {
@@ -1188,6 +1193,11 @@ MCLcore.mountList[20] = {
 			name = "Ritual Sites",
 			mounts = {"m2935", "m2965", "m2964", "m2961", "m2779"},
 			mountID = {2935, 2965, 2964, 2961, 2779}
+		},
+		Showdowns = {
+			name = "Showdowns",
+			mounts = {274650, 274649, 275664},
+			mountID = {}
 		},
 		Treasure = {
 			name = "Treasures",
@@ -1441,6 +1451,31 @@ MCLcore.mountList[22] = {
 		},
 	}
 }
+MCLcore.mountList[23] = {
+	name = "Patch 12.0.7",
+	categories = {
+		Sporefall = {
+			name = "Sporefall",
+			mounts = {269240},
+			mountID = {}
+		},
+		Showdowns = {
+			name = "Showdowns",
+			mounts = {274650, 274649, 275664},
+			mountID = {}
+		},
+		Midsummer = {
+			name = "Midsummer Fire Festival",
+			mounts = {275464},
+			mountID = {}
+		},
+		Timewalking = {
+			name = "Timewalking",
+			mounts = {258884},
+			mountID = {}
+		},
+	}
+}
 MCLcore.sectionNames[1] = {
 	name = "Midnight",
 	mounts = MCLcore.mountList[20],
@@ -1588,6 +1623,14 @@ if tocVersion == 120005 then
 		isExpansion = false,
 		hiddenFromOverview = true,
 	}
+elseif tocVersion == 120007 then
+	MCLcore.sectionNames[24] = {
+		name = "12.0.7 - What's New?",
+		mounts = MCLcore.mountList[23],
+		icon = "Interface\\AddOns\\MCL\\icons\\midnight.blp",
+		isExpansion = false,
+		hiddenFromOverview = true,
+	}
 end
 
 MCLcore.regionalFilter = {
@@ -1619,7 +1662,7 @@ MCLcore.mountNotes = {
 	[43962] = "Random drop from Hyldnir Spoils (reward from Storm Peaks daily quests).",
 	[43986] = "Rewarded from defeating Sartharion with 3 drakes alive on 10-man difficulty. Leave the trash alone and just kill the boss. {{m:115,60.1,56.7}}",
 	[44083] = "Drops from any boss in Vault of Archavon (10/25). Extremely rare drop. Your faction must control Wintergrasp to enter. Horde version. {{m:123,50.1,11.4}}",
-	[44151] = "Drops from Skadi the Ruthless in Utgarde Pinnacle on Heroic difficulty. Approximately 1% drop rate. Fast farm: kill Skadi, reset, repeat. Subject to 10 instances/hour lockout. {{m:117,57.3,46.7}}",
+	[44151] = "Drops from Skadi the Ruthless in Utgarde Pinnacle on Heroic difficulty. Approximately 1% drop rate. Heroic has a daily lockout, so you can only attempt this once per day per character — it cannot be reset-farmed. Run it daily or use alts. {{m:117,57.3,46.7}}",
 	[44175] = "No longer obtainable from achievements. Only available from the Black Market Auction House via Unclaimed Black Market Container. Originally reward from Glory of the Raider (10-player) achievement.",
 	[44177] = "Reward from the achievement What a Long, Strange Trip It's Been. Requires completing all 8 seasonal holiday meta achievements over the course of a full year.",
 	[44178] = "Reward from the achievement \"Leading the Cavalry\" (collect 50 mounts). Flying mount.",
@@ -2307,6 +2350,7 @@ MCLcore.mountNotes = {
 	[258488] = "Sold by Collector Ta'steld in Oribos for 5,000 Timewarped Badges during Shadowlands Timewalking. Ground mount.",
 	[258515] = "Sold by Collector Ta'steld in Oribos for 5,000 Timewarped Badges during Shadowlands Timewalking. Flying mount.",
 	[259227] = "Requires Rank 6",
+	[258884] = "Reward from the achievement \"Master of the Turbulent Timeways V.\" Earned through Timewalking (Turbulent Timeways).",
 	[259238] = "Requires Rank 8",
 	[259463] = "Sold by Collector Ta'steld in Oribos for 5,000 Timewarped Badges during Shadowlands Timewalking. Ground mount.",
 	[260231] = "Drops from the final boss of Magisters' Terrace (Midnight). Low drop rate.",
@@ -2334,6 +2378,11 @@ MCLcore.mountNotes = {
 	[268364] = "Trading Post (May 2026) for 500 Trader's Tender.",
 	[268876] = "Trading Post Traveler's Log reward (June 2026). Earned by completing the monthly activities bar.",
 	[268877] = "Trading Post (June 2026) for 700 Trader's Tender.",
+	[269240] = "Combine 4 Delicious Sporesnack, which drop from Rotmire in the Sporefall raid on any difficulty. Only one Delicious Sporesnack can be earned per week, so this requires a minimum of 4 weeks.",
+	[274649] = "Sold by Kifaan in Val for 15 Voidlight Marl. Requires completing the achievement \"A Trip Around the Stars.\"",
+	[274650] = "Sold by Kifaan in Naigtal for 15 Voidlight Marl. Requires completing the achievement \"A Trip Through the Stars.\"",
+	[275464] = "Has a chance to drop from Ahune during the Midsummer Fire Festival. Account-wide on your first defeat of Ahune each day, with an increasing chance each consecutive day you defeat the boss.",
+	[275664] = "Sold by Kifaan (Val and Naigtal) for 15 Voidlight Marl. Requires completing the achievement \"Heroic Showdowns.\"",
 	["m1046"] = "Paladin only. Automatically learned by Dark Iron Dwarf Paladins. Alliance.",
 	["m1047"] = "Paladin only. Automatically learned by Dwarf Paladins. Alliance.",
 	["m1445"] = "You must solo the entire dungeon Plaguefall on Heroic or Mythic difficulty. {{m:1536,22.2,41.4}}\nAfter defeating the last boss, backtrack to the Domina Venomblade boss arena.\nThe Slime Serpent appears in the pool on the side.",

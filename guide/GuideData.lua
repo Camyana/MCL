@@ -1,6 +1,52 @@
 MCL_GUIDE_DATA = MCL_GUIDE_DATA or {}
 
 MCL_GUIDE_DATA.mounts = {
+	-- Patch 12.0.7 mounts
+	[1284973] = {
+		name = "Luminous Sporeglider",
+		method = "BOSS",
+		itemId = 269240,
+		lockBossName = "Rotmire",
+		coords = {
+			{ m = 2413, x = 73.48, y = 66.35, i = true },
+		},
+	},
+	[1294663] = {
+		name = "Netherforged Nullframe",
+		method = "VENDOR",
+		itemId = 274650,
+		coords = {
+			{ m = 2600, x = 47.88, y = 81.13 },
+		},
+	},
+	[1294648] = {
+		name = "Voidmancer's Starcarver",
+		method = "VENDOR",
+		itemId = 274649,
+		coords = {
+			{ m = 2599, x = 59.17, y = 19.38 },
+		},
+	},
+	[1297427] = {
+		name = "Tortured Gorger",
+		method = "VENDOR",
+		itemId = 275664,
+		coords = {
+			{ m = 2600, x = 47.88, y = 81.13 },
+			{ m = 2599, x = 59.17, y = 19.38 },
+		},
+	},
+	[1298439] = {
+		name = "Sun Festival's Painted Roc",
+		method = "BOSS",
+		itemId = 275464,
+		lockBossName = "Ahune",
+	},
+	[1264184] = {
+		name = "Spawn of Vyranoth",
+		method = "SPECIAL",
+		itemId = 258884,
+	},
 	[17481] = {
 		name = "Rivendare's Deathcharger",
 		method = "NPC",

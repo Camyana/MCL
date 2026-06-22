@@ -4315,7 +4315,13 @@ for _, categoryName in ipairs(sortedCategoryNames) do
 
         -- Category title
         categoryFrame.title = categoryFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
-        categoryFrame.title:SetPoint("TOPLEFT", categoryFrame, "TOPLEFT", 22, -8)
+        -- Slightly reduce the category header font size (e.g. "Achievements", "Decor Duels")
+        local titleFont, titleSize, titleFlags = categoryFrame.title:GetFont()
+        if titleFont and titleSize then
+            categoryFrame.title:SetFont(titleFont, titleSize - 3, titleFlags)
+        end
+        -- Title sits just right of the toggle button (toggle left=9, width 16 -> 27)
+        categoryFrame.title:SetPoint("TOPLEFT", categoryFrame, "TOPLEFT", 27, -8)
         categoryFrame.title:SetText(L[categoryData.name] or L[categoryName] or categoryData.name or categoryName)
         categoryFrame.title:SetTextColor(0.7, 0.78, 0.88, 1)
 
@@ -4329,7 +4335,8 @@ for _, categoryName in ipairs(sortedCategoryNames) do
         -- House-style +/− toggle button
         categoryFrame.toggleBtn = CreateFrame("Frame", nil, categoryFrame, "BackdropTemplate")
         categoryFrame.toggleBtn:SetSize(16, 16)
-        categoryFrame.toggleBtn:SetPoint("TOPLEFT", categoryFrame, "TOPLEFT", 4, -6)
+        -- Align the collapse button's left edge with the progress bar / mount grid (x=9)
+        categoryFrame.toggleBtn:SetPoint("TOPLEFT", categoryFrame, "TOPLEFT", 9, -6)
         categoryFrame.toggleBtn:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8x8",
             edgeFile = "Interface\\Buttons\\WHITE8x8",
@@ -4381,7 +4388,9 @@ for _, categoryName in ipairs(sortedCategoryNames) do
         -- Create progress bar container
         local progressContainer = CreateFrame("Frame", nil, categoryFrame)
         progressContainer:SetHeight(18)
-        progressContainer:SetPoint("TOPLEFT", categoryFrame, "TOPLEFT", 10, -30)
+        -- Align the bar's left edge with the mount grid below it. Mount icon
+        -- backdrops start at (mountStartX - 1) = 9, so match that here.
+        progressContainer:SetPoint("TOPLEFT", categoryFrame, "TOPLEFT", 9, -30)
         progressContainer:SetPoint("TOPRIGHT", categoryFrame, "TOPRIGHT", -10, -30)
         categoryFrame.progressContainer = progressContainer
         

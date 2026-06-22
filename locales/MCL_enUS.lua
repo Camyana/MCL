@@ -3,6 +3,8 @@ local AceLocale = LibStub("AceLocale-3.0")
 local L = AceLocale:NewLocale("MCL", "enUS", true)  -- 'true' makes this the default locale
 if L then
     L["12.0.5 - What's New?"] = "12.0.5 - What's New?"
+    L["12.0.7 - What's New?"] = "12.0.7 - What's New?"
+    L["Sporefall"] = "Sporefall"
     L["Achievement"] = "Achievement"
     L["Adventures"] = "Adventures"
     L["Ahead of the Curve"] = "Ahead of the Curve"
@@ -188,6 +190,8 @@ if L then
     L["Midnight Pre-Patch"] = "Midnight Pre-Patch"
     L["Midnight"] = "Midnight"
     L["Haranir"] = "Haranir"
+    L["Showdowns"] = "Showdowns"
+    L["Midsummer Fire Festival"] = "Midsummer Fire Festival"
 
     ------ setting panel ------
     L["Ctrl + Right Click to pin uncollected mounts"] = "Ctrl + Right Click to pin/unpin mounts"

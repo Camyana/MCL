@@ -482,6 +482,9 @@ MCL_GUIDE_CURRENCY_DATA = {
     [1264643] = { { type = "gold", id = 0, amount = 10000 } }, -- Ballistic Bronco
     [1264988] = { { type = "currency", id = 1166, amount = 5000 } }, -- Snowpaw Glimmerfur Prowler
     [1266702] = { { type = "currency", id = 3316, amount = 8000 } }, -- Voidbound Stormray
+    [1294663] = { { type = "currency", id = 3316, amount = 15 } }, -- Netherforged Nullframe
+    [1294648] = { { type = "currency", id = 3316, amount = 15 } }, -- Voidmancer's Starcarver
+    [1297427] = { { type = "currency", id = 3316, amount = 15 } }, -- Tortured Gorger
     [1268924] = { { type = "currency", id = 3316, amount = 10 } }, -- Silvermoon's Arcane Defender
     [1268926] = { { type = "currency", id = 2803, amount = 10000 } }, -- Elven Arcane Guardian
     [1270675] = { { type = "currency", id = 3385, amount = 10 } }, -- Vivid Chloroceros

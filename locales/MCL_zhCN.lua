@@ -3,6 +3,10 @@ local AceLocale = LibStub("AceLocale-3.0")
 local L = AceLocale:NewLocale("MCL", "zhCN")
 if L then
     L["12.0.5 - What's New?"] = "12.0.5 - 新内容？"
+    L["12.0.7 - What's New?"] = "12.0.7 - 新内容？"
+    L["Sporefall"] = "Sporefall"
+    L["Showdowns"] = "Showdowns"
+    L["Midsummer Fire Festival"] = "仲夏火焰节"
     L["Decor Duels"] = "装饰决斗"
     L["Ritual Sites"] = "仪式地点"
     L["Void Assaults"] = "虚空突袭"
@@ -218,6 +222,9 @@ if L then
     L["Hide Unobtainable mounts from the overview."] = "在总览中隐藏绝版坐骑"
     L["Show Minimap Icon"] = "显示小地图按钮"
     L["Toggle the display of the Minimap Icon."] = "切换显示小地图按钮"
+    L["Hide Total Mounts Bar"] = "隐藏坐骑总数栏"
+    L["Loading mount data"] = "正在加载坐骑数据"
+    L["Waiting for the game to finish loading mounts..."] = "正在等待游戏完成坐骑加载..."
     L["Reset Settings"] = "重置设置"
     L["Reset to default settings"] = "重置为默认设置"
     L["Hide Collected Mounts"] = "隐藏已收集的坐骑"

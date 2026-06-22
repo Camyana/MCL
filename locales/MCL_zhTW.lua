@@ -3,6 +3,8 @@ local AceLocale = LibStub("AceLocale-3.0")
 local L = AceLocale:NewLocale("MCL", "zhTW")
 if L then
     L["12.0.5 - What's New?"] = "12.0.5 - 新內容？"
+    L["12.0.7 - What's New?"] = "12.0.7 - 新內容？"
+    L["Sporefall"] = "Sporefall"
     L["Decor Duels"] = "裝飾決鬥"
     L["Ritual Sites"] = "儀式地點"
     L["Void Assaults"] = "虛空突襲"
@@ -187,6 +189,8 @@ if L then
     L["Midnight"] = "至暗之夜"
     L["Midnight Pre-Patch"] = "至暗之夜前夕"
     L["Haranir"] = "哈拉尼爾"
+    L["Showdowns"] = "Showdowns"
+    L["Midsummer Fire Festival"] = "仲夏火焰節"
 
     ------ setting panel ------
     L["Ctrl + Right Click to pin uncollected mounts"] = "Ctrl + 右鍵 標記未收藏的坐騎"
@@ -226,6 +230,9 @@ if L then
     L["Hide Unobtainable mounts from the overview."] = "在總覽中隱藏絕版坐騎"
     L["Show Minimap Icon"] = "顯示小地圖按鈕"
     L["Toggle the display of the Minimap Icon."] = "切換顯示小地圖按鈕"
+    L["Hide Total Mounts Bar"] = "隱藏坐騎總數列"
+    L["Loading mount data"] = "正在載入坐騎資料"
+    L["Waiting for the game to finish loading mounts..."] = "正在等待遊戲完成坐騎載入..."
     L["Reset Settings"] = "重設設定"
     L["Reset to default settings"] = "重設為預設設定"
     L["Hide Collected Mounts"] = "隱藏已收集的坐騎"
