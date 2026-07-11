@@ -619,6 +619,13 @@ SlashCmdList["MCL"] = function(msg)
         else
             print("|cffFF0000[MCL]|r Cleanup function not available.")
         end
+    elseif cmd == "unhide" or cmd == "unhideall" or cmd == "showhidden" then
+        if MCLcore.Function and MCLcore.Function.UnhideAll then
+            local n = MCLcore.Function:UnhideAll()
+            print("|cff00CCFF[MCL]|r Un-hid " .. tostring(n) .. " mount(s). All mounts are visible again.")
+        else
+            print("|cffFF0000[MCL]|r Hidden-mount feature not available.")
+        end
     elseif cmd == "party" or cmd == "group" or cmd == "raid" then
         if MCLcore.PartyCheck then
             MCLcore.PartyCheck:SendRequest()

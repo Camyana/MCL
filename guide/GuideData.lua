@@ -1009,7 +1009,7 @@ MCL_GUIDE_DATA.mounts = {
 		chance = 3000,
 		lockBossName = "Rukhmar",
 		coords = {
-			{ m = 542, x = 47.1, y = 78.4 },
+			{ m = 542, x = 37.4, y = 38.6 },   -- Rukhmar, Skyreach (Spires of Arak)
 		},
 	},
 	[171829] = {
@@ -2307,7 +2307,8 @@ MCL_GUIDE_DATA.mounts = {
 		itemId = 174641,
 		chance = 33,
 		coords = {
-			{ m = 249, x = 73.8, y = 83.4 },
+			-- Amathet assault, present-day (N'Zoth) Uldum = UiMapID 1527, not Cata Uldum (249)
+			{ m = 1527, x = 73.8, y = 83.4 },
 		},
 	},
 	[315987] = {
@@ -2325,7 +2326,8 @@ MCL_GUIDE_DATA.mounts = {
 		itemId = 174753,
 		chance = 33,
 		coords = {
-			{ m = 249, x = 68, y = 31.4 },
+			-- Aqir assault, present-day (N'Zoth) Uldum = UiMapID 1527, not Cata Uldum (249)
+			{ m = 1527, x = 68, y = 31.4 },
 		},
 	},
 	[316276] = {
@@ -2339,7 +2341,8 @@ MCL_GUIDE_DATA.mounts = {
 		itemId = 174769,
 		chance = 100,
 		coords = {
-			{ m = 249, x = 30.4, y = 49.4 },
+			-- Aqir assault, present-day (N'Zoth) Uldum = UiMapID 1527, not Cata Uldum (249)
+			{ m = 1527, x = 30.4, y = 49.4 },
 		},
 	},
 	[316339] = {
@@ -3942,7 +3945,7 @@ MCL_GUIDE_DATA.zones = {
 	[198] = { 97493, 101542 },
 	[205] = { 98718 },
 	[207] = { 88718, 88746 },
-	[249] = { 88742, 88744, 315847, 316275, 316337 },
+	[249] = { 88742, 88744 },   -- Cata Uldum: Throne of the Four Winds / Vortex Pinnacle raid drakes
 	[310] = { 1218013 },
 	[348] = { 1265784 },
 	[376] = { 130965 },
@@ -3975,6 +3978,7 @@ MCL_GUIDE_DATA.zones = {
 	[1355] = { 275623, 294038, 300149, 300150 },
 	[1462] = { 290718, 291492, 297157 },
 	[1525] = { 332882, 332905 },
+	[1527] = { 315847, 316275, 316337 },   -- Present-day (N'Zoth) Uldum: Amathet/Aqir assault mounts
 	[1530] = { 312751, 315014, 315427, 316722, 316723 },
 	[1533] = { 312765 },
 	[1536] = { 327405, 332457, 332466, 332478, 332480, 336042, 336045, 344228, 344574, 344575, 344576 },
@@ -4046,4 +4050,20 @@ MCL_GUIDE_DATA.instanceToZone = {
 	[2232] = 2200,
 	[2291] = 2255,
 	[2303] = 2214,
+}
+
+-- ─── Equivalent (alias) map IDs ──────────────────────────────
+-- Some zones exist as several UiMapIDs — typically an older version and a
+-- later, re-themed version (e.g. a Cataclysm/Zidormi "past" map and the
+-- present-day map).  When these share the same physical terrain and
+-- coordinate space, a mount indexed under one ID should also appear when
+-- the World Map resolves to the sibling ID.  This matters because the map
+-- can land on either ID depending on how the player navigated to it
+-- (GetBestMapForUnit while standing in the zone vs. clicking in from the
+-- continent map), which would otherwise make the visible pin set flip.
+--
+-- Each entry is a group of UiMapIDs that share the same coordinate space.
+-- Only include IDs whose (x, y) coordinates line up 1:1.
+MCL_GUIDE_DATA.mapEquivalents = {
+	{ 249, 1527 },   -- Uldum: 249 = Cataclysm/Zidormi past, 1527 = BfA N'Zoth present
 }

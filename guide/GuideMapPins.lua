@@ -1398,14 +1398,23 @@ function Pins:RefreshPins()
         childMapSet[childID] = true
     end
 
+    -- Same-coordinate sibling maps (e.g. the two Uldum UiMapIDs).  Coords on
+    -- these line up 1:1 with the current map, so they're placed directly (no
+    -- projection) — this keeps pins consistent no matter which sibling ID the
+    -- World Map resolved to.
+    local aliasMapSet = {}
+    for _, aliasID in ipairs(Guide:GetMapAliases(mapID)) do
+        aliasMapSet[aliasID] = true
+    end
+
     -- Direct mounts for the current map
     local mounts = Guide:GetMountsForZone(mapID, showChildren)
     for _, rec in ipairs(mounts) do
         if rec.coords then
             for _, wp in ipairs(rec.coords) do
                 if wp.x and wp.y then
-                    if wp.m == mapID then
-                        -- Pin on this exact map
+                    if wp.m == mapID or aliasMapSet[wp.m] then
+                        -- Pin on this exact map (or a same-coordinate sibling)
                         PlacePin(canvas, rec, wp.x / 100, wp.y / 100,
                                  canvasWidth, canvasHeight, scaleComp)
                     elseif childMapSet[wp.m] then

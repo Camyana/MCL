@@ -234,6 +234,7 @@ MCL_GUIDE_CURRENCY_DATA = {
     [185052] = { { type = "item", id = 103533, amount = 1 } }, -- Vicious War Kodo
     [190690] = { { type = "item", id = 124099, amount = 5000 } }, -- Bristling Hellboar
     [194464] = { { type = "currency", id = 1166, amount = 5000 } }, -- Eclipse Dragonhawk
+    [213115] = { { type = "gold", id = 0, amount = 20000000000 } }, -- Bloodfang Widow
     [214791] = { { type = "item", id = 138777, amount = 100 } }, -- Brinedeep Bottom-Feeder
     [223341] = { { type = "item", id = 103533, amount = 1 } }, -- Vicious Gilnean Warhorse
     [223354] = { { type = "item", id = 103533, amount = 1 } }, -- Vicious War Trike

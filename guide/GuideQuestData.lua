@@ -50,7 +50,7 @@ MCL_GUIDE_QUEST_DATA = {
     [1256] = { quest = "Good Girl", questId = 56214, npc = "Kelfin Scout", zone = "Nazjatar", m = 1355 },  -- Snapdragon Kelpstalker
     [1265] = { quest = "Lost Flight", questId = 58876, npc = "Wrathion", zone = "Stormwind City", m = 84, x = 85.2, y = 32.2 },  -- Uncorrupted Voidwing
     [1320] = { quest = "My Own Drone", questId = 58866, npc = "Blacksmith Abasi", zone = "Uldum", m = 1527, x = 54, y = 33.4 },  -- Shadowbarb Drone
-    [1329] = { quest = "Alpaca It In", zone = "Uldum", m = 249 },  -- Springfur Alpaca
+    [1329] = { quest = "Alpaca It In", zone = "Uldum", m = 1527 },  -- Springfur Alpaca (Friendly Alpaca event, present-day Uldum)
     [1391] = { quest = "A New Pack", questId = 62046, npc = "Unbidden Worldeater", zone = "Revendreth", m = 1525, x = 66.2, y = 62 },  -- Loyal Gorger
     [1441] = { quest = "Feral Shadehound", questId = 63684, zone = "The Maw", m = 1543 },  -- Bound Shadehound
     [1545] = { quest = "A Whispering Breeze", questId = 72512, npc = "Godoloto", zone = "Ohn'ahran Plains", m = 2023, x = 51, y = 62.2 },  -- Divine Kiss of Ohn'ahra

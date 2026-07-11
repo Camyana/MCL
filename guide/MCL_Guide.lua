@@ -21,6 +21,7 @@ Guide.spellToMount  = {}    -- spellId → mountId  (WoW journal)
 Guide.mountToSpell  = {}    -- mountId → spellId
 Guide.collectedNames = {}   -- lowercase mount name → true (for deduping legacy mounts)
 Guide.unobtainableSpells = {}  -- spellId → true for unobtainable mounts
+Guide.mapAliases    = {}    -- mapID   → { equivalent mapID, ... } (same-coord sibling maps)
 
 -- Settings defaults
 MCL_GUIDE_SETTINGS = MCL_GUIDE_SETTINGS or {}
@@ -120,6 +121,35 @@ local function BuildUnobtainableSet()
             end
         end
     end
+end
+
+-- ─── Build map-equivalence lookup ────────────────────────────
+-- Expands MCL_GUIDE_DATA.mapEquivalents (groups of same-coordinate
+-- sibling map IDs) into a per-map lookup: mapID → { other IDs in group }.
+-- Lets zone/pin lookups treat e.g. the two Uldum UiMapIDs as one so the
+-- displayed mounts don't depend on how the World Map was navigated.
+local function BuildMapAliases()
+    Guide.mapAliases = {}
+    if not MCL_GUIDE_DATA or not MCL_GUIDE_DATA.mapEquivalents then return end
+    for _, group in ipairs(MCL_GUIDE_DATA.mapEquivalents) do
+        for _, mid in ipairs(group) do
+            local aliases = Guide.mapAliases[mid]
+            if not aliases then
+                aliases = {}
+                Guide.mapAliases[mid] = aliases
+            end
+            for _, other in ipairs(group) do
+                if other ~= mid then
+                    table.insert(aliases, other)
+                end
+            end
+        end
+    end
+end
+
+-- Return the list of same-coordinate sibling map IDs for a map (may be empty).
+function Guide:GetMapAliases(mapID)
+    return (mapID and self.mapAliases[mapID]) or {}
 end
 
 -- ─── Merge static guide data with live API info ──────────────
@@ -529,6 +559,11 @@ function Guide:GetMountsForZone(mapID, includeChildren)
 
     -- Decide which zone IDs to pull mounts from
     local mapIDs = { mapID }
+    -- Include same-coordinate sibling maps (e.g. the two Uldum UiMapIDs) so
+    -- the mount set doesn't depend on how the World Map was navigated.
+    for _, aliasID in ipairs(self:GetMapAliases(mapID)) do
+        table.insert(mapIDs, aliasID)
+    end
     if includeChildren then
         for _, childID in ipairs(self:GetAllChildMapIDs(mapID)) do
             table.insert(mapIDs, childID)
@@ -674,6 +709,7 @@ frame:SetScript("OnEvent", function(self, event, ...)
         C_Timer.After(4, function()
             BuildSpellMountMap()
             BuildUnobtainableSet()
+            BuildMapAliases()
             BuildMountLookup()
             Guide.ready = true
 

@@ -1609,6 +1609,13 @@ MCLcore.sectionNames[22] = {
 	isExpansion = false,
 }
 MCLcore.sectionNames[23] = {
+	name = "Hidden",
+	mounts = {MCL_HIDDEN},
+	icon = "Interface\\AddOns\\MCL\\icons\\unobtainable.blp",
+	isExpansion = false,
+	hiddenFromOverview = true,
+}
+MCLcore.sectionNames[24] = {
 	name = "Overview",
 	mounts = {},
 	icon = "Interface\\AddOns\\MCL\\icons\\mcl.blp",
@@ -1616,7 +1623,7 @@ MCLcore.sectionNames[23] = {
 }
 local _, _, _, tocVersion = GetBuildInfo()
 if tocVersion == 120005 then
-	MCLcore.sectionNames[24] = {
+	MCLcore.sectionNames[25] = {
 		name = "12.0.5 - What's New?",
 		mounts = MCLcore.mountList[22],
 		icon = "Interface\\AddOns\\MCL\\icons\\midnight.blp",
@@ -1624,7 +1631,7 @@ if tocVersion == 120005 then
 		hiddenFromOverview = true,
 	}
 elseif tocVersion == 120007 then
-	MCLcore.sectionNames[24] = {
+	MCLcore.sectionNames[25] = {
 		name = "12.0.7 - What's New?",
 		mounts = MCLcore.mountList[23],
 		icon = "Interface\\AddOns\\MCL\\icons\\midnight.blp",
@@ -1807,7 +1814,7 @@ MCLcore.mountNotes = {
 	[129922] = "Sold by Auzin in Dalaran (Northrend) for 5,000 Timewarped Badges during Wrath of the Lich King Timewalking.",
 	[129923] = "Sold by Cupri in Shattrath City for 5,000 Timewarped Badges during Burning Crusade Timewalking. Flying mount.",
 	[133543] = "Drops from any Timewalking dungeon boss. Extremely rare drop. Can drop during any Timewalking event (BC, WotLK, Cata, MoP, WoD, Legion, BfA). Run as many TW dungeons as possible during the event for best chances.",
-	[137570] = "Sold by Shimmering Manapool Vendors in Suramar for 2,000 gold. Requires completing enough of the Suramar storyline to access the vendor area. An arachnid mount that unfolds from a cocoon.",
+	[137570] = "Sold by The Mad Merchant in The Wonderworks, Dalaran (Broken Isles) {{m:627,43.2,46.4}} for 2,000,000 gold. The Mad Merchant is an elusive vendor who appears sporadically (every few hours to a few days) and stays for about an hour before vanishing. An arachnid mount that unfolds from a cocoon.",
 	[137573] = "Reward from a quest chain starting with Nighthuntress Syrenne's quest in Suramar. The fox mount is obtained by looting a Torn Invitation from Withered Army Training in Suramar, then completing a short quest series. The Torn Invitation can drop anytime during the training scenario.",
 	[137574] = "Drops from Gul'dan in The Nighthold on Normal, Heroic, or Mythic difficulty. Estimated ~1% drop chance. Cannot be bonus rolled. Also available on the Black Market Auction House. {{m:680,44.8,60.2}}",
 	[137575] = "Drops from Gul'dan in The Nighthold on Mythic difficulty only. This is the Mythic-only color variant. Also available on the Black Market Auction House. {{m:680,44.8,60.2}}",

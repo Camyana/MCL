@@ -403,6 +403,11 @@ function MCL_functions:SetMouseClickFunctionality(frame, mountID, mountName, ite
 
     local lastLeftClick = 0
     frame:SetScript("OnMouseDown", function(self, button)
+        if button == 'RightButton' and IsAltKeyDown() and MCL_SETTINGS and MCL_SETTINGS.enableHiddenMounts then
+            -- Alt + Right-Click: hide / un-hide this mount (feature must be enabled in settings)
+            MCLcore.Function:ToggleHidden(mountID, frame)
+            return
+        end
         if IsControlKeyDown() then
             if button == 'LeftButton' then
                 DressUpMount(mountID)
@@ -1005,6 +1010,88 @@ function MCL_functions:CleanupInvalidPinnedMounts()
     -- Replace MCL_PINNED with cleaned version
     MCL_PINNED = validPinnedMounts
     self:RebuildPinnedLookup()
+end
+
+-- =========================================================
+-- Hidden mounts: mirrors the Pinned system. A hidden mount is
+-- excluded from its category and from all collection counts, and
+-- lives only in the "Hidden" tab until the player un-hides it.
+-- MCL_HIDDEN uses the same shape as MCL_PINNED:
+--   { { mountID = "m123", category = "...", section = "..." }, ... }
+-- =========================================================
+local hiddenLookup = nil
+
+function MCL_functions:RebuildHiddenLookup()
+    hiddenLookup = {}
+    if MCL_HIDDEN then
+        for k, v in pairs(MCL_HIDDEN) do
+            if v and v.mountID then
+                hiddenLookup[v.mountID] = k
+            end
+        end
+    end
+end
+
+function MCL_functions:CheckIfHidden(mountID)
+    -- The hidden-mounts feature is opt-in via settings; when off, nothing counts as hidden.
+    if not (MCL_SETTINGS and MCL_SETTINGS.enableHiddenMounts) then
+        return false, nil
+    end
+    if MCL_HIDDEN == nil then
+        MCL_HIDDEN = {}
+    end
+    if not hiddenLookup then
+        self:RebuildHiddenLookup()
+    end
+    local idx = hiddenLookup[mountID]
+    if idx then
+        return true, idx
+    end
+    return false, nil
+end
+
+-- Toggle a mount's hidden state. `mountID` is the numeric mount journal ID;
+-- `frame` (optional) is the clicked mount frame, used for category/section context.
+function MCL_functions:ToggleHidden(mountID, frame)
+    if not MCL_HIDDEN then MCL_HIDDEN = {} end
+    local key = "m" .. mountID
+    local isHidden, idx = self:CheckIfHidden(key)
+    if isHidden then
+        table.remove(MCL_HIDDEN, idx)
+    else
+        -- A mount can't be both pinned and hidden — un-pin it first.
+        local isPinned, pIdx = self:CheckIfPinned(key)
+        if isPinned and pIdx then
+            table.remove(MCL_PINNED, pIdx)
+            self:RebuildPinnedLookup()
+            if frame and frame.pin then frame.pin:SetAlpha(0) end
+        end
+        table.insert(MCL_HIDDEN, {
+            mountID  = key,
+            category = (frame and frame.category) or "Unknown",
+            section  = (frame and frame.section) or "Unknown",
+        })
+    end
+    self:RebuildHiddenLookup()
+    MCLcore.hiddenMountsChanged = true
+    -- Recompute counts and rebuild so the mount leaves (or returns to) its category.
+    if self.CalculateSectionStats then self:CalculateSectionStats() end
+    if MCLcore.Frames and MCLcore.Frames.RefreshLayout then
+        MCLcore.Frames:RefreshLayout()
+    end
+end
+
+-- Clear all hidden mounts (used by the /mcl unhide command during the mockup;
+-- the Hidden tab will offer per-mount un-hiding once built).
+function MCL_functions:UnhideAll()
+    local n = MCL_HIDDEN and #MCL_HIDDEN or 0
+    MCL_HIDDEN = {}
+    self:RebuildHiddenLookup()
+    if self.CalculateSectionStats then self:CalculateSectionStats() end
+    if MCLcore.Frames and MCLcore.Frames.RefreshLayout then
+        MCLcore.Frames:RefreshLayout()
+    end
+    return n
 end
 
 function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, tab, skip_total, pin)
@@ -2097,8 +2184,8 @@ function MCL_functions:CalculateSectionStats()
                             allowed = (faction == playerFaction)
                         end
                         
-                        -- Only count mounts that pass faction restrictions
-                        if allowed then
+                        -- Only count mounts that pass faction restrictions and are not user-hidden
+                        if allowed and not MCLcore.Function:CheckIfHidden("m" .. mount_Id) then
                             sectionTotal = sectionTotal + 1
                             if IsMountCollected(mount_Id) then
                                 sectionCollected = sectionCollected + 1

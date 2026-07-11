@@ -1,6 +1,10 @@
 local MCL, core = ...
 local AceLocale = LibStub("AceLocale-3.0")
-local L = AceLocale:NewLocale("MCL", "enUS", true)  -- 'true' makes this the default locale
+-- isDefault = true (this is the base locale); silent = true so unknown keys
+-- return the key itself instead of firing a "Missing entry" error.  Some
+-- lookups use data-driven keys (e.g. monthly categories like "June 2023")
+-- that have no fixed locale entry; silent mode lets those fall back cleanly.
+local L = AceLocale:NewLocale("MCL", "enUS", true, true)
 if L then
     L["12.0.5 - What's New?"] = "12.0.5 - What's New?"
     L["12.0.7 - What's New?"] = "12.0.7 - What's New?"
@@ -110,6 +114,8 @@ if L then
     L["Pandaren"] = "Pandaren"
     L["Paragon Reputation"] = "Paragon Reputation"
     L["Pinned"] = "Pinned"
+    L["Hidden"] = "Hidden"
+    L["Hide Instructions Text"] = "|cffFF8800|TInterface\\GossipFrame\\AvailableQuestIcon:0:0:0:0:32:32:0:32:0:32|t Alt + Right Click|r to hide/show mounts"
     L["Plunderstorm"] = "Plunderstorm"
     L["Pre-Launch Event"] = "Pre-Launch Event"
     L["Prey"] = "Prey"
@@ -232,6 +238,7 @@ if L then
     L["Reset Settings"] = "Reset Settings"
     L["Reset to default settings"] = "Reset to default settings"
     L["Hide Collected Mounts"] = "Hide Collected Mounts"
+    L["Enable Hidden Mounts"] = "Enable Hidden Mounts"
     L["If enabled, collected mounts will not be shown in the list at all. Requires UI reload."] = "If enabled, collected mounts will not be shown in the list at all. Requires UI reload."
     L["Changing this setting requires a UI reload. Reload now?"] = "Changing this setting requires a UI reload. Reload now?"
     L["YES"] = "Yes"

@@ -769,12 +769,14 @@ end
 
 -- Build a nav-ordered list of sections for consistent tab/content mapping
 function MCLcore:BuildSectionsOrdered()
-    local pinned, overview, expansions, others = nil, nil, {}, {}
+    local pinned, overview, hidden, expansions, others = nil, nil, nil, {}, {}
     local playerFaction = UnitFactionGroup("player")
     for i = 1, #MCLcore.sectionNames do
         local v = MCLcore.sectionNames[i]
         if v.name == "Pinned" then
             pinned = v
+        elseif v.name == "Hidden" then
+            hidden = v
         elseif v.name == "Horde" and playerFaction == "Alliance" then
             -- skip Horde for Alliance players
         elseif v.name == "Alliance" and playerFaction == "Horde" then
@@ -792,6 +794,7 @@ function MCLcore:BuildSectionsOrdered()
     for _, v in ipairs(expansions) do table.insert(ordered, v) end
     for _, v in ipairs(others) do table.insert(ordered, v) end
     if pinned then table.insert(ordered, pinned) end
+    if hidden and MCL_SETTINGS and MCL_SETTINGS.enableHiddenMounts then table.insert(ordered, hidden) end
     MCLcore.sectionsOrdered = ordered
 end
 
@@ -849,12 +852,14 @@ function MCL_frames:SetTabs()
 
     local sections = MCLcore.sectionsOrdered or MCLcore.sections
     -- Find Overview, Pinned, expansions, and others
-    local overviewSection, pinnedSection, expansionSections, otherSections = nil, nil, {}, {}
+    local overviewSection, pinnedSection, hiddenSection, expansionSections, otherSections = nil, nil, nil, {}, {}
     for _, v in ipairs(sections) do
         if v.name == "Overview" then
             overviewSection = v
         elseif v.name == "Pinned" then
             pinnedSection = v
+        elseif v.name == "Hidden" then
+            hiddenSection = v
         elseif v.isExpansion then
             table.insert(expansionSections, v)
         else
@@ -1223,6 +1228,65 @@ function MCL_frames:SetTabs()
         navYOffset = navYOffset - 28
     end
 
+    -- 4b. Hidden tab (directly below Pinned; only when the feature is enabled in settings)
+    if hiddenSection and MCL_SETTINGS and MCL_SETTINGS.enableHiddenMounts then
+        local tab = CreateFrame("Button", nil, tabFrame, "BackdropTemplate")
+        tab:SetSize(nav_width + 8, 32)
+        tab:SetPoint("TOPLEFT", tabFrame, "TOPLEFT", 1, navYOffset)
+        StyleNavButton(tab, false)
+        tab.text = tab:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        tab.text:SetPoint("LEFT", 10, 0)
+        local hiddenLabel = L[hiddenSection.name] or hiddenSection.name
+        tab.text:SetText(hiddenLabel)
+        tab.checkmark = tab:CreateTexture(nil, "OVERLAY")
+        tab.checkmark:SetSize(12, 12)
+        tab.checkmark:SetPoint("RIGHT", tab, "RIGHT", -6, 0)
+        tab.checkmark:SetTexture("Interface\\RaidFrame\\ReadyCheck-Ready")
+        tab.checkmark:Hide()
+        tab.countText = tab:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        tab.countText:SetPoint("RIGHT", tab.checkmark, "LEFT", -2, 0)
+        tab.countText:SetTextColor(0.5, 0.55, 0.65, 1)
+        local hiddenCount = MCL_HIDDEN and #MCL_HIDDEN or 0
+        if hiddenCount > 0 then
+            tab.countText:SetText(tostring(hiddenCount))
+        end
+        tab.section = hiddenSection
+        tab.content = MCLcore.Frames:createContentFrame(MCL_mainFrame.ScrollChild, hiddenSection.name, hiddenSection.icon)
+
+        -- Namespaced references for the hidden content frame (mirrors pinnedFrame/pinnedTab)
+        MCLcore.hiddenFrame = tab.content
+        MCLcore.hiddenTab = tab
+
+        if not MCL_HIDDEN then
+            MCL_HIDDEN = {}
+        end
+
+        MCLcore.mountFrames = MCLcore.mountFrames or {}
+        if MCL_HIDDEN and next(MCL_HIDDEN) then
+            MCLcore.mountFrames[2] = {}
+            if MCLcore.Function and MCLcore.Function.CreateMountsForCategory then
+                local overflow, mountFrame = MCLcore.Function:CreateMountsForCategory(MCL_HIDDEN, MCLcore.hiddenFrame, 30, MCLcore.hiddenTab, true, true)
+                MCLcore.mountFrames[2] = mountFrame
+            end
+        end
+
+        tab.content:Hide()
+        tab:SetScript("OnClick", function(self)
+            SelectTab(self)
+        end)
+        tab:EnableMouse(true)
+        tab:SetFrameStrata("HIGH")
+        tab:SetFrameLevel(100)
+        tab:Show()
+        table.insert(tabFrame.tabs, tab)
+        if MCLcore.MCL_MF_Nav then
+            table.insert(MCLcore.MCL_MF_Nav.tabs, tab)
+        end
+        table.insert(MCLcore.sectionFrames, tab.content)
+        tabIndex = tabIndex + 1
+        navYOffset = navYOffset - 28
+    end
+
     -- 5. Settings tab (always last)
     do
         local tab = CreateFrame("Button", nil, tabFrame, "BackdropTemplate")
@@ -1550,8 +1614,8 @@ function MCL_frames:createContentFrame(relativeFrame, title, sectionIcon)
     end
     frame.name = title -- Store non-localized name
 
-    -- Add pin instructions for all sections except Overview
-    if title == "Pinned" then
+    -- Add pin/hide instructions for the Pinned and Hidden sections
+    if title == "Pinned" or title == "Hidden" then
         local instructionsFrame = CreateFrame("Frame", nil, frame, "BackdropTemplate")
         instructionsFrame:SetSize(availableWidth - 30, 20)  -- Smaller height for compact display
         instructionsFrame:SetPoint("TOPLEFT", frame, "TOPLEFT", 10, -30)  -- Position below title
@@ -1567,14 +1631,14 @@ function MCL_frames:createContentFrame(relativeFrame, title, sectionIcon)
         local instructionsText = instructionsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         instructionsText:SetPoint("LEFT", instructionsFrame, "LEFT", 10, 0)
         -- Use color codes to make "Ctrl + Right Click" bold and orange
-        instructionsText:SetText(L["Pin Instructions Text"])
+        instructionsText:SetText(title == "Hidden" and L["Hide Instructions Text"] or L["Pin Instructions Text"])
         instructionsText:SetTextColor(0.9, 0.9, 1, 1)  -- Light blue-white for the rest of the text
         
         -- Adjust frame height to accommodate instructions
         frame:SetHeight(85)  -- Increased to make room for instructions
     end
 
-    if title ~= "Pinned" then
+    if title ~= "Pinned" and title ~= "Hidden" then
         frame.pBar = MCLcore.Frames:progressBar(frame)
         local yOffset = title == "Overview" and -15 or -55  -- Adjust based on whether instructions are present
         frame.pBar:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 15, yOffset)  -- Aligned with title padding
@@ -2893,7 +2957,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     -- =====================================================
     -- CARD 1: Display Options
     -- =====================================================
-    local displayCard = createCard(frame, L["Display Options"], yPos, 190)
+    local displayCard = createCard(frame, L["Display Options"], yPos, 220)
     
     local displayY = -34
     
@@ -2979,8 +3043,29 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     totalBarLabel:SetPoint("LEFT", totalBarCheck, "RIGHT", 8, 0)
     totalBarLabel:SetText(L["Hide Total Mounts Bar"])
     totalBarLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+    displayY = displayY - 30
 
-    yPos = yPos - 200
+    -- Enable Hidden Mounts feature (adds a "Hidden" tab below Pinned)
+    local hiddenCheck = CreateFrame("CheckButton", nil, displayCard)
+    hiddenCheck:SetSize(18, 18)
+    hiddenCheck:SetPoint("TOPLEFT", displayCard, "TOPLEFT", 12, displayY)
+    hiddenCheck:SetChecked(MCL_SETTINGS.enableHiddenMounts or false)
+    hiddenCheck.originalOnClick = function(self)
+        MCL_SETTINGS.enableHiddenMounts = self:GetChecked()
+        -- Rebuild tabs so the Hidden tab appears/disappears (deferred to after this click).
+        C_Timer.After(0, function()
+            if MCLcore.Frames and MCLcore.Frames.RefreshLayout then
+                MCLcore.Frames:RefreshLayout()
+            end
+        end)
+    end
+    styleCheckbox(hiddenCheck)
+    local hiddenSettingLabel = displayCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    hiddenSettingLabel:SetPoint("LEFT", hiddenCheck, "RIGHT", 8, 0)
+    hiddenSettingLabel:SetText(L["Enable Hidden Mounts"])
+    hiddenSettingLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+
+    yPos = yPos - 230
     
     -- =====================================================
     -- CARD 3: Layout
@@ -4205,7 +4290,20 @@ for _, categoryName in ipairs(sortedCategoryNames) do
             table.insert(mountList, mount)
         end
     end
-    
+
+    -- Exclude user-hidden mounts: they should not count toward the category
+    -- total/collected and should not render in the grid (they live in the Hidden tab).
+    if MCLcore.Function.CheckIfHidden then
+        local visibleList = {}
+        for _, mount in ipairs(mountList) do
+            local mid = MCLcore.Function:GetMountID(mount)
+            if not (mid and MCLcore.Function:CheckIfHidden("m" .. mid)) then
+                table.insert(visibleList, mount)
+            end
+        end
+        mountList = visibleList
+    end
+
     for _, mountId in ipairs(mountList) do
         safeLoopCheck("counting mounts in category: " .. tostring(categoryName))
         local mount_Id = MCLcore.Function:GetMountID(mountId)
@@ -4632,6 +4730,18 @@ function MCL_frames:createTimelineCategoryFrame(set, relativeFrame, sectionName)
             for _, m in ipairs(categoryData.mountID) do table.insert(mountList, m) end
         end
 
+        -- Exclude user-hidden mounts (count + display) to match the rest of the UI.
+        if MCLcore.Function.CheckIfHidden then
+            local visibleList = {}
+            for _, m in ipairs(mountList) do
+                local mid = MCLcore.Function:GetMountID(m)
+                if not (mid and MCLcore.Function:CheckIfHidden("m" .. mid)) then
+                    table.insert(visibleList, m)
+                end
+            end
+            mountList = visibleList
+        end
+
         local totalMounts, collectedMounts, displayedMounts = 0, 0, 0
         for _, mountId in ipairs(mountList) do
             local mount_Id = MCLcore.Function:GetMountID(mountId)
@@ -4895,8 +5005,11 @@ function MCL_frames:RefreshLayout()
     if MCL_frames.SetTabs then
         MCL_frames:SetTabs()
         
-        -- If we're on the overview page, we need to refresh it since it has dynamic content
-        if selectedTabName == "Overview" and MCLcore.overview then
+        -- Always rebuild the overview content after SetTabs. SetTabs releases the overview
+        -- frame's children for every tab, so it must be repopulated on every refresh — not
+        -- only when the Overview tab is active. Otherwise a RefreshLayout triggered from
+        -- another tab (e.g. toggling a setting) leaves the overview blank.
+        if MCLcore.overview then
             -- Clear existing overview content using shared helper
             ReleaseFrameChildren(MCLcore.overview)
             
@@ -4990,12 +5103,14 @@ function MCL_frames:CalculateMinHeight()
         return baseHeight + 200  -- Fallback minimum
     end
     
-    local overviewSection, pinnedSection, expansionSections, otherSections = nil, nil, {}, {}
+    local overviewSection, pinnedSection, hiddenSection, expansionSections, otherSections = nil, nil, nil, {}, {}
     for _, v in ipairs(sections) do
         if v.name == "Overview" then
             overviewSection = v
         elseif v.name == "Pinned" then
             pinnedSection = v
+        elseif v.name == "Hidden" then
+            hiddenSection = v
         elseif v.isExpansion then
             table.insert(expansionSections, v)
         else
@@ -5025,6 +5140,11 @@ function MCL_frames:CalculateMinHeight()
     
     -- 4. Pinned section (28px)
     if pinnedSection then
+        currentY = currentY - 28
+    end
+
+    -- 4b. Hidden section (28px, only when the feature is enabled)
+    if hiddenSection and MCL_SETTINGS and MCL_SETTINGS.enableHiddenMounts then
         currentY = currentY - 28
     end
     
