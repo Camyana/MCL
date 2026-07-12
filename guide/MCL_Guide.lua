@@ -554,6 +554,30 @@ function Guide:GetAllChildMapIDs(mapID, maxDepth)
     return children
 end
 
+-- ─── Opposite-faction filter ────────────────────────────────
+-- Returns true when a mount is faction-specific and belongs to the
+-- OPPOSITE faction from the player, so it can never be obtained on this
+-- character (e.g. the Horde-only Darkspear Raptor shown to an Alliance
+-- player).  Uses the mount journal's own faction data:
+--   GetMountInfoByID → isFactionSpecific (8), faction (9): 0 = Horde, 1 = Alliance.
+local playerFactionIndex   -- 0 = Horde, 1 = Alliance, -1 = neutral (lazily resolved)
+function Guide:IsOppositeFactionMount(mountID)
+    if not mountID then return false end
+    if playerFactionIndex == nil then
+        local fg = UnitFactionGroup("player")
+        if fg == "Horde" then
+            playerFactionIndex = 0
+        elseif fg == "Alliance" then
+            playerFactionIndex = 1
+        else
+            playerFactionIndex = -1   -- neutral Pandaren (pre-choice): don't filter
+        end
+    end
+    if playerFactionIndex < 0 then return false end
+    local _, _, _, _, _, _, _, isFactionSpecific, faction = C_MountJournal.GetMountInfoByID(mountID)
+    return isFactionSpecific == true and faction ~= nil and faction ~= playerFactionIndex
+end
+
 function Guide:GetMountsForZone(mapID, includeChildren)
     if not mapID then return {} end
 
@@ -614,8 +638,13 @@ function Guide:GetMountsForZone(mapID, includeChildren)
                                 Guide.unobtainableSpells[spellId] = true
                             end
                         end
+                        -- Opposite-faction mounts can never be obtained on this
+                        -- character, so always filter them (even in debug view).
+                        local isWrongFaction = Guide:IsOppositeFactionMount(checkID)
                         local debugAll = MCL_GUIDE_SETTINGS.debugShowAll
-                        if not debugAll and rec.isCollected == true then
+                        if isWrongFaction then
+                            -- skip opposite-faction mounts (unobtainable on this char)
+                        elseif not debugAll and rec.isCollected == true then
                             -- skip collected mounts from map pins & zone panel
                         elseif not debugAll and isUnobtainable then
                             -- skip unobtainable mounts from map pins & zone panel

@@ -711,11 +711,17 @@ function Toast:ShowZoneAlert(mapID)
     -- Gather uncollected mounts
     local guideLookup = MCL_GUIDE.mountLookup or {}
     local uncollected = {}
+    local unobtainable = MCL_GUIDE.unobtainableSpells or {}
     for _, sid in ipairs(spellIds) do
         local info = guideLookup[sid]
         if info and info.mountID then
             local mName, _, mIcon, _, _, _, _, _, _, _, isCollected = C_MountJournal.GetMountInfoByID(info.mountID)
-            if mName and not isCollected then
+            -- Skip collected, unobtainable, and opposite-faction mounts — none of
+            -- those are actually obtainable here on this character (e.g. the
+            -- Horde-only Darkspear Raptor must not appear for an Alliance player).
+            local wrongFaction = MCL_GUIDE.IsOppositeFactionMount
+                and MCL_GUIDE:IsOppositeFactionMount(info.mountID)
+            if mName and not isCollected and not unobtainable[sid] and not wrongFaction then
                 local methodText = (MCL_GUIDE.GetMethodText and MCL_GUIDE:GetMethodText(info.method)) or info.method or "Unknown"
                 table.insert(uncollected, {
                     name   = mName,
