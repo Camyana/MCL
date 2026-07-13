@@ -318,6 +318,7 @@ MCL_GUIDE_CURRENCY_DATA = {
     [349823] = { { type = "item", id = 103533, amount = 1 } },
     [349824] = { { type = "item", id = 103533, amount = 1 } },
     [349935] = { { type = "currency", id = 2118, amount = 100000 } }, -- Noble Bruffalon
+    [350220] = { { type = "currency", id = 1166, amount = 5000 } }, -- Liquid Hot Magma Slug (Dragonflight Timewalking)
     [352926] = { { type = "currency", id = 2118, amount = 3000 }, { type = "item", id = 202039, amount = 150 } }, -- Skyskin Hornstrider
     [353857] = { { type = "currency", id = 1813, amount = 7500 } }, -- Autumnal Wilderling
     [353858] = { { type = "currency", id = 1767, amount = 1000 } }, -- Winter Wilderling
@@ -377,6 +378,7 @@ MCL_GUIDE_CURRENCY_DATA = {
     [394220] = { { type = "gold", id = 0, amount = 400000 } }, -- Obsidian Vorquin
     [394737] = { { type = "item", id = 103533, amount = 1 } },
     [394738] = { { type = "item", id = 103533, amount = 1 } },
+    [404018] = { { type = "currency", id = 1166, amount = 5000 } }, -- Black-Furred Bakar (Dragonflight Timewalking)
     [408627] = { { type = "item", id = 204727, amount = 400 } }, -- Igneous Shalewing
     [408653] = { { type = "item", id = 205188, amount = 85 } }, -- Boulder Hauler
     [408654] = { { type = "currency", id = 1166, amount = 5000 } }, -- Sandy Shalewing

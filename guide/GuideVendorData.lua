@@ -409,6 +409,7 @@ MCL_GUIDE_VENDOR_DATA = {
     [1465] = { { npc = "Necrolord Sipe", zone = "Stormwind City", m = 84, x = 76.8, y = 65.4 } },
     [1466] = { { npc = "Deathguard Netharian", zone = "Orgrimmar", m = 85, x = 41.8, y = 73 } },
     [1467] = { { npc = "Storykeeper Ashekh", zone = "The Forbidden Reach", m = 2151, x = 34, y = 59.8 } },  -- Noble Bruffalon
+    [1470] = { { npc = "Xydan (Dragonflight Timewalking)", zone = "Valdrakken" } },  -- Liquid Hot Magma Slug
     [1478] = { { npc = "Brendormi", zone = "", m = 2025, x = 61.2, y = 47 } },  -- Skyskin Hornstrider
     [1485] = { { npc = "Elwyn", zone = "Ardenweald", m = 1565, x = 59.2, y = 34.6 } },  -- Autumnal Wilderling
     [1486] = { { npc = "Duchess Mynx", zone = "Korthia", m = 1961, x = 63.4, y = 23.4 } },  -- Winter Wilderling
@@ -447,6 +448,7 @@ MCL_GUIDE_VENDOR_DATA = {
     [1686] = { { npc = "Tethalash", zone = "Valdrakken", m = 13862, x = 25.6, y = 33.8 } },  -- Obsidian Vorquin
     [1688] = { { npc = "Necrolord Sipe", zone = "Stormwind City", m = 84, x = 76.8, y = 65.4 } },
     [1689] = { { npc = "Deathguard Netharian", zone = "Orgrimmar", m = 85, x = 41.8, y = 73 } },
+    [1710] = { { npc = "Xydan (Dragonflight Timewalking)", zone = "Valdrakken" } },  -- Black-Furred Bakar
     [1730] = { { npc = "Saccratros", zone = "Zaralek Cavern", m = 2133, x = 55.8, y = 55.4 } },  -- Igneous Shalewing
     [1736] = { { npc = "Ponzo", zone = "Zaralek Cavern", m = 2133, x = 58, y = 53.8 } },  -- Boulder Hauler
     [1737] = { { npc = "Any Timewalking Vendor", zone = "" } },  -- Sandy Shalewing
