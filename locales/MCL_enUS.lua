@@ -280,6 +280,7 @@ if L then
     L["Map Pin Options"] = "Map Pin Options"
     L["Show Map Icons"] = "Show Map Icons"
     L["Show Mount List on Map"] = "Show Mount List on Map"
+    L["Show Map Legend Tab"] = "Show Map Legend Tab"
     L["Show Child-Map Mounts"] = "Show Child-Map Mounts"
     L["Map Pin Size:"] = "Map Pin Size:"
     L["About"] = "About"

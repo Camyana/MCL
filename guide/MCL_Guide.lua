@@ -29,6 +29,7 @@ MCL_GUIDE_SETTINGS = MCL_GUIDE_SETTINGS or {}
 local DEFAULT_SETTINGS = {
     showZonePanel      = true,      -- show mount panel on world map
     showMapPins        = true,
+    showLegendTab      = true,      -- show the "MCL Mounts" legend tab on the world map
     showRepInTooltip   = true,
     hideCollected      = true,      -- hide already-collected mounts in zone panel & map pins
     mapPinScale        = 1.0,       -- scale multiplier for map pin icons (1.0 = base size)

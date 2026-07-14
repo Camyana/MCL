@@ -711,7 +711,7 @@ MCLcore.mountList[13] = {
 		},
 		Gladiator = {
 			name = "Gladiator",
-			mounts = {232617},
+			mounts = {260228},
 			mountID = {}
 		},
 		Halaa = {
@@ -791,7 +791,7 @@ MCLcore.mountList[14] = {
 		},
 		TimeWalking = {
 			name = "Timewalking",
-			mounts = {129923, 129922, 87775, 167894, 167895, 133543, 188674, 187595, 231374, 224398, 224399, 234730, 232624, 205208, 234721, 234716, 234740, 238739, 245694, 245695, 257513, 257514, 257516, 257511, 258515, 258488, 259463, 258884, 192778, 210140},
+			mounts = {129923, 129922, 87775, 167894, 167895, 133543, 188674, 187595, 231374, 224398, 224399, 234730, 232624, 205208, 234721, 234716, 234740, 238739, 245694, 245695, 257513, 257514, 257516, 257511, 258515, 259463, 258884, 192778, 210140},
 			mountID = {}
 		},
 		WinterVeil = {
@@ -806,12 +806,7 @@ MCLcore.mountList[15] = {
 	categories = {
 		AV = {
 			name = "Timewalking Alterac Valley",
-			mounts = {172023},
-			mountID = {}
-		},
-		AzerothChoppers = {
-			name = "Azeroth Choppers",
-			mounts = {116789},
+			mounts = {172022, 172023},
 			mountID = {}
 		},
 		BlizzardStore = {
@@ -826,7 +821,7 @@ MCLcore.mountList[15] = {
 		},
 		DiabloIV = {
 			name = "Diablo IV",
-			mounts = {"m1596", 246264, 191114},
+			mounts = {246264, 191114},
 			mountID = {}
 		},
 		Hearthstone = {
@@ -856,7 +851,7 @@ MCLcore.mountList[15] = {
 		},
 		TCG = {
 			name = "Trading Card Game",
-			mounts = {49283, 49284, 49285, 49286, 49282, 49290, 54069, 54068, 68008, 69228, 68825, 71718, 72582, 72575, 79771, 93671, 74269},
+			mounts = {49283, 49284, 49285, 49286, 49282, 49290, 54069, 54068, 68008, 69228, 68825, 71718, 72582, 72575, 79771, 93671},
 			mountID = {}
 		},
 		WarcraftIII = {
@@ -871,7 +866,7 @@ MCLcore.mountList[15] = {
 		},
 		anniversary = {
 			name = "WoW Anniversary Mounts",
-			mounts = {172022, 186469, 208572, 228760, 229348, 223459, 223471, 258428},
+			mounts = {186469, 208572, 228760, 229348, 223459, 223471, 258428},
 			mountID = {}
 		},
 	}
@@ -951,7 +946,7 @@ MCLcore.mountList[17] = {
 		},
 		Arena = {
 			name = "Arena Mounts",
-			mounts = {30609, 34092, 37676, 43516, 46708, 46171, 47840, 50435, 71339, 71954, 85785, 95041, 104325, 104326, 104327, 128277, 128281, 128282, 141843, 141844, 141845, 141846, 141847, 141848, 153493, 156879, 156880, 156881, 156884, 183937, 186177, 189507, 191290, 202086, 205233, 210345, "m1822", 223586, 210077, 229987},
+			mounts = {30609, 34092, 37676, 43516, 46708, 46171, 47840, 50435, 71339, 71954, 85785, 95041, 104325, 104326, 104327, 128277, 128281, 128282, 141843, 141844, 141845, 141846, 141847, 141848, 153493, 156879, 156880, 156881, 156884, 183937, 186177, 189507, 191290, 202086, 205233, 210345, "m1822", 223586, 210077, 229987, 232617},
 			mountID = {}
 		},
 		Brawl = {
@@ -1141,7 +1136,7 @@ MCLcore.mountList[20] = {
 	categories = {
 		Achievement = {
 			name = "Achievement",
-			mounts = {252011, 262620, 262621, 257145, 260228, 246594, 260887, 257144, 260697, 257199},
+			mounts = {252011, 262620, 262621, 257145, 246594, 260887, 257144, 260697, 257199},
 			mountID = {}
 		},
 		DecorDuels = {
@@ -1989,17 +1984,17 @@ MCLcore.mountNotes = {
 	[174066] = "Reward for unlocking the Mechagnome allied race (Alliance only). Requires completing the Mechagon storyline and the Mechagnome recruitment questline.",
 	[174067] = "Reward for unlocking the Vulpera allied race (Horde only). Requires completing the Vol'dun storyline and reaching Exalted with the Voldunai, then completing the recruitment questline.",
 	[174641] = "Drops from {{npc:162372,Ishak of the Four Winds}} during Amathet assault in {{m:1527,Uldum}} at approximately 2-5% drop rate {{m:1527,73.7,83.5}}. Can also be looted from the Uldum Accord paragon cache.",
-	[174649] = "Purchased from {{npc:160711,Zhang Ku}} in {{m:1530,Vale of Eternal Blossoms}} for 1 Pristine Cloud Serpent Scale. The scale drops from {{npc:157160,Lei}} world boss or can be purchased from the Rajani reputation vendor at Exalted.",
+	[174649] = "Purchased from {{npc:160711,Zhang Ku}} in {{m:1530,Vale of Eternal Blossoms}} for 1 {{item:174230}}. You must obtain the Scale first — it drops from the rare Rei Lun, or (once Exalted with the Rajani) can be bought from the Rajani quartermaster. Either way, the Scale is always required to buy the mount from Zhang Ku.",
 	[174653] = "Rare drop from a mailbox mimic that randomly spawns in Horrific Visions of Stormwind or Orgrimmar at approximately 1-2% chance per vision. The mailbox can appear in any district. Click the mailbox to spawn a hostile Mail Muncher that drops the mount.",
 	[174654] = "Reward from the Ahead of the Curve: N'Zoth the Corruptor achievement. This was the BFA Season 4 AotC reward for defeating N'Zoth on Heroic difficulty before the Shadowlands pre-patch. No longer obtainable.",
-	[174752] = "Drops from {{npc:157160,Houndlord Ren}} in {{m:1530,Vale of Eternal Blossoms}} at approximately 2-3% drop rate {{m:1530,12.0,34.0}}. Spawns during Mogu assaults.",
+	[174752] = "Obtained by using {{item:174927}} on the Ivory Cloud Serpent, a rare flying serpent that patrols {{m:1530,Vale of Eternal Blossoms}} during the assault. This is a separate mount from Xinlao.",
 	[174753] = "Obtained through the Aqir Hatchling questline in {{m:1527,Uldum}}. Find a Shadowbarb Egg during an Aqir assault, then complete daily quests over several days to hatch and raise the drone. Start by finding a Voidtouched Egg at {{m:1527,54.8,30.8}}.",
 	[174754] = "Purchased from {{npc:160714,Provisioner Qorra}} in Uldum for 5,000g. Requires Exalted with Uldum Accord. Complete N'Zoth assaults and dailies in Uldum for reputation.",
 	[174769] = "Drops from {{npc:162147,Corpse Eater}} during Aqir assault in {{m:1527,Uldum}} at approximately 2-3% drop rate. The Aqir assault must be the active minor assault in Uldum.",
 	[174770] = "Purchased from {{npc:162396,Wrathion}} in the Chamber of Heart for 100,000 Corrupted Mementos. Corrupted Mementos are earned from Horrific Visions of N'Zoth.",
 	[174771] = "Obtained through the Aqir Hatchling questline in {{m:1527,Uldum}}. Find a Voidtouched Egg during an Aqir assault at {{m:1527,54.8,30.8}}, then complete a multi-day quest chain to raise the drone through stages.",
-	[174840] = "Drops from {{npc:157468,Ivory Cloud Serpent}} that spawns as a rare mob during the Rajani daily assault in {{m:1530,Vale of Eternal Blossoms}}. Approximately 3-5% drop rate. Use Rajani faction daily quest items to trigger the spawn.",
-	[174841] = "Drops from {{npc:157266,Anh-De the Loyal}} in {{m:1530,Vale of Eternal Blossoms}} at approximately 2-5% drop rate {{m:1530,34.0,26.0}}. Spawns during Mantid assaults.",
+	[174840] = "Drops from {{npc:157266,Anh-De the Loyal}} in {{m:1530,Vale of Eternal Blossoms}} at approximately 2-5% drop rate {{m:1530,34.1,68.0}}. Spawns during Mantid assaults.",
+	[174841] = "Drops from {{npc:157160,Houndlord Ren}} in {{m:1530,Vale of Eternal Blossoms}} at approximately 2-3% drop rate {{m:1530,12.1,30.9}}. Spawns during Mogu assaults.",
 	[174842] = "Drops from {{npc:156884,Vuk'laz the Earthbreaker}} or other 8.3 world bosses in Uldum/Vale at very low drop rate (~1%). Kill the weekly world boss during N'Zoth assaults for a chance.",
 	[174859] = "Reward from befriending the Friendly Alpaca in {{m:1527,Uldum}} by feeding it Gersahl Greens 7 times over 7 days. The alpaca spawns at various locations in Uldum. Gersahl Greens are picked from nodes scattered around Uldum.",
 	[174860] = "Feed Seaside Leafy Greens Mix to the Elusive Quickhoof rare alpaca in {{m:864,Vol'dun}}. The alpaca spawns at different locations and must be found while active. Seaside Leafy Greens Mix is crafted from cooking reagents or bought from the AH.",
@@ -2356,7 +2351,6 @@ MCLcore.mountNotes = {
 	[257513] = "Reward from the achievement Master of the Turbulent Timeways IV, or selectable from Ta'readon's Mount Voucher. Complete Turbulent Timeways meta achievements.",
 	[257514] = "Reward from the achievement Master of the Turbulent Timeways IV, or selectable from Ta'readon's Mount Voucher. Complete Turbulent Timeways meta achievements.",
 	[257516] = "Reward from the achievement Master of the Turbulent Timeways IV, or selectable from Ta'readon's Mount Voucher. Complete Turbulent Timeways meta achievements.",
-	[258488] = "Sold by Collector Ta'steld in Oribos for 5,000 Timewarped Badges during Shadowlands Timewalking. Ground mount.",
 	[258515] = "Sold by Collector Ta'steld in Oribos for 5,000 Timewarped Badges during Shadowlands Timewalking. Flying mount.",
 	[259227] = "Requires Rank 6",
 	[258884] = "Reward from the achievement \"Master of the Turbulent Timeways V.\" Earned through Timewalking (Turbulent Timeways).",

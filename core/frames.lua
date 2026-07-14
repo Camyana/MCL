@@ -3712,7 +3712,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     -- CARD 7: Map Pin Options
     -- =====================================================
     if MCL_GUIDE_DATA and MCL_GUIDE_DATA.zones then
-        local pinCard = createCard(frame, L["Map Pin Options"], yPos, 200)
+        local pinCard = createCard(frame, L["Map Pin Options"], yPos, 230)
         
         local pinY = -34
         
@@ -3755,7 +3755,25 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         showPanelLabel:SetText(L["Show Mount List on Map"])
         showPanelLabel:SetTextColor(0.7, 0.78, 0.88, 1)
         pinY = pinY - 30
-        
+
+        -- Checkbox: Show Map Legend Tab
+        local showLegendCheck = CreateFrame("CheckButton", nil, pinCard)
+        showLegendCheck:SetSize(18, 18)
+        showLegendCheck:SetPoint("TOPLEFT", pinCard, "TOPLEFT", 12, pinY)
+        showLegendCheck:SetChecked(MCL_GUIDE_SETTINGS.showLegendTab ~= false)
+        showLegendCheck.originalOnClick = function(self)
+            MCL_GUIDE_SETTINGS.showLegendTab = self:GetChecked()
+            if MCL_GUIDE and MCL_GUIDE.MapPanel and MCL_GUIDE.MapPanel.UpdateLegendTabVisibility then
+                MCL_GUIDE.MapPanel:UpdateLegendTabVisibility()
+            end
+        end
+        styleCheckbox(showLegendCheck)
+        local showLegendLabel = pinCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        showLegendLabel:SetPoint("LEFT", showLegendCheck, "RIGHT", 8, 0)
+        showLegendLabel:SetText(L["Show Map Legend Tab"])
+        showLegendLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        pinY = pinY - 30
+
         -- Checkbox: Show Child-Map Mounts
         local showChildCheck = CreateFrame("CheckButton", nil, pinCard)
         showChildCheck:SetSize(18, 18)
@@ -3815,8 +3833,8 @@ function MCL_frames:createSettingsFrame(relativeFrame)
             end
         end
         styleSlider(pinSlider, false)
-        
-        yPos = yPos - 210
+
+        yPos = yPos - 240
     end
     
     -- =====================================================

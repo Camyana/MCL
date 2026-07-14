@@ -1495,6 +1495,15 @@ function f:TryInit()
         QuestMapFrame.ContentsAnchor._mclSizeHook = true
     end
 
+    -- Respect the "Show Map Legend Tab" setting — skip creating/showing the
+    -- MCL Mounts tab entirely when the user has disabled it (independent of
+    -- the map pins and the side mount-list panel).
+    if MCL_GUIDE_SETTINGS and MCL_GUIDE_SETTINGS.showLegendTab == false then
+        if tabButton then tabButton:Hide() end
+        if panel then SafeSetVisible(panel, false) end
+        return
+    end
+
     -- Create the tab
     EnsureTab(parent)
 
@@ -1583,6 +1592,21 @@ function f:TryInit()
             end
         end)
         QuestMapFrame._mclSetDisplayHook = true
+    end
+end
+
+-- Toggle the "MCL Mounts" legend tab on/off at runtime (called from the
+-- settings checkbox).  Independent of map pins and the side mount-list panel.
+function MapPanel:UpdateLegendTabVisibility()
+    if MCL_GUIDE_SETTINGS and MCL_GUIDE_SETTINGS.showLegendTab == false then
+        if tabButton then tabButton:Hide() end
+        if panel then SafeSetVisible(panel, false) end
+    elseif WorldMapFrame and WorldMapFrame:IsShown() then
+        -- Re-create / re-show the tab immediately
+        f:TryInit()
+        if QuestMapFrame and QuestMapFrame.ValidateTabs then
+            QuestMapFrame:ValidateTabs()
+        end
     end
 end
 
