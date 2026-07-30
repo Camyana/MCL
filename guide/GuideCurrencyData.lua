@@ -355,7 +355,6 @@ MCL_GUIDE_CURRENCY_DATA = {
     [365073] = { { type = "item", id = 188957, amount = 400 }, { type = "item", id = 189179, amount = 1 }, { type = "item", id = 189145, amount = 1 } },
     [365074] = { { type = "item", id = 188957, amount = 300 }, { type = "item", id = 189178, amount = 1 }, { type = "item", id = 189145, amount = 1 } },
     [365076] = { { type = "item", id = 188957, amount = 350 }, { type = "item", id = 189177, amount = 1 }, { type = "item", id = 189145, amount = 1 } },
-    [367190] = { { type = "gold", id = 0, amount = 1200000000 } }, -- [DND] Test Mount JZB
     [367704] = { { type = "item", id = 188957, amount = 500 }, { type = "item", id = 189172, amount = 1 }, { type = "item", id = 190388, amount = 1 } },
     [371176] = { { type = "item", id = 204727, amount = 100 } }, -- Subterranean Magmammoth
     [374034] = { { type = "currency", id = 2003, amount = 750 }, { type = "item", id = 201401, amount = 5 }, { type = "item", id = 193053, amount = 20 } }, -- Azure Skitterfly

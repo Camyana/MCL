@@ -84,6 +84,7 @@ local function InitializeSearch()
                                             if matchFound then
                                                 table.insert(self.searchResults, {
                                                     mountId = mountId,
+                                                    mountID = mount_Id,
                                                     mountName = mountName,
                                                     matchedName = matchedName,
                                                     icon = icon,
@@ -262,6 +263,18 @@ local function InitializeSearch()
                         GameTooltip:SetMountBySpellID(result.spellID)
                     end
                     GameTooltip:Show()
+
+                    -- Also preview the mount on the side mount-card panel (same as
+                    -- hovering a mount icon in the main grid).
+                    if MCLcore and MCLcore.MountCard and MCL_SETTINGS and MCL_SETTINGS.enableMountCardHover then
+                        MCLcore.MountCard.ShowOnHover({
+                            mountID  = result.mountID,
+                            id       = result.mountID,
+                            name     = result.mountName,
+                            category = result.category,
+                            section  = result.section,
+                        }, self, 0.2)
+                    end
                 end)
                 row:SetScript("OnLeave", function(self)
                     self:SetBackdropColor(0, 0, 0, 0)

@@ -225,7 +225,7 @@ MCL_GUIDE_VENDOR_DATA = {
     },
     [486] = { { npc = "Uncle Bigpocket", zone = "Kun-Lai Summit", m = 379, x = 65.4, y = 61.6 } },  -- Grey Riding Yak
     [487] = { { npc = "Uncle Bigpocket", zone = "Kun-Lai Summit", m = 379, x = 65.4, y = 61.6 } },  -- Blonde Riding Yak
-    [488] = { { npc = "Nat Pagle", zone = "Krasarang Wilds", m = 418, x = 68.4, y = 43.6 } },  -- Crimson Water Strider
+    [488] = { { npc = "Nat Pagle", zone = "Your Garrison — Fishing Shack (Draenor)" } },  -- Crimson Water Strider (Garrison, not Krasarang)
     [492] = {
         { npc = "Turtlemaster Odai", zone = "Orgrimmar", m = 1637, x = 69.4, y = 41.2 },
         { npc = "Old Whitenose", zone = "Stormwind City", m = 1519, x = 67.8, y = 18.4 },
@@ -423,7 +423,6 @@ MCL_GUIDE_VENDOR_DATA = {
     [1522] = { { npc = "Vilo", zone = "Zereth Mortis", m = 1970, x = 34.8, y = 64.2 } },  -- Heartlight Vombata
     [1529] = { { npc = "Vilo", zone = "Zereth Mortis", m = 1970, x = 34.8, y = 64.2 } },  -- Anointed Protostag
     [1546] = { { npc = "Tattukiaka", zone = "The Azure Span", m = 2024, x = 14, y = 49.6 } },  -- Iskaara Trader's Ottuk
-    [1578] = { { npc = "Uncle Bigpocket", zone = "Kun-Lai Summit", m = 379, x = 65.4, y = 61.6 } },  -- [DND] Test Mount JZB
     [1603] = { { npc = "Sacratros", zone = "Zaralek Cavern", m = 2133, x = 55.8, y = 55.4 } },  -- Subterranean Magmammoth
     [1612] = { { npc = "Yries Lightfingers", zone = "The Waking Shores", m = 2022, x = 26.4, y = 55.4 } },  -- Loyal Magmammoth
     [1615] = { { npc = "Granpap Whiskers", zone = "Dragonscale Basecamp", m = 2022, x = 47.6, y = 83.2 } },  -- Tamed Skitterfly
