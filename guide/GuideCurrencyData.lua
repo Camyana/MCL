@@ -493,4 +493,10 @@ MCL_GUIDE_CURRENCY_DATA = {
     [1271698] = { { type = "currency", id = 3405, amount = 200 } }, -- Unbound Manawyrm
     [1282471] = { { type = "currency", id = 3393, amount = 500 } }, -- Breaker Bee
     [1282936] = { { type = "currency", id = 3405, amount = 50 } }, -- Void-Corrupted Hawkstrider
+    [1296731] = { { type = "item", id = 275436, amount = 1 } }, -- Cerulean Deathwalker
+    [1296734] = { { type = "item", id = 275436, amount = 1 } }, -- Amethyst Mechsuit
+    [1296756] = { { type = "item", id = 275436, amount = 1 } }, -- Blue-Chip Shreddertank
+    [1296758] = { { type = "item", id = 275436, amount = 1 } }, -- Profit-Green Shreddertank
+    [1296759] = { { type = "item", id = 275436, amount = 1 } }, -- High-Yield Shreddertank
+    [1296760] = { { type = "item", id = 275436, amount = 1 } }, -- Speculative Shreddertank
 }

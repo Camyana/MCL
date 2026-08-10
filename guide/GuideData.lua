@@ -3917,6 +3917,36 @@ MCL_GUIDE_DATA.mounts = {
 		method = "",
 		itemId = 260696,
 	},
+	[1296731] = {
+		name = "Cerulean Deathwalker",
+		method = "",
+		itemId = 275440,
+	},
+	[1296734] = {
+		name = "Amethyst Mechsuit",
+		method = "",
+		itemId = 275442,
+	},
+	[1296756] = {
+		name = "Blue-Chip Shreddertank",
+		method = "",
+		itemId = 275444,
+	},
+	[1296758] = {
+		name = "Profit-Green Shreddertank",
+		method = "",
+		itemId = 275445,
+	},
+	[1296759] = {
+		name = "High-Yield Shreddertank",
+		method = "",
+		itemId = 275446,
+	},
+	[1296760] = {
+		name = "Speculative Shreddertank",
+		method = "",
+		itemId = 275447,
+	},
 }
 
 MCL_GUIDE_DATA.zones = {

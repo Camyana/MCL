@@ -156,9 +156,19 @@ end
 local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("NEW_MOUNT_ADDED")
 eventFrame:RegisterEvent("MOUNT_JOURNAL_SEARCH_UPDATED")
-eventFrame:SetScript("OnEvent", function(_, event)
+eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+eventFrame:SetScript("OnEvent", function(_, event, isInitialLogin, isReloadingUi)
     if event == "NEW_MOUNT_ADDED" then
         Cache:InvalidateCollected()
+    elseif event == "PLAYER_ENTERING_WORLD" and (isInitialLogin or isReloadingUi) then
+        -- Character-specific / non-account-wide mounts (e.g. the Argent Charger)
+        -- can report "not collected" if their status is queried very early in the
+        -- login sequence.  That stale value then sticks, because NEW_MOUNT_ADDED
+        -- never fires for a mount collected in a *previous* session.  Re-read the
+        -- collected flags once the world is loaded, and again shortly after to
+        -- catch faction/class mount status that settles a little later.
+        Cache:InvalidateCollected()
+        C_Timer.After(5, function() Cache:InvalidateCollected() end)
     end
     -- MOUNT_JOURNAL_SEARCH_UPDATED can fire during filter changes;
     -- we don't need to invalidate here since we bypass search filters.

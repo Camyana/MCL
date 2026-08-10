@@ -716,12 +716,13 @@ function Toast:ShowZoneAlert(mapID)
         local info = guideLookup[sid]
         if info and info.mountID then
             local mName, _, mIcon, _, _, _, _, _, _, _, isCollected = C_MountJournal.GetMountInfoByID(info.mountID)
-            -- Skip collected, unobtainable, and opposite-faction mounts — none of
-            -- those are actually obtainable here on this character (e.g. the
-            -- Horde-only Darkspear Raptor must not appear for an Alliance player).
-            local wrongFaction = MCL_GUIDE.IsOppositeFactionMount
-                and MCL_GUIDE:IsOppositeFactionMount(info.mountID)
-            if mName and not isCollected and not unobtainable[sid] and not wrongFaction then
+            -- Skip collected, unobtainable, and mounts unavailable to this
+            -- character (wrong class or faction) — none of those are actually
+            -- obtainable here (e.g. the Horde-only Darkspear Raptor or the
+            -- Paladin-only Argent Charger must not appear for the wrong player).
+            local unavailable = MCL_GUIDE.IsUnavailableOnChar
+                and MCL_GUIDE:IsUnavailableOnChar(info.mountID)
+            if mName and not isCollected and not unobtainable[sid] and not unavailable then
                 local methodText = (MCL_GUIDE.GetMethodText and MCL_GUIDE:GetMethodText(info.method)) or info.method or "Unknown"
                 table.insert(uncollected, {
                     name   = mName,

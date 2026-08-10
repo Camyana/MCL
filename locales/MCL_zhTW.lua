@@ -44,7 +44,7 @@ if L then
     L["Dark Iron Dwarf"] = "黑鐵矮人"
     L["Darkmoon Faire"] = "暗月馬戲團"
     L["Death Knight"] = "死亡騎士"
-    L["Delves"] = "地心探險"
+    L["Delves"] = "地下堡"
     L["Demon Hunter"] = "惡魔獵人"
     L["Diablo IV"] = "暗黑破壞神IV"
     L["Dracthyr"] = "半龍人"

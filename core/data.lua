@@ -914,6 +914,11 @@ MCLcore.mountList[16] = {
 			mounts = {44178, 44843, 44842, 98104, 91802, 98259, 69226, 87776, 137614, 163981, 118676, 198654, 265656},
 			mountID = {}
 		},
+		TimelostSaddle = {
+			name = "Mythic+",
+			mounts = {182717, 187525, 174836, 187682, 192557, 199412, 204798, 209060, 213438, 226357, 235549, 237141, 247822, 248248, 275440, 275442, 275444, 275445, 275446, 275447},
+			mountID = {}
+		},
 		Paladin = {
 			name = "Paladin",
 			mounts = {47179, "m2233", "m41", "m84", "m149", "m150", "m350", "m351", "m367", "m368", "m1046", "m1047", "m1568", 191566},
@@ -972,11 +977,6 @@ MCLcore.mountList[17] = {
 		DastardlyDuos = {
 			name = "Dastardly Duos",
 			mounts = {239020},
-			mountID = {}
-		},
-		MythicPlus = {
-			name = "Mythic +",
-			mounts = {182717, 187525, 174836, 187682, 192557, 199412, 204798, 209060, 213438, 226357, 235549, 237141, 247822, 248248},
 			mountID = {}
 		},
 		OriginalEpic = {
@@ -1136,7 +1136,7 @@ MCLcore.mountList[20] = {
 	categories = {
 		Achievement = {
 			name = "Achievement",
-			mounts = {252011, 262620, 262621, 257145, 246594, 260887, 257144, 260697, 257199},
+			mounts = {252011, 262620, 262621, 257145, 246594, 260887, 257144, 260697, 257199, 276881, 276882, 275652, 275656, 276553, 276801},
 			mountID = {}
 		},
 		DecorDuels = {
@@ -1146,12 +1146,12 @@ MCLcore.mountList[20] = {
 		},
 		Delves = {
 			name = "Delves",
-			mounts = {263222, 262496, 262500, 262502},
+			mounts = {263222, 262496, 262500, 262502, 275657, 276162},
 			mountID = {}
 		},
 		Dungeon = {
 			name = "Dungeon",
-			mounts = {260231, 262914},
+			mounts = {260231, 262914, 276804},
 			mountID = {}
 		},
 		Exploration = {
@@ -1161,27 +1161,32 @@ MCLcore.mountList[20] = {
 		},
 		Prey = {
 			name = "Prey",
-			mounts = {257191, 257192, 257193},
+			mounts = {257191, 257192, 257193, 275659, 275660},
+			mountID = {}
+		},
+		PVP = {
+			name = "PVP",
+			mounts = {275302, 275432, 275433},
 			mountID = {}
 		},
 		Quest = {
 			name = "Quest",
-			mounts = {257240, 257143, 260233},
+			mounts = {257240, 257143, 260233, 273838},
 			mountID = {}
 		},
 		Raid = {
 			name = "Raid",
-			mounts = {246590, 269240},
+			mounts = {246590, 269240, 275658},
 			mountID = {}
 		},
 		RareSpawn = {
 			name = "Rare Spawn",
-			mounts = {257152, 257085, 257156, 257147, 257200, 246735, 252012, 260635},
+			mounts = {257152, 257085, 257156, 257147, 257200, 246735, 252012, 260635, 276803, 276549},
 			mountID = {}
 		},
 		Reputation = {
 			name = "Reputation",
-			mounts = {257219, 250889, 252014, 257154, 257176, 246734, 257142, 257448, 257447, 257445, 260696},
+			mounts = {257219, 250889, 252014, 257154, 257176, 246734, 257142, 257448, 257447, 257445, 260696, 276802, 276551, 275653},
 			mountID = {}
 		},
 		RitualSites = {
@@ -1206,7 +1211,7 @@ MCLcore.mountList[20] = {
 		},
 		Zone = {
 			name = "Zone",
-			mounts = {250782, 257197, 256424, 257180},
+			mounts = {250782, 257197, 256424, 257180, 275654},
 			mountID = {}
 		},
 	}
@@ -1471,6 +1476,51 @@ MCLcore.mountList[23] = {
 		},
 	}
 }
+MCLcore.mountList[24] = {
+	name = "Patch 12.1",
+	categories = {
+		Delves = {
+			name = "Delves",
+			mounts = {275657, 276162},
+			mountID = {}
+		},
+		MythicPlus = {
+			name = "Mythic+",
+			mounts = {276881, 276882},
+			mountID = {}
+		},
+		Prey = {
+			name = "Prey",
+			mounts = {275659, 275660},
+			mountID = {}
+		},
+		PVP = {
+			name = "PVP",
+			mounts = {275302, 275432, 275433},
+			mountID = {}
+		},
+		Raid = {
+			name = "Raid",
+			mounts = {275652, 275658},
+			mountID = {}
+		},
+		Dungeon = {
+			name = "Dungeon",
+			mounts = {276804},
+			mountID = {}
+		},
+		Renown = {
+			name = "Renown & Reputation",
+			mounts = {276802, 276551, 275653, 273838},
+			mountID = {}
+		},
+		CoiledIsle = {
+			name = "The Coiled Isle",
+			mounts = {275656, 276803, 276549, 275654, 276553, 276801},
+			mountID = {}
+		},
+	}
+}
 MCLcore.sectionNames[1] = {
 	name = "Midnight",
 	mounts = MCLcore.mountList[20],
@@ -1629,6 +1679,14 @@ elseif tocVersion == 120007 then
 	MCLcore.sectionNames[25] = {
 		name = "12.0.7 - What's New?",
 		mounts = MCLcore.mountList[23],
+		icon = "Interface\\AddOns\\MCL\\icons\\midnight.blp",
+		isExpansion = false,
+		hiddenFromOverview = true,
+	}
+elseif tocVersion == 120100 then
+	MCLcore.sectionNames[25] = {
+		name = "12.1 - What's New?",
+		mounts = MCLcore.mountList[24],
 		icon = "Interface\\AddOns\\MCL\\icons\\midnight.blp",
 		isExpansion = false,
 		hiddenFromOverview = true,
@@ -2385,7 +2443,35 @@ MCLcore.mountNotes = {
 	[274649] = "Sold by Kifaan in Val for 15 Voidlight Marl. Requires completing the achievement \"A Trip Around the Stars.\"",
 	[274650] = "Sold by Kifaan in Naigtal for 15 Voidlight Marl. Requires completing the achievement \"A Trip Through the Stars.\"",
 	[275464] = "Has a chance to drop from Ahune during the Midsummer Fire Festival. Account-wide on your first defeat of Ahune each day, with an increasing chance each consecutive day you defeat the boss.",
+	[275440] = "Earn 3,400 Mythic+ rating during a season to receive 1 Timelost Saddle, then exchange it with Lindormi in Silvermoon City or the Timeways. The saddle expires at the end of the season.",
+	[275442] = "Earn 3,400 Mythic+ rating during a season to receive 1 Timelost Saddle, then exchange it with Lindormi in Silvermoon City or the Timeways. The saddle expires at the end of the season.",
+	[275444] = "Earn 3,400 Mythic+ rating during a season to receive 1 Timelost Saddle, then exchange it with Lindormi in Silvermoon City or the Timeways. The saddle expires at the end of the season.",
+	[275445] = "Earn 3,400 Mythic+ rating during a season to receive 1 Timelost Saddle, then exchange it with Lindormi in Silvermoon City or the Timeways. The saddle expires at the end of the season.",
+	[275446] = "Earn 3,400 Mythic+ rating during a season to receive 1 Timelost Saddle, then exchange it with Lindormi in Silvermoon City or the Timeways. The saddle expires at the end of the season.",
+	[275447] = "Earn 3,400 Mythic+ rating during a season to receive 1 Timelost Saddle, then exchange it with Lindormi in Silvermoon City or the Timeways. The saddle expires at the end of the season.",
+	[275302] = "Reward from the achievement \"Gladiator: Midnight Season 2.\" Win 50 3v3 games while at Elite rank during Midnight Season 2.",
+	[275432] = "Alliance Vicious mount for Midnight Season 2. Reward from the Venomous Combatant achievement after winning Rated PvP matches at 1000+ rating.",
+	[275433] = "Horde Vicious mount for Midnight Season 2. Reward from the Venomous Combatant achievement after winning Rated PvP matches at 1000+ rating.",
+	[275652] = "Reward from the achievement \"Glory of the Venomous Raider.\" Complete the Venomous Abyss raid achievement meta.",
+	[275653] = "Sold by Second Mate Sluggs on The Coiled Isle. Requires Captain Tokka Bloodsworn Crew progress and costs 2,500 reputation currency.",
+	[275654] = "Sold by Skull of Er'inye in The Coiled Isle zone for 10,000 currency.",
+	[275656] = "Reward from the achievement \"Treasures of the Coiled Isle.\" Discover the hidden treasures across the Coiled Isle.",
+	[275657] = "Reward from the achievement \"Let Me Solo Him: Azta'rec.\" Defeat the Delves Nemesis boss Azta'rec solo.",
+	[275658] = "Drops from Ula'tek in The Venomous Abyss on Mythic difficulty.",
+	[275659] = "Drops from Ral'kala Hunt in the Prey system. Linked to the \"Prey: A Ghostly Nightmare\" hunt achievement/objective.",
+	[275660] = "Sold by Construct V'anore after unlocking Preyseeker's Journey Rank 10. Costs 2,250 currency.",
 	[275664] = "Sold by Kifaan (Val and Naigtal) for 15 Voidlight Marl. Requires completing the achievement \"Heroic Showdowns.\"",
+	[276162] = "Sold by Telemancer Astrandis after unlocking Delver's Journey Rank 5. Vendor mount from Delves progression.",
+	[276549] = "Rare drop from Coiled Isle rares.",
+	[276551] = "Sold by Jan'sari the Watchful in The Coiled Isle after reaching Zul'jarra's Forces Renown 19. Costs 8,000 currency.",
+	[276553] = "Reward from the achievement \"Pro Poison Patroller.\" Complete 250 patrols within the Vaults of Atal'Utek.",
+	[276801] = "Reward from the achievement \"Assault the Vault.\" Complete achievements in the Vaults of Atal'Utek.",
+	[276802] = "Sold by Jan'sari the Watchful in The Coiled Isle after reaching Zul'jarra's Forces Renown 17. Costs 6,000 currency.",
+	[276803] = "Rare drop from Coiled Isle rares.",
+	[276804] = "Drops from Zul'jan in the Altar of Fangs dungeon.",
+	[276881] = "Reward from the achievement \"Midnight Keystone Master: Season Two.\" Reach 2,000 Mythic+ rating during Midnight Season 2.",
+	[276882] = "Reward from the achievement \"Midnight Keystone Legend: Season Two.\" Reach 3,000 Mythic+ rating during Midnight Season 2.",
+	[273838] = "Reward from a Zul'jarra's Forces Renown questline in The Coiled Isle. Starts with \"Ancestral Gems\" and ends with \"The Innocent Essence.\"",
 	["m1046"] = "Paladin only. Automatically learned by Dark Iron Dwarf Paladins. Alliance.",
 	["m1047"] = "Paladin only. Automatically learned by Dwarf Paladins. Alliance.",
 	["m1445"] = "You must solo the entire dungeon Plaguefall on Heroic or Mythic difficulty. {{m:1536,22.2,41.4}}\nAfter defeating the last boss, backtrack to the Domina Venomblade boss arena.\nThe Slime Serpent appears in the pool on the side.",

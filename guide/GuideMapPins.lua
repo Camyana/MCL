@@ -1438,10 +1438,36 @@ function Pins:RefreshPins()
     end
 end
 
+-- ─── Refresh collected status + pins/panel (shared helper) ──
+local function ResyncCollectedAndRefresh()
+    if MCLcore and MCLcore.MountCache and MCLcore.MountCache.InvalidateCollected then
+        MCLcore.MountCache:InvalidateCollected()
+    end
+    Pins:RefreshPins()
+    if Guide.ZonePanel and Guide.ZonePanel.Refresh then
+        Guide.ZonePanel:Refresh()
+    end
+end
+
 -- ─── Hook into WorldMapFrame ────────────────────────────────
 local hookFrame = CreateFrame("Frame")
 hookFrame:RegisterEvent("PLAYER_LOGIN")
-hookFrame:SetScript("OnEvent", function()
+hookFrame:RegisterEvent("NEW_MOUNT_ADDED")
+hookFrame:SetScript("OnEvent", function(_, event)
+    if event == "NEW_MOUNT_ADDED" then
+        -- A mount was just collected — refresh cached collected status and drop
+        -- its pin/panel entry without waiting for the map to be reopened.
+        C_Timer.After(0.1, ResyncCollectedAndRefresh)
+        return
+    end
+
+    -- ── PLAYER_LOGIN ──
+    -- Some character-specific mounts (e.g. the Argent Charger) report their
+    -- collected status late in the login sequence, which can leave a stale
+    -- "uncollected" pin for a mount that is actually collected.  Re-sync a few
+    -- seconds after login so those pins clear on their own.
+    C_Timer.After(6, ResyncCollectedAndRefresh)
+
     -- Hook map open/close and map ID changes
     if WorldMapFrame then
         hooksecurefunc(WorldMapFrame, "OnMapChanged", function()
