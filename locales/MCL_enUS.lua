@@ -529,6 +529,8 @@ if L then
     L["Boss"] = "Boss"
     L["Difficulty"] = "Difficulty"
     L["NPC"] = "NPC"
+    L["Status"] = "Status"
+    L["Already defeated today"] = "Already defeated today"
     L["Cost"] = "Cost"
     L["Rare"] = "Rare"
     L["Fish"] = "Fish"

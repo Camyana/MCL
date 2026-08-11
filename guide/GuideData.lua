@@ -3919,33 +3919,288 @@ MCL_GUIDE_DATA.mounts = {
 	},
 	[1296731] = {
 		name = "Cerulean Deathwalker",
-		method = "",
+		method = "VENDOR",
 		itemId = 275440,
+		coords = {
+			{ m = 2393, x = 42.3, y = 58.8, n = "Lindormi" },
+		},
 	},
 	[1296734] = {
 		name = "Amethyst Mechsuit",
-		method = "",
+		method = "VENDOR",
 		itemId = 275442,
+		coords = {
+			{ m = 2393, x = 42.3, y = 58.8, n = "Lindormi" },
+		},
 	},
 	[1296756] = {
 		name = "Blue-Chip Shreddertank",
-		method = "",
+		method = "VENDOR",
 		itemId = 275444,
+		coords = {
+			{ m = 2393, x = 42.3, y = 58.8, n = "Lindormi" },
+		},
 	},
 	[1296758] = {
 		name = "Profit-Green Shreddertank",
-		method = "",
+		method = "VENDOR",
 		itemId = 275445,
+		coords = {
+			{ m = 2393, x = 42.3, y = 58.8, n = "Lindormi" },
+		},
 	},
 	[1296759] = {
 		name = "High-Yield Shreddertank",
-		method = "",
+		method = "VENDOR",
 		itemId = 275446,
+		coords = {
+			{ m = 2393, x = 42.3, y = 58.8, n = "Lindormi" },
+		},
 	},
 	[1296760] = {
 		name = "Speculative Shreddertank",
-		method = "",
+		method = "VENDOR",
 		itemId = 275447,
+		coords = {
+			{ m = 2393, x = 42.3, y = 58.8, n = "Lindormi" },
+		},
+	},
+
+	-- ── Patch 12.1 — The Curse of Ula'tek ──────────────────────
+	-- Map IDs: 2512 = The Coiled Isle, 2509 = Vaults of Atal'Utek
+	-- (a child of 2512), 2393 = Silvermoon City.
+	[1266211] = {
+		name = "Venomous Gladiator's Goredrake",
+		method = "SPECIAL",
+		itemId = 275302,
+	},
+	[1292668] = {
+		name = "Spirit of Tok'jara",
+		method = "QUEST",
+		itemId = 273838,
+		coords = {
+			{ m = 2509, x = 50.5, y = 63.9, n = "Du'gal" },
+		},
+	},
+	[1296670] = {
+		name = "Vicious Lightbloom Boar",
+		method = "SPECIAL",
+		itemId = 275433,
+	},
+	[1296672] = {
+		name = "Vicious Lightbloom Boar",
+		method = "SPECIAL",
+		itemId = 275432,
+	},
+	[1297216] = {
+		name = "Sea-Dwelling Isle Serpent",
+		method = "VENDOR",
+		itemId = 275653,
+		coords = {
+			{ m = 2512, x = 51.6, y = 49.8, n = "Second Mate Sluggs" },
+		},
+	},
+	[1297217] = {
+		name = "Caustic Venomfang",
+		method = "VENDOR",
+		itemId = 275654,
+		coords = {
+			{ m = 2509, x = 51.2, y = 62.4, n = "Skull of Er'inye" },
+		},
+	},
+	[1297220] = {
+		name = "Crimson Venomfang",
+		method = "SPECIAL",
+		itemId = 275652,
+		coords = {
+			{ m = 2509, x = 47.2, y = 21.7, n = "The Venomous Abyss", i = true },
+		},
+	},
+	-- Treasures of the Coiled Isle — all 22 hidden treasures.
+	-- q = the treasure's hidden tracking quest; once looted the pin is
+	-- retired, since a one-time treasure never comes back.
+	[1297224] = {
+		name = "Auriferous Venomfang",
+		method = "Treasure",
+		itemId = 275656,
+		coords = {
+			{ m = 2512, x = 29.5, y = 67.2, n = "Smoldering Incense", q = 95855 },
+			{ m = 2512, x = 31.4, y = 83.5, n = "Possessed Vase", q = 96985 },
+			{ m = 2512, x = 43.6, y = 67.5, n = "Profane Ritual Spoils", q = 95941 },
+			{ m = 2512, x = 43.9, y = 26.5, n = "Zul'jan's Stash", q = 95727 },
+			{ m = 2512, x = 45.9, y = 66.3, n = "Fangbound Sack", q = 95938 },
+			{ m = 2512, x = 46.9, y = 29.6, n = "Damaged Loa Trinket", q = 95596 },
+			{ m = 2512, x = 49.5, y = 32.0, n = "Waterlogged Basket", q = 95854 },
+			{ m = 2512, x = 53.1, y = 43.1, n = "Stinking Vessel", q = 95841 },
+			{ m = 2512, x = 55.2, y = 38.0, n = "Tarnished Amani Glaive", q = 95563 },
+			{ m = 2512, x = 58.1, y = 43.5, n = "Cracked Skull", q = 95594 },
+			{ m = 2512, x = 58.2, y = 45.7, n = "Vul'zahn's Smuggled Treasure", q = 95976 },
+			{ m = 2512, x = 60.4, y = 59.5, n = "Jaktu's Cursed Blade", q = 95566 },
+			{ m = 2512, x = 64.7, y = 36.6, n = "Venomjade Necklace", q = 95835 },
+			{ m = 2512, x = 64.9, y = 78.9, n = "Forgotten Mask", q = 95591 },
+			{ m = 2512, x = 65.4, y = 5.8, n = "Sunken Diver's Chest", q = 95907 },
+			{ m = 2512, x = 67.0, y = 28.0, n = "Ornate Bottle", q = 95836 },
+			{ m = 2512, x = 67.3, y = 48.5, n = "Grave of Someone Forgotten", q = 95956 },
+			{ m = 2512, x = 68.0, y = 65.9, n = "Lost Spirit", q = 95571 },
+			{ m = 2512, x = 70.6, y = 76.6, n = "Brine-Crusted Chest", q = 95995 },
+			{ m = 2512, x = 71.9, y = 66.6, n = "Amani Privateer's Cache", q = 94569 },
+			{ m = 2512, x = 73.5, y = 56.5, n = "Crumbling Urn", q = 95558 },
+			{ m = 2512, x = 75.4, y = 68.4, n = "Malfunctioning Staff", q = 95164 },
+		},
+	},
+	[1297404] = {
+		name = "Apophic Soul Crusher",
+		method = "SPECIAL",
+		itemId = 275657,
+		lockBossName = "Azta'rec",
+		coords = {
+			{ m = 2512, x = 51.2, y = 31.0, n = "Venomfall Deeps", i = true },
+		},
+	},
+	[1297405] = {
+		name = "Primeval Skyfriend",
+		method = "BOSS",
+		itemId = 275658,
+		lockBossName = "Ula'tek",
+		groupSize = 20,
+		instanceDifficulties = { 16 },
+		coords = {
+			{ m = 2509, x = 47.2, y = 21.7, n = "The Venomous Abyss", i = true },
+		},
+	},
+	[1297407] = {
+		name = "Hexflame Reaver",
+		method = "NPC",
+		itemId = 275659,
+		lockBossName = "Ral'kala",
+		coords = {
+			{ m = 2512, x = 58.2, y = 48.7, n = "Image of Astalor Bloodsworn" },
+		},
+	},
+	[1297408] = {
+		name = "Preyhunter's Fury",
+		method = "VENDOR",
+		itemId = 275660,
+		coords = {
+			{ m = 2393, x = 55.7, y = 65.9, n = "Construct V'anore" },
+		},
+	},
+	[1298808] = {
+		name = "Corroded Soul Crusher",
+		method = "VENDOR",
+		itemId = 276162,
+		coords = {
+			{ m = 2393, x = 52.5, y = 78.8, n = "Telemancer Astrandis" },
+		},
+	},
+	-- Topaz Skyfang / Ruby Writhe both drop from any of the 12
+	-- Coiled Isle rares, so they share the same rare coordinates.
+	-- dq = the rare's per-day kill credit.  It resets at daily reset, so
+	-- a killed rare keeps its pin (greyed out) rather than losing it —
+	-- the location still matters for tomorrow's route.
+	[1299961] = {
+		name = "Topaz Skyfang",
+		method = "NPC",
+		itemId = 276549,
+		coords = {
+			{ m = 2512, x = 24.8, y = 73.5, n = "Kari'zah the Forgotten", dq = 97122 },
+			{ m = 2512, x = 31.7, y = 56.7, n = "Lockjaw", dq = 96456 },
+			{ m = 2512, x = 43.9, y = 50.8, n = "Hisstara", dq = 96464 },
+			{ m = 2512, x = 50.1, y = 69.0, n = "Siltmouth", dq = 97112 },
+			{ m = 2512, x = 52.0, y = 32.3, n = "Destra", dq = 95452 },
+			{ m = 2512, x = 53.8, y = 72.0, n = "Farthik the Plunderer", dq = 96491 },
+			{ m = 2512, x = 55.8, y = 67.9, n = "Coin-Eye Skully", dq = 94619 },
+			{ m = 2512, x = 60.0, y = 40.0, n = "Sss'alik", dq = 95447 },
+			{ m = 2512, x = 63.1, y = 62.1, n = "Nar'zira", dq = 94860 },
+			{ m = 2512, x = 69.5, y = 45.0, n = "Garsecg", dq = 94856 },
+			{ m = 2512, x = 70.1, y = 63.5, n = "Big Mon", dq = 93829 },
+			{ m = 2509, x = 38.8, y = 13.4, n = "Szarith the Fanged", dq = 96030 },
+		},
+	},
+	[1299963] = {
+		name = "Violet-Backed Skyfang",
+		method = "VENDOR",
+		itemId = 276551,
+		coords = {
+			{ m = 2512, x = 58.8, y = 46.0, n = "Jan'sari the Watchful" },
+		},
+	},
+	[1299965] = {
+		name = "Emerald Skyfang",
+		method = "SPECIAL",
+		itemId = 276553,
+		coords = {
+			{ m = 2509, x = 51.2, y = 62.4, n = "Amani Foothold — Temple Patrols" },
+		},
+	},
+	[1300776] = {
+		name = "The Writhing Brood",
+		method = "BOSS",
+		itemId = 276804,
+		lockBossName = "Zul'jan",
+		groupSize = 5,
+		instanceDifficulties = { 23 },
+		coords = {
+			{ m = 2509, x = 47.2, y = 67.6, n = "Altar of Fangs", i = true },
+		},
+	},
+	-- Assault the Vault meta — the 12 Funerary Inscriptions are the
+	-- only fixed-location component of the meta.
+	[1300777] = {
+		name = "Venomous Coiler",
+		method = "SPECIAL",
+		itemId = 276801,
+		coords = {
+			{ m = 2509, x = 38.0, y = 48.1, n = "To comrades", q = 98038 },
+			{ m = 2509, x = 42.5, y = 33.0, n = "To a stranger", q = 98039 },
+			{ m = 2509, x = 42.9, y = 39.9, n = "To sons", q = 98034 },
+			{ m = 2509, x = 45.8, y = 61.8, n = "To failure", q = 98035 },
+			{ m = 2509, x = 46.8, y = 7.6, n = "To a sister", q = 98037 },
+			{ m = 2509, x = 47.2, y = 28.8, n = "To a father", q = 98036 },
+			{ m = 2509, x = 49.5, y = 56.6, n = "To a daughter", q = 98029 },
+			{ m = 2509, x = 52.2, y = 45.2, n = "To a lover", q = 98030 },
+			{ m = 2509, x = 52.9, y = 33.9, n = "To a captain", q = 98033 },
+			{ m = 2509, x = 55.3, y = 48.2, n = "To parents (Profaned Mausoleum)", q = 98031 },
+			{ m = 2509, x = 55.6, y = 40.6, n = "To a dream", q = 98032 },
+			{ m = 2509, x = 56.5, y = 22.9, n = "To a shield-bearer", q = 98040 },
+		},
+	},
+	[1300778] = {
+		name = "Indigo Coiled Horror",
+		method = "VENDOR",
+		itemId = 276802,
+		coords = {
+			{ m = 2512, x = 58.8, y = 46.0, n = "Jan'sari the Watchful" },
+		},
+	},
+	[1300779] = {
+		name = "Ruby Writhe",
+		method = "NPC",
+		itemId = 276803,
+		coords = {
+			{ m = 2512, x = 24.8, y = 73.5, n = "Kari'zah the Forgotten", dq = 97122 },
+			{ m = 2512, x = 31.7, y = 56.7, n = "Lockjaw", dq = 96456 },
+			{ m = 2512, x = 43.9, y = 50.8, n = "Hisstara", dq = 96464 },
+			{ m = 2512, x = 50.1, y = 69.0, n = "Siltmouth", dq = 97112 },
+			{ m = 2512, x = 52.0, y = 32.3, n = "Destra", dq = 95452 },
+			{ m = 2512, x = 53.8, y = 72.0, n = "Farthik the Plunderer", dq = 96491 },
+			{ m = 2512, x = 55.8, y = 67.9, n = "Coin-Eye Skully", dq = 94619 },
+			{ m = 2512, x = 60.0, y = 40.0, n = "Sss'alik", dq = 95447 },
+			{ m = 2512, x = 63.1, y = 62.1, n = "Nar'zira", dq = 94860 },
+			{ m = 2512, x = 69.5, y = 45.0, n = "Garsecg", dq = 94856 },
+			{ m = 2512, x = 70.1, y = 63.5, n = "Big Mon", dq = 93829 },
+			{ m = 2509, x = 38.8, y = 13.4, n = "Szarith the Fanged", dq = 96030 },
+		},
+	},
+	[1301070] = {
+		name = "Breath of Blight",
+		method = "SPECIAL",
+		itemId = 276881,
+	},
+	[1301074] = {
+		name = "Breath of Ruin",
+		method = "SPECIAL",
+		itemId = 276882,
 	},
 }
 

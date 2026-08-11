@@ -530,7 +530,8 @@ function Panel:ShowIconTooltip(btn)
     local hasCoords = false
     if data.coords then
         for _, wp in ipairs(data.coords) do
-            if wp.x and wp.y then hasCoords = true; break end
+            -- Spent locations can't be waypointed, so don't promise it
+            if wp.x and wp.y and Guide:IsWaypointActive(wp) then hasCoords = true; break end
         end
     end
     GameTooltip:AddLine(" ")

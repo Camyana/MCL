@@ -721,6 +721,32 @@ function Guide:GetMethodText(method)
     return METHOD_LABELS[method] or method or L["Unknown"]
 end
 
+-- ─── Per-coordinate objective state ──────────────────────────
+-- Some mounts are earned across many separate locations rather than
+-- from one spot (a treasure hunt, a pool of rares).  Those coords can
+-- carry the hidden tracking quest behind the objective:
+--
+--   q  = one-time objective — a treasure, a lore object.  Once it is
+--        flagged complete that location is spent for good, so the pin
+--        is dropped entirely.
+--   dq = daily-lockout objective — a rare's per-day kill credit.  It
+--        clears again at daily reset, so the pin is kept and merely
+--        greyed out; you still want the location for tomorrow's run.
+--
+-- Returns: spent (drop the pin), doneToday (grey the pin out).
+function Guide:GetWaypointState(wp)
+    if not wp then return false, false end
+    local spent = wp.q and C_QuestLog.IsQuestFlaggedCompleted(wp.q) or false
+    local doneToday = wp.dq and C_QuestLog.IsQuestFlaggedCompleted(wp.dq) or false
+    return spent, doneToday
+end
+
+-- True when a coord should still be drawn / offered as a waypoint.
+function Guide:IsWaypointActive(wp)
+    local spent = self:GetWaypointState(wp)
+    return not spent
+end
+
 -- ─── Difficulty labels ───────────────────────────────────────
 local DIFF_LABELS = {
     [2]  = L["Heroic"],

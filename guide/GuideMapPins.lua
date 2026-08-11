@@ -23,20 +23,32 @@ Pins.dataPins = {}           -- data-provider pin frames
 function Pins:PinMount(mountData)
     if not mountData or not mountData.coords then return end
 
-    -- Find first coord with x/y in the current zone (or any zone)
+    -- Find the best coord with x/y, preferring the current zone.
+    -- Locations already spent (a looted treasure) are skipped outright,
+    -- and a rare already killed today only wins if nothing else is left,
+    -- so clicking always routes you somewhere still worth going.
     local currentMap = Guide:GetCurrentMapID()
-    local best = nil
+    local best, bestFallback = nil, nil
 
     for _, wp in ipairs(mountData.coords) do
         if wp.x and wp.y then
-            if wp.m == currentMap then
-                best = wp
-                break
-            elseif not best then
-                best = wp
+            local spent, doneToday = Guide:GetWaypointState(wp)
+            if not spent then
+                if doneToday then
+                    if not bestFallback or wp.m == currentMap then
+                        bestFallback = wp
+                    end
+                elseif wp.m == currentMap then
+                    best = wp
+                    break
+                elseif not best then
+                    best = wp
+                end
             end
         end
     end
+
+    best = best or bestFallback
 
     if not best then
         -- No exact coords — just inform the user
@@ -395,7 +407,7 @@ local function HideDividersFrom(startIdx)
 end
 
 -- ─── Populate ───────────────────────────────────────────────
-local function PopulateMiniCard(card, data)
+local function PopulateMiniCard(card, data, waypoint)
     -- ── Header ──────────────────────────────────────────────
     if data.icon then
         card.mountIcon:SetTexture(data.icon)
@@ -465,14 +477,27 @@ local function PopulateMiniCard(card, data)
         end
     end
 
-    -- NPC from coords
-    if data.coords then
+    -- NPC / location name.  Prefer the hovered pin's own coord — a
+    -- treasure-hunt mount has a different name at every location, so
+    -- falling back to coords[1] would label them all identically.
+    local npcName = waypoint and waypoint.n
+    if not npcName and data.coords then
         for _, wp in ipairs(data.coords) do
             if wp.n then
-                li, y = AddInfoRow(card, li, y, L["NPC"], wp.n, COLOR_LABEL, COLOR_VALUE)
+                npcName = wp.n
                 break
             end
         end
+    end
+    if npcName then
+        li, y = AddInfoRow(card, li, y, L["NPC"], npcName, COLOR_LABEL, COLOR_VALUE)
+    end
+
+    -- Daily objective already done — the pin is still shown (greyed) so
+    -- the location is there for tomorrow, so say why it's greyed out.
+    local _, doneToday = Guide:GetWaypointState(waypoint)
+    if doneToday then
+        li, y = AddInfoRow(card, li, y, L["Status"], L["Already defeated today"], COLOR_LABEL, COLOR_ACH_DONE)
     end
 
     -- Item name
@@ -645,9 +670,9 @@ local function PopulateMiniCard(card, data)
 end
 
 -- ─── Show / Hide ────────────────────────────────────────────
-local function ShowMiniCard(pinFrame, data)
+local function ShowMiniCard(pinFrame, data, waypoint)
     local card = GetMiniCard()
-    PopulateMiniCard(card, data)
+    PopulateMiniCard(card, data, waypoint)
     card:ClearAllPoints()
     card:SetPoint("BOTTOMLEFT", pinFrame, "TOPRIGHT", 5, -5)
     card:Show()
@@ -749,8 +774,9 @@ function MCL_GuidePinMixin:OnLoad()
     self:SetFrameLevel(2500)
 end
 
-function MCL_GuidePinMixin:OnAcquired(mountData)
+function MCL_GuidePinMixin:OnAcquired(mountData, waypoint)
     self.mountData = mountData
+    self.waypoint  = waypoint
 
     -- ── Visual container (slides on hover) ─────────────────
     -- Created as a Button so it can receive clicks during cluster spread.
@@ -856,8 +882,12 @@ function MCL_GuidePinMixin:OnAcquired(mountData)
         self.badge:Hide()
     end
 
-    -- ── Desaturate if collected ─────────────────────────────
-    if mountData.isCollected then
+    -- ── Desaturate if collected, or already done today ──────
+    -- A rare that has already given its daily kill credit keeps its pin
+    -- (the location still matters tomorrow) but is greyed out like a
+    -- collected mount so it reads as "nothing to do here right now".
+    local _, doneToday = Guide:GetWaypointState(waypoint)
+    if mountData.isCollected or doneToday then
         self.icon:SetDesaturated(true)
         self.icon:SetAlpha(0.5)
         self.borderTop:SetAlpha(0.4)
@@ -899,6 +929,7 @@ end
 
 function MCL_GuidePinMixin:OnReleased()
     self.mountData = nil
+    self.waypoint = nil
     self:SetScript("OnUpdate", nil)
     self._slidOut = false
     self._inCluster = false
@@ -983,7 +1014,7 @@ function MCL_GuidePinMixin:OnMouseEnter()
     if #cluster <= 1 then
         -- Nothing underneath – just show tooltip directly on the pin
         if not HasOtherPinsUnderneath(self) then
-            ShowMiniCard(self, self.mountData)
+            ShowMiniCard(self, self.mountData, self.waypoint)
             return
         end
 
@@ -992,7 +1023,7 @@ function MCL_GuidePinMixin:OnMouseEnter()
         singleSlidePin = self
         self.visual:EnableMouse(true)
         self.visual:SetScript("OnEnter", function()
-            ShowMiniCard(self.visual, self.mountData)
+            ShowMiniCard(self.visual, self.mountData, self.waypoint)
         end)
         self.visual:SetScript("OnLeave", function()
             HideMiniCard()
@@ -1160,7 +1191,7 @@ SpreadCluster = function(cluster, triggerPin)
                 clusterCollapseTimer:Cancel()
                 clusterCollapseTimer = nil
             end
-            ShowMiniCard(pin.visual, pin.mountData)
+            ShowMiniCard(pin.visual, pin.mountData, pin.waypoint)
         end)
         pin.visual:SetScript("OnLeave", function()
             HideMiniCard()
@@ -1178,7 +1209,7 @@ SpreadCluster = function(cluster, triggerPin)
 
     -- Show tooltip for the pin that triggered the spread
     if triggerPin and triggerPin.visual and triggerPin.mountData then
-        ShowMiniCard(triggerPin.visual, triggerPin.mountData)
+        ShowMiniCard(triggerPin.visual, triggerPin.mountData, triggerPin.waypoint)
     end
 end
 
@@ -1351,9 +1382,9 @@ local function UpdatePinScales()
 end
 
 -- ─── Place a single pin on the canvas ───────────────────────
-local function PlacePin(canvas, rec, fx, fy, canvasWidth, canvasHeight, scaleComp)
+local function PlacePin(canvas, rec, fx, fy, canvasWidth, canvasHeight, scaleComp, wp)
     local pin = AcquirePin(canvas)
-    pin:OnAcquired(rec)
+    pin:OnAcquired(rec, wp)
 
     -- Counteract canvas zoom so pins stay consistent
     pin:SetScale(scaleComp)
@@ -1412,11 +1443,13 @@ function Pins:RefreshPins()
     for _, rec in ipairs(mounts) do
         if rec.coords then
             for _, wp in ipairs(rec.coords) do
-                if wp.x and wp.y then
+                -- Skip locations already spent for good (a looted treasure).
+                -- Daily objectives stay, and are greyed out by OnAcquired.
+                if wp.x and wp.y and Guide:IsWaypointActive(wp) then
                     if wp.m == mapID or aliasMapSet[wp.m] then
                         -- Pin on this exact map (or a same-coordinate sibling)
                         PlacePin(canvas, rec, wp.x / 100, wp.y / 100,
-                                 canvasWidth, canvasHeight, scaleComp)
+                                 canvasWidth, canvasHeight, scaleComp, wp)
                     elseif childMapSet[wp.m] then
                         -- Project child-map coord onto the parent via C_Map
                         local continentID, worldPos = C_Map.GetWorldPosFromMapPos(wp.m,
@@ -1427,7 +1460,7 @@ function Pins:RefreshPins()
                                 local fx, fy = vec:GetXY()
                                 if fx >= 0 and fx <= 1 and fy >= 0 and fy <= 1 then
                                     PlacePin(canvas, rec, fx, fy,
-                                             canvasWidth, canvasHeight, scaleComp)
+                                             canvasWidth, canvasHeight, scaleComp, wp)
                                 end
                             end
                         end
@@ -1453,11 +1486,27 @@ end
 local hookFrame = CreateFrame("Frame")
 hookFrame:RegisterEvent("PLAYER_LOGIN")
 hookFrame:RegisterEvent("NEW_MOUNT_ADDED")
+hookFrame:RegisterEvent("QUEST_TURNED_IN")
 hookFrame:SetScript("OnEvent", function(_, event)
     if event == "NEW_MOUNT_ADDED" then
         -- A mount was just collected — refresh cached collected status and drop
         -- its pin/panel entry without waiting for the map to be reopened.
         C_Timer.After(0.1, ResyncCollectedAndRefresh)
+        return
+    end
+
+    if event == "QUEST_TURNED_IN" then
+        -- Looting a treasure or killing a rare completes its hidden
+        -- tracking quest, which is what coord-level q/dq keys off.  Redraw
+        -- so the pin retires (or greys out) while the map is still open.
+        if WorldMapFrame and WorldMapFrame:IsShown() then
+            C_Timer.After(0.2, function()
+                Pins:RefreshPins()
+                if Guide.ZonePanel and Guide.ZonePanel.Refresh then
+                    Guide.ZonePanel:Refresh()
+                end
+            end)
+        end
         return
     end
 
