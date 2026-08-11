@@ -1,4 +1,5 @@
 .vscode
+.claude/
 dev/
 __pycache__/
 *.py
