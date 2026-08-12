@@ -406,6 +406,10 @@ local function HideDividersFrom(startIdx)
     end
 end
 
+-- Step markers live further down (they need the canvas scale helper),
+-- so the card code reaches them through these forward declarations.
+local ShowStepMarkers, ReleaseStepMarkers, GetStepMarkerRects
+
 -- ─── Populate ───────────────────────────────────────────────
 local function PopulateMiniCard(card, data, waypoint)
     -- ── Header ──────────────────────────────────────────────
@@ -495,9 +499,12 @@ local function PopulateMiniCard(card, data, waypoint)
 
     -- Daily objective already done — the pin is still shown (greyed) so
     -- the location is there for tomorrow, so say why it's greyed out.
-    local _, doneToday = Guide:GetWaypointState(waypoint)
+    -- Spent one-time objectives only appear under debugShowSpent.
+    local wpSpent, doneToday = Guide:GetWaypointState(waypoint)
     if doneToday then
         li, y = AddInfoRow(card, li, y, L["Status"], L["Already defeated today"], COLOR_LABEL, COLOR_ACH_DONE)
+    elseif wpSpent then
+        li, y = AddInfoRow(card, li, y, L["Status"], L["Already looted"], COLOR_LABEL, COLOR_ACH_DONE)
     end
 
     -- Item name
@@ -596,6 +603,23 @@ local function PopulateMiniCard(card, data, waypoint)
         li, y = AddInfoRow(card, li, y, L["Origin"], origin, COLOR_LABEL, COLOR_ORIGIN)
     end
 
+    -- ── Extra steps for this specific location ──────────────
+    -- Treasures that can't just be clicked (key chains, puzzles,
+    -- NPC hand-ins) carry their own unlock steps on the coord.
+    if waypoint and waypoint.steps and #waypoint.steps > 0 then
+        y = AddDivider(card, y, sep); sep = sep + 1
+        li, y = AddTextLine(card, li, y, L["Extra Steps:"], COLOR_SECTION_HDR, 10)
+        local anyLocated = false
+        for i, step in ipairs(waypoint.steps) do
+            li, y = AddTextLine(card, li, y, i .. ". " .. (step.t or ""), COLOR_NOTE, 14)
+            if step.x and step.y then anyLocated = true end
+        end
+        if anyLocated then
+            li, y = AddTextLine(card, li, y, L["Numbered markers on the map show these spots."], COLOR_HINT, 14)
+        end
+        li, y = AddTextLine(card, li, y, L["Left-click for a step-by-step tracker."], COLOR_HINT, 14)
+    end
+
     -- ── Notes / Instructions ────────────────────────────────
     local note = GetPinMountNote(data)
     if note then
@@ -670,11 +694,87 @@ local function PopulateMiniCard(card, data, waypoint)
 end
 
 -- ─── Show / Hide ────────────────────────────────────────────
+-- ─── Card placement ─────────────────────────────────────────
+-- The card is bigger than the area between a treasure and its step
+-- markers, so a fixed corner buries the very markers the card is
+-- telling you to visit.  Try all four corners and keep the one that
+-- covers the least: markers first, then anything pushed off-screen.
+-- Order matters — ties keep the historic top-right placement.
+local CARD_GAP = 5
+local CARD_ANCHORS = {
+    { point = "BOTTOMLEFT",  rel = "TOPRIGHT",    xs =  1, ys = -1 },
+    { point = "BOTTOMRIGHT", rel = "TOPLEFT",     xs = -1, ys = -1 },
+    { point = "TOPLEFT",     rel = "BOTTOMRIGHT", xs =  1, ys =  1 },
+    { point = "TOPRIGHT",    rel = "BOTTOMLEFT",  xs = -1, ys =  1 },
+}
+
+local function RectOverlap(l1, b1, r1, t1, l2, b2, r2, t2)
+    local w = math.min(r1, r2) - math.max(l1, l2)
+    local h = math.min(t1, t2) - math.max(b1, b2)
+    if w <= 0 or h <= 0 then return 0 end
+    return w * h
+end
+
+local function PositionMiniCard(card, pinFrame)
+    card:ClearAllPoints()
+
+    local pl, pb = pinFrame:GetLeft(), pinFrame:GetBottom()
+    if not pl or not pb then
+        -- No geometry yet (frame not laid out) — fall back to the default.
+        card:SetPoint("BOTTOMLEFT", pinFrame, "TOPRIGHT", CARD_GAP, -CARD_GAP)
+        return
+    end
+
+    local ps = pinFrame:GetEffectiveScale()
+    local cs = card:GetEffectiveScale()
+    local pL, pB = pl * ps, pb * ps
+    local pR = (pl + pinFrame:GetWidth()) * ps
+    local pT = (pb + pinFrame:GetHeight()) * ps
+
+    local cw, ch = card:GetWidth() * cs, card:GetHeight() * cs
+    local gap    = CARD_GAP * cs
+
+    local us = UIParent:GetEffectiveScale()
+    local sw, sh = UIParent:GetWidth() * us, UIParent:GetHeight() * us
+
+    local markers = GetStepMarkerRects and GetStepMarkerRects() or nil
+
+    local best, bestScore
+    for _, a in ipairs(CARD_ANCHORS) do
+        -- Left edge: right of the pin for xs > 0, left of it otherwise.
+        local l = (a.xs > 0) and (pR + gap) or (pL - gap - cw)
+        -- Bottom edge: card grows up off the pin's top for ys < 0,
+        -- and down off its bottom for ys > 0.
+        local b = (a.ys < 0) and (pT - gap) or (pB + gap - ch)
+        local r, t = l + cw, b + ch
+
+        local score = 0
+        if markers then
+            for _, m in ipairs(markers) do
+                score = score + RectOverlap(l, b, r, t, m.l, m.b, m.r, m.t)
+            end
+        end
+        -- Anything clipped off-screen gets pushed back over the map by
+        -- SetClampedToScreen, so treat it as covered area too.
+        score = score + ((cw * ch) - RectOverlap(l, b, r, t, 0, 0, sw, sh)) * 2
+
+        if not bestScore or score < bestScore then
+            best, bestScore = a, score
+            if score == 0 then break end
+        end
+    end
+
+    best = best or CARD_ANCHORS[1]
+    card:SetPoint(best.point, pinFrame, best.rel,
+        CARD_GAP * best.xs, CARD_GAP * best.ys)
+end
+
 local function ShowMiniCard(pinFrame, data, waypoint)
     local card = GetMiniCard()
     PopulateMiniCard(card, data, waypoint)
-    card:ClearAllPoints()
-    card:SetPoint("BOTTOMLEFT", pinFrame, "TOPRIGHT", 5, -5)
+    -- Markers first: their positions decide which corner the card takes.
+    if ShowStepMarkers then ShowStepMarkers(waypoint) end
+    PositionMiniCard(card, pinFrame)
     card:Show()
 end
 
@@ -682,6 +782,7 @@ local function HideMiniCard()
     if miniCardFrame then
         miniCardFrame:Hide()
     end
+    if ReleaseStepMarkers then ReleaseStepMarkers() end
 end
 
 -- ─── Pin sizing & colours by source type ────────────────────
@@ -886,8 +987,10 @@ function MCL_GuidePinMixin:OnAcquired(mountData, waypoint)
     -- A rare that has already given its daily kill credit keeps its pin
     -- (the location still matters tomorrow) but is greyed out like a
     -- collected mount so it reads as "nothing to do here right now".
-    local _, doneToday = Guide:GetWaypointState(waypoint)
-    if mountData.isCollected or doneToday then
+    -- Spent locations only reach here under debugShowSpent, and are
+    -- greyed the same way.
+    local spent, doneToday = Guide:GetWaypointState(waypoint)
+    if mountData.isCollected or doneToday or spent then
         self.icon:SetDesaturated(true)
         self.icon:SetAlpha(0.5)
         self.borderTop:SetAlpha(0.4)
@@ -1277,6 +1380,16 @@ function MCL_GuidePinMixin:OnClick(button)
             end
         end
     else
+        -- A location with an unlock chain opens the step tracker instead
+        -- of just dropping a waypoint — the tracker sets one anyway, for
+        -- the step you're actually on.
+        local wp = self.waypoint
+        if wp and wp.steps and #wp.steps > 0 and Guide.StepTracker then
+            if Guide.StepTracker:Show(self.mountData, wp) then
+                HideMiniCard()
+                return
+            end
+        end
         Pins:PinMount(self.mountData)
     end
 end
@@ -1366,10 +1479,144 @@ local function GetPinScaleCompensation(canvas)
     return 1 / (canvasScale ^ exponent)
 end
 
+-- ─── Step markers ───────────────────────────────────────────
+-- Numbered dots for the sub-locations of a multi-stage treasure
+-- (key halves, quest NPCs, clams…).  They're drawn while that
+-- treasure's pin card is up and released when it closes, so the map
+-- only carries them while you're actually reading the steps.
+-- Mouse is disabled on them: they must never steal the hover that is
+-- keeping the card open.
+local stepMarkerPool    = {}
+local activeStepMarkers = {}
+local STEP_MARKER_COLOR = { 0.95, 0.75, 0.20 }   -- treasure gold
+
+ReleaseStepMarkers = function()
+    for _, mk in ipairs(activeStepMarkers) do
+        mk:Hide()
+        mk:ClearAllPoints()
+        table.insert(stepMarkerPool, mk)
+    end
+    wipe(activeStepMarkers)
+end
+
+-- Screen-space rects of the visible step markers, label included, so the
+-- mount card can pick a corner that doesn't sit on top of them.
+GetStepMarkerRects = function()
+    if #activeStepMarkers == 0 then return nil end
+    local rects = {}
+    for _, mk in ipairs(activeStepMarkers) do
+        local l, b = mk:GetLeft(), mk:GetBottom()
+        if l and b then
+            local s  = mk:GetEffectiveScale()
+            local cx = (l + mk:GetWidth() / 2) * s
+            local halfW = math.max(mk:GetWidth() * s, mk.label:GetStringWidth() * s) / 2
+            local labelH = mk.label:GetText() ~= "" and (mk.label:GetStringHeight() * s + s) or 0
+            rects[#rects + 1] = {
+                l = cx - halfW,
+                r = cx + halfW,
+                b = b * s - labelH,
+                t = (b + mk:GetHeight()) * s,
+            }
+        end
+    end
+    return rects
+end
+
+local function AcquireStepMarker(canvas)
+    local mk = table.remove(stepMarkerPool)
+    if not mk then
+        mk = CreateFrame("Frame", nil, canvas)
+        mk:SetFrameStrata("TOOLTIP")
+        mk:SetFrameLevel(2400)          -- just under the mount pins
+        mk:EnableMouse(false)
+
+        mk.border = mk:CreateTexture(nil, "BACKGROUND")
+        mk.border:SetAllPoints()
+        mk.border:SetColorTexture(0.05, 0.05, 0.08, 0.95)
+
+        mk.fill = mk:CreateTexture(nil, "ARTWORK")
+        mk.fill:SetPoint("TOPLEFT", 1, -1)
+        mk.fill:SetPoint("BOTTOMRIGHT", -1, 1)
+        mk.fill:SetColorTexture(STEP_MARKER_COLOR[1], STEP_MARKER_COLOR[2], STEP_MARKER_COLOR[3], 0.95)
+
+        mk.num = mk:CreateFontString(nil, "OVERLAY")
+        mk.num:SetPoint("CENTER")
+        mk.num:SetTextColor(0.05, 0.05, 0.08, 1)
+
+        mk.label = mk:CreateFontString(nil, "OVERLAY")
+        mk.label:SetPoint("TOP", mk, "BOTTOM", 0, -1)
+        mk.label:SetTextColor(STEP_MARKER_COLOR[1], STEP_MARKER_COLOR[2], STEP_MARKER_COLOR[3], 1)
+    end
+    mk:SetParent(canvas)
+    mk:Show()
+    table.insert(activeStepMarkers, mk)
+    return mk
+end
+
+-- Flatten a step list into drawable markers: the step's own spot plus
+-- any alternates, all carrying the step's number.
+local function CollectStepSpots(steps)
+    if not steps then return nil end
+    local spots = {}
+    for i, step in ipairs(steps) do
+        if step.x and step.y then
+            spots[#spots + 1] = { i = i, x = step.x, y = step.y, n = step.n, m = step.m }
+        end
+        if step.spots then
+            for _, alt in ipairs(step.spots) do
+                spots[#spots + 1] = { i = i, x = alt.x, y = alt.y, n = alt.n, m = alt.m }
+            end
+        end
+    end
+    if #spots == 0 then return nil end
+    return spots
+end
+
+ShowStepMarkers = function(waypoint)
+    ReleaseStepMarkers()
+
+    if not waypoint then return end
+    local spots = CollectStepSpots(waypoint.steps)
+    if not spots then return end
+    if not MCL_GUIDE_SETTINGS or not MCL_GUIDE_SETTINGS.showMapPins then return end
+    if not WorldMapFrame or not WorldMapFrame:IsShown() then return end
+
+    local canvas = WorldMapFrame:GetCanvas()
+    local mapID  = WorldMapFrame:GetMapID()
+    if not canvas or not mapID then return end
+
+    local cw, ch  = canvas:GetWidth(), canvas:GetHeight()
+    local comp    = GetPinScaleCompensation(canvas)
+    local scale   = MCL_GUIDE_SETTINGS.mapPinScale or 2.0
+    local size    = math.max(12, math.floor(11 * scale + 0.5))
+    local numSize = math.max(8, math.floor(7 * scale + 0.5))
+    local lblSize = math.max(8, math.floor(7 * scale + 0.5))
+
+    for _, sp in ipairs(spots) do
+        -- Steps are only drawn on their own map; no parent projection,
+        -- since every chain so far stays inside its treasure's zone.
+        if sp.x and sp.y and (sp.m or waypoint.m) == mapID then
+            local mk = AcquireStepMarker(canvas)
+            mk:SetSize(size, size)
+            mk:SetScale(comp)
+            mk.num:SetFont(STANDARD_TEXT_FONT, numSize, "OUTLINE")
+            mk.num:SetText(tostring(sp.i))
+            mk.label:SetFont(STANDARD_TEXT_FONT, lblSize, "OUTLINE")
+            mk.label:SetText(sp.n or "")
+
+            local px = (sp.x / 100) * cw
+            local py = -(sp.y / 100) * ch
+            mk._canvasX, mk._canvasY = px, py
+            mk:SetPoint("CENTER", canvas, "TOPLEFT", px / comp, py / comp)
+        end
+    end
+end
+
 -- ─── Re-apply scale to all visible pins (called on zoom) ────
 local function UpdatePinScales()
-    if #activePins == 0 then return end
-    local canvas = activePins[1]:GetParent()
+    local canvas = activePins[1] and activePins[1]:GetParent()
+                   or activeStepMarkers[1] and activeStepMarkers[1]:GetParent()
+    if not canvas then return end
     local comp = GetPinScaleCompensation(canvas)
     for _, pin in ipairs(activePins) do
         pin:SetScale(comp)
@@ -1378,6 +1625,12 @@ local function UpdatePinScales()
         pin:ClearAllPoints()
         pin:SetPoint("CENTER", canvas, "TOPLEFT",
             pin._canvasX / comp, pin._canvasY / comp)
+    end
+    for _, mk in ipairs(activeStepMarkers) do
+        mk:SetScale(comp)
+        mk:ClearAllPoints()
+        mk:SetPoint("CENTER", canvas, "TOPLEFT",
+            mk._canvasX / comp, mk._canvasY / comp)
     end
 end
 

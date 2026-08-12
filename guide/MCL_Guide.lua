@@ -37,6 +37,8 @@ local DEFAULT_SETTINGS = {
     zonePanelFlyout    = "DOWN",    -- icon strip direction: DOWN, UP, RIGHT, LEFT
     zonePanelAnchor    = nil,       -- { point, x, y } saved anchor for the tab button
     debugShowAll       = false,     -- debug: show ALL map pins (collected + unobtainable)
+    debugShowSpent     = false,     -- debug: keep pins for one-time objectives already looted
+    stepTrackerAnchor  = nil,       -- { point, relPoint, x, y } saved step-tracker position
 }
 
 local function ApplyDefaults()
@@ -742,7 +744,11 @@ function Guide:GetWaypointState(wp)
 end
 
 -- True when a coord should still be drawn / offered as a waypoint.
+-- debugShowSpent keeps spent locations on the map (greyed out) so a
+-- finished treasure run can still be inspected — handy for checking
+-- coords and step markers against a character that already looted them.
 function Guide:IsWaypointActive(wp)
+    if MCL_GUIDE_SETTINGS and MCL_GUIDE_SETTINGS.debugShowSpent then return true end
     local spent = self:GetWaypointState(wp)
     return not spent
 end

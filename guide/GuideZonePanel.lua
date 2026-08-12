@@ -646,6 +646,20 @@ SlashCmdList["MCLGUIDE"] = function(msg)
         Panel:Refresh()
         return
     end
+    if msg == "debugspent" or msg == "debug spent" then
+        MCL_GUIDE_SETTINGS.debugShowSpent = not MCL_GUIDE_SETTINGS.debugShowSpent
+        if MCL_GUIDE_SETTINGS.debugShowSpent then
+            print("|cFF1FB7EBMCL|r Debug: showing looted treasures / spent locations (greyed out)")
+            if not MCL_GUIDE_SETTINGS.debugShowAll then
+                print("|cFF1FB7EBMCL|r Debug: mounts you already collected are still hidden - add |cFFFFFF00/mcg debug|r to show those too")
+            end
+        else
+            print("|cFF1FB7EBMCL|r Debug: hiding looted treasures / spent locations")
+        end
+        if Guide.MapPins then Guide.MapPins:RefreshPins() end
+        Panel:Refresh()
+        return
+    end
     if msg == "hide" then
         MCL_GUIDE_SETTINGS.showZonePanel = false
         if panelFrame then panelFrame:Hide() end

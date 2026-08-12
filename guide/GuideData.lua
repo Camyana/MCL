@@ -4019,6 +4019,17 @@ MCL_GUIDE_DATA.mounts = {
 	-- Treasures of the Coiled Isle — all 22 hidden treasures.
 	-- q = the treasure's hidden tracking quest; once looted the pin is
 	-- retired, since a one-time treasure never comes back.
+	-- steps = the unlock chain for the seven that can't just be clicked,
+	-- as an ordered list.  Each step is:
+	--   t     = what to do
+	--   x/y/n = where, if it sends you somewhere.  Drawn as a numbered
+	--           map marker and click-to-waypoint in the step tracker.
+	--   spots = extra candidate locations for the same step (the clams)
+	--   item  = item ID whose presence means the step is done
+	--   count = how many of `item` are needed (default 1)
+	--   aura  = spell ID (or list) whose buff means the step is done
+	-- Steps with no trigger are conversation-only: nothing in the API
+	-- exposes them, so the tracker lets you tick those off by hand.
 	[1297224] = {
 		name = "Auriferous Venomfang",
 		method = "Treasure",
@@ -4026,7 +4037,12 @@ MCL_GUIDE_DATA.mounts = {
 		coords = {
 			{ m = 2512, x = 29.5, y = 67.2, n = "Smoldering Incense", q = 95855 },
 			{ m = 2512, x = 31.4, y = 83.5, n = "Possessed Vase", q = 96985 },
-			{ m = 2512, x = 43.6, y = 67.5, n = "Profane Ritual Spoils", q = 95941 },
+			{ m = 2512, x = 43.6, y = 67.5, n = "Profane Ritual Spoils", q = 95941,
+				steps = {
+					{ t = "Find the ritual table at the top of the venom river and stand behind it, facing the river.", x = 43.6, y = 67.5, n = "Ritual table" },
+					{ t = "Click the four Mysterious Trinkets in order: bottom-left, bottom-right, top-left, top-right." },
+					{ t = "The spoils spawn behind you - loot them." },
+				} },
 			{ m = 2512, x = 43.9, y = 26.5, n = "Zul'jan's Stash", q = 95727 },
 			{ m = 2512, x = 45.9, y = 66.3, n = "Fangbound Sack", q = 95938 },
 			{ m = 2512, x = 46.9, y = 29.6, n = "Damaged Loa Trinket", q = 95596 },
@@ -4034,16 +4050,60 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 2512, x = 53.1, y = 43.1, n = "Stinking Vessel", q = 95841 },
 			{ m = 2512, x = 55.2, y = 38.0, n = "Tarnished Amani Glaive", q = 95563 },
 			{ m = 2512, x = 58.1, y = 43.5, n = "Cracked Skull", q = 95594 },
-			{ m = 2512, x = 58.2, y = 45.7, n = "Vul'zahn's Smuggled Treasure", q = 95976 },
+			{ m = 2512, x = 58.2, y = 45.7, n = "Vul'zahn's Smuggled Treasure", q = 95976,
+				steps = {
+					{ t = "Ask Vul'zahn about the treasure - he wants food first.", x = 58.2, y = 45.7, n = "Vul'zahn" },
+					{ t = "Ask the Witherbark Cook for food - he has a headache.", x = 58.0, y = 48.8, n = "Witherbark Cook" },
+					{ t = "Get the Potion of Headache Relief from Apothecary Dezi.", x = 57.3, y = 48.5, n = "Apothecary Dezi", item = 271791 },
+					{ t = "Hand the potion to the Cook for Snuffling Boar Stew.", x = 58.0, y = 48.8, n = "Witherbark Cook", item = 271788 },
+					{ t = "Give the stew to Vul'zahn for the Soldier's Smuggled Treasure Key.", x = 58.2, y = 45.7, n = "Vul'zahn", item = 271792 },
+					{ t = "Unlock the cache." },
+				} },
 			{ m = 2512, x = 60.4, y = 59.5, n = "Jaktu's Cursed Blade", q = 95566 },
 			{ m = 2512, x = 64.7, y = 36.6, n = "Venomjade Necklace", q = 95835 },
 			{ m = 2512, x = 64.9, y = 78.9, n = "Forgotten Mask", q = 95591 },
-			{ m = 2512, x = 65.4, y = 5.8, n = "Sunken Diver's Chest", q = 95907 },
+			{ m = 2512, x = 65.4, y = 5.8, n = "Sunken Diver's Chest", q = 95907,
+				steps = {
+					{ t = "Swim north off the coast to the wreck - the chest is on the sea floor.", x = 65.4, y = 5.8, n = "Sunken Diver's Chest" },
+					{ t = "Kill the Glittering Grouper Brinetails circling it for 3 Diver's Key Fragments.", item = 271424, count = 3 },
+					{ t = "Combine the fragments into the Diver's Key.", item = 271423 },
+					{ t = "Unlock the chest." },
+				} },
 			{ m = 2512, x = 67.0, y = 28.0, n = "Ornate Bottle", q = 95836 },
-			{ m = 2512, x = 67.3, y = 48.5, n = "Grave of Someone Forgotten", q = 95956 },
-			{ m = 2512, x = 68.0, y = 65.9, n = "Lost Spirit", q = 95571 },
-			{ m = 2512, x = 70.6, y = 76.6, n = "Brine-Crusted Chest", q = 95995 },
-			{ m = 2512, x = 71.9, y = 66.6, n = "Amani Privateer's Cache", q = 94569 },
+			{ m = 2512, x = 67.3, y = 48.5, n = "Grave of Someone Forgotten", q = 95956,
+				steps = {
+					{ t = "Interact with the Forgotten Soldier and the Nameless Grave.", x = 67.3, y = 48.5, n = "Nameless Grave" },
+					{ t = "Ask Zuzan about Jin'ta.", x = 69.1, y = 52.7, n = "Zuzan" },
+					{ t = "Ask Nan'ja about Jin'ta.", x = 70.4, y = 58.5, n = "Nan'ja" },
+					{ t = "Ask Ru'ko about Jin'ta.", x = 66.4, y = 57.2, n = "Ru'ko" },
+					{ t = "Return to the grave and loot it.", x = 67.3, y = 48.5, n = "Nameless Grave" },
+				} },
+			{ m = 2512, x = 68.0, y = 65.9, n = "Lost Spirit", q = 95571,
+				steps = {
+					{ t = "Talk to the Lost Spirit.", x = 68.0, y = 65.9, n = "Lost Spirit" },
+					{ t = "Take the Forgotten Trinket from the pillar.", x = 70.3, y = 64.5, n = "Forgotten Trinket", item = 269935 },
+					{ t = "Bring the trinket back to the Lost Spirit to finish the conversation.", x = 68.0, y = 65.9, n = "Lost Spirit" },
+				} },
+			{ m = 2512, x = 70.6, y = 76.6, n = "Brine-Crusted Chest", q = 95995,
+				steps = {
+					{ t = "Dive the Bubbling Clams offshore until one yields a Luminescent Pearl.",
+						x = 68.1, y = 80.3, n = "Bubbling Clam", item = 271815,
+						spots = {
+							{ x = 69.6, y = 82.5, n = "Bubbling Clam" },
+							{ x = 70.9, y = 81.6, n = "Bubbling Clam" },
+							{ x = 71.3, y = 83.3, n = "Bubbling Clam" },
+						} },
+					{ t = "Drop the pearl on the marked spot in the cave south of the Ring of Glory - Nacretta swaps it for the Dropped Key.", x = 70.6, y = 76.6, n = "Brine-Crusted Chest", item = 271881 },
+					{ t = "Unlock the chest." },
+				} },
+			{ m = 2512, x = 71.9, y = 66.6, n = "Amani Privateer's Cache", q = 94569,
+				steps = {
+					{ t = "Fish a Grisly Morsel out of the Grisly Cod Pool.", x = 73.3, y = 65.9, n = "Grisly Cod Pool", item = 265525 },
+					{ t = "Feed it to the Hungry Dolphin in the bay off the cache for the 5 minute Blue Water, Blue Sky buff.", aura = { 1269487, 1275730 } },
+					{ t = "While the buff holds, loot the Privateer's Loop Half of Key from the Waterlogged Crate.", x = 73.1, y = 67.0, n = "Waterlogged Crate", item = 265610 },
+					{ t = "And the Privateer's Teeth Half of Key from the Broken Urn.", x = 72.5, y = 68.4, n = "Broken Urn", item = 265603 },
+					{ t = "Combine the halves into the Amani Privateer's Key and unlock the cache.", item = 265602 },
+				} },
 			{ m = 2512, x = 73.5, y = 56.5, n = "Crumbling Urn", q = 95558 },
 			{ m = 2512, x = 75.4, y = 68.4, n = "Malfunctioning Staff", q = 95164 },
 		},
