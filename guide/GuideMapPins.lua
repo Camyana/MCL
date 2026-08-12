@@ -60,6 +60,13 @@ function Pins:PinMount(mountData)
     local mapPoint = UiMapPoint.CreateFromCoordinates(best.m, best.x / 100, best.y / 100)
     C_Map.SetUserWaypoint(mapPoint)
     C_SuperTrack.SetSuperTrackedUserWaypoint(true)
+    -- A click on the map can be handled again by the canvas underneath,
+    -- which drops a waypoint at the cursor over the top of this one.
+    -- Re-assert next frame so the mount's location is what sticks.
+    C_Timer.After(0, function()
+        C_Map.SetUserWaypoint(mapPoint)
+        C_SuperTrack.SetSuperTrackedUserWaypoint(true)
+    end)
 
     self.activeWaypoint = {
         mapID   = best.m,
@@ -683,6 +690,10 @@ local function PopulateMiniCard(card, data, waypoint)
     -- ── Footer ──────────────────────────────────────────────
     y = AddDivider(card, y, sep); sep = sep + 1
     li, y = AddTextLine(card, li, y, L["Click to set waypoint | Right-click for mount card"], COLOR_HINT, 10)
+    -- Only a multi-location find has a route worth walking.
+    if data.coords and #data.coords > 1 then
+        li, y = AddTextLine(card, li, y, L["Shift-click to route the whole set"], COLOR_HINT, 10)
+    end
 
     -- Clean up unused elements
     HideLinesFrom(li)
@@ -885,6 +896,15 @@ function MCL_GuidePinMixin:OnAcquired(mountData, waypoint)
         self.visual = CreateFrame("Button", nil, self)
         self.visual:EnableMouse(false)
         self.visual:RegisterForClicks("LeftButtonUp", "RightButtonDown")
+        -- Without this the click carries on down to the map canvas,
+        -- which drops its own waypoint wherever the cursor was and
+        -- replaces the one we just set.
+        if self.visual.SetPropagateMouseClicks then
+            self.visual:SetPropagateMouseClicks(false)
+        end
+        if self.visual.SetPropagateMouseMotion then
+            self.visual:SetPropagateMouseMotion(false)
+        end
     end
     self:SetScript("OnUpdate", nil)
     self._slidOut = false
@@ -1407,6 +1427,17 @@ function MCL_GuidePinMixin:OnClick(button)
             end
         end
     else
+        -- Shift-click routes the whole set: a treasure achievement is a
+        -- couple of dozen scattered pins, and walking them in map order
+        -- is a lot further than walking them nearest-first.
+        if IsShiftKeyDown() and Guide.StepTracker
+           and self.mountData.coords and #self.mountData.coords > 1 then
+            if Guide.StepTracker:ShowRoute(self.mountData) then
+                HideMiniCard()
+                return
+            end
+        end
+
         -- A location with an unlock chain opens the step tracker instead
         -- of just dropping a waypoint — the tracker sets one anyway, for
         -- the step you're actually on.
