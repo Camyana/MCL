@@ -3745,10 +3745,32 @@ MCL_GUIDE_DATA.mounts = {
 		method = "",
 		itemId = 246734,
 	},
+	-- Rootstalker Grimlynx / Vibrant Petalwing both drop from any of the
+	-- 15 Harandar rares, so they share the same rare coordinates.
+	-- dq = the rare's per-day kill credit (the "Leaf None Behind"
+	-- criteria quests).  It resets at daily reset, so a killed rare keeps
+	-- its pin (greyed out) rather than losing it.
 	[1243597] = {
 		name = "Rootstalker Grimlynx",
-		method = "USE",
+		method = "NPC",
 		itemId = 246735,
+		coords = {
+			{ m = 2413, x = 27.4, y = 71.4, n = "Pterrock", dq = 92191 },
+			{ m = 2413, x = 28.1, y = 81.8, n = "Oro'ohna", dq = 92190 },
+			{ m = 2413, x = 36.6, y = 74.8, n = "Treetop", dq = 92183 },
+			{ m = 2413, x = 39.7, y = 60.8, n = "Ahl'ua'huhi", dq = 92193 },
+			{ m = 2413, x = 40.7, y = 43.1, n = "Dracaena", dq = 92176 },
+			{ m = 2413, x = 44.4, y = 16.0, n = "Annulus the Worldshaker", dq = 92194 },
+			{ m = 2413, x = 45.6, y = 29.7, n = "Mindrot", dq = 92172 },
+			{ m = 2413, x = 51.2, y = 45.3, n = "Rhazul", dq = 91832 },
+			{ m = 2413, x = 56.8, y = 34.1, n = "Serrasa", dq = 92170 },
+			{ m = 2413, x = 59.9, y = 47.0, n = "Queen Lashtongue", dq = 92154 },
+			{ m = 2413, x = 64.4, y = 47.5, n = "Chlorokyll", dq = 92161 },
+			{ m = 2413, x = 65.8, y = 32.9, n = "Stumpy", dq = 92168 },
+			{ m = 2413, x = 68.7, y = 39.0, n = "Chironex", dq = 92137 },
+			{ m = 2413, x = 69.0, y = 60.0, n = "Ha'kalawe", dq = 92142 },
+			{ m = 2413, x = 72.6, y = 69.3, n = "Tallcap the Truthspreader", dq = 92148 },
+		},
 	},
 	[1245198] = {
 		name = "The Headless Horseman's Ghoulish Charger",
@@ -3777,8 +3799,25 @@ MCL_GUIDE_DATA.mounts = {
 	},
 	[1253927] = {
 		name = "Vibrant Petalwing",
-		method = "USE",
+		method = "NPC",
 		itemId = 252012,
+		coords = {
+			{ m = 2413, x = 27.4, y = 71.4, n = "Pterrock", dq = 92191 },
+			{ m = 2413, x = 28.1, y = 81.8, n = "Oro'ohna", dq = 92190 },
+			{ m = 2413, x = 36.6, y = 74.8, n = "Treetop", dq = 92183 },
+			{ m = 2413, x = 39.7, y = 60.8, n = "Ahl'ua'huhi", dq = 92193 },
+			{ m = 2413, x = 40.7, y = 43.1, n = "Dracaena", dq = 92176 },
+			{ m = 2413, x = 44.4, y = 16.0, n = "Annulus the Worldshaker", dq = 92194 },
+			{ m = 2413, x = 45.6, y = 29.7, n = "Mindrot", dq = 92172 },
+			{ m = 2413, x = 51.2, y = 45.3, n = "Rhazul", dq = 91832 },
+			{ m = 2413, x = 56.8, y = 34.1, n = "Serrasa", dq = 92170 },
+			{ m = 2413, x = 59.9, y = 47.0, n = "Queen Lashtongue", dq = 92154 },
+			{ m = 2413, x = 64.4, y = 47.5, n = "Chlorokyll", dq = 92161 },
+			{ m = 2413, x = 65.8, y = 32.9, n = "Stumpy", dq = 92168 },
+			{ m = 2413, x = 68.7, y = 39.0, n = "Chironex", dq = 92137 },
+			{ m = 2413, x = 69.0, y = 60.0, n = "Ha'kalawe", dq = 92142 },
+			{ m = 2413, x = 72.6, y = 69.3, n = "Tallcap the Truthspreader", dq = 92148 },
+		},
 	},
 	[1253929] = {
 		name = "Cerulean Sporeglider",
@@ -3790,7 +3829,11 @@ MCL_GUIDE_DATA.mounts = {
 		method = "Treasure",
 		itemId = 252017,
 		coords = {
-			{ m = 2413, x = 40.8, y = 28.3 },
+			{ m = 2413, x = 40.7, y = 28.1, n = "Peculiar Cauldron", q = 93587,
+				steps = {
+					{ t = "Gather 150 Crystalized Resin Fragments from Flame-Hardened Sap along the river between the burning roots and The Den - each sap gives 2-7, and they don't show on the minimap.", item = 260531, count = 150 },
+					{ t = "Tip the resin into the cauldron.", x = 40.7, y = 28.1, n = "Peculiar Cauldron" },
+				} },
 		},
 	},
 	[1260354] = {
@@ -3798,7 +3841,12 @@ MCL_GUIDE_DATA.mounts = {
 		method = "Chest",
 		itemId = 256423,
 		coords = {
-			{ m = 2413, x = 47.4, y = 67.6 },
+			{ m = 2413, x = 46.7, y = 67.8, n = "Sporespawned Cache", q = 93650,
+				steps = {
+					{ t = "Pick up the Fungal Mallet - it grants a 5 minute buff.", x = 41.3, y = 68.0, n = "Fungal Mallet", aura = 1266347 },
+					{ t = "Ring the Mycelium Gong while the buff holds to spawn the cache.", x = 46.7, y = 67.8, n = "Mycelium Gong" },
+					{ t = "Loot the Sporespawned Cache." },
+				} },
 		},
 	},
 	[1260356] = {
@@ -3811,8 +3859,24 @@ MCL_GUIDE_DATA.mounts = {
 	},
 	[1261155] = {
 		name = "Augmented Stormray",
-		method = "USE",
+		method = "NPC",
 		itemId = 257085,
+		coords = {
+			{ m = 2405, x = 29.5, y = 50.1, n = "Sundereth the Caller", dq = 90805 },
+			{ m = 2405, x = 34.1, y = 82.1, n = "Territorial Voidscythe", dq = 91050 },
+			{ m = 2405, x = 35.6, y = 49.4, n = "Bilemaw the Gluttonous", dq = 93884 },
+			{ m = 2405, x = 35.7, y = 81.2, n = "Tremora", dq = 91048 },
+			{ m = 2405, x = 37.9, y = 71.8, n = "Lotus Darkblossom", dq = 93947 },
+			{ m = 2405, x = 39.5, y = 64.6, n = "Aeonelle Blackstar", dq = 93944 },
+			{ m = 2405, x = 40.2, y = 41.4, n = "Nightbrood", dq = 91051 },
+			{ m = 2405, x = 43.7, y = 51.5, n = "Screammaxa the Matriarch", dq = 93966 },
+			{ m = 2405, x = 47.2, y = 79.8, n = "Bane of the Vilebloods", dq = 93946 },
+			{ m = 2405, x = 48.8, y = 53.0, n = "Ravengerus", dq = 93895 },
+			{ m = 2405, x = 54.0, y = 62.7, n = "Far'thana the Mad", dq = 93896 },
+			{ m = 2405, x = 55.7, y = 79.5, n = "Queen o' War", dq = 93934 },
+			{ m = 2444, x = 41.0, y = 89.1, n = "Eruundi", dq = 91047 },
+			{ m = 2444, x = 46.4, y = 41.0, n = "Rakshur the Bonegrinder", dq = 93953 },
+		},
 	},
 	[1261291] = {
 		name = "Fiery Dragonhawk",
@@ -3821,13 +3885,47 @@ MCL_GUIDE_DATA.mounts = {
 	},
 	[1261302] = {
 		name = "Cobalt Dragonhawk",
-		method = "USE",
+		method = "NPC",
 		itemId = 257147,
+		coords = {
+			{ m = 2395, x = 34.9, y = 20.9, n = "Waverly", dq = 92395 },
+			{ m = 2395, x = 36.6, y = 36.2, n = "Coralfang", dq = 92389 },
+			{ m = 2395, x = 36.5, y = 63.8, n = "Bloated Snapdragon", dq = 92366 },
+			{ m = 2395, x = 36.6, y = 77.3, n = "Lady Liminus", dq = 94856 },
+			{ m = 2395, x = 40.2, y = 85.3, n = "Terrinor", dq = 92409 },
+			{ m = 2395, x = 42.6, y = 69.3, n = "Duskburn", dq = 93550 },
+			{ m = 2395, x = 45.2, y = 79.2, n = "Harried Hawkstrider", dq = 91315 },
+			{ m = 2395, x = 45.6, y = 38.8, n = "Dame Bloodshed", dq = 93561 },
+			{ m = 2395, x = 49.0, y = 87.8, n = "Bad Zed", dq = 92404 },
+			{ m = 2395, x = 51.7, y = 45.7, n = "Malfunctioning Construct", dq = 93555 },
+			{ m = 2395, x = 51.8, y = 74.1, n = "Warden of Weeds", dq = 91280 },
+			{ m = 2395, x = 54.7, y = 60.8, n = "Overfester Hydra", dq = 92392 },
+			{ m = 2395, x = 56.4, y = 77.1, n = "Banuran", dq = 92403 },
+			{ m = 2395, x = 59.3, y = 79.3, n = "Lost Guardian", dq = 92399 },
+			{ m = 2395, x = 63.1, y = 49.9, n = "Cre'van", dq = 92391 },
+		},
 	},
 	[1261316] = {
 		name = "Amani Sharptalon",
-		method = "USE",
+		method = "NPC",
 		itemId = 257152,
+		coords = {
+			{ m = 2437, x = 21.3, y = 70.6, n = "Voidtouched Crustacean", dq = 89581 },
+			{ m = 2437, x = 28.7, y = 24.0, n = "Lightwood Borer", dq = 89575 },
+			{ m = 2437, x = 30.7, y = 45.1, n = "Spinefrill", dq = 89578 },
+			{ m = 2437, x = 33.7, y = 89.0, n = "Elder Oaktalon", dq = 89572 },
+			{ m = 2437, x = 34.4, y = 33.1, n = "Necrohexxer Raz'ka", dq = 89569 },
+			{ m = 2437, x = 39.0, y = 50.0, n = "Poacher Rav'ik", dq = 91634 },
+			{ m = 2437, x = 39.5, y = 20.1, n = "The Devouring Invader", dq = 89583 },
+			{ m = 2437, x = 45.1, y = 41.5, n = "Ash'an the Empowered", dq = 91073 },
+			{ m = 2437, x = 46.4, y = 51.9, n = "Oophaga", dq = 89579 },
+			{ m = 2437, x = 46.7, y = 43.5, n = "The Decaying Diamondback", dq = 91072 },
+			{ m = 2437, x = 47.8, y = 21.0, n = "Depthborn Eelamental", dq = 89573 },
+			{ m = 2437, x = 47.9, y = 34.2, n = "Tiny Vermin", dq = 89580 },
+			{ m = 2437, x = 50.8, y = 65.2, n = "Mrrlokk", dq = 91174 },
+			{ m = 2437, x = 51.5, y = 18.4, n = "The Snapping Scourge", dq = 89570 },
+			{ m = 2437, x = 51.8, y = 72.9, n = "Skullcrusher Harak", dq = 89571 },
+		},
 	},
 	[1261322] = {
 		name = "Crimson Silvermoon Hawkstrider",
@@ -3836,8 +3934,25 @@ MCL_GUIDE_DATA.mounts = {
 	},
 	[1261323] = {
 		name = "Cerulean Hawkstrider",
-		method = "USE",
+		method = "NPC",
 		itemId = 257156,
+		coords = {
+			{ m = 2395, x = 34.9, y = 20.9, n = "Waverly", dq = 92395 },
+			{ m = 2395, x = 36.6, y = 36.2, n = "Coralfang", dq = 92389 },
+			{ m = 2395, x = 36.5, y = 63.8, n = "Bloated Snapdragon", dq = 92366 },
+			{ m = 2395, x = 36.6, y = 77.3, n = "Lady Liminus", dq = 94856 },
+			{ m = 2395, x = 40.2, y = 85.3, n = "Terrinor", dq = 92409 },
+			{ m = 2395, x = 42.6, y = 69.3, n = "Duskburn", dq = 93550 },
+			{ m = 2395, x = 45.2, y = 79.2, n = "Harried Hawkstrider", dq = 91315 },
+			{ m = 2395, x = 45.6, y = 38.8, n = "Dame Bloodshed", dq = 93561 },
+			{ m = 2395, x = 49.0, y = 87.8, n = "Bad Zed", dq = 92404 },
+			{ m = 2395, x = 51.7, y = 45.7, n = "Malfunctioning Construct", dq = 93555 },
+			{ m = 2395, x = 51.8, y = 74.1, n = "Warden of Weeds", dq = 91280 },
+			{ m = 2395, x = 54.7, y = 60.8, n = "Overfester Hydra", dq = 92392 },
+			{ m = 2395, x = 56.4, y = 77.1, n = "Banuran", dq = 92403 },
+			{ m = 2395, x = 59.3, y = 79.3, n = "Lost Guardian", dq = 92399 },
+			{ m = 2395, x = 63.1, y = 49.9, n = "Cre'van", dq = 92391 },
+		},
 	},
 	[1261332] = {
 		name = "Duskbrute Harrower",
@@ -3851,8 +3966,25 @@ MCL_GUIDE_DATA.mounts = {
 	},
 	[1261351] = {
 		name = "Witherbark Pango",
-		method = "USE",
+		method = "NPC",
 		itemId = 257200,
+		coords = {
+			{ m = 2437, x = 21.3, y = 70.6, n = "Voidtouched Crustacean", dq = 89581 },
+			{ m = 2437, x = 28.7, y = 24.0, n = "Lightwood Borer", dq = 89575 },
+			{ m = 2437, x = 30.7, y = 45.1, n = "Spinefrill", dq = 89578 },
+			{ m = 2437, x = 33.7, y = 89.0, n = "Elder Oaktalon", dq = 89572 },
+			{ m = 2437, x = 34.4, y = 33.1, n = "Necrohexxer Raz'ka", dq = 89569 },
+			{ m = 2437, x = 39.0, y = 50.0, n = "Poacher Rav'ik", dq = 91634 },
+			{ m = 2437, x = 39.5, y = 20.1, n = "The Devouring Invader", dq = 89583 },
+			{ m = 2437, x = 45.1, y = 41.5, n = "Ash'an the Empowered", dq = 91073 },
+			{ m = 2437, x = 46.4, y = 51.9, n = "Oophaga", dq = 89579 },
+			{ m = 2437, x = 46.7, y = 43.5, n = "The Decaying Diamondback", dq = 91072 },
+			{ m = 2437, x = 47.8, y = 21.0, n = "Depthborn Eelamental", dq = 89573 },
+			{ m = 2437, x = 47.9, y = 34.2, n = "Tiny Vermin", dq = 89580 },
+			{ m = 2437, x = 50.8, y = 65.2, n = "Mrrlokk", dq = 91174 },
+			{ m = 2437, x = 51.5, y = 18.4, n = "The Snapping Scourge", dq = 89570 },
+			{ m = 2437, x = 51.8, y = 72.9, n = "Skullcrusher Harak", dq = 89571 },
+		},
 	},
 	[1261357] = {
 		name = "Amani Blessed Bear",
@@ -3864,7 +3996,15 @@ MCL_GUIDE_DATA.mounts = {
 		method = "Treasure",
 		itemId = 257223,
 		coords = {
-			{ m = 2437, x = 46.7, y = 81.7 },
+			{ m = 2437, x = 46.7, y = 81.7, n = "Honored Warrior's Cache",
+				steps = {
+					{ t = "Find the Honored Warrior's Cache in the cavern under the tree in Solemn Valley and interact with it.", x = 46.7, y = 81.7, n = "Honored Warrior's Cache" },
+					{ t = "Kill Nalorakk's Chosen at its urn for the Bear Tooth.", x = 32.7, y = 83.5, n = "Nalorakk's Chosen", item = 259219 },
+					{ t = "Kill Halazzi's Chosen for the Lynx Claw.", x = 34.6, y = 33.5, n = "Halazzi's Chosen", item = 259223 },
+					{ t = "Kill Jan'alai's Chosen for the Dragonhawk Feather.", x = 54.8, y = 22.4, n = "Jan'alai's Chosen", item = 259220 },
+					{ t = "Kill Akil'zon's Chosen for the Eagle Talon.", x = 51.6, y = 84.9, n = "Akil'zon's Chosen", item = 259221 },
+					{ t = "Return to the cache - the four tokens unlock it.", x = 46.7, y = 81.7, n = "Honored Warrior's Cache" },
+				} },
 		},
 	},
 	[1261576] = {
@@ -3909,13 +4049,75 @@ MCL_GUIDE_DATA.mounts = {
 	},
 	[1266700] = {
 		name = "Sanguine Harrower",
-		method = "USE",
+		method = "NPC",
 		itemId = 260635,
+		coords = {
+			{ m = 2405, x = 29.5, y = 50.1, n = "Sundereth the Caller", dq = 90805 },
+			{ m = 2405, x = 34.1, y = 82.1, n = "Territorial Voidscythe", dq = 91050 },
+			{ m = 2405, x = 35.6, y = 49.4, n = "Bilemaw the Gluttonous", dq = 93884 },
+			{ m = 2405, x = 35.7, y = 81.2, n = "Tremora", dq = 91048 },
+			{ m = 2405, x = 37.9, y = 71.8, n = "Lotus Darkblossom", dq = 93947 },
+			{ m = 2405, x = 39.5, y = 64.6, n = "Aeonelle Blackstar", dq = 93944 },
+			{ m = 2405, x = 40.2, y = 41.4, n = "Nightbrood", dq = 91051 },
+			{ m = 2405, x = 43.7, y = 51.5, n = "Screammaxa the Matriarch", dq = 93966 },
+			{ m = 2405, x = 47.2, y = 79.8, n = "Bane of the Vilebloods", dq = 93946 },
+			{ m = 2405, x = 48.8, y = 53.0, n = "Ravengerus", dq = 93895 },
+			{ m = 2405, x = 54.0, y = 62.7, n = "Far'thana the Mad", dq = 93896 },
+			{ m = 2405, x = 55.7, y = 79.5, n = "Queen o' War", dq = 93934 },
+			{ m = 2444, x = 41.0, y = 89.1, n = "Eruundi", dq = 91047 },
+			{ m = 2444, x = 46.4, y = 41.0, n = "Rakshur the Bonegrinder", dq = 93953 },
+		},
 	},
 	[1266702] = {
 		name = "Voidbound Stormray",
 		method = "",
 		itemId = 260696,
+	},
+	-- Treasures of Harandar — all 9 hidden treasures (map 2413).
+	-- Same shape as the Coiled Isle set: q retires a looted pin, steps
+	-- carry the unlock chain for the four that need one.  Two of these
+	-- treasures also hand out mounts of their own — Peculiar Cauldron
+	-- and Sporespawned Cache — so those entries repeat the chain.
+	[1270673] = {
+		name = "Vivacious Chloroceros",
+		method = "Treasure",
+		itemId = 263579,
+		coords = {
+			{ m = 2413, x = 26.7, y = 67.7, n = "Impenetrably Sealed Gourd", q = 93508,
+				steps = {
+					{ t = "Head into the cave mouth south-west of the Fungal Flats.", x = 27.5, y = 68.0, n = "Cave entrance" },
+					{ t = "Collect the Mysterious Red Fluid.", x = 27.1, y = 67.8, n = "Mysterious Red Fluid", item = 260251 },
+					{ t = "Collect the Mysterious Purple Fluid.", x = 26.7, y = 68.0, n = "Mysterious Purple Fluid", item = 260250 },
+					{ t = "Mix the two at the Durable Vase to make Fizzing Fluid.", x = 26.6, y = 67.9, n = "Durable Vase", item = 260266 },
+					{ t = "Pour the Fizzing Fluid over the gourd to crack it open.", x = 26.7, y = 67.7, n = "Impenetrably Sealed Gourd" },
+				} },
+			{ m = 2413, x = 40.7, y = 28.1, n = "Peculiar Cauldron", q = 93587,
+				steps = {
+					{ t = "Gather 150 Crystalized Resin Fragments from Flame-Hardened Sap along the river between the burning roots and The Den - each sap gives 2-7, and they don't show on the minimap.", item = 260531, count = 150 },
+					{ t = "Tip the resin into the cauldron.", x = 40.7, y = 28.1, n = "Peculiar Cauldron" },
+				} },
+			{ m = 2413, x = 46.7, y = 67.8, n = "Sporespawned Cache", q = 93650,
+				steps = {
+					{ t = "Pick up the Fungal Mallet - it grants a 5 minute buff.", x = 41.3, y = 68.0, n = "Fungal Mallet", aura = 1266347 },
+					{ t = "Ring the Mycelium Gong while the buff holds to spawn the cache.", x = 46.7, y = 67.8, n = "Mycelium Gong" },
+					{ t = "Loot the Sporespawned Cache." },
+				} },
+			{ m = 2413, x = 47.0, y = 50.5, n = "Burning Branch of the World Tree", q = 92426 },
+			{ m = 2413, x = 47.2, y = 50.8, n = "Gift of the Cycle", q = 93144,
+				steps = {
+					{ t = "Take A Tattered Ball.", x = 51.1, y = 50.6, n = "A Tattered Ball", item = 256882 },
+					{ t = "Place it on the Altar of Innocence.", x = 51.1, y = 47.6, n = "Altar of Innocence" },
+					{ t = "Take A Lost Hunting Knife.", x = 45.1, y = 54.1, n = "A Lost Hunting Knife", item = 257024 },
+					{ t = "Place it on the Altar of Vigor.", x = 47.2, y = 53.1, n = "Altar of Vigor" },
+					{ t = "Take A Rolled-Up Pillow.", x = 51.4, y = 56.0, n = "A Rolled-Up Pillow", item = 257054 },
+					{ t = "Place it on the Altar of Wisdom.", x = 51.1, y = 58.5, n = "Altar of Wisdom" },
+					{ t = "Collect the Gift of the Cycle from the pool inside The Den.", x = 47.2, y = 50.8, n = "Gift of the Cycle" },
+				} },
+			{ m = 2413, x = 55.7, y = 39.4, n = "Kemet's Simmering Cauldron", q = 92436 },
+			{ m = 2413, x = 62.9, y = 51.2, n = "Reliquary's Lost Paintbrush", q = 92431 },
+			{ m = 2413, x = 71.7, y = 31.1, n = "Failed Shroom Jumper's Satchel", q = 92424 },
+			{ m = 2413, x = 73.6, y = 65.2, n = "Sporelord's Fight Prize", q = 92427 },
+		},
 	},
 	[1296731] = {
 		name = "Cerulean Deathwalker",
@@ -3979,7 +4181,20 @@ MCL_GUIDE_DATA.mounts = {
 		method = "QUEST",
 		itemId = 273838,
 		coords = {
-			{ m = 2509, x = 50.5, y = 63.9, n = "Du'gal" },
+			-- Six time-gated quests, one a day, so the tracker is mostly
+			-- here to answer "which day am I on".  Only the first and last
+			-- quest IDs are published; the four in between are ticked by
+			-- hand until someone datamines them.
+			{ m = 2509, x = 50.5, y = 63.9, n = "Du'gal",
+				steps = {
+					{ t = "Reach Renown 10 with Zul'jarra's Forces." },
+					{ t = "Day 1 - take \"Ancestral Gems\" from Du'gal in the Vaults of Atal'Utek.", x = 50.5, y = 63.9, n = "Du'gal", quest = 96267 },
+					{ t = "Day 2 - return to Du'gal for the next quest.", x = 50.5, y = 63.9, n = "Du'gal" },
+					{ t = "Day 3 - return to Du'gal for the next quest.", x = 50.5, y = 63.9, n = "Du'gal" },
+					{ t = "Day 4 - return to Du'gal for the next quest.", x = 50.5, y = 63.9, n = "Du'gal" },
+					{ t = "Day 5 - return to Du'gal for the next quest.", x = 50.5, y = 63.9, n = "Du'gal" },
+					{ t = "Day 6 - finish \"The Innocent Essence\": recover 15 Essence of Tok'jara from the venom geyser.", quest = 96305 },
+				} },
 		},
 	},
 	[1296670] = {
@@ -4028,6 +4243,7 @@ MCL_GUIDE_DATA.mounts = {
 	--   item  = item ID whose presence means the step is done
 	--   count = how many of `item` are needed (default 1)
 	--   aura  = spell ID (or list) whose buff means the step is done
+	--   quest = quest ID (or list) whose completion means the step is done
 	-- Steps with no trigger are conversation-only: nothing in the API
 	-- exposes them, so the tracker lets you tick those off by hand.
 	[1297224] = {
@@ -4134,7 +4350,13 @@ MCL_GUIDE_DATA.mounts = {
 		itemId = 275659,
 		lockBossName = "Ral'kala",
 		coords = {
-			{ m = 2512, x = 58.2, y = 48.7, n = "Image of Astalor Bloodsworn" },
+			{ m = 2512, x = 58.2, y = 48.7, n = "Image of Astalor Bloodsworn",
+				steps = {
+					{ t = "Unlock Preyhunter's Journey Rank 1 for Season 2." },
+					{ t = "Toggle Nightmare mode with the Image of Astalor Bloodsworn at Tokka's Landing, or pick up a Nightmare Prey hunt in the zone.", x = 58.2, y = 48.7, n = "Image of Astalor Bloodsworn" },
+					{ t = "Burn Ossified Relics at a Haunted Brazier (the blue brazier icons on the world map) until the bar fills. It's a public event, so any Nightmare-flagged player can feed it." },
+					{ t = "Defeat Ral'kala when he spawns." },
+				} },
 		},
 	},
 	[1297408] = {

@@ -983,6 +983,29 @@ function MCL_GuidePinMixin:OnAcquired(mountData, waypoint)
         self.badge:Hide()
     end
 
+    -- ── Step-guide star ─────────────────────────────────────
+    -- Marks a location that carries an unlock chain, so you can tell at
+    -- a glance which pins open the step tracker rather than having to
+    -- hover every one.
+    if not self.guideStar then
+        self.guideStar = self.visual:CreateTexture(nil, "OVERLAY", nil, 2)
+    end
+    local hasSteps = waypoint and waypoint.steps and #waypoint.steps > 0
+    if hasSteps then
+        -- Sized off the pin rather than the raw scale, so it keeps the
+        -- same proportion whatever pin size the user has chosen.
+        local starSize = math.max(24, math.floor(pinSize * 0.90 + 0.5))
+        self.guideStar:ClearAllPoints()
+        self.guideStar:SetPoint("CENTER", self.visual, "TOPRIGHT", -3, -3)
+        self.guideStar:SetSize(starSize, starSize)
+        if not self.guideStar:SetAtlas("PetJournal-FavoritesIcon") then
+            self.guideStar:SetTexture("Interface\\Common\\FavoritesIcon")
+        end
+        self.guideStar:Show()
+    else
+        self.guideStar:Hide()
+    end
+
     -- ── Desaturate if collected, or already done today ──────
     -- A rare that has already given its daily kill credit keeps its pin
     -- (the location still matters tomorrow) but is greyed out like a
@@ -998,6 +1021,7 @@ function MCL_GuidePinMixin:OnAcquired(mountData, waypoint)
         self.borderLeft:SetAlpha(0.4)
         self.borderRight:SetAlpha(0.4)
         if self.badge then self.badge:SetAlpha(0.5) end
+        self.guideStar:SetAlpha(0.5)
     else
         self.icon:SetDesaturated(false)
         self.icon:SetAlpha(1.0)
@@ -1006,6 +1030,7 @@ function MCL_GuidePinMixin:OnAcquired(mountData, waypoint)
         self.borderLeft:SetAlpha(1.0)
         self.borderRight:SetAlpha(1.0)
         if self.badge then self.badge:SetAlpha(1.0) end
+        self.guideStar:SetAlpha(1.0)
     end
 
     -- ── Hover reference dot (stays when pin slides away) ───
@@ -1048,6 +1073,7 @@ function MCL_GuidePinMixin:OnReleased()
     end
     if self.dot then self.dot:Hide() end
     if self.line then self.line:Hide() end
+    if self.guideStar then self.guideStar:Hide() end
 end
 
 -- ── Pin handlers ─────────────────────────────────────────────
@@ -1353,6 +1379,7 @@ CollapseClusterImmediate = function()
         end
         if pin.dot then pin.dot:Hide() end
         if pin.line then pin.line:Hide() end
+        if pin.guideStar then pin.guideStar:Hide() end
     end
     wipe(spreadCluster)
 end
@@ -1425,6 +1452,7 @@ local function ReleasePins()
         end
         if pin.dot then pin.dot:Hide() end
         if pin.line then pin.line:Hide() end
+        if pin.guideStar then pin.guideStar:Hide() end
         pin.mountData = nil
         pin:SetScale(1)
         table.insert(pinPool, pin)
@@ -1654,6 +1682,19 @@ local function PlacePin(canvas, rec, fx, fy, canvasWidth, canvasHeight, scaleCom
         px / scaleComp, py / scaleComp)
 end
 
+-- A pin counts as a rare when its source is a rare spawn — the same
+-- records the legend labels "Rare".  Rare-pool mounts carry dq on their
+-- coords (per-day kill credit), which catches shared pools too.
+local function IsRarePin(rec)
+    if rec.method == "NPC" then return true end
+    if rec.coords then
+        for _, wp in ipairs(rec.coords) do
+            if wp.dq then return true end
+        end
+    end
+    return false
+end
+
 -- ─── Refresh pins on the world map ──────────────────────────
 function Pins:RefreshPins()
     if not Guide.ready then return end
@@ -1694,7 +1735,11 @@ function Pins:RefreshPins()
     -- Direct mounts for the current map
     local mounts = Guide:GetMountsForZone(mapID, showChildren)
     for _, rec in ipairs(mounts) do
-        if rec.coords then
+        -- A zone's rare pool is a dozen-plus pins that sit on the map all
+        -- day; the toolbar's rare toggle drops just those.
+        if IsRarePin(rec) and MCL_GUIDE_SETTINGS.showRarePins == false then
+            -- skipped
+        elseif rec.coords then
             for _, wp in ipairs(rec.coords) do
                 -- Skip locations already spent for good (a looted treasure).
                 -- Daily objectives stay, and are greyed out by OnAcquired.

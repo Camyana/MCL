@@ -43,6 +43,7 @@ local mountList   = {}
 
 -- Pin toggle button
 local pinToggleButton
+local rareToggleButton
 
 -- ─── Flyout helper ──────────────────────────────────────────
 local function GetFlyout()
@@ -218,7 +219,8 @@ local function AnchorPanelToTab()
         panelFrame:SetPoint("TOPRIGHT", tabButton, "TOPLEFT", -4, 0)
     end
 
-    -- Keep pin toggle button anchored beside the tab
+    -- Keep the toggle buttons anchored beside the tab, in a row that
+    -- runs the same way the tab strip does.
     if pinToggleButton then
         pinToggleButton:ClearAllPoints()
         if dir == "DOWN" or dir == "UP" then
@@ -227,6 +229,14 @@ local function AnchorPanelToTab()
         else
             -- Tab is horizontal strip → place toggle below the tab
             pinToggleButton:SetPoint("TOP", tabButton, "BOTTOM", 0, -2)
+        end
+    end
+    if rareToggleButton and pinToggleButton then
+        rareToggleButton:ClearAllPoints()
+        if dir == "DOWN" or dir == "UP" then
+            rareToggleButton:SetPoint("LEFT", pinToggleButton, "RIGHT", 2, 0)
+        else
+            rareToggleButton:SetPoint("TOP", pinToggleButton, "BOTTOM", 0, -2)
         end
     end
 end
@@ -417,6 +427,61 @@ local function GetPanelFrame()
     end)
     pinToggleButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
+    -- ── Rare pins toggle button ─────────────────────────────
+    -- A zone's rare pool is a dozen-plus pins that stay on the map all
+    -- day; this hides just those without touching the rest.
+    rareToggleButton = CreateFrame("Button", nil, WorldMapFrame, "BackdropTemplate")
+    rareToggleButton:SetSize(TAB_SIZE, TAB_SIZE)
+    rareToggleButton:SetFrameStrata("HIGH")
+    rareToggleButton:SetFrameLevel((WorldMapFrame:GetFrameLevel() or 5) + 20)
+    rareToggleButton:SetBackdrop({
+        bgFile   = "Interface\\Tooltips\\UI-Tooltip-Background",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true, tileSize = 16, edgeSize = 10,
+        insets = { left = 2, right = 2, top = 2, bottom = 2 },
+    })
+
+    local function UpdateRareToggleVisual()
+        local on = MCL_GUIDE_SETTINGS.showRarePins ~= false
+        if on then
+            rareToggleButton:SetBackdropColor(0.05, 0.15, 0.08, 0.95)
+            rareToggleButton:SetBackdropBorderColor(0.2, 0.8, 0.3, 0.8)
+            rareToggleButton.icon:SetDesaturated(false)
+            rareToggleButton.icon:SetAlpha(1.0)
+        else
+            rareToggleButton:SetBackdropColor(0.12, 0.05, 0.05, 0.95)
+            rareToggleButton:SetBackdropBorderColor(0.6, 0.2, 0.2, 0.8)
+            rareToggleButton.icon:SetDesaturated(true)
+            rareToggleButton.icon:SetAlpha(0.5)
+        end
+    end
+
+    rareToggleButton.icon = rareToggleButton:CreateTexture(nil, "ARTWORK")
+    rareToggleButton.icon:SetPoint("CENTER")
+    rareToggleButton.icon:SetSize(TAB_SIZE - 8, TAB_SIZE - 8)
+    -- The skull vignette players already read as "rare" on the map.
+    if not rareToggleButton.icon:SetAtlas("VignetteKill") then
+        rareToggleButton.icon:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcon_8")
+    end
+
+    UpdateRareToggleVisual()
+
+    rareToggleButton:SetScript("OnClick", function()
+        MCL_GUIDE_SETTINGS.showRarePins = not (MCL_GUIDE_SETTINGS.showRarePins ~= false)
+        UpdateRareToggleVisual()
+        if Guide.MapPins and Guide.MapPins.RefreshPins then
+            Guide.MapPins:RefreshPins()
+        end
+    end)
+    rareToggleButton:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        local state = (MCL_GUIDE_SETTINGS.showRarePins ~= false) and ("|cFF00FF00" .. L["ON"] .. "|r") or ("|cFFFF4444" .. L["OFF"] .. "|r")
+        GameTooltip:AddLine(string.format(L["Rare Pins (%s)"], state))
+        GameTooltip:AddLine(L["Click to toggle rare spawn pins on the map"], 0.5, 0.5, 0.5)
+        GameTooltip:Show()
+    end)
+    rareToggleButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
     -- ── Icon container ──────────────────────────────────────
     panelFrame = CreateFrame("Frame", "MCL_GuideZonePanel", WorldMapFrame)
     panelFrame:SetSize(ICON_SIZE, ICON_SIZE)
@@ -591,10 +656,12 @@ function Panel:Refresh()
         if panelExpanded and #mountList > 0 then pf:Show() end
         if tabButton then tabButton:Show() end
         if pinToggleButton then pinToggleButton:Show() end
+        if rareToggleButton then rareToggleButton:Show() end
     else
         pf:Hide()
         if tabButton then tabButton:Hide() end
         if pinToggleButton then pinToggleButton:Hide() end
+        if rareToggleButton then rareToggleButton:Hide() end
     end
 end
 
@@ -603,6 +670,7 @@ function Panel:OnMapShow()
     if MCL_GUIDE_SETTINGS.showZonePanel then
         if tabButton then tabButton:Show() end
         if pinToggleButton then pinToggleButton:Show() end
+        if rareToggleButton then rareToggleButton:Show() end
         self:Refresh()
     end
 end
@@ -611,6 +679,7 @@ function Panel:OnMapHide()
     if panelFrame then panelFrame:Hide() end
     if tabButton  then tabButton:Hide()  end
     if pinToggleButton then pinToggleButton:Hide() end
+        if rareToggleButton then rareToggleButton:Hide() end
     ReleaseAllIcons()
 end
 
@@ -665,6 +734,7 @@ SlashCmdList["MCLGUIDE"] = function(msg)
         if panelFrame then panelFrame:Hide() end
         if tabButton then tabButton:Hide() end
         if pinToggleButton then pinToggleButton:Hide() end
+        if rareToggleButton then rareToggleButton:Hide() end
     elseif msg == "show" then
         MCL_GUIDE_SETTINGS.showZonePanel = true
         if WorldMapFrame and WorldMapFrame:IsShown() then
@@ -684,6 +754,7 @@ SlashCmdList["MCLGUIDE"] = function(msg)
             if panelFrame then panelFrame:Hide() end
             if tabButton then tabButton:Hide() end
             if pinToggleButton then pinToggleButton:Hide() end
+        if rareToggleButton then rareToggleButton:Hide() end
             print("|cFF1FB7EBMCL|r Guide: " .. L["MCL_GUIDE_PANEL_HIDDEN"])
         end
     end

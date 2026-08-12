@@ -60,12 +60,24 @@ local function HasAura(step)
     return false
 end
 
+-- Quest triggers cover the chains that run on quest completion rather
+-- than on something landing in your bags — a time-gated questline being
+-- the case that needs it most, since a week can pass between steps.
+local function HasQuest(step)
+    if not step.quest then return false end
+    local quests = type(step.quest) == "table" and step.quest or { step.quest }
+    for _, questID in ipairs(quests) do
+        if C_QuestLog.IsQuestFlaggedCompleted(questID) then return true end
+    end
+    return false
+end
+
 -- A step is done when its own trigger fires, when it was ticked by
 -- hand, or when the whole objective is finished.
 local function IsStepDone(index, step, allDone)
     if allDone then return true end
     if manualDone[index] then return true end
-    return HasItem(step) or HasAura(step)
+    return HasItem(step) or HasAura(step) or HasQuest(step)
 end
 
 -- The chain is ordered, so anything before a completed step must also
