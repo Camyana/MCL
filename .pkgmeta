@@ -1,0 +1,9 @@
+# Packaging configuration for the BigWigs/CurseForge packager.
+#
+# Without a changelog of our own the packager builds one from the git
+# history, which is where the "lightweight tag / Author / Date / commit"
+# preamble in the What's New panel comes from.  Pointing it at
+# CHANGELOG.md ships our own release notes instead.
+manual-changelog:
+    filename: CHANGELOG.md
+    markup-type: markdown

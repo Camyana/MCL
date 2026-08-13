@@ -729,6 +729,27 @@ SlashCmdList["MCLGUIDE"] = function(msg)
         Panel:Refresh()
         return
     end
+    if msg == "raretest" then
+        if Guide.RareAlert then
+            Guide.RareAlert:Preview()
+            print("|cFF1FB7EBMCL|r Rare alert preview - drag it to move, right-click to dismiss")
+        end
+        return
+    end
+    if msg == "rares" then
+        MCL_GUIDE_SETTINGS.rareMountAlerts = not (MCL_GUIDE_SETTINGS.rareMountAlerts ~= false)
+        if MCL_GUIDE_SETTINGS.rareMountAlerts then
+            if Guide.RareAlert and Guide.RareAlert:UsingRareScanner() then
+                print("|cFF1FB7EBMCL|r Rare mount alerts: ON (tagging RareScanner's alerts - it does the scanning)")
+            else
+                print("|cFF1FB7EBMCL|r Rare mount alerts: ON")
+            end
+        else
+            print("|cFF1FB7EBMCL|r Rare mount alerts: OFF")
+        end
+        if Guide.RareAlert then Guide.RareAlert:Refresh() end
+        return
+    end
     if msg == "hide" then
         MCL_GUIDE_SETTINGS.showZonePanel = false
         if panelFrame then panelFrame:Hide() end
