@@ -42,6 +42,7 @@ local BAR_MIN_W        = 150
 local MOUNT_MODEL      = 110
 local MOUNT_GAP        = 10
 local MOUNT_CAM        = 0.9   -- lower pulls the camera in, filling the tile
+local DEFAULT_SCALE    = 0.7   -- the banner is generous at full size
 local MOUNT_LABEL_H    = 14
 local MAX_MOUNT_MODELS = 3
 
@@ -121,6 +122,14 @@ local function MountNames(mounts)
     return names
 end
 
+-- ─── Sound ──────────────────────────────────────────────────
+-- A rare scanner beeps for every rare it sees.  This is the "and that
+-- one has a mount on it" cue, so it stays distinct from that.
+function Alert:PlayCue()
+    if MCL_GUIDE_SETTINGS and MCL_GUIDE_SETTINGS.rareAlertSound == false then return end
+    PlaySound(SOUNDKIT.UI_WORLDQUEST_START, "Master")
+end
+
 -- ─── The banner ─────────────────────────────────────────────
 -- Blizzard's raid warning is red Friz Quadrata in the middle of the
 -- screen and looks nothing like the rest of MCL.  This instead reads
@@ -135,6 +144,7 @@ end
 --
 -- Only the name carries a background; the models sit on the world.
 local banner, bannerTimer
+local unlocked = false   -- parked open for positioning
 
 local function SaveBannerPosition()
     if not banner then return end
@@ -280,8 +290,65 @@ local function GetBanner()
         f:SetPoint("TOP", UIParent, "TOP", 0, -190)
     end
 
+    f.unlockHint = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    f.unlockHint:SetPoint("BOTTOM", f, "BOTTOM", 0, -14)
+    f.unlockHint:SetText("|cFF1FB7EB" .. L["Drag to position"] .. "|r")
+    f.unlockHint:Hide()
+
+    f:SetScale((MCL_GUIDE_SETTINGS and MCL_GUIDE_SETTINGS.rareAlertScale) or DEFAULT_SCALE)
+
     banner = f
     return f
+end
+
+-- ─── Position and size ──────────────────────────────────────
+function Alert:SetScale(scale)
+    scale = math.max(0.4, math.min(scale or DEFAULT_SCALE, 2.0))
+    MCL_GUIDE_SETTINGS.rareAlertScale = scale
+    if banner then banner:SetScale(scale) end
+    return scale
+end
+
+function Alert:GetScale()
+    return (MCL_GUIDE_SETTINGS and MCL_GUIDE_SETTINGS.rareAlertScale) or DEFAULT_SCALE
+end
+
+function Alert:ResetPosition()
+    MCL_GUIDE_SETTINGS.rareAlertAnchor = nil
+    if banner then
+        banner:ClearAllPoints()
+        banner:SetPoint("TOP", UIParent, "TOP", 0, -190)
+    end
+end
+
+-- Unlocked, the banner stays put with a sample in it so it can be
+-- dragged into place — the alerts themselves are too brief to aim.
+function Alert:IsUnlocked()
+    return unlocked
+end
+
+function Alert:Unlock()
+    unlocked = true
+    if bannerTimer then bannerTimer:Cancel(); bannerTimer = nil end
+    self:Preview()
+    local f = GetBanner()
+    f:SetAlpha(1)
+    if f.unlockHint then f.unlockHint:Show() end
+end
+
+function Alert:Lock()
+    unlocked = false
+    local f = banner
+    if not f then return end
+    if f.unlockHint then f.unlockHint:Hide() end
+    if bannerTimer then bannerTimer:Cancel(); bannerTimer = nil end
+    f:Hide()
+    f:SetAlpha(0)
+end
+
+function Alert:ToggleUnlock()
+    if unlocked then self:Lock() else self:Unlock() end
+    return unlocked
 end
 
 -- Mount models under the bar, centred as a group so one mount sits in
@@ -387,11 +454,17 @@ local function ShowBanner(rareName, mounts, npcID)
         f:SetHeight(RARE_MODEL_H + BAR_H + 24)
     end
 
-    if bannerTimer then bannerTimer:Cancel() end
+    if bannerTimer then bannerTimer:Cancel(); bannerTimer = nil end
     if f.fadeOut:IsPlaying() then f.fadeOut:Stop() end
     f:Show()
-    f.fadeIn:Play()
 
+    -- While unlocked it stays put so it can be dragged into place.
+    if unlocked then
+        f:SetAlpha(1)
+        return
+    end
+
+    f.fadeIn:Play()
     bannerTimer = C_Timer.NewTimer(8, function()
         bannerTimer = nil
         if f:IsShown() then f.fadeOut:Play() end
@@ -409,7 +482,7 @@ local function Announce(rareName, mounts, npcID)
 
     print("|cFF1FB7EBMCL|r " .. string.format(L["%s is up - drops %s"],
         rareName, table.concat(MountNames(mounts), ", ")))
-    PlaySound(SOUNDKIT.UI_WORLDQUEST_START, "Master")
+    Alert:PlayCue()
 end
 
 -- ─── Standalone scanning ────────────────────────────────────
@@ -474,6 +547,10 @@ local function HookRareScanner()
 
         local mounts = Alert:MountsFrom(self.name)
         if not mounts then return end
+
+        -- RareScanner beeps for every rare it finds; this is the extra
+        -- cue that says this one is actually worth breaking off for.
+        Alert:PlayCue()
 
         -- Atlas markup rather than a unicode star: the description uses
         -- GameFontWhiteTiny, which has no glyph for one and renders a box.

@@ -587,8 +587,30 @@ local function GetFrame()
         f:SetPoint("CENTER", UIParent, "CENTER", 300, 0)
     end
 
+    f:SetScale((MCL_GUIDE_SETTINGS and MCL_GUIDE_SETTINGS.guideWindowScale) or 1.0)
+
     frame = f
     return f
+end
+
+-- ─── Position and size ──────────────────────────────────────
+function Tracker:SetScale(scale)
+    scale = math.max(0.5, math.min(scale or 1.0, 2.0))
+    MCL_GUIDE_SETTINGS.guideWindowScale = scale
+    if frame then frame:SetScale(scale) end
+    return scale
+end
+
+function Tracker:GetScale()
+    return (MCL_GUIDE_SETTINGS and MCL_GUIDE_SETTINGS.guideWindowScale) or 1.0
+end
+
+function Tracker:ResetPosition()
+    MCL_GUIDE_SETTINGS.stepTrackerAnchor = nil
+    if frame then
+        frame:ClearAllPoints()
+        frame:SetPoint("CENTER", UIParent, "CENTER", 300, 0)
+    end
 end
 
 -- The nav strip only exists when there is paging to do, so the rows

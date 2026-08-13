@@ -1,5 +1,35 @@
 # Changelog
 
+## 3.8.0
+
+### Settings for everything the guide has grown
+
+The guide picked up a lot recently — step chains, routes, pin stars, rare alerts — and most of it had no home in the settings panel. Now it does.
+
+**Map Pin Options** gains two switches that were previously only reachable from the map toolbar, or not at all:
+
+- **Show Rare Pins** — a zone's rare pool is a dozen-plus pins; turn them off when they're in the way
+- **Star pins with a guide** — the star marking locations that open a step-by-step tracker
+
+**Guide Window** is a new section for the step and route window:
+
+- **Show numbered step markers** — the numbered spots drawn on the map for a chain
+- **Window Size** — 0.5× to 2×
+- **Reset Position**
+
+**Rare Mount Alerts** is a new section too:
+
+- **Enable**, and **Play a sound** — ticking the sound plays it, so you can hear what you've chosen
+- **Alert Size** — 0.4× to 1.5×
+- **Move Alert** — parks the alert on screen with a sample in it so you can drag it where you want; alerts are too brief to aim otherwise
+- **Reset Position**
+
+### The alert is smaller, and audible with RareScanner
+
+The alert now defaults to **70% size** — it was generous at full scale — and the slider above covers the rest.
+
+It also plays its cue when RareScanner is doing the detecting. RareScanner beeps for every rare it finds; this is the second, distinct cue that means the one in front of you is actually carrying a mount you don't have.
+
 ## 3.7.0
 
 ### Rare mount alerts

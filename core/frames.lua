@@ -3712,7 +3712,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     -- CARD 7: Map Pin Options
     -- =====================================================
     if MCL_GUIDE_DATA and MCL_GUIDE_DATA.zones then
-        local pinCard = createCard(frame, L["Map Pin Options"], yPos, 230)
+        local pinCard = createCard(frame, L["Map Pin Options"], yPos, 290)
         
         local pinY = -34
         
@@ -3795,6 +3795,42 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         showChildLabel:SetTextColor(0.7, 0.78, 0.88, 1)
         pinY = pinY - 30
         
+        -- Checkbox: Show Rare Pins
+        local rarePinsCheck = CreateFrame("CheckButton", nil, pinCard)
+        rarePinsCheck:SetSize(18, 18)
+        rarePinsCheck:SetPoint("TOPLEFT", pinCard, "TOPLEFT", 12, pinY)
+        rarePinsCheck:SetChecked(MCL_GUIDE_SETTINGS.showRarePins ~= false)
+        rarePinsCheck.originalOnClick = function(self)
+            MCL_GUIDE_SETTINGS.showRarePins = self:GetChecked()
+            if MCL_GUIDE and MCL_GUIDE.MapPins and MCL_GUIDE.MapPins.RefreshPins then
+                MCL_GUIDE.MapPins:RefreshPins()
+            end
+        end
+        styleCheckbox(rarePinsCheck)
+        local rarePinsLabel = pinCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        rarePinsLabel:SetPoint("LEFT", rarePinsCheck, "RIGHT", 8, 0)
+        rarePinsLabel:SetText(L["Show Rare Pins"])
+        rarePinsLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        pinY = pinY - 30
+
+        -- Checkbox: Show guide star
+        local starCheck = CreateFrame("CheckButton", nil, pinCard)
+        starCheck:SetSize(18, 18)
+        starCheck:SetPoint("TOPLEFT", pinCard, "TOPLEFT", 12, pinY)
+        starCheck:SetChecked(MCL_GUIDE_SETTINGS.showGuideStar ~= false)
+        starCheck.originalOnClick = function(self)
+            MCL_GUIDE_SETTINGS.showGuideStar = self:GetChecked()
+            if MCL_GUIDE and MCL_GUIDE.MapPins and MCL_GUIDE.MapPins.RefreshPins then
+                MCL_GUIDE.MapPins:RefreshPins()
+            end
+        end
+        styleCheckbox(starCheck)
+        local starLabel = pinCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        starLabel:SetPoint("LEFT", starCheck, "RIGHT", 8, 0)
+        starLabel:SetText(L["Star pins with a guide"])
+        starLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        pinY = pinY - 30
+
         -- Slider: Map Pin Size
         local pinScaleValue = (MCL_GUIDE_SETTINGS and MCL_GUIDE_SETTINGS.mapPinScale) or 2.0
         local mapPinSizePrefix = L["Map Pin Size:"]
@@ -3834,11 +3870,248 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         end
         styleSlider(pinSlider, false)
 
-        yPos = yPos - 240
+        yPos = yPos - 300
     end
-    
+
     -- =====================================================
-    -- CARD 8: Reset
+    -- CARD 8: Guide Window (step chains and routes)
+    -- =====================================================
+    do
+        local guideCard = createCard(frame, L["Guide Window"], yPos, 160)
+        local gY = -34
+
+        -- Checkbox: numbered step markers on the map
+        local markersCheck = CreateFrame("CheckButton", nil, guideCard)
+        markersCheck:SetSize(18, 18)
+        markersCheck:SetPoint("TOPLEFT", guideCard, "TOPLEFT", 12, gY)
+        markersCheck:SetChecked(MCL_GUIDE_SETTINGS.showStepMarkers ~= false)
+        markersCheck.originalOnClick = function(self)
+            MCL_GUIDE_SETTINGS.showStepMarkers = self:GetChecked()
+        end
+        styleCheckbox(markersCheck)
+        local markersLabel = guideCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        markersLabel:SetPoint("LEFT", markersCheck, "RIGHT", 8, 0)
+        markersLabel:SetText(L["Show numbered step markers"])
+        markersLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        gY = gY - 30
+
+        -- Slider: guide window scale
+        local guideScale = (MCL_GUIDE and MCL_GUIDE.StepTracker and MCL_GUIDE.StepTracker:GetScale())
+            or (MCL_GUIDE_SETTINGS and MCL_GUIDE_SETTINGS.guideWindowScale) or 1.0
+        local guidePrefix = L["Window Size:"]
+        local guideLabel = guideCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        guideLabel:SetPoint("TOPLEFT", guideCard, "TOPLEFT", 12, gY)
+        guideLabel:SetText(guidePrefix .. " " .. string.format("%.2fx", guideScale))
+        guideLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+
+        local guideSlider = CreateFrame("Slider", nil, guideCard)
+        guideSlider:SetPoint("TOPLEFT", guideCard, "TOPLEFT", 12, gY - 22)
+        guideSlider:SetOrientation("HORIZONTAL")
+        guideSlider:SetThumbTexture("Interface\\Buttons\\WHITE8x8")
+        guideSlider:SetMinMaxValues(0.5, 2.0)
+        guideSlider:SetValue(guideScale)
+        guideSlider:SetValueStep(0.05)
+        guideSlider:SetObeyStepOnDrag(true)
+        guideSlider:SetWidth(200)
+        guideSlider:SetHeight(20)
+
+        local guideMin = guideCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        guideMin:SetPoint("LEFT", guideSlider, "LEFT", 0, -15)
+        guideMin:SetText("0.5x"); guideMin:SetTextColor(0.5, 0.55, 0.65, 1)
+        local guideMax = guideCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        guideMax:SetPoint("RIGHT", guideSlider, "RIGHT", 0, -15)
+        guideMax:SetText("2.0x"); guideMax:SetTextColor(0.5, 0.55, 0.65, 1)
+
+        guideSlider.originalOnValueChanged = function(self, value)
+            value = math.floor(value * 20 + 0.5) / 20
+            if MCL_GUIDE and MCL_GUIDE.StepTracker then
+                value = MCL_GUIDE.StepTracker:SetScale(value)
+            elseif MCL_GUIDE_SETTINGS then
+                MCL_GUIDE_SETTINGS.guideWindowScale = value
+            end
+            guideLabel:SetText(guidePrefix .. " " .. string.format("%.2fx", value))
+        end
+        styleSlider(guideSlider, false)
+        gY = gY - 62
+
+        local guideResetBtn = CreateFrame("Button", nil, guideCard, "BackdropTemplate")
+        guideResetBtn:SetSize(130, 26)
+        guideResetBtn:SetPoint("TOPLEFT", guideCard, "TOPLEFT", 12, gY)
+        guideResetBtn:SetBackdrop({
+            bgFile = "Interface\\Buttons\\WHITE8x8",
+            edgeFile = "Interface\\Buttons\\WHITE8x8",
+            edgeSize = 1
+        })
+        guideResetBtn:SetBackdropColor(0.12, 0.13, 0.16, 0.7)
+        guideResetBtn:SetBackdropBorderColor(0.30, 0.32, 0.38, 0.8)
+
+        local guideResetText = guideResetBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        guideResetText:SetPoint("CENTER")
+        guideResetText:SetText(L["Reset Position"])
+        guideResetText:SetTextColor(0.7, 0.75, 0.82, 1)
+
+        guideResetBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.18, 0.19, 0.23, 0.9) end)
+        guideResetBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.12, 0.13, 0.16, 0.7) end)
+        guideResetBtn:SetScript("OnClick", function()
+            if MCL_GUIDE and MCL_GUIDE.StepTracker then
+                MCL_GUIDE.StepTracker:ResetPosition()
+            end
+        end)
+
+        yPos = yPos - 170
+    end
+
+    -- =====================================================
+    -- CARD 9: Rare Mount Alerts
+    -- =====================================================
+    do
+        local alertCard = createCard(frame, L["Rare Mount Alerts"], yPos, 220)
+        local aY = -34
+
+        -- Checkbox: enable
+        local alertCheck = CreateFrame("CheckButton", nil, alertCard)
+        alertCheck:SetSize(18, 18)
+        alertCheck:SetPoint("TOPLEFT", alertCard, "TOPLEFT", 12, aY)
+        alertCheck:SetChecked(MCL_GUIDE_SETTINGS.rareMountAlerts ~= false)
+        alertCheck.originalOnClick = function(self)
+            MCL_GUIDE_SETTINGS.rareMountAlerts = self:GetChecked()
+            if MCL_GUIDE and MCL_GUIDE.RareAlert then
+                MCL_GUIDE.RareAlert:Refresh()
+            end
+        end
+        styleCheckbox(alertCheck)
+
+        local alertLabel = alertCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        alertLabel:SetPoint("LEFT", alertCheck, "RIGHT", 8, 0)
+        alertLabel:SetText(L["Alert on rares that drop a mount"])
+        alertLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        aY = aY - 30
+
+        -- Checkbox: sound cue
+        local alertSoundCheck = CreateFrame("CheckButton", nil, alertCard)
+        alertSoundCheck:SetSize(18, 18)
+        alertSoundCheck:SetPoint("TOPLEFT", alertCard, "TOPLEFT", 12, aY)
+        alertSoundCheck:SetChecked(MCL_GUIDE_SETTINGS.rareAlertSound ~= false)
+        alertSoundCheck.originalOnClick = function(self)
+            MCL_GUIDE_SETTINGS.rareAlertSound = self:GetChecked()
+            if self:GetChecked() and MCL_GUIDE and MCL_GUIDE.RareAlert then
+                MCL_GUIDE.RareAlert:PlayCue()   -- so you hear what you picked
+            end
+        end
+        styleCheckbox(alertSoundCheck)
+        local alertSoundLabel = alertCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        alertSoundLabel:SetPoint("LEFT", alertSoundCheck, "RIGHT", 8, 0)
+        alertSoundLabel:SetText(L["Play a sound"])
+        alertSoundLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        aY = aY - 30
+
+        -- Slider: banner scale
+        local alertScale = (MCL_GUIDE and MCL_GUIDE.RareAlert and MCL_GUIDE.RareAlert:GetScale())
+            or (MCL_GUIDE_SETTINGS and MCL_GUIDE_SETTINGS.rareAlertScale) or 0.7
+        local scalePrefix = L["Alert Size:"]
+        local scaleLabel = alertCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        scaleLabel:SetPoint("TOPLEFT", alertCard, "TOPLEFT", 12, aY)
+        scaleLabel:SetText(scalePrefix .. " " .. string.format("%.2fx", alertScale))
+        scaleLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+
+        local scaleSlider = CreateFrame("Slider", nil, alertCard)
+        scaleSlider:SetPoint("TOPLEFT", alertCard, "TOPLEFT", 12, aY - 22)
+        scaleSlider:SetOrientation("HORIZONTAL")
+        scaleSlider:SetThumbTexture("Interface\\Buttons\\WHITE8x8")
+        scaleSlider:SetMinMaxValues(0.4, 1.5)
+        scaleSlider:SetValue(alertScale)
+        scaleSlider:SetValueStep(0.05)
+        scaleSlider:SetObeyStepOnDrag(true)
+        scaleSlider:SetWidth(200)
+        scaleSlider:SetHeight(20)
+
+        local scaleMin = alertCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        scaleMin:SetPoint("LEFT", scaleSlider, "LEFT", 0, -15)
+        scaleMin:SetText("0.4x"); scaleMin:SetTextColor(0.5, 0.55, 0.65, 1)
+        local scaleMax = alertCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        scaleMax:SetPoint("RIGHT", scaleSlider, "RIGHT", 0, -15)
+        scaleMax:SetText("1.5x"); scaleMax:SetTextColor(0.5, 0.55, 0.65, 1)
+
+        scaleSlider.originalOnValueChanged = function(self, value)
+            value = math.floor(value * 20 + 0.5) / 20   -- round to 0.05
+            if MCL_GUIDE and MCL_GUIDE.RareAlert then
+                value = MCL_GUIDE.RareAlert:SetScale(value)
+            elseif MCL_GUIDE_SETTINGS then
+                MCL_GUIDE_SETTINGS.rareAlertScale = value
+            end
+            scaleLabel:SetText(scalePrefix .. " " .. string.format("%.2fx", value))
+        end
+        styleSlider(scaleSlider, false)
+        aY = aY - 62
+
+        -- Buttons: unlock to drag, and reset back to centre-top
+        local moveBtn = CreateFrame("Button", nil, alertCard, "BackdropTemplate")
+        moveBtn:SetSize(130, 26)
+        moveBtn:SetPoint("TOPLEFT", alertCard, "TOPLEFT", 12, aY)
+        moveBtn:SetBackdrop({
+            bgFile = "Interface\\Buttons\\WHITE8x8",
+            edgeFile = "Interface\\Buttons\\WHITE8x8",
+            edgeSize = 1
+        })
+        moveBtn:SetBackdropColor(0.10, 0.20, 0.30, 0.7)
+        moveBtn:SetBackdropBorderColor(0.20, 0.45, 0.68, 0.8)
+
+        local moveText = moveBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        moveText:SetPoint("CENTER")
+        moveText:SetTextColor(0.7, 0.85, 1, 1)
+
+        local function RefreshMoveText()
+            local on = MCL_GUIDE and MCL_GUIDE.RareAlert and MCL_GUIDE.RareAlert:IsUnlocked()
+            moveText:SetText(on and L["Lock"] or L["Move Alert"])
+        end
+        RefreshMoveText()
+
+        moveBtn:SetScript("OnEnter", function(self)
+            self:SetBackdropColor(0.15, 0.30, 0.45, 0.9)
+        end)
+        moveBtn:SetScript("OnLeave", function(self)
+            self:SetBackdropColor(0.10, 0.20, 0.30, 0.7)
+        end)
+        moveBtn:SetScript("OnClick", function()
+            if MCL_GUIDE and MCL_GUIDE.RareAlert then
+                MCL_GUIDE.RareAlert:ToggleUnlock()
+                RefreshMoveText()
+            end
+        end)
+
+        local resetPosBtn = CreateFrame("Button", nil, alertCard, "BackdropTemplate")
+        resetPosBtn:SetSize(130, 26)
+        resetPosBtn:SetPoint("LEFT", moveBtn, "RIGHT", 8, 0)
+        resetPosBtn:SetBackdrop({
+            bgFile = "Interface\\Buttons\\WHITE8x8",
+            edgeFile = "Interface\\Buttons\\WHITE8x8",
+            edgeSize = 1
+        })
+        resetPosBtn:SetBackdropColor(0.12, 0.13, 0.16, 0.7)
+        resetPosBtn:SetBackdropBorderColor(0.30, 0.32, 0.38, 0.8)
+
+        local resetPosText = resetPosBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        resetPosText:SetPoint("CENTER")
+        resetPosText:SetText(L["Reset Position"])
+        resetPosText:SetTextColor(0.7, 0.75, 0.82, 1)
+
+        resetPosBtn:SetScript("OnEnter", function(self)
+            self:SetBackdropColor(0.18, 0.19, 0.23, 0.9)
+        end)
+        resetPosBtn:SetScript("OnLeave", function(self)
+            self:SetBackdropColor(0.12, 0.13, 0.16, 0.7)
+        end)
+        resetPosBtn:SetScript("OnClick", function()
+            if MCL_GUIDE and MCL_GUIDE.RareAlert then
+                MCL_GUIDE.RareAlert:ResetPosition()
+            end
+        end)
+
+        yPos = yPos - 230
+    end
+
+    -- =====================================================
+    -- CARD 9: Reset
     -- =====================================================
     local resetCard = createCard(frame, L["Danger Zone"], yPos, 60)
     -- Red accent line for danger zone

@@ -1011,6 +1011,7 @@ function MCL_GuidePinMixin:OnAcquired(mountData, waypoint)
         self.guideStar = self.visual:CreateTexture(nil, "OVERLAY", nil, 2)
     end
     local hasSteps = waypoint and waypoint.steps and #waypoint.steps > 0
+        and MCL_GUIDE_SETTINGS.showGuideStar ~= false
     if hasSteps then
         -- Sized off the pin rather than the raw scale, so it keeps the
         -- same proportion whatever pin size the user has chosen.
@@ -1635,6 +1636,7 @@ ShowStepMarkers = function(waypoint)
     ReleaseStepMarkers()
 
     if not waypoint then return end
+    if MCL_GUIDE_SETTINGS.showStepMarkers == false then return end
     local spots = CollectStepSpots(waypoint.steps)
     if not spots then return end
     if not MCL_GUIDE_SETTINGS or not MCL_GUIDE_SETTINGS.showMapPins then return end
