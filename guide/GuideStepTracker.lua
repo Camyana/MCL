@@ -433,6 +433,18 @@ local function NextUnvisited(from)
     return nil
 end
 
+-- Opening or closing a route changes what the map should be drawing, and
+-- the map won't know unless it is told.
+local function RedrawMap()
+    if Guide.MapPins and Guide.MapPins.RefreshRoutePath then
+        Guide.MapPins:RefreshRoutePath()
+    end
+    -- The minimap line follows the same stop the window is pointing at.
+    if Guide.RouteCompass and Guide.RouteCompass.Refresh then
+        Guide.RouteCompass:Refresh()
+    end
+end
+
 -- ─── Rows ───────────────────────────────────────────────────
 -- A row is a coloured heading band with a bullet, and a detail line on
 -- a slightly lighter panel beneath it.
@@ -1208,18 +1220,6 @@ end
 
 function Tracker:IsShown()
     return frame and frame:IsShown()
-end
-
--- Opening or closing a route changes what the map should be drawing, and
--- the map won't know unless it is told.
-local function RedrawMap()
-    if Guide.MapPins and Guide.MapPins.RefreshRoutePath then
-        Guide.MapPins:RefreshRoutePath()
-    end
-    -- The minimap line follows the same stop the window is pointing at.
-    if Guide.RouteCompass and Guide.RouteCompass.Refresh then
-        Guide.RouteCompass:Refresh()
-    end
 end
 
 -- The world map draws the planned route, so it has to be able to see it.

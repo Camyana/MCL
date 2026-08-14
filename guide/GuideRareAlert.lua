@@ -55,6 +55,14 @@ local scanTicker  = nil
 local trackTicker = nil     -- runs only while a waypoint is being tracked
 local rsHooked    = false
 
+-- Midnight added "secret values": some unit calls hand back a value that
+-- can't be read or compared, and touching one in a conditional throws.
+-- RareScanner guards every unit call this way, so we do too.
+local function plain(value)
+    if issecretvalue and issecretvalue(value) then return nil end
+    return value
+end
+
 -- ─── What drops from what ───────────────────────────────────
 -- Rare coords are the ones carrying a per-day kill credit, plus the
 -- single-rare NPC drops that have no pool.
@@ -107,7 +115,10 @@ local function Entries(rareName)
 end
 
 function Alert:MountsFrom(rareName)
-    if not rareName or rareName == "" then return nil end
+    -- The other door names come through, alongside CheckName: callers
+    -- pass UnitName straight in, and that can be a secret value.
+    rareName = plain(rareName)
+    if type(rareName) ~= "string" or rareName == "" then return nil end
     if not lookup then BuildLookup() end
 
     local entries = Entries(rareName)
@@ -145,7 +156,8 @@ end
 -- have no record of at all, versus one we know whose mounts are already
 -- collected or already looted today.  Both used to print "no mount".
 function Alert:Verdict(rareName)
-    if not rareName or rareName == "" then return "|cFF888888unnamed|r" end
+    rareName = plain(rareName)
+    if type(rareName) ~= "string" or rareName == "" then return "|cFF888888unnamed|r" end
     if not lookup then BuildLookup() end
     local mounts = self:MountsFrom(rareName)
     if mounts then return "|cFF00FF00" .. #mounts .. " mount(s)|r" end
@@ -240,14 +252,6 @@ end
 local banner, bannerTimer
 local unlocked = false   -- parked open for positioning
 local tracked  = nil     -- the rare our waypoint is pointing at
-
--- Midnight added "secret values": some unit calls hand back a value that
--- can't be read or compared, and touching one in a conditional throws.
--- RareScanner guards every unit call this way, so we do too.
-local function plain(value)
-    if issecretvalue and issecretvalue(value) then return nil end
-    return value
-end
 
 -- Where to send you for a given rare, worked out fresh each time.
 --
@@ -503,6 +507,10 @@ local function GetBanner()
     end)
 
     f.bar:SetScript("OnEnter", function(self)
+        -- Invisible means gone.  If the banner is ever left shown at zero
+        -- alpha it is still mouse-live, and answering the hover would put
+        -- a tooltip over empty screen.
+        if f:GetAlpha() < 0.05 then return end
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
         GameTooltip:AddLine(f.rareName or "", 1, 1, 1)
         GameTooltip:AddLine("|cFF00FF00" .. L["Click to target"] .. "|r")
@@ -527,6 +535,33 @@ local function GetBanner()
 
     function f:ShowChrome() end
 
+    -- A frame hidden while the cursor is on it never receives OnLeave, so
+    -- whatever tooltip it was showing stays on screen with nothing under
+    -- it - which reads as the alert still being there.  Cleanup hangs off
+    -- OnHide rather than the fade's OnFinished, so it runs no matter what
+    -- hid the banner: the fade, the close button, Lock(), or a reload.
+    f:SetScript("OnHide", function(self)
+        self:SetScript("OnUpdate", nil)
+        -- Whatever hid us, stop taking mouse input.  A frame left shown
+        -- at zero alpha is invisible but still live, and the hover it
+        -- answers looks exactly like an alert that never went away.
+        if self.bar then self.bar:EnableMouse(false) end
+        for _, btn in ipairs(self.mountIcons or {}) do btn:EnableMouse(false) end
+        if self.life then self.life:Hide() end
+        self:HideModels()
+
+        local owner = GameTooltip:GetOwner()
+        if owner then
+            if owner == self.bar then
+                GameTooltip:Hide()
+            else
+                for _, btn in ipairs(self.mountIcons or {}) do
+                    if owner == btn then GameTooltip:Hide(); break end
+                end
+            end
+        end
+    end)
+
     f.fadeIn = f:CreateAnimationGroup()
     local ai = f.fadeIn:CreateAnimation("Alpha")
     ai:SetFromAlpha(0); ai:SetToAlpha(1); ai:SetDuration(0.25)
@@ -537,11 +572,8 @@ local function GetBanner()
     ao:SetFromAlpha(1); ao:SetToAlpha(0); ao:SetDuration(0.5)
     f.fadeOut:SetScript("OnPlay", function() f:HideModels() end)
     f.fadeOut:SetScript("OnFinished", function()
-        f:SetScript("OnUpdate", nil)
-        if f.life then f.life:Hide() end
-        f:HideModels()
         f:SetAlpha(0)
-        f:Hide()
+        f:Hide()   -- OnHide does the rest
     end)
 
     f:SetScript("OnMouseUp", function(self, button)
@@ -652,6 +684,7 @@ local function LayoutMountIcons(f, mounts)
                 btn:SetScript("OnShow", function(self) self.glow:SetAlpha(0) end)
 
                 btn:SetScript("OnEnter", function(self)
+                    if f:GetAlpha() < 0.05 then return end
                     self.glow:SetColorTexture(0.30, 0.66, 0.96, 0.35)
                     -- The count summarises; hovering says which one.
                     if self.mountName then f.reward:SetText(self.mountName) end
@@ -884,6 +917,10 @@ local function ShowBanner(rareName, mounts, npcID, unit, livePos)
 
     if bannerTimer then bannerTimer:Cancel(); bannerTimer = nil end
     if f.fadeOut:IsPlaying() then f.fadeOut:Stop() end
+
+    -- Showing puts the mouse back; OnHide takes it away.
+    f.bar:EnableMouse(true)
+    for _, btn in ipairs(f.mountIcons or {}) do btn:EnableMouse(true) end
     f:Show()
 
     if unlocked then
@@ -941,8 +978,16 @@ end
 -- "Creature-0-1234-5678-9012-<npcID>-000ABC" — the sixth field is the
 -- creature ID, which is what a model frame needs.
 local function NpcIDFromGUID(guid)
-    if not guid then return nil end
-    local kind, _, _, _, _, id = strsplit("-", guid)
+    -- UnitGUID hands back a secret string in 12.x, and strsplit on one
+    -- throws rather than returning nothing.  Fired from nameplate and
+    -- target events, that is thousands of errors a session.  No GUID we
+    -- can read means no npcID; the model falls back to the icon and
+    -- everything else carries on off the name.
+    guid = plain(guid)
+    if type(guid) ~= "string" then return nil end
+
+    local ok, kind, _, _, _, _, id = pcall(strsplit, "-", guid)
+    if not ok then return nil end
     if kind == "Creature" or kind == "Vehicle" then
         return tonumber(id)
     end
@@ -953,7 +998,12 @@ end
 -- the target — the cases where we can act on it directly rather than
 -- waiting for a click.
 local function CheckName(name, npcID, unit, livePos)
-    if not name then return end
+    -- UnitName is a secret value for some units in 12.x, and every use
+    -- below is a string operation that would throw on one.  This is the
+    -- single door every detection path comes through, so the guard lives
+    -- here rather than at each of the four call sites.
+    name = plain(name)
+    if type(name) ~= "string" or name == "" then return end
     -- A corpse is not an opportunity.  Anything already dead is skipped
     -- outright, whether we found it on a nameplate or under the cursor.
     if unit and plain(UnitIsDead(unit)) then return end
@@ -1022,7 +1072,8 @@ local function ScanNameplates()
     if not C_NamePlate or not C_NamePlate.GetNamePlates then return end
     for _, plate in ipairs(C_NamePlate.GetNamePlates()) do
         local unit = plate and plate.namePlateUnitToken
-        if unit and UnitExists(unit) and not UnitIsPlayer(unit) and not UnitIsDead(unit) then
+        if unit and plain(UnitExists(unit)) and not plain(UnitIsPlayer(unit))
+            and not plain(UnitIsDead(unit)) then
             CheckName(UnitName(unit), NpcIDFromGUID(UnitGUID(unit)), unit)
         end
     end
@@ -1145,7 +1196,8 @@ local function Sweep()
     NoticeArrival()
     ScanNameplates()
     -- The target counts too: you may have clicked it before we ever saw it.
-    if UnitExists("target") and not UnitIsPlayer("target") and not UnitIsDead("target") then
+    if plain(UnitExists("target")) and not plain(UnitIsPlayer("target"))
+        and not plain(UnitIsDead("target")) then
         CheckName(UnitName("target"), NpcIDFromGUID(UnitGUID("target")), "target")
     end
 end
@@ -1228,8 +1280,9 @@ function Alert:Preview()
     end
     -- Nothing outstanding: preview with whatever the player is looking
     -- at, so the model frame still has something to draw.
-    local npcID = UnitExists("target") and NpcIDFromGUID(UnitGUID("target")) or nil
-    ShowBanner(UnitExists("target") and UnitName("target") or "Coin-Eye Skully",
+    local haveTarget = plain(UnitExists("target"))
+    local npcID = haveTarget and NpcIDFromGUID(UnitGUID("target")) or nil
+    ShowBanner((haveTarget and plain(UnitName("target"))) or "Coin-Eye Skully",
         { { name = "Ruby Writhe" }, { name = "Topaz Skyfang" } }, npcID)
     return false
 end
@@ -1277,11 +1330,26 @@ function Alert:Debug()
         end
     end
 
-    if UnitExists("target") then
-        local mounts = self:MountsFrom(UnitName("target"))
-        print(("  target: %s - %s"):format(UnitName("target"),
+    if plain(UnitExists("target")) then
+        local targetName = plain(UnitName("target")) or "<secret>"
+        local mounts = self:MountsFrom(targetName)
+        print(("  target: %s - %s"):format(targetName,
             mounts and ("|cFF00FF00" .. #mounts .. " mount(s)|r") or "|cFF888888no match|r"))
 
+        if banner then
+            print(("  banner: shown=%s alpha=%.2f mouse=%s fading=%s"):format(
+                tostring(banner:IsShown()), banner:GetAlpha(),
+                tostring(banner:IsMouseEnabled()),
+                tostring(banner.fadeOut and banner.fadeOut:IsPlaying())))
+            if banner.bar then
+                print(("  bar:    shown=%s mouse=%s over=%s"):format(
+                    tostring(banner.bar:IsShown()),
+                    tostring(banner.bar:IsMouseEnabled()),
+                    tostring(banner.bar:IsMouseOver())))
+            end
+            print(("  timer:  %s   unlocked=%s"):format(
+                tostring(bannerTimer ~= nil), tostring(unlocked)))
+        end
         if banner and banner.rareModel then
             local m = banner.rareModel
             print(("  model: unit=%s tried=%s framed=%s cam=%s shown=%s file=%s"):format(

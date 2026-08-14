@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.9.2
+
+### Fixes
+
+- **Thousands of errors a session.** Creature IDs are read from a unit's GUID, and in Midnight that GUID comes back as a value addons aren't allowed to read. Every nameplate and every target change tried anyway. All the paths that read a unit's name, GUID or state now check first, and a value they can't read simply means the alert works from the name instead.
+- **The route's `<` and `>` arrows did nothing** and threw an error each time they were clicked.
+- **The rare alert left something behind.** After it faded, the space it occupied still answered the mouse, showing its tooltip over empty screen. It now stops listening the moment it goes, whatever made it go.
+- **Lucent Hawkstrider** listed its dungeon where its boss should be. It drops from Degentrius.
+
 ## 3.9.1
 
 ### The route is a loop, and the map shows it

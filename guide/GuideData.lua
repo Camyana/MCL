@@ -4042,7 +4042,7 @@ MCL_GUIDE_DATA.mounts = {
 		name = "Lucent Hawkstrider",
 		method = "Dungeon",
 		itemId = 260231,
-		lockBossName = "Magister's Terrace (Midnight)",
+		lockBossName = "Degentrius",
 		coords = {
 			{ m = 2424, x = 63, y = 16 },
 		},
