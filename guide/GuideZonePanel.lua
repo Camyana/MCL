@@ -729,6 +729,14 @@ SlashCmdList["MCLGUIDE"] = function(msg)
         Panel:Refresh()
         return
     end
+    if msg == "rarewatch" then
+        if Guide.RareAlert then Guide.RareAlert:ToggleWatch() end
+        return
+    end
+    if msg == "raredebug" then
+        if Guide.RareAlert then Guide.RareAlert:Debug() end
+        return
+    end
     if msg == "raretest" then
         if Guide.RareAlert then
             Guide.RareAlert:Preview()

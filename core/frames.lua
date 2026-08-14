@@ -3965,7 +3965,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     -- CARD 9: Rare Mount Alerts
     -- =====================================================
     do
-        local alertCard = createCard(frame, L["Rare Mount Alerts"], yPos, 220)
+        local alertCard = createCard(frame, L["Rare Mount Alerts"], yPos, 250)
         local aY = -34
 
         -- Checkbox: enable
@@ -4003,6 +4003,60 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         alertSoundLabel:SetPoint("LEFT", alertSoundCheck, "RIGHT", 8, 0)
         alertSoundLabel:SetText(L["Play a sound"])
         alertSoundLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+
+        -- Which sound: click to step through them, hearing each one.
+        local soundBtn = CreateFrame("Button", nil, alertCard, "BackdropTemplate")
+        soundBtn:SetSize(150, 22)
+        soundBtn:SetPoint("LEFT", alertSoundLabel, "RIGHT", 10, 0)
+        soundBtn:SetBackdrop({
+            bgFile = "Interface\\Buttons\\WHITE8x8",
+            edgeFile = "Interface\\Buttons\\WHITE8x8",
+            edgeSize = 1
+        })
+        soundBtn:SetBackdropColor(0.10, 0.20, 0.30, 0.7)
+        soundBtn:SetBackdropBorderColor(0.20, 0.45, 0.68, 0.8)
+
+        local soundText = soundBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        soundText:SetPoint("CENTER")
+        soundText:SetTextColor(0.7, 0.85, 1, 1)
+
+        local function RefreshSoundText()
+            local s = MCL_GUIDE and MCL_GUIDE.RareAlert and MCL_GUIDE.RareAlert:GetSound()
+            soundText:SetText((s and s.label or "-") .. "  >")
+        end
+        RefreshSoundText()
+
+        soundBtn:SetScript("OnEnter", function(self)
+            self:SetBackdropColor(0.15, 0.30, 0.45, 0.9)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:AddLine(L["Click to hear the next sound"], 1, 1, 1)
+            GameTooltip:Show()
+        end)
+        soundBtn:SetScript("OnLeave", function(self)
+            self:SetBackdropColor(0.10, 0.20, 0.30, 0.7)
+            GameTooltip:Hide()
+        end)
+        soundBtn:SetScript("OnClick", function()
+            if MCL_GUIDE and MCL_GUIDE.RareAlert then
+                MCL_GUIDE.RareAlert:CycleSound()
+                RefreshSoundText()
+            end
+        end)
+        aY = aY - 30
+
+        -- Checkbox: retire the waypoint once you get there
+        local clearWpCheck = CreateFrame("CheckButton", nil, alertCard)
+        clearWpCheck:SetSize(18, 18)
+        clearWpCheck:SetPoint("TOPLEFT", alertCard, "TOPLEFT", 12, aY)
+        clearWpCheck:SetChecked(MCL_GUIDE_SETTINGS.rareClearWaypoint ~= false)
+        clearWpCheck.originalOnClick = function(self)
+            MCL_GUIDE_SETTINGS.rareClearWaypoint = self:GetChecked()
+        end
+        styleCheckbox(clearWpCheck)
+        local clearWpLabel = alertCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        clearWpLabel:SetPoint("LEFT", clearWpCheck, "RIGHT", 8, 0)
+        clearWpLabel:SetText(L["Clear the waypoint on arrival"])
+        clearWpLabel:SetTextColor(0.7, 0.78, 0.88, 1)
         aY = aY - 30
 
         -- Slider: banner scale
@@ -4107,7 +4161,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
             end
         end)
 
-        yPos = yPos - 230
+        yPos = yPos - 260
     end
 
     -- =====================================================

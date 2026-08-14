@@ -37,6 +37,7 @@ local DEFAULT_SETTINGS = {
     rareAlertAnchor    = nil,       -- { point, relPoint, x, y } saved alert banner position
     rareAlertScale     = 0.7,       -- alert banner scale
     rareAlertSound     = true,      -- play a cue when a mount rare shows up
+    rareClearWaypoint  = true,      -- drop the waypoint once you reach the rare
     showLegendTab      = true,      -- show the "MCL Mounts" legend tab on the world map
     showRepInTooltip   = true,
     hideCollected      = true,      -- hide already-collected mounts in zone panel & map pins

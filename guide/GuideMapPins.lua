@@ -1510,13 +1510,13 @@ local function AcquirePin(canvas)
         pin:SetScript("OnLeave", pin.OnMouseLeave)
         pin:SetScript("OnClick", pin.OnClick)
 
-        -- Prevent mouse events from propagating to underlying map elements
-        if pin.SetPropagateMouseMotion then
-            pin:SetPropagateMouseMotion(false)
-        end
-        if pin.SetPropagateMouseClicks then
-            pin:SetPropagateMouseClicks(false)
-        end
+        -- Mouse events used to be stopped from propagating to the map
+        -- underneath here.  SetPropagateMouseMotion/Clicks are protected
+        -- in 12.x: the call is refused outright and the log takes an
+        -- ADDON_ACTION_BLOCKED line for every pin built, which on a busy
+        -- map is hundreds.  pcall doesn't help - the block is reported by
+        -- the client, not raised as a Lua error.  Both default to false
+        -- for a frame we create, so asking for it gained nothing anyway.
     end
     pin:Show()
     table.insert(activePins, pin)

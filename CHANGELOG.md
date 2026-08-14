@@ -1,5 +1,42 @@
 # Changelog
 
+## 3.9.0
+
+### Five rares that never alerted, now do
+
+The rare mount alert matches the name the game gives a rare against the name in MCL's data, exactly. Five of those names were stored short, so those rares were sighted and silently ignored:
+
+- **Lockjaw** → Lockjaw the Snapper
+- **Hisstara** → Hisstara the Raiser
+- **Siltmouth** → Siltmouth, the Unflappable
+- **Sss'alik** → Sss'alik, The Rotten Claw
+- **Cre'van** → Cre'van, Cruel Taskmaster
+
+All 71 rare names have been checked against the game's own vignette table. A name that doesn't match exactly now falls back to a prefix match at a word boundary, so a short name still works instead of failing silently.
+
+### The alert, redesigned
+
+The rare's model now stands above the card rather than clipping into it, framed as a bust so a long-tailed drake and a humanoid arrive at the same size — previously one filled the box and the other rendered as a speck. The card underneath:
+
+- The rare's name as a headline, bracketed by hairlines, shrinking to fit rather than truncating mid-word
+- A **RARE SIGHTING** label in the top band, alongside a proper dismiss button
+- Larger, brighter instruction and reward text — both were close to unreadable at their old size
+- Mount rewards sit in framed wells; hovering one names it on the reward line and shows its full tooltip
+- A drop shadow, so the card doesn't disappear into a dark zone
+- A rule along the bottom edge draining over the alert's life, so you can see it about to go
+
+### The waypoint retires itself
+
+Clicking a rare alert sets a waypoint. That waypoint now clears when you get there — within 40 yards — as well as when the rare dies, including when somebody else kills it. **Clear the waypoint on arrival** in Rare Mount Alerts turns it off. Only waypoints MCL set are ever cleared; if you've pointed somewhere else since, yours is left alone.
+
+### Fixes
+
+- The alert's click target no longer sits under the mount icons, which were swallowing clicks meant for targeting
+- Fixed a crash when showing a rare whose model was still loading
+- Map pins no longer flood the error log with blocked-action messages, once per pin drawn
+- Raid marking removed. It never worked: the game refuses the call from an addon in any form, and every attempt only added an error to the log
+- `/mcg raredebug` now distinguishes a rare MCL has no record of from one whose mounts you've already collected or looted today
+
 ## 3.8.0
 
 ### Settings for everything the guide has grown
