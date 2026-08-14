@@ -733,6 +733,10 @@ SlashCmdList["MCLGUIDE"] = function(msg)
         if Guide.RareAlert then Guide.RareAlert:ToggleWatch() end
         return
     end
+    if msg == "routedebug" then
+        if Guide.MapPins and Guide.MapPins.RouteDebug then Guide.MapPins:RouteDebug() end
+        return
+    end
     if msg == "raredebug" then
         if Guide.RareAlert then Guide.RareAlert:Debug() end
         return

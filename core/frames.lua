@@ -3877,7 +3877,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     -- CARD 8: Guide Window (step chains and routes)
     -- =====================================================
     do
-        local guideCard = createCard(frame, L["Guide Window"], yPos, 160)
+        local guideCard = createCard(frame, L["Guide Window"], yPos, 250)
         local gY = -34
 
         -- Checkbox: numbered step markers on the map
@@ -3893,6 +3893,57 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         markersLabel:SetPoint("LEFT", markersCheck, "RIGHT", 8, 0)
         markersLabel:SetText(L["Show numbered step markers"])
         markersLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        gY = gY - 30
+
+        -- Checkbox: a route moves on by itself once you get there
+        local autoAdvCheck = CreateFrame("CheckButton", nil, guideCard)
+        autoAdvCheck:SetSize(18, 18)
+        autoAdvCheck:SetPoint("TOPLEFT", guideCard, "TOPLEFT", 12, gY)
+        autoAdvCheck:SetChecked(MCL_GUIDE_SETTINGS.routeAutoAdvance ~= false)
+        autoAdvCheck.originalOnClick = function(self)
+            MCL_GUIDE_SETTINGS.routeAutoAdvance = self:GetChecked()
+        end
+        styleCheckbox(autoAdvCheck)
+        local autoAdvLabel = guideCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        autoAdvLabel:SetPoint("LEFT", autoAdvCheck, "RIGHT", 8, 0)
+        autoAdvLabel:SetText(L["Advance the route on arrival"])
+        autoAdvLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        gY = gY - 30
+
+        -- Checkbox: draw the route's legs on the world map
+        local routePathCheck = CreateFrame("CheckButton", nil, guideCard)
+        routePathCheck:SetSize(18, 18)
+        routePathCheck:SetPoint("TOPLEFT", guideCard, "TOPLEFT", 12, gY)
+        routePathCheck:SetChecked(MCL_GUIDE_SETTINGS.showRoutePath ~= false)
+        routePathCheck.originalOnClick = function(self)
+            MCL_GUIDE_SETTINGS.showRoutePath = self:GetChecked()
+            if MCL_GUIDE and MCL_GUIDE.MapPins then
+                MCL_GUIDE.MapPins:RefreshRoutePath()
+            end
+        end
+        styleCheckbox(routePathCheck)
+        local routePathLabel = guideCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        routePathLabel:SetPoint("LEFT", routePathCheck, "RIGHT", 8, 0)
+        routePathLabel:SetText(L["Draw the route on the map"])
+        routePathLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        gY = gY - 30
+
+        -- Checkbox: point at the next stop from the minimap
+        local miniRouteCheck = CreateFrame("CheckButton", nil, guideCard)
+        miniRouteCheck:SetSize(18, 18)
+        miniRouteCheck:SetPoint("TOPLEFT", guideCard, "TOPLEFT", 12, gY)
+        miniRouteCheck:SetChecked(MCL_GUIDE_SETTINGS.showMinimapRoute ~= false)
+        miniRouteCheck.originalOnClick = function(self)
+            MCL_GUIDE_SETTINGS.showMinimapRoute = self:GetChecked()
+            if MCL_GUIDE and MCL_GUIDE.RouteCompass then
+                MCL_GUIDE.RouteCompass:Refresh()
+            end
+        end
+        styleCheckbox(miniRouteCheck)
+        local miniRouteLabel = guideCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        miniRouteLabel:SetPoint("LEFT", miniRouteCheck, "RIGHT", 8, 0)
+        miniRouteLabel:SetText(L["Point to the next stop on the minimap"])
+        miniRouteLabel:SetTextColor(0.7, 0.78, 0.88, 1)
         gY = gY - 30
 
         -- Slider: guide window scale
@@ -3958,7 +4009,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
             end
         end)
 
-        yPos = yPos - 170
+        yPos = yPos - 260
     end
 
     -- =====================================================

@@ -1695,6 +1695,200 @@ local function UpdatePinScales()
     end
 end
 
+-- ─── The planned route, drawn on the canvas ─────────────────
+-- A list of stops tells you where to go but not in what order; the line
+-- is the part that makes it a route.  Legs already walked are dimmed
+-- rather than dropped, so you can see where you came from.
+local routeLines = {}
+local routeLayer = nil
+
+-- Lines need a frame of their own, not the canvas.  A texture created
+-- straight on the canvas draws at the canvas's own level, which is
+-- underneath the map's detail layer - that layer is a child frame, so it
+-- wins.  Pins are visible because they're frames too.
+--
+-- Above the pins rather than below.  Underneath looked tidier, until you
+-- notice which leg it hides: the loop is rotated to start at the stop
+-- nearest you, so the closing leg runs between two stops that are
+-- neighbours on the map - short, and swallowed whole by a pair of 34px
+-- pin icons.  The loop then reads as open when it isn't.  A 2.5px line
+-- clipping the corner of a pin is the cheaper cost.
+local function GetRouteLayer(canvas)
+    if not routeLayer then
+        routeLayer = CreateFrame("Frame", nil, canvas)
+    end
+    routeLayer:SetParent(canvas)
+    routeLayer:SetAllPoints(canvas)
+    routeLayer:SetFrameStrata("TOOLTIP")
+    routeLayer:SetFrameLevel(2600)
+    routeLayer:Show()
+    return routeLayer
+end
+
+local function ReleaseRouteLines()
+    for _, line in ipairs(routeLines) do
+        line:Hide()
+    end
+end
+
+local function AcquireRouteLine(layer, index)
+    local line = routeLines[index]
+    if not line then
+        line = layer:CreateLine(nil, "OVERLAY")
+        routeLines[index] = line
+    end
+    line:Show()
+    return line
+end
+
+local lastRouteDraw = {}
+
+local function DrawRoutePath(canvas, mapID, canvasWidth, canvasHeight, scaleComp)
+    lastRouteDraw = { mapID = mapID, reason = nil, stops = 0, drawn = 0 }
+
+    if MCL_GUIDE_SETTINGS.showRoutePath == false then
+        lastRouteDraw.reason = "setting off"
+        return
+    end
+
+    local Tracker = Guide.StepTracker
+    if not (Tracker and Tracker.GetRoute) then
+        lastRouteDraw.reason = "tracker has no GetRoute"
+        return
+    end
+    local stops, current, arrived = Tracker:GetRoute()
+    if not stops then
+        lastRouteDraw.reason = "no route on screen"
+        return
+    end
+    lastRouteDraw.stops = #stops
+    lastRouteDraw.current = current
+    if #stops < 2 then
+        lastRouteDraw.reason = "route has fewer than two stops"
+        return
+    end
+
+    local layer = GetRouteLayer(canvas)
+
+    local drawn = 0
+    -- One extra pass round: the last stop joins back to the first, because
+    -- the route is a circuit rather than a one-way trip.
+    for i = 1, #stops do
+        local a, b = stops[i], stops[i + 1] or stops[1]
+        -- Only legs whose both ends are on the map being looked at.  A
+        -- route can span maps; half a leg drawn to nowhere is worse than
+        -- no leg at all.
+        if a and b and a.m == mapID and b.m == mapID
+            and a.x and a.y and b.x and b.y then
+            drawn = drawn + 1
+            local line = AcquireRouteLine(layer, drawn)
+
+            line:SetStartPoint("TOPLEFT", layer,
+                (a.x / 100) * canvasWidth, -(a.y / 100) * canvasHeight)
+            line:SetEndPoint("TOPLEFT", layer,
+                (b.x / 100) * canvasWidth, -(b.y / 100) * canvasHeight)
+
+            -- One weight for the whole route.  Varying the thickness read
+            -- as a rendering fault rather than as meaning, so the state is
+            -- carried by colour alone: bright for the leg you're on, the
+            -- same cyan faded for the rest of the loop, grey for legs
+            -- already walked.
+            line:SetThickness(2.5 * scaleComp)
+
+            local walked = arrived and a.wp and arrived[a.wp]
+            if i == current then
+                line:SetColorTexture(0.30, 0.72, 0.96, 0.95)
+            elseif walked then
+                line:SetColorTexture(0.45, 0.50, 0.58, 0.45)
+            else
+                line:SetColorTexture(0.30, 0.72, 0.96, 0.50)
+            end
+        end
+    end
+
+    for i = drawn + 1, #routeLines do
+        routeLines[i]:Hide()
+    end
+
+    lastRouteDraw.drawn = drawn
+    if drawn == 0 then
+        lastRouteDraw.reason = "no leg had both ends on this map"
+    end
+end
+
+-- Redraw the route line and nothing else.
+--
+-- The route moves far more often than the pins do - every arrival, every
+-- re-plan, every nav click - and rebuilding every pin to move one line
+-- releases the pin under the cursor, which closes its tooltip.  Hovering
+-- a pin became impossible while a route was open.
+function Pins:RefreshRoutePath()
+    if not Guide.ready then return end
+    if not WorldMapFrame or not WorldMapFrame:IsShown() then return end
+
+    local mapID = WorldMapFrame:GetMapID()
+    local canvas = WorldMapFrame:GetCanvas()
+    if not mapID or not canvas then return end
+
+    ReleaseRouteLines()
+    DrawRoutePath(canvas, mapID, canvas:GetWidth(), canvas:GetHeight(),
+                  GetPinScaleCompensation(canvas))
+end
+
+-- Why the map is or isn't showing a route line.
+function Pins:RouteDebug()
+    print("|cFF1FB7EBMCL|r route path:")
+
+    -- Ask the window what it is doing right now.  The stored result is
+    -- from the last map refresh, which may predate the route opening.
+    local Tracker = Guide.StepTracker
+    if Tracker and Tracker.DebugState then
+        local mode, shown, count, index = Tracker:DebugState()
+        print(("  window: mode=%s shown=%s stops=%d index=%s"):format(
+            tostring(mode), tostring(shown), count or 0, tostring(index)))
+    else
+        print("  window: |cFFFF6666StepTracker not loaded|r")
+    end
+
+    -- Redraw now so the numbers below describe this moment.
+    self:RefreshRoutePath()
+
+    -- The stops themselves, in the order the loop walks them.  A route
+    -- that looks unclosed is usually a route with fewer stops left than
+    -- expected, not a leg that failed to draw.
+    if Tracker and Tracker.GetRoute then
+        local stops = Tracker:GetRoute()
+        if stops then
+            for i, stop in ipairs(stops) do
+                print(("    %2d. %-28s m=%s (%.1f, %.1f)"):format(
+                    i, stop.name or "?", tostring(stop.m), stop.x or 0, stop.y or 0))
+            end
+            if #stops >= 2 then
+                print(("    closing leg: %s -> %s"):format(
+                    stops[#stops].name or "?", stops[1].name or "?"))
+            end
+        end
+    end
+
+    local d = lastRouteDraw or {}
+    print(("  map: %s   stops: %d   current: %s"):format(
+        tostring(d.mapID), d.stops or 0, tostring(d.current)))
+    print(("  legs drawn: %d"):format(d.drawn or 0))
+    if d.reason then
+        print(("  |cFFFFD100%s|r"):format(d.reason))
+    end
+    print(("  setting: %s   map open: %s"):format(
+        tostring(MCL_GUIDE_SETTINGS.showRoutePath ~= false),
+        tostring(WorldMapFrame and WorldMapFrame:IsShown())))
+    if routeLayer then
+        print(("  layer: strata=%s level=%d shown=%s"):format(
+            routeLayer:GetFrameStrata(), routeLayer:GetFrameLevel(),
+            tostring(routeLayer:IsShown())))
+    else
+        print("  layer: not created yet")
+    end
+end
+
 -- ─── Place a single pin on the canvas ───────────────────────
 local function PlacePin(canvas, rec, fx, fy, canvasWidth, canvasHeight, scaleComp, wp)
     local pin = AcquirePin(canvas)
@@ -1734,6 +1928,7 @@ function Pins:RefreshPins()
     if not WorldMapFrame or not WorldMapFrame:IsShown() then return end
 
     ReleasePins()
+    ReleaseRouteLines()
 
     if not MCL_GUIDE_SETTINGS.showMapPins then return end
 
@@ -1800,6 +1995,9 @@ function Pins:RefreshPins()
             end
         end
     end
+
+    -- The line that turns a set of pins into a route.
+    DrawRoutePath(canvas, mapID, canvasWidth, canvasHeight, scaleComp)
 end
 
 -- ─── Refresh collected status + pins/panel (shared helper) ──

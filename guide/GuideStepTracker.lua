@@ -34,7 +34,9 @@ Guide.StepTracker = Guide.StepTracker or {}
 local Tracker = Guide.StepTracker
 
 -- Layout
-local WIDTH          = 340
+local WIDTH          = 340   -- the default; the window is resizable
+local MIN_WIDTH      = 260
+local MAX_WIDTH      = 720
 local PAD            = 8
 local HEADER_H       = 28
 local SUBTITLE_H     = 24
@@ -87,6 +89,9 @@ local routeMount  = nil    -- the mount whose locations are being routed
 local routeStops  = nil    -- ordered list of remaining stops
 local routeTotal  = 0      -- how many locations the set has in all
 local routeIndex  = 1      -- which stop of the route is on screen
+local arrived     = {}     -- stops we've already walked to this session
+local routePlan   = nil    -- what the current plan was built from
+local arriveTicker = nil
 local routeTracked = nil   -- the coord the waypoint is currently on
 local routeReturn = nil    -- mount to go back to after drilling into a chain
 
@@ -159,10 +164,116 @@ local function EvaluateSteps()
 end
 
 -- ─── Route building ─────────────────────────────────────────
--- Greedy nearest-neighbour over the locations still outstanding.  It is
--- not the optimal tour, but for a scattered treasure set it is within a
--- hop or two of one and it re-plans every time you open it, so walking
--- it out of order costs nothing.
+-- Map coordinates are normalised over a zone's bounding box, so x and y
+-- units are only the same length when the zone happens to be square.
+-- Every distance below is measured in them, which quietly biases which
+-- stop counts as nearest in a zone that is much wider than it is tall.
+-- One scale factor, worked out per map, makes them comparable.
+local mapStretch = 1
+
+-- Measured, not assumed: two short probes across the zone compared by
+-- distance.  Distance is indifferent to which world axis is north, so
+-- there is no coordinate convention here to get backwards.
+local function Probe(mapID, x1, y1, x2, y2)
+    local ok1, _, a = pcall(C_Map.GetWorldPosFromMapPos, mapID, CreateVector2D(x1, y1))
+    local ok2, _, b = pcall(C_Map.GetWorldPosFromMapPos, mapID, CreateVector2D(x2, y2))
+    if not (ok1 and ok2 and a and b) then return nil end
+    local ax, ay = a:GetXY()
+    local bx, by = b:GetXY()
+    if not ax or not bx then return nil end
+    local dx, dy = bx - ax, by - ay
+    return math.sqrt(dx * dx + dy * dy)
+end
+
+local function SetMapStretch(mapID)
+    mapStretch = 1
+    if not mapID or not C_Map.GetWorldPosFromMapPos or not CreateVector2D then return end
+
+    local across = Probe(mapID, 0.4, 0.5, 0.6, 0.5)
+    local down   = Probe(mapID, 0.5, 0.4, 0.5, 0.6)
+    if across and down and across > 0 and down > 0 then
+        mapStretch = down / across
+    end
+end
+
+local function Dist(ax, ay, bx, by)
+    local dx = ax - bx
+    local dy = (ay - by) * mapStretch
+    return math.sqrt(dx * dx + dy * dy)
+end
+
+-- These routes are farmed repeatedly - the rares are back tomorrow - so
+-- the run is a circuit, not a one-way trip.  That makes the leg from the
+-- last stop back to the first a real leg, and it has to be part of what
+-- gets optimised: an ordering that looks tight as an open path can leave
+-- a long walk home.
+--
+-- Two-opt over a closed tour: reversing the run between two stops is an
+-- improvement when the two edges it replaces are shorter than the two it
+-- removes.  Crossings go by construction, since two legs that cross are
+-- always longer than the same two uncrossed.  Indices wrap, so the
+-- closing leg is considered like any other.
+local function TwoOptLoop(path)
+    local n = #path
+    if n < 4 then return path end
+
+    local improved, guard = true, 0
+    while improved and guard < 40 do
+        improved = false
+        guard = guard + 1
+
+        for i = 1, n - 1 do
+            local a = path[i == 1 and n or i - 1]
+            for j = i + 1, n do
+                -- i == 1 and j == n reverses the whole tour, which is the
+                -- same loop walked backwards; nothing to gain.
+                if not (i == 1 and j == n) then
+                    local b = path[j == n and 1 or j + 1]
+                    local before = Dist(a.x, a.y, path[i].x, path[i].y)
+                                 + Dist(path[j].x, path[j].y, b.x, b.y)
+                    local after  = Dist(a.x, a.y, path[j].x, path[j].y)
+                                 + Dist(path[i].x, path[i].y, b.x, b.y)
+
+                    if after < before - 0.0001 then
+                        local lo, hi = i, j
+                        while lo < hi do
+                            path[lo], path[hi] = path[hi], path[lo]
+                            lo, hi = lo + 1, hi - 1
+                        end
+                        improved = true
+                    end
+                end
+            end
+        end
+    end
+    return path
+end
+
+-- A loop has no natural beginning, so it starts at whichever stop you are
+-- closest to.  Rotating rather than re-planning keeps the circuit intact:
+-- same loop, different entry point.
+local function RotateToNearest(path, x, y)
+    if not x or not y or #path < 2 then return path end
+
+    local best, bestD = 1, math.huge
+    for i, stop in ipairs(path) do
+        local d = Dist(stop.x, stop.y, x, y)
+        if d < bestD then best, bestD = i, d end
+    end
+    if best == 1 then return path end
+
+    local n = #path
+    local rotated = {}
+    for k = 0, n - 1 do
+        rotated[k + 1] = path[((best - 1 + k) % n) + 1]
+    end
+    for k = 1, n do path[k] = rotated[k] end
+    return path
+end
+
+-- Nearest-neighbour to lay a circuit down, two-opt to pull the crossings
+-- out of it, then rotate it to start nearest you.  Re-planned every time
+-- the window refreshes, so walking it out of order costs nothing.
 local function BuildRoute(mountData)
     local pool, total = {}, 0
     for _, wp in ipairs(mountData.coords or {}) do
@@ -220,17 +331,27 @@ local function BuildRoute(mountData)
             end
             cx, cy = best.x, best.y
         end
+
+        -- Where this map's leg begins, kept for the improvement pass.
+        local startX, startY = cx, cy
+        SetMapStretch(m)
+
+        local leg = {}
         while #stops > 0 do
             local bi, bd = 1, math.huge
             for i, s in ipairs(stops) do
-                local dx, dy = s.x - cx, s.y - cy
-                local d = dx * dx + dy * dy
+                local d = Dist(s.x, s.y, cx, cy)
                 if d < bd then bi, bd = i, d end
             end
             local pick = table.remove(stops, bi)
-            route[#route + 1] = pick
+            leg[#leg + 1] = pick
             cx, cy = pick.x, pick.y
         end
+
+        TwoOptLoop(leg)
+        RotateToNearest(leg, startX, startY)
+        for _, stop in ipairs(leg) do route[#route + 1] = stop end
+
         px, py = nil, nil   -- only the first map gets the player anchor
     end
 
@@ -274,6 +395,44 @@ local function SetWaypointToStop(stop)
     return SetWaypoint(stop.m, stop.x, stop.y)
 end
 
+-- ─── Arrival ────────────────────────────────────────────────
+-- Reaching a stop is the other way a route moves on.  Looting one
+-- already drops it from the plan, but a rare you walked to and found
+-- absent leaves you standing on a waypoint that will never clear itself.
+local ARRIVE_YARDS = 40
+
+-- Yards when the client will give them - GetDistance measures to the
+-- super-tracked point, which is ours - and map units when it won't.
+-- Map units are zone-relative rather than absolute, so that threshold
+-- has to be loose enough for a big zone.
+local function AtStop(stop)
+    if not stop then return false end
+
+    local dist = C_Navigation and C_Navigation.GetDistance and C_Navigation.GetDistance()
+    if type(dist) == "number" and dist > 0 then
+        return dist <= ARRIVE_YARDS
+    end
+
+    local map = Guide.GetCurrentMapID and Guide:GetCurrentMapID()
+    if not map or map ~= stop.m then return false end
+    local pos = C_Map.GetPlayerMapPosition and C_Map.GetPlayerMapPosition(map, "player")
+    if not pos then return false end
+    local px, py = pos:GetXY()
+    if not px or not py then return false end
+    return math.abs(px * 100 - stop.x) <= 1.0 and math.abs(py * 100 - stop.y) <= 1.0
+end
+
+-- The first stop at or after `from` that hasn't been walked to yet.
+-- Returns nil when they've all been visited, which leaves the window on
+-- the last one rather than snapping somewhere arbitrary.
+local function NextUnvisited(from)
+    for i = from, #(routeStops or {}) do
+        local stop = routeStops[i]
+        if stop and not arrived[stop.wp] then return i end
+    end
+    return nil
+end
+
 -- ─── Rows ───────────────────────────────────────────────────
 -- A row is a coloured heading band with a bullet, and a detail line on
 -- a slightly lighter panel beneath it.
@@ -290,7 +449,6 @@ local function AcquireRow(index)
     end
 
     local row = CreateFrame("Button", nil, frame)
-    row:SetWidth(WIDTH - PAD * 2)
     row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 
     row.band = row:CreateTexture(nil, "BACKGROUND")
@@ -421,7 +579,10 @@ local function LayoutRow(row, yOff, state, number, heading, detail)
 
     row:SetHeight(total)
     row:ClearAllPoints()
+    -- Anchored to both edges rather than given a width, so a row is
+    -- whatever the window currently is.
     row:SetPoint("TOPLEFT", frame, "TOPLEFT", PAD, yOff)
+    row:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -PAD, yOff)
     row:Show()
     return total
 end
@@ -454,9 +615,16 @@ local function GetFrame()
     f:SetFrameStrata("FULLSCREEN_DIALOG")
     f:SetFrameLevel(700)
     f:SetToplevel(true)
-    f:SetSize(WIDTH, 160)
+    f:SetSize((MCL_GUIDE_SETTINGS and MCL_GUIDE_SETTINGS.guideWindowWidth) or WIDTH, 160)
     f:SetClampedToScreen(true)
     f:SetMovable(true)
+    f:SetResizable(true)
+    -- Height is computed from the content, so only the width is really
+    -- up for grabs; the height bounds are just wide enough not to fight
+    -- whatever the layout works out.
+    if f.SetResizeBounds then
+        f:SetResizeBounds(MIN_WIDTH, 80, MAX_WIDTH, 2000)
+    end
     f:EnableMouse(true)
     f:RegisterForDrag("LeftButton")
     f:SetScript("OnDragStart", f.StartMoving)
@@ -473,6 +641,47 @@ local function GetFrame()
     })
     f:SetBackdropColor(unpack(C_WINDOW_BG))
     f:SetBackdropBorderColor(unpack(C_WINDOW_EDGE))
+
+    -- ── Width grip ──────────────────────────────────────────
+    -- On the right edge rather than the usual bottom-right corner,
+    -- because a corner grip promises height resizing that isn't on
+    -- offer: the window sizes itself to its content vertically.
+    f.grip = CreateFrame("Button", nil, f)
+    f.grip:SetPoint("RIGHT", f, "RIGHT", -1, 0)
+    f.grip:SetSize(8, 44)
+    f.grip:EnableMouse(true)
+
+    f.gripMark = f.grip:CreateTexture(nil, "OVERLAY")
+    f.gripMark:SetPoint("CENTER")
+    f.gripMark:SetSize(2, 26)
+    f.gripMark:SetColorTexture(0.42, 0.48, 0.58, 0.75)
+
+    f.grip:SetScript("OnEnter", function(self)
+        self:GetParent().gripMark:SetColorTexture(0.30, 0.72, 0.96, 1)
+    end)
+    f.grip:SetScript("OnLeave", function(self)
+        if not self.sizing then
+            self:GetParent().gripMark:SetColorTexture(0.42, 0.48, 0.58, 0.75)
+        end
+    end)
+    -- Drag scripts rather than mouse down/up: OnMouseUp only fires if the
+    -- button is released over the grip, so a quick drag that ends off the
+    -- edge would leave the window stuck sizing.
+    f.grip:RegisterForDrag("LeftButton")
+    f.grip:SetScript("OnDragStart", function(self)
+        self.sizing = true
+        self:GetParent():StartSizing("RIGHT")
+    end)
+    f.grip:SetScript("OnDragStop", function(self)
+        self.sizing = nil
+        local parent = self:GetParent()
+        parent:StopMovingOrSizing()
+        MCL_GUIDE_SETTINGS.guideWindowWidth = math.floor(parent:GetWidth() + 0.5)
+        parent.gripMark:SetColorTexture(0.42, 0.48, 0.58, 0.75)
+        -- Rows follow the width on their own, but a heading that now
+        -- wraps onto fewer lines needs the heights worked out again.
+        Tracker:Refresh()
+    end)
 
     -- ── Title bar ───────────────────────────────────────────
     f.headerBg = f:CreateTexture(nil, "BACKGROUND")
@@ -547,13 +756,13 @@ local function GetFrame()
     f.prev = MakeStripButton(f, "<", 22)
     f.prev:SetPoint("LEFT", f.navBg, "LEFT", PAD, 0)
     f.prev:SetScript("OnClick", function()
-        if routeIndex > 1 then routeIndex = routeIndex - 1; Tracker:Refresh() end
+        if routeIndex > 1 then routeIndex = routeIndex - 1; Tracker:Refresh(); RedrawMap() end
     end)
 
     f.next = MakeStripButton(f, ">", 22)
     f.next:SetPoint("LEFT", f.prev, "RIGHT", 2, 0)
     f.next:SetScript("OnClick", function()
-        if routeIndex < #(routeStops or {}) then routeIndex = routeIndex + 1; Tracker:Refresh() end
+        if routeIndex < #(routeStops or {}) then routeIndex = routeIndex + 1; Tracker:Refresh(); RedrawMap() end
     end)
 
     f.position = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -607,6 +816,8 @@ end
 
 function Tracker:ResetPosition()
     MCL_GUIDE_SETTINGS.stepTrackerAnchor = nil
+    MCL_GUIDE_SETTINGS.guideWindowWidth = nil
+    if frame then frame:SetWidth(WIDTH) end
     if frame then
         frame:ClearAllPoints()
         frame:SetPoint("CENTER", UIParent, "CENTER", 300, 0)
@@ -716,41 +927,136 @@ local function RefreshSteps()
     f:SetHeight(math.abs(y) + PROGRESS_H + PAD * 2)
 end
 
+-- What is still outstanding, as a comparable string.  Re-planning is only
+-- honest when this changes; anything else is the same set of places.
+local function OutstandingKey(mountData)
+    local keys = {}
+    for _, wp in ipairs(mountData.coords or {}) do
+        if wp.x and wp.y then
+            local spent, doneToday = Guide:GetWaypointState(wp)
+            if not spent and not doneToday then
+                keys[#keys + 1] = string.format("%d:%.1f:%.1f", wp.m or 0, wp.x, wp.y)
+            end
+        end
+    end
+    table.sort(keys)
+    return table.concat(keys, "|")
+end
+
+-- ─── Finishing empty-handed ─────────────────────────────────
+-- Walking the whole loop and getting nothing is the normal outcome, and
+-- the window going quiet at "0 to go" doesn't say so.  Worth naming, and
+-- worth saying when it's worth coming back.
+local announcedDry = {}
+
+local function MountCollected(mountData)
+    local mountID = mountData and (mountData.mountID
+        or (mountData.spellId and Guide.spellToMount and Guide.spellToMount[mountData.spellId]))
+    if not mountID then return false end
+    local _, _, _, _, _, _, _, _, _, _, collected = C_MountJournal.GetMountInfoByID(mountID)
+    return collected and true or false
+end
+
+-- Daily reset, formatted by the game so it reads right in every locale.
+local function TimeToReset()
+    local secs
+    if C_DateAndTime and C_DateAndTime.GetSecondsUntilDailyReset then
+        local ok, value = pcall(C_DateAndTime.GetSecondsUntilDailyReset)
+        if ok then secs = value end
+    end
+    if (not secs or secs <= 0) and GetQuestResetTime then
+        local ok, value = pcall(GetQuestResetTime)
+        if ok then secs = value end
+    end
+    if not secs or secs <= 0 then return nil end
+    return SecondsToTime(secs, true), secs
+end
+
+-- Once per mount per session: the route refreshes constantly, and a line
+-- of chat on every refresh would be worse than no line at all.
+local function AnnounceDry(mountData, pretty)
+    local key = mountData and (mountData.spellId or mountData.name)
+    if not key or announcedDry[key] then return end
+    announcedDry[key] = true
+
+    local name = (mountData.mountName or mountData.name or "?")
+    if pretty then
+        print(("|cFF1FB7EBMCL|r " .. L["No %s today - every rare is done. Next chance in %s."])
+            :format(name, pretty))
+    else
+        print(("|cFF1FB7EBMCL|r " .. L["No %s today - every rare is done."]):format(name))
+    end
+end
+
 -- A route shows one stop at a time: the whole point is "go here next",
 -- and a dozen rows of places you aren't going yet is just noise.  Use
 -- the arrows to skip ahead if you'd rather take a different one.
 local function RefreshRoute()
-    -- Re-plan from what is still outstanding; looted stops fall out.
-    routeStops, routeTotal = BuildRoute(routeMount)
+    -- Plan once and then walk it.  Re-planning on every refresh looked
+    -- reasonable until you started moving: the loop is anchored to where
+    -- you're standing, so every few steps produced a different order and
+    -- the window appeared to shuffle itself while the line on the map
+    -- redrew underneath you.  A plan only changes when the set of places
+    -- left to visit does.
+    local key = OutstandingKey(routeMount)
+    if key ~= routePlan or not routeStops then
+        local wasOn = routeStops and routeStops[routeIndex] and routeStops[routeIndex].wp
+        routeStops, routeTotal = BuildRoute(routeMount)
+        routePlan = key
+
+        -- Keep pointing at the same place if it survived the re-plan, so
+        -- collecting one stop doesn't move the goalposts on the rest.
+        routeIndex = 1
+        if wasOn then
+            for i, stop in ipairs(routeStops) do
+                if stop.wp == wasOn then routeIndex = i; break end
+            end
+        end
+    end
 
     ReleaseRows()
     local f = frame
     f.back:Hide()
 
     local remaining = #routeStops
-
-    -- If the stop we were pointing at has gone (you looted it), snap
-    -- back to the head of the freshly planned route.
-    if routeTracked then
-        local stillThere = false
-        for _, s in ipairs(routeStops) do
-            if s.wp == routeTracked then stillThere = true; break end
-        end
-        if not stillThere then routeIndex = 1 end
-    end
     routeIndex = math.max(1, math.min(routeIndex, math.max(remaining, 1)))
+
+    -- Don't sit on somewhere already walked to; the route moves on.
+    if remaining > 0 and routeStops[routeIndex]
+        and arrived[routeStops[routeIndex].wp] then
+        routeIndex = NextUnvisited(routeIndex) or NextUnvisited(1) or routeIndex
+    end
 
     SetSubtitle(routeMount)
     ShowNavStrip(remaining > 1)
     if remaining > 1 then
         f.position:SetText(string.format("%d / %d", routeIndex, remaining))
     end
-    f.status:SetText(remaining == 0
-        and ("|cFF59B36A" .. L["Complete!"] .. "|r")
-        or string.format(L["%d to go"], remaining))
+    local gotIt = remaining == 0 and MountCollected(routeMount)
+    local resetIn = (remaining == 0 and not gotIt) and TimeToReset() or nil
+
+    if remaining > 0 then
+        f.status:SetText(string.format(L["%d to go"], remaining))
+    elseif gotIt then
+        f.status:SetText("|cFF59B36A" .. L["Complete!"] .. "|r")
+    else
+        f.status:SetText("|cFFFFD100" .. L["No mount today"] .. "|r")
+    end
 
     local y = ContentTop(remaining > 1)
     local stop = routeStops[routeIndex]
+
+    -- Finished the loop without the mount: say so, and say when it is
+    -- worth coming back, rather than leaving an empty window.
+    if remaining == 0 and not gotIt then
+        local row = AcquireRow(1)
+        row.kind, row.index, row.step, row.stop = nil, nil, nil, nil
+        y = y - LayoutRow(row, y, "done", 1, L["No mount today"],
+                          resetIn and string.format(L["Try again in %s"], resetIn)
+                                  or L["Try again after the daily reset"]) - ROW_GAP
+        AnnounceDry(routeMount, resetIn)
+    end
+
     if stop then
         local row = AcquireRow(1)
         row.kind, row.index, row.step, row.stop = "route", routeIndex, nil, stop
@@ -774,7 +1080,25 @@ local function RefreshRoute()
 end
 
 -- ─── Public API ─────────────────────────────────────────────
+-- A re-plan can reorder every leg, so the map has to follow.  Refresh is
+-- driven by bag and aura events, which arrive in bursts, so the redraw is
+-- deferred and coalesced rather than run once per event.
+local mapRedrawPending = false
+local function RedrawMapSoon()
+    if mapRedrawPending then return end
+    if not (Guide.MapPins and Guide.MapPins.RefreshRoutePath) then return end
+    mapRedrawPending = true
+    C_Timer.After(0, function()
+        mapRedrawPending = false
+        if mode == "route" then Guide.MapPins:RefreshRoutePath() end
+    end)
+end
+
 function Tracker:Refresh()
+    if mode == "route" then RedrawMapSoon() end
+    if Guide.RouteCompass and Guide.RouteCompass.Refresh then
+        Guide.RouteCompass:Refresh()
+    end
     if not frame or not frame:IsShown() then return end
     if mode == "route" then
         RefreshRoute()
@@ -813,6 +1137,31 @@ function Tracker:Show(mountData, waypoint)
 end
 
 -- Open a running order through every location of a multi-location find.
+-- Only runs while a route is on screen, and stops itself the moment one
+-- isn't.  A second between checks is well inside walking pace.
+local function StartArriveWatch()
+    if arriveTicker then return end
+    arriveTicker = C_Timer.NewTicker(1, function()
+        if not (frame and frame:IsShown() and mode == "route") then
+            if arriveTicker then arriveTicker:Cancel(); arriveTicker = nil end
+            return
+        end
+        if MCL_GUIDE_SETTINGS and MCL_GUIDE_SETTINGS.routeAutoAdvance == false then return end
+
+        local stop = routeStops and routeStops[routeIndex]
+        if not stop or not AtStop(stop) then return end
+
+        -- Walked to.  Remember it so a re-plan doesn't drop us back on
+        -- it, and move to the next place we haven't been.
+        arrived[stop.wp] = true
+        local nextIndex = NextUnvisited(routeIndex + 1) or NextUnvisited(1)
+        if nextIndex and nextIndex ~= routeIndex then
+            routeIndex = nextIndex
+            Tracker:Refresh()
+        end
+    end)
+end
+
 function Tracker:ShowRoute(mountData)
     if not mountData or not mountData.coords or #mountData.coords < 2 then return false end
 
@@ -821,12 +1170,18 @@ function Tracker:ShowRoute(mountData)
     mode        = "route"
     routeMount  = mountData
     routeStops  = nil
+    routePlan   = nil
     routeIndex  = 1
     routeTracked = nil
     routeReturn = nil
 
+    wipe(arrived)
+    wipe(announcedDry)
+
     f:Show()
     RefreshRoute()
+    StartArriveWatch()
+    RedrawMap()
     return true
 end
 
@@ -840,12 +1195,44 @@ function Tracker:Hide()
     trackedStep = nil
     routeMount  = nil
     routeStops  = nil
+    routePlan   = nil
     routeReturn = nil
     wipe(manualDone)
+    wipe(arrived)
+    if arriveTicker then
+        arriveTicker:Cancel()
+        arriveTicker = nil
+    end
+    RedrawMap()
 end
 
 function Tracker:IsShown()
     return frame and frame:IsShown()
+end
+
+-- Opening or closing a route changes what the map should be drawing, and
+-- the map won't know unless it is told.
+local function RedrawMap()
+    if Guide.MapPins and Guide.MapPins.RefreshRoutePath then
+        Guide.MapPins:RefreshRoutePath()
+    end
+    -- The minimap line follows the same stop the window is pointing at.
+    if Guide.RouteCompass and Guide.RouteCompass.Refresh then
+        Guide.RouteCompass:Refresh()
+    end
+end
+
+-- The world map draws the planned route, so it has to be able to see it.
+-- Returns nil unless a route is actually on screen.
+-- What the window thinks it is doing, for diagnostics.
+function Tracker:DebugState()
+    return mode, (frame and frame:IsShown()) and true or false,
+           routeStops and #routeStops or 0, routeIndex
+end
+
+function Tracker:GetRoute()
+    if mode ~= "route" or not (frame and frame:IsShown()) then return nil end
+    return routeStops, routeIndex, arrived
 end
 
 -- ─── Auto-progression ───────────────────────────────────────

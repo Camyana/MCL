@@ -1,5 +1,44 @@
 # Changelog
 
+## 3.9.1
+
+### The route is a loop, and the map shows it
+
+Shift-clicking a pin plans a run round a zone's rares or treasures. That run is now drawn on the world map as a connected loop, so you can see the shape of it rather than reading one stop at a time.
+
+- The route is planned as a **circuit**, not a one-way trip — the walk back to the start counts, and is optimised along with everything else
+- Crossings are gone: an improvement pass reworks the order until no two legs cross, which on the Coiled Isle cuts about a quarter off the distance
+- The leg you're on is highlighted; legs already walked go grey
+- A line on the **minimap** points at the stop you're heading for, so you don't need the map open to follow the route
+
+The plan is now made once and walked, instead of being rebuilt every few seconds. It was anchored to wherever you were standing, so walking reshuffled the order underneath you.
+
+### The route moves on by itself
+
+Reaching a stop advances the route to the next one, whether or not anything was there. Walking to a rare that hasn't spawned no longer leaves you parked on a waypoint that will never clear.
+
+The waypoint also clears itself once you arrive, and when the rare dies — including when somebody else kills it.
+
+### Finishing empty-handed
+
+Walking the whole loop and getting nothing now says so, with the time until the next daily reset, rather than the window quietly reading "0 to go".
+
+### Rare locations corrected
+
+Rare locations were checked against the game's own data. Eleven were wrong:
+
+- **Lady Liminus** carried Garsecg's kill credit, so killing either marked both done for the day — dropping a rare you hadn't touched off your route and silencing its mount alert
+- **Nar'zira** had the coordinates of its other spawn zone, putting its pin a long way from where it actually appears on the Coiled Isle
+- **Szarith the Fanged** was on the wrong map entirely, and has been removed — every mount it drops comes from eleven other rares in the same zone
+- Eight more were off by up to three map units
+
+### Fixes
+
+- The guide window can be resized by dragging its right edge, and remembers the width
+- Hovering a map pin no longer resets it mid-hover, which made tooltips impossible to read while a route was open
+- The minimap line points *at* the waypoint rather than near it — the direction was being skewed by the zone's aspect ratio, which was also biasing which stop the route thought was nearest
+- Map pins no longer fill the error log with blocked-action messages
+
 ## 3.9.0
 
 ### Five rares that never alerted, now do
