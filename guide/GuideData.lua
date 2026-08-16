@@ -4482,6 +4482,11 @@ MCL_GUIDE_DATA.mounts = {
 		method = "SPECIAL",
 		itemId = 276882,
 	},
+	[1301775] = {
+		name = "Umbral Ashes",
+		method = "SPECIAL",
+		itemId = 277192,
+	},
 }
 
 MCL_GUIDE_DATA.zones = {

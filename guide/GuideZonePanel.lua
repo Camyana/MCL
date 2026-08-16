@@ -703,7 +703,40 @@ end)
 SLASH_MCLGUIDE1 = "/mclguide"
 SLASH_MCLGUIDE2 = "/mcg"
 SlashCmdList["MCLGUIDE"] = function(msg)
-    msg = (msg or ""):lower():trim()
+    -- Kept unlowered as well: a rare's name is worth storing the way it
+    -- is actually spelled, for when the list is read back.
+    local raw = (msg or ""):trim()
+    msg = raw:lower()
+
+    if msg:sub(1, 11) == "rareignore " then
+        local name = raw:sub(12):trim()
+        if name ~= "" and Guide.RareAlert then
+            local ignored, shown = Guide.RareAlert:ToggleIgnore(name)
+            if ignored then
+                print("|cFF1FB7EBMCL|r " .. string.format(L["No longer alerting for %s."], shown))
+            else
+                print("|cFF1FB7EBMCL|r " .. string.format(L["Alerting for %s again."], shown))
+            end
+        end
+        return
+    end
+    if msg == "rareignored" then
+        local list = Guide.RareAlert and Guide.RareAlert:ListIgnored() or {}
+        if #list == 0 then
+            print("|cFF1FB7EBMCL|r " .. L["Not ignoring any rares."])
+        else
+            print("|cFF1FB7EBMCL|r " .. string.format(L["Ignored rares: %d"], #list))
+            for _, name in ipairs(list) do print("    " .. name) end
+            print("|cFF888888/mcg rareignore <name>|r " .. L["to remove one"])
+        end
+        return
+    end
+    if msg == "rareignoreclear" then
+        local n = Guide.RareAlert and Guide.RareAlert:ClearIgnored() or 0
+        print("|cFF1FB7EBMCL|r " .. string.format(L["Ignored rares: %d"], 0)
+            .. "  (" .. n .. " cleared)")
+        return
+    end
     if msg == "debug" then
         MCL_GUIDE_SETTINGS.debugShowAll = not MCL_GUIDE_SETTINGS.debugShowAll
         if MCL_GUIDE_SETTINGS.debugShowAll then

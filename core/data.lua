@@ -809,6 +809,11 @@ MCLcore.mountList[15] = {
 			mounts = {172022, 172023},
 			mountID = {}
 		},
+		BlizzCon = {
+			name = "BlizzCon",
+			mounts = {274260},
+			mountID = {}
+		},
 		BlizzardStore = {
 			name = "Blizzard Store",
 			mounts = {54811, 69846, 78924, 97989, 107951, 112326, 122469, 147901, 156564, 160589, 166775, 166774, 166776, "m1266", "m1267", "m1290", "m1346", "m1291", "m1456", "m1330", "m1531", "m1581", "m1312", "m1594", "m1583", "m1797", 203727, "m1795", "m1692", 228751, 229128, 219450, 224574, "m2237", 229418, 230184, 230200, 230201, 230185, 227362, 235344, 231297, 233285, 233284, 233282, 233283, 233286, 238943, 238994, 238966, 221270, 190581, 212228, 225250, 206167, 246698, 247848, 258427, 258423, 258425, 243194, 248088, 242795, 252679, 252681, 258477, 248681, 239076, 262661, "m2700", "m2701", "m2702", "m2703", 233019, 233020, 190636},
@@ -1136,7 +1141,7 @@ MCLcore.mountList[20] = {
 	categories = {
 		Achievement = {
 			name = "Achievement",
-			mounts = {252011, 262620, 262621, 257145, 246594, 260887, 257144, 260697, 257199, 276881, 276882, 275652, 275656, 276553, 276801},
+			mounts = {252011, 262620, 262621, 257145, 246594, 260887, 257144, 260697, 257199, 276881, 276882, 275652, 275656, 276553, 276801, 277192},
 			mountID = {}
 		},
 		DecorDuels = {
@@ -1496,7 +1501,7 @@ MCLcore.mountList[24] = {
 		},
 		MythicPlus = {
 			name = "Mythic+",
-			mounts = {276881, 276882},
+			mounts = {276881, 276882, 277192},
 			mountID = {}
 		},
 		Prey = {
@@ -2461,6 +2466,7 @@ MCLcore.mountNotes = {
 	[269240] = "Combine 4 Delicious Sporesnack, which drop from Rotmire in the Sporefall raid on any difficulty. Only one Delicious Sporesnack can be earned per week, so this requires a minimum of 4 weeks.",
 	[273317] = "Trading Post (July 2026) for 700 Trader's Tender.",
 	[273651] = "Trading Post Traveler's Log reward (July 2026). Earned by completing the monthly activities bar.",
+	[274260] = "Included with the World of Warcraft BlizzCon Bundle and the BlizzCon Ultimate Collection for BlizzCon 2026. The bundles are on sale until September 28, 2026.",
 	[274649] = "Sold by Kifaan in Val for 15 Voidlight Marl. Requires completing the achievement \"A Trip Around the Stars.\"",
 	[274650] = "Sold by Kifaan in Naigtal for 15 Voidlight Marl. Requires completing the achievement \"A Trip Through the Stars.\"",
 	[274681] = "Trading Post (August 2026) for 550 Trader's Tender.",
@@ -2493,6 +2499,7 @@ MCLcore.mountNotes = {
 	[276804] = "Drops from Zul'jan, the final boss of the Altar of Fangs, on Mythic or Mythic Keystone difficulty.\n\nDungeon entrance, in the Vaults of Atal'Utek: {{m:2509,47.2,67.6}}",
 	[276881] = "Reward from the achievement \"Midnight Keystone Master: Season Two.\" Reach 2,000 Mythic+ rating during Midnight Season 2.",
 	[276882] = "Reward from the achievement \"Midnight Keystone Legend: Season Two.\" Reach 3,000 Mythic+ rating during Midnight Season 2.",
+	[277192] = "Reward from the achievement \"Umbral Champion: Midnight Season One.\" Finish Midnight Season 1 in the top 1% of Mythic+ rating in your region. Awarded after the season closes.",
 	[273838] = "Reward from a Zul'jarra's Forces Renown questline, unlocked at Renown 10 and time-gated to one quest a day.",
 	["m1046"] = "Paladin only. Automatically learned by Dark Iron Dwarf Paladins. Alliance.",
 	["m1047"] = "Paladin only. Automatically learned by Dwarf Paladins. Alliance.",

@@ -1,5 +1,29 @@
 # Changelog
 
+## 3.10.0
+
+### Rares you'd rather not hear about
+
+Tame a rare as a hunter pet and it keeps its name, so MCL kept announcing it every time its nameplate came back — and then pointed a waypoint at your own pet. Anything under a player's control is no longer treated as a rare, so that stops on its own.
+
+For every other reason to want one quiet, there's now an ignore list:
+
+- **Shift-right-click an alert** and confirm, to stop hearing about that rare
+- **Settings → Rare Mount Alerts** names everything on the list, with a **Clear** button
+- `/mcg rareignore <name>` toggles one, `/mcg rareignored` lists them
+
+Ignoring silences the alert only — the rare still appears on the map and in routes, since it's still a way to get a mount you don't have.
+
+### New mounts
+
+- Rabbit'ath — BlizzCon 2026 bundles
+- Umbral Ashes — Umbral Champion: Midnight Season One
+
+### Fixes
+
+- Right-clicking the alert to dismiss it only worked on the edges; the middle of the card ignored it
+- Dismissing no longer targets the rare on the way out
+
 ## 3.9.2
 
 ### Fixes
