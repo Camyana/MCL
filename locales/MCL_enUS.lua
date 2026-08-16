@@ -535,6 +535,7 @@ if L then
     L["Already defeated today"] = "Already defeated today"
     L["Already looted"] = "Already looted"
     L["Click to target"] = "Click to target"
+    L["Click for a waypoint"] = "Click for a waypoint"
     L["Shift-right-click to ignore this rare"] = "Shift-right-click to ignore this rare"
     L["No longer alerting for %s."] = "No longer alerting for %s."
     L["Stop alerting for %s?"] = "Stop alerting for %s?"

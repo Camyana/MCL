@@ -522,6 +522,7 @@ if L then
     L["Numbered markers on the map show these spots."] = "地圖上的編號標記顯示這些地點。"
     L["Already looted"] = "已拾取"
     L["Click to target"] = "點擊選中目標"
+    L["Click for a waypoint"] = "點擊標記路徑點"
     L["Shift-right-click to ignore this rare"] = "Shift+右鍵忽略該稀有"
     L["No longer alerting for %s."] = "不再提醒%s。"
     L["Stop alerting for %s?"] = "不再提醒%s？"

@@ -520,7 +520,7 @@ local function GetBanner()
     -- 10pt at 66% grey on near-black was the least readable thing on a
     -- card whose whole job is to be read at a glance.
     f.sub:SetTextColor(0.80, 0.84, 0.90)
-    f.sub:SetText(L["Click to target"])
+    f.sub:SetText(L["Click for a waypoint"])
     local subFile, _, subFlags = f.sub:GetFont()
     f.sub:SetFont(subFile, 12, subFlags)
 
@@ -565,11 +565,18 @@ local function GetBanner()
     -- Covers the text block only, not the icon row: the icons are their
     -- own buttons for tooltips, and a button on top of a button means
     -- clicks near them vanish instead of targeting.
-    f.bar = CreateFrame("Button", "MCL_RareAlertBar", f, "SecureActionButtonTemplate")
+    -- A plain button.  This was a SecureActionButtonTemplate running
+    -- "/targetexact <name>", which is the only way an addon can target
+    -- something by name - and in Midnight the game refuses to run it,
+    -- reporting MCL for calling RunMacroText.  Targeting from an addon
+    -- is simply closed now, the way SetRaidTarget and readable GUIDs
+    -- closed before it.  Dropping the secure template also un-protects
+    -- hiding the banner, which is what made it linger after combat.
+    f.bar = CreateFrame("Button", "MCL_RareAlertBar", f)
     f.bar:SetPoint("TOPLEFT", f.panel, "TOPLEFT", 1, -1)
     f.bar:SetPoint("BOTTOMRIGHT", f.panel, "BOTTOMRIGHT",
         -1, MOUNT_ICON + MOUNT_ICON_PAD + 8)
-    f.bar:RegisterForClicks("AnyUp", "AnyDown")
+    f.bar:RegisterForClicks("AnyUp")
     f.bar:SetFrameLevel(f.panel:GetFrameLevel() + 1)
 
     f.close:SetFrameLevel(f.bar:GetFrameLevel() + 1)
@@ -600,7 +607,7 @@ local function GetBanner()
     end
     f.RightClick = RightClick
 
-    f.bar:SetScript("PostClick", function(self, button)
+    f.bar:SetScript("OnClick", function(self, button)
         if button == "RightButton" then
             RightClick(f)
             return
@@ -608,11 +615,6 @@ local function GetBanner()
 
         local name = f.rareName
         if not name then return end
-
-        if not plain(UnitExists("target")) and not f.warnedRange then
-            f.warnedRange = true
-            print("|cFF1FB7EBMCL|r " .. L["Too far away to target that rare yet - waypoint set instead."])
-        end
 
         local wp = ResolveRareSpot(name, f.rareLive)
         if wp and wp.m and wp.x and wp.y then
@@ -639,7 +641,7 @@ local function GetBanner()
         if f:GetAlpha() < 0.05 then return end
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
         GameTooltip:AddLine(f.rareName or "", 1, 1, 1)
-        GameTooltip:AddLine("|cFF00FF00" .. L["Click to target"] .. "|r")
+        GameTooltip:AddLine("|cFF00FF00" .. L["Click for a waypoint"] .. "|r")
         GameTooltip:AddLine("|cFF888888" .. L["Shift-right-click to ignore this rare"] .. "|r")
         GameTooltip:Show()
     end)
@@ -670,17 +672,13 @@ local function GetBanner()
     -- Everything that has to stop when the alert goes, minus the actual
     -- hiding.  Split out because in combat the hiding is the one part we
     -- are not allowed to do.
-    function f:Quiet(inCombat)
+    function f:Quiet()
         self:SetScript("OnUpdate", nil)
         if self.life then self.life:Hide() end
         self:HideModels()
 
-        -- EnableMouse on a secure button is itself protected in combat,
-        -- so it waits.  The zero-alpha guard on OnEnter covers the gap.
-        if not inCombat then
-            if self.bar then self.bar:EnableMouse(false) end
-            for _, btn in ipairs(self.mountIcons or {}) do btn:EnableMouse(false) end
-        end
+        if self.bar then self.bar:EnableMouse(false) end
+        for _, btn in ipairs(self.mountIcons or {}) do btn:EnableMouse(false) end
 
         local owner = GameTooltip:GetOwner()
         if owner then
@@ -694,24 +692,15 @@ local function GetBanner()
         end
     end
 
-    -- The banner parents a secure action button, which makes hiding it
-    -- protected: called in combat the game refuses and logs a blocked
-    -- action, and the frame stays shown at zero alpha - invisible, still
-    -- listening, and looking for all the world like an alert that never
-    -- went away.  In combat it goes quiet now and hides when the fighting
-    -- stops.
+    -- Plain now that no secure button lives here.  Hiding a frame with a
+    -- secure child is protected in combat, which is what used to leave
+    -- the banner shown at zero alpha, still answering the mouse.
     function f:Dismiss()
         self:SetAlpha(0)
-        if InCombatLockdown() then
-            self.pendingHide = true
-            self:Quiet(true)
-            return
-        end
-        self.pendingHide = nil
         self:Hide()
     end
 
-    f:SetScript("OnHide", function(self) self:Quiet(false) end)
+    f:SetScript("OnHide", function(self) self:Quiet() end)
 
     f.fadeIn = f:CreateAnimationGroup()
     local ai = f.fadeIn:CreateAnimation("Alpha")
@@ -1043,22 +1032,6 @@ local function ShowBanner(rareName, mounts, npcID, unit, livePos)
     f.rareName = rareName
     f.rareNpcID = npcID
     f.rareLive = livePos
-    f.warnedRange = nil   -- a new sighting deserves a fresh warning
-
-    if not InCombatLockdown() then
-        -- type1/macrotext1 rather than type/macrotext: the bar is
-        -- registered for every button so it can catch right-clicks, and
-        -- without this the targeting macro would fire on those too.
-        f.bar:SetAttribute("type1", "macro")
-        -- Targeting only.  SetRaidTarget is protected: run from a
-        -- macro it still raises ADDON_ACTION_FORBIDDEN, so the skull
-        -- was never going to land and the attempt only spammed the
-        -- error log.
-        f.bar:SetAttribute("macrotext1", "/targetexact " .. rareName)
-        f.pendingMacro = nil
-    else
-        f.pendingMacro = rareName
-    end
 
     local icons = LayoutMountIcons(f, mounts)
     f:SetHeight(MODEL_H - MODEL_SINK + PANEL_H
@@ -1517,15 +1490,6 @@ function Alert:Debug()
                 m:GetWidth(), m:GetHeight(), m:GetAlpha(),
                 tostring(banner.rareNpcID)))
         end
-        if banner and banner.bar then
-            local mt = banner.bar:GetAttribute("macrotext1")
-            print(("  alert macro: %s"):format(mt and "armed" or "|cFFFF6666not set|r"))
-            if mt then
-                print(("    %s"):format((mt:gsub("\n", " | "))))
-            end
-        else
-            print("  alert macro: banner has never been shown")
-        end
     else
         print("  target: none - target the rare and run this again")
     end
@@ -1579,19 +1543,6 @@ Listen("CHAT_MSG_MONSTER_EMOTE")
 Listen("NAME_PLATE_UNIT_REMOVED")
 events:SetScript("OnEvent", function(_, event, arg1, arg2)
     if event == "PLAYER_REGEN_ENABLED" then
-        -- Finish a hide that combat refused.
-        if banner and banner.pendingHide then
-            banner.pendingHide = nil
-            banner:Hide()
-        end
-
-        -- Apply a macro that was blocked by combat.
-        if banner and banner.pendingMacro then
-            banner.bar:SetAttribute("type1", "macro")
-            banner.bar:SetAttribute("macrotext1",
-                "/targetexact " .. banner.pendingMacro)
-            banner.pendingMacro = nil
-        end
         return
     end
 

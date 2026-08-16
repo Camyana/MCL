@@ -519,6 +519,7 @@ if L then
     L["Numbered markers on the map show these spots."] = "I segnaposti numerati sulla mappa mostrano questi punti."
     L["Already looted"] = "Già saccheggiato"
     L["Click to target"] = "Clicca per bersagliare"
+    L["Click for a waypoint"] = "Clicca per un punto di riferimento"
     L["Shift-right-click to ignore this rare"] = "Maiusc+clic destro per ignorare questo raro"
     L["No longer alerting for %s."] = "Nessun avviso per %s."
     L["Stop alerting for %s?"] = "Non avvisare più per %s?"

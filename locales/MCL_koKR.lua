@@ -520,6 +520,7 @@ if L then
     L["Numbered markers on the map show these spots."] = "지도의 번호 표식이 해당 위치를 나타냅니다."
     L["Already looted"] = "이미 획득함"
     L["Click to target"] = "클릭하여 대상 지정"
+    L["Click for a waypoint"] = "클릭하여 경로 지점 표시"
     L["Shift-right-click to ignore this rare"] = "Shift+우클릭으로 이 희귀 몬스터 무시"
     L["No longer alerting for %s."] = "%s 알림을 끕니다."
     L["Stop alerting for %s?"] = "%s 알림을 끌까요?"

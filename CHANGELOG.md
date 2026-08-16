@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.10.2
+
+### Clicking a rare alert sets a waypoint
+
+It used to try to target the rare as well. Midnight no longer lets addons do that — the game refuses the attempt and reports MCL for it — so the alert has stopped trying and now says what it actually does. Clicking still points you at the rare, and right-click still dismisses.
+
+This is the third thing Midnight has closed off here, after raid markers and readable creature IDs. Nothing is lost that was working; the error log is quieter for it.
+
 ## 3.10.1
 
 ### Fixes

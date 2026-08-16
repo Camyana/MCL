@@ -526,6 +526,7 @@ if L then
     L["Numbered markers on the map show these spots."] = "Пронумерованные метки на карте показывают эти места."
     L["Already looted"] = "Уже собрано"
     L["Click to target"] = "Нажмите, чтобы выбрать целью"
+    L["Click for a waypoint"] = "Нажмите, чтобы поставить метку"
     L["Shift-right-click to ignore this rare"] = "Shift+ПКМ, чтобы игнорировать этого редкого"
     L["No longer alerting for %s."] = "Оповещения о %s отключены."
     L["Stop alerting for %s?"] = "Отключить оповещения о %s?"
