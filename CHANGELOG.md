@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.10.1
+
+### Fixes
+
+- **Pressing Escape reported an error and blamed MCL.** Registering the ignore-list confirmation touched a Blizzard table in a way that spoiled it for everything else reading it afterwards, and the game menu is one of those things. Anyone on 3.10.0 should update.
+- **The rare alert could leave an invisible copy of itself behind.** Hovering where it had been brought its tooltip back with nothing on screen. The alert can't be closed while you're in combat — which is exactly when it usually expires, since you're fighting the rare — so it now falls silent straight away and closes properly once the fight ends.
+
 ## 3.10.0
 
 ### Rares you'd rather not hear about

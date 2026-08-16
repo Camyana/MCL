@@ -166,7 +166,11 @@ end
 -- Ignoring is easy to do by accident and hard to notice afterwards - the
 -- alert simply never comes again - so it asks first.  Un-ignoring needs
 -- no confirmation: getting an alert back is self-announcing.
-StaticPopupDialogs = StaticPopupDialogs or {}
+-- Adding a key to the table is fine; assigning the table itself is not.
+-- `StaticPopupDialogs = StaticPopupDialogs or {}` writes to a Blizzard
+-- global, which taints the variable for everyone who touches it after -
+-- and Escape runs straight through it, so opening the game menu started
+-- refusing SpellStopCasting and blaming MCL.
 StaticPopupDialogs["MCL_IGNORE_RARE"] = {
     text = "%s",
     button1 = YES,
@@ -663,15 +667,20 @@ local function GetBanner()
     -- it - which reads as the alert still being there.  Cleanup hangs off
     -- OnHide rather than the fade's OnFinished, so it runs no matter what
     -- hid the banner: the fade, the close button, Lock(), or a reload.
-    f:SetScript("OnHide", function(self)
+    -- Everything that has to stop when the alert goes, minus the actual
+    -- hiding.  Split out because in combat the hiding is the one part we
+    -- are not allowed to do.
+    function f:Quiet(inCombat)
         self:SetScript("OnUpdate", nil)
-        -- Whatever hid us, stop taking mouse input.  A frame left shown
-        -- at zero alpha is invisible but still live, and the hover it
-        -- answers looks exactly like an alert that never went away.
-        if self.bar then self.bar:EnableMouse(false) end
-        for _, btn in ipairs(self.mountIcons or {}) do btn:EnableMouse(false) end
         if self.life then self.life:Hide() end
         self:HideModels()
+
+        -- EnableMouse on a secure button is itself protected in combat,
+        -- so it waits.  The zero-alpha guard on OnEnter covers the gap.
+        if not inCombat then
+            if self.bar then self.bar:EnableMouse(false) end
+            for _, btn in ipairs(self.mountIcons or {}) do btn:EnableMouse(false) end
+        end
 
         local owner = GameTooltip:GetOwner()
         if owner then
@@ -683,7 +692,26 @@ local function GetBanner()
                 end
             end
         end
-    end)
+    end
+
+    -- The banner parents a secure action button, which makes hiding it
+    -- protected: called in combat the game refuses and logs a blocked
+    -- action, and the frame stays shown at zero alpha - invisible, still
+    -- listening, and looking for all the world like an alert that never
+    -- went away.  In combat it goes quiet now and hides when the fighting
+    -- stops.
+    function f:Dismiss()
+        self:SetAlpha(0)
+        if InCombatLockdown() then
+            self.pendingHide = true
+            self:Quiet(true)
+            return
+        end
+        self.pendingHide = nil
+        self:Hide()
+    end
+
+    f:SetScript("OnHide", function(self) self:Quiet(false) end)
 
     f.fadeIn = f:CreateAnimationGroup()
     local ai = f.fadeIn:CreateAnimation("Alpha")
@@ -695,8 +723,7 @@ local function GetBanner()
     ao:SetFromAlpha(1); ao:SetToAlpha(0); ao:SetDuration(0.5)
     f.fadeOut:SetScript("OnPlay", function() f:HideModels() end)
     f.fadeOut:SetScript("OnFinished", function()
-        f:SetAlpha(0)
-        f:Hide()   -- OnHide does the rest
+        f:Dismiss()
     end)
 
     f:SetScript("OnMouseUp", function(self, button)
@@ -758,8 +785,7 @@ function Alert:Lock()
     if f.unlockHint then f.unlockHint:Hide() end
     if bannerTimer then bannerTimer:Cancel(); bannerTimer = nil end
     f:HideModels()
-    f:Hide()
-    f:SetAlpha(0)
+    f:Dismiss()
 end
 
 function Alert:ToggleUnlock()
@@ -1553,6 +1579,12 @@ Listen("CHAT_MSG_MONSTER_EMOTE")
 Listen("NAME_PLATE_UNIT_REMOVED")
 events:SetScript("OnEvent", function(_, event, arg1, arg2)
     if event == "PLAYER_REGEN_ENABLED" then
+        -- Finish a hide that combat refused.
+        if banner and banner.pendingHide then
+            banner.pendingHide = nil
+            banner:Hide()
+        end
+
         -- Apply a macro that was blocked by combat.
         if banner and banner.pendingMacro then
             banner.bar:SetAttribute("type1", "macro")
