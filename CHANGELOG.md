@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.10.3
+
+### Fixes
+
+- **Opening the character sheet could throw an error naming MCL.** Registering the window so Escape would close it meant writing into one of the game's own tables, which spoils it for everything else that reads it afterwards — and in Midnight that turns into errors in places with nothing to do with MCL. Escape still closes the window; MCL just handles the key itself now and leaves the game's tables alone.
+
 ## 3.10.2
 
 ### Clicking a rare alert sets a waypoint

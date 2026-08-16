@@ -719,10 +719,32 @@ function MCL_frames:CreateMainFrame()
 
 	MCL_mainFrame:SetFrameStrata("HIGH")
 
-    tinsert(UISpecialFrames, "MCLFrame")
-    
+    -- Escape closes the window.  This used to be tinsert into Blizzard's
+    -- UISpecialFrames, which is the one place MCL wrote to a Blizzard
+    -- global - and writing to one taints it for every bit of Blizzard
+    -- code that reads it afterwards.  Health and other unit values are
+    -- secret in Midnight, and comparing a secret value from a tainted
+    -- execution throws, so opening the character sheet started erroring
+    -- with MCL named as the cause.
+    --
+    -- Handling the key ourselves touches nothing outside the addon.
+    -- Keyboard input is propagated for everything except Escape, so no
+    -- other key is swallowed while the window is open.
+    MCL_mainFrame:EnableKeyboard(true)
+    MCL_mainFrame:SetPropagateKeyboardInput(true)
+    MCL_mainFrame:SetScript("OnKeyDown", function(self, key)
+        if key == "ESCAPE" then
+            self:SetPropagateKeyboardInput(false)
+            self:Hide()
+        else
+            self:SetPropagateKeyboardInput(true)
+        end
+    end)
     -- Add OnShow handler to show navigation when main frame is shown
-    MCL_mainFrame:SetScript("OnShow", function()
+    MCL_mainFrame:SetScript("OnShow", function(self)
+        -- A fresh window must not inherit the key swallow from the last
+        -- time Escape closed it.
+        self:SetPropagateKeyboardInput(true)
         if MCLcore.MCL_MF_Nav then
             MCLcore.MCL_MF_Nav:Show()
         end
