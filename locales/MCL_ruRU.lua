@@ -249,6 +249,7 @@ if L then
     L["Sections"] = "Разделы"
     L["MCL | Mount Collection Log"] = "MCL | Журнал коллекции маунтов"
     L["Enable Mount Card on Hover"] = "Включить карту маунта при наведении"
+    L["Enable Animations"] = "Включить анимацию"
     L["If enabled, the mount card will automatically appear when hovering over mounts."] = "Если включено, карта маунта будет автоматически появляться при наведении на маунтов."
     L["|cff00CCFFMount Collection Log Commands:\n|cffFF0000Show:|cffFFFFFF Shows your mount collection log\n|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon\n|cffFF0000Config:|cffFFFFFF Opens the settings\n|cffFF0000Cleanup:|cffFFFFFF Cleans up invalid pinned mounts\n|cffFF0000Help:|cffFFFFFF Shows commands"] = "|cff00CCFFКоманды журнала коллекции маунтов:\n|cffFF0000Show:|cffFFFFFF Показывает журнал коллекции маунтов\n|cffFF0000Icon:|cffFFFFFF Переключает иконку миникарты\n|cffFF0000Config:|cffFFFFFF Открывает настройки\n|cffFF0000Cleanup:|cffFFFFFF Удаляет недействительных закрепленных маунтов\n|cffFF0000Help:|cffFFFFFF Показывает команды"
     L["How to Use Pinned Mounts"] = "Как использовать закрепленных маунтов"

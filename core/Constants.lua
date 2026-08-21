@@ -11,28 +11,75 @@ local C = MCLcore.C
 -- =========================================================
 -- COLORS  (RGBA tables – unpack-friendly)
 -- =========================================================
+-- ---------------------------------------------------------
+-- The palette is an ELEVATION LADDER. In a dark UI a nearer
+-- surface reads as lighter, so SURFACE_0 (the sidebar, which
+-- should recede) is the darkest and every card stacked on top
+-- of the body steps up from it. Getting this backwards - which
+-- is what the window used to do - makes cards punch holes into
+-- the window instead of floating above it.
+--
+-- Steps are ~0.025 apart in lightness: far enough to read as a
+-- deliberate level, close enough to stay one material.
+-- ---------------------------------------------------------
 C.COLORS = {
+    ---- Surfaces ----
+    SURFACE_0           = { 0.055, 0.058, 0.070, 1 },  -- app ground / nav sidebar
+    SURFACE_1           = { 0.078, 0.082, 0.098, 1 },  -- main content body
+    SURFACE_2           = { 0.105, 0.110, 0.130, 1 },  -- cards, category panels
+    SURFACE_3           = { 0.135, 0.142, 0.168, 1 },  -- inputs, nav buttons, toggles
+    SURFACE_RAISED      = { 0.170, 0.190, 0.240, 1 },  -- hover state for SURFACE_3
+    SURFACE_SEL         = { 0.150, 0.200, 0.290, 1 },  -- selected nav item
+
+    ---- Chrome ----
+    CHROME_BAR          = { 0.095, 0.100, 0.120, 1 },  -- title bar / card header bar
+
+    ---- Borders: one hue, three weights ----
+    BORDER_SUBTLE       = { 0.20, 0.21, 0.26, 1 },     -- card separation
+    BORDER_DEFAULT      = { 0.27, 0.28, 0.34, 1 },     -- inputs, buttons
+    BORDER_STRONG       = { 0.36, 0.38, 0.46, 1 },     -- outer window edge
+
+    ---- Accent: one blue, four tints ----
+    ACCENT              = { 0.36, 0.68, 0.92, 1 },
+    ACCENT_BRIGHT       = { 0.52, 0.82, 1.00, 1 },     -- hover / selected text
+    ACCENT_MUTED        = { 0.24, 0.46, 0.68, 1 },     -- fills, slider track
+    ACCENT_RULE         = { 0.30, 0.60, 0.90, 0.45 },  -- the ONE 1px accent rule
+
+    ---- Text: four steps is all a window this size needs ----
+    TEXT_PRIMARY        = { 0.92, 0.94, 0.98, 1 },     -- headings, active
+    TEXT_BODY           = { 0.72, 0.76, 0.84, 1 },     -- default body
+    TEXT_MUTED          = { 0.50, 0.54, 0.62, 1 },     -- counts, captions
+    TEXT_DISABLED       = { 0.36, 0.38, 0.44, 1 },     -- placeholder
+
+    ---- Status: desaturated, because 15 bars share one screen ----
+    STATUS_LOW          = { 0.85, 0.35, 0.35, 1 },
+    STATUS_MID          = { 0.90, 0.62, 0.28, 1 },
+    STATUS_HIGH         = { 0.45, 0.78, 0.42, 1 },
+    STATUS_COMPLETE     = { 0.36, 0.68, 0.92, 1 },     -- = ACCENT, closes the loop
+    STATUS_NEUTRAL      = { 0.42, 0.44, 0.50, 1 },
+    DANGER              = { 0.78, 0.28, 0.28, 1 },     -- close button hover
+
     -- House-style accent blue used for titles, labels, buttons
     ACCENT_BLUE         = { 0.4,  0.78, 0.95, 1 },
     -- Softer label / subtitle color
-    LABEL               = { 0.7,  0.78, 0.88, 1 },
+    LABEL               = { 0.72, 0.76, 0.84, 1 },
     -- Dim label for secondary info
-    LABEL_DIM           = { 0.5,  0.55, 0.65, 1 },
+    LABEL_DIM           = { 0.50, 0.54, 0.62, 1 },
     -- Body text
     TEXT                = { 0.8,  0.8,  0.85, 1 },
     -- White
     WHITE               = { 1,    1,    1,    1 },
 
     -- Backgrounds
-    DARK_BG             = { 0.06, 0.06, 0.09, 1 },
-    PANEL_BG            = { 0.08, 0.08, 0.1,  0.8 },
-    HEADER_BG           = { 0.08, 0.08, 0.12, 1 },
-    CARD_BG             = { 0.09, 0.09, 0.12, 0.95 },
+    DARK_BG             = { 0.055, 0.058, 0.070, 1 },
+    PANEL_BG            = { 0.078, 0.082, 0.098, 0.8 },
+    HEADER_BG           = { 0.095, 0.100, 0.120, 1 },
+    CARD_BG             = { 0.105, 0.110, 0.130, 0.95 },
 
     -- Borders
-    BORDER_DIM          = { 0.25, 0.25, 0.3,  0.8 },
-    BORDER_MEDIUM       = { 0.25, 0.25, 0.3,  1 },
-    BORDER_ACCENT       = { 0.3,  0.6,  0.9,  1 },
+    BORDER_DIM          = { 0.20, 0.21, 0.26,  0.8 },
+    BORDER_MEDIUM       = { 0.27, 0.28, 0.34,  1 },
+    BORDER_ACCENT       = { 0.30, 0.60, 0.90,  1 },
 
     -- Waypoint buttons
     WP_BG               = { 0.12, 0.12, 0.18, 0.9 },
@@ -52,18 +99,18 @@ C.COLORS = {
     GREEN_FLASH         = { 0.3,  0.85, 0.4,  1 },
 
     -- Checkbox internals
-    CB_BG_OFF           = { 0.08, 0.08, 0.1,  0.8 },
-    CB_BG_ON            = { 0.15, 0.25, 0.4,  0.9 },
-    CB_BORDER_OFF       = { 0.25, 0.25, 0.3,  1 },
-    CB_BORDER_ON        = { 0.3,  0.6,  0.9,  1 },
-    CB_BORDER_HOVER     = { 0.3,  0.6,  0.9,  0.8 },
+    CB_BG_OFF           = { 0.078, 0.082, 0.098, 0.9 },
+    CB_BG_ON            = { 0.150, 0.200, 0.290, 1 },
+    CB_BORDER_OFF       = { 0.27, 0.28, 0.34, 1 },
+    CB_BORDER_ON        = { 0.30, 0.60, 0.90, 1 },
+    CB_BORDER_HOVER     = { 0.52, 0.82, 1.00, 0.9 },
 
     -- Progress bar
-    PB_BG               = { 0.08, 0.08, 0.1,  0.8 },
-    PB_BORDER           = { 0.25, 0.25, 0.3,  0.8 },
-    PB_TEXT             = { 0.85, 0.9,  0.95, 1 },
-    PB_HOVER            = { 0.8,  0.5,  0.9,  1 },
-    PB_GRAY             = { 0.5,  0.5,  0.5,  1 },
+    PB_BG               = { 0.055, 0.058, 0.070, 0.9 },
+    PB_BORDER           = { 0.20, 0.21, 0.26, 0.9 },
+    PB_TEXT             = { 0.92, 0.94, 0.98, 1 },
+    PB_HOVER            = { 0.52, 0.82, 1.00, 1 },
+    PB_GRAY             = { 0.42, 0.44, 0.50, 1 },
 
     -- Slider
     SLIDER_TRACK_BG     = { 0.08, 0.08, 0.1,  1 },
@@ -77,11 +124,13 @@ C.COLORS = {
 }
 
 -- Fallback progress bar colors (used when MCL_SETTINGS.progressColors is nil)
+-- Deliberately desaturated: the Overview stacks fifteen of these bars on
+-- one screen, and at full saturation they drown out every label near them.
 C.PROGRESS_FALLBACK = {
-    LOW      = { 1,    0,    0    },  -- red
-    MEDIUM   = { 1,    0.65, 0    },  -- orange
-    HIGH     = { 0,    1,    0    },  -- green
-    COMPLETE = { 0,    0.5,  1    },  -- blue
+    LOW      = { 0.85, 0.35, 0.35 },
+    MEDIUM   = { 0.90, 0.62, 0.28 },
+    HIGH     = { 0.45, 0.78, 0.42 },
+    COMPLETE = { 0.36, 0.68, 0.92 },
 }
 
 -- Progress bar percentage thresholds
@@ -103,11 +152,61 @@ C.TEXTURES = {
 }
 
 -- =========================================================
+-- TYPE SCALE
+-- =========================================================
+-- Blizzard's font objects only give us 10 / 12 / 16pt, which is a 1.2
+-- ratio - far too compressed for anything to dominate. These sizes are
+-- applied on top of an existing font object via C.ApplyType so the
+-- window gets a real focal point.
+C.TYPE = {
+    DISPLAY = 20,   -- window title, page title
+    HEADING = 15,   -- section headers, card headers
+    SUBHEAD = 13,   -- category titles, nav labels
+    BODY    = 12,   -- default
+    CAPTION = 10,   -- counts, hints, placeholders
+}
+
+-- Re-size a FontString in place, keeping its font file and optionally
+-- forcing an outline for the two heaviest steps.
+function C.ApplyType(fontString, size, outline)
+    if not fontString or not fontString.GetFont then return fontString end
+    local file, _, flags = fontString:GetFont()
+    if not file then return fontString end
+    fontString:SetFont(file, size, outline and "OUTLINE" or flags)
+    return fontString
+end
+
+-- =========================================================
+-- SURFACES
+-- =========================================================
+-- The opacity slider used to reach exactly four backdrops, so turning
+-- it down made the window vanish while every card inside stayed solid.
+-- Routing surface fills through here scales them all together.
+function C.Surface(token, weight)
+    local c = C.COLORS[token] or C.COLORS.SURFACE_1
+    local opacity = (MCL_SETTINGS and MCL_SETTINGS.opacity) or 0.94
+    return c[1], c[2], c[3], (weight or 1) * opacity
+end
+
+-- =========================================================
 -- DIMENSIONS
 -- =========================================================
 C.DIMS = {
+    -- Navigation rhythm at full size. The stride is always height + gap -
+    -- they used to be 32 and 28 independently, so every sidebar entry
+    -- overlapped its neighbour by 4px and their 1px borders doubled up.
+    -- These are the ceiling: MCL_frames:ComputeNavMetrics scales down from
+    -- here when the section list is taller than the window.
+    NAV_ITEM_H       = 30,
+    NAV_ITEM_GAP     = 4,
+
+    -- Shared component sizes
+    CARD_HEADER_H    = 26,
+    ROW_HEADER_H     = 28,
+    TOGGLE_SIZE      = 16,
+
     -- Main frame
-    MAIN_WIDTH       = 800,
+    MAIN_WIDTH       = 900,
     MAIN_HEIGHT      = 600,
     NAV_WIDTH        = 180,
 
@@ -125,7 +224,7 @@ C.DIMS = {
     CB_LABEL_OFFSET  = 8,
 
     -- Progress bar
-    PB_HEIGHT        = 15,
+    PB_HEIGHT        = 18,
     PB_WIDTH         = 150,
     PB_EDGE_SIZE     = 1,
 

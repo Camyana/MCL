@@ -453,7 +453,7 @@ function MCL_Load:Init(force, showOnComplete)
                 
                 -- If we should show the window after initialization, do so
                 if showOnComplete and MCLcore.MCL_MF then
-                    MCLcore.MCL_MF:Show()
+                    MCLcore.Frames:OpenMainFrame()
                 end
 
                 MCL_Load:HideLoadingIndicator()
@@ -506,7 +506,13 @@ function MCL_Load:Toggle()
         MCL_Load:ShowLoadingIndicator()
         return
     else
-        MCLcore.MCL_MF:SetShown(not MCLcore.MCL_MF:IsShown()) -- The addon's frame exists and can be toggled.
+        -- Routed through the Open/Close pair rather than SetShown so every
+        -- caller in the addon goes through the same two entry points.
+        if MCLcore.MCL_MF:IsShown() then
+            MCLcore.Frames:CloseMainFrame()
+        else
+            MCLcore.Frames:OpenMainFrame()
+        end
     end
 end
 

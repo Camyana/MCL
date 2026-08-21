@@ -252,6 +252,7 @@ if L then
     L["Sections"] = "Abschnitte"
     L["MCL | Mount Collection Log"] = "MCL | Reittier-Sammlungs-Log"
     L["Enable Mount Card on Hover"] = "Reittier-Karte beim Hover aktivieren"
+    L["Enable Animations"] = "Animationen aktivieren"
     L["If enabled, the mount card will automatically appear when hovering over mounts."] = "Wenn aktiviert, erscheint die Reittier-Karte automatisch beim Hover über Reittiere."
     L["|cff00CCFFMount Collection Log Commands:\n|cffFF0000Show:|cffFFFFFF Shows your mount collection log\n|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon\n|cffFF0000Config:|cffFFFFFF Opens the settings\n|cffFF0000Cleanup:|cffFFFFFF Cleans up invalid pinned mounts\n|cffFF0000Help:|cffFFFFFF Shows commands"] = "|cff00CCFFReittier-Sammlungs-Log Befehle:\n|cffFF0000Show:|cffFFFFFF Zeigt Ihr Reittier-Sammlungs-Log\n|cffFF0000Icon:|cffFFFFFF Schaltet das Minikartensymbol um\n|cffFF0000Config:|cffFFFFFF Öffnet die Einstellungen\n|cffFF0000Cleanup:|cffFFFFFF Bereinigt ungültige angeheftete Reittiere\n|cffFF0000Help:|cffFFFFFF Zeigt Befehle"
     L["How to Use Pinned Mounts"] = "So verwenden Sie angeheftete Reittiere"

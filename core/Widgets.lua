@@ -244,17 +244,32 @@ function W:UpdateProgressBar(frame, total, collected)
     if total == nil and collected == nil then return frame end
 
     if total == 0 then
+        if MCLcore.Anim then MCLcore.Anim:Cancel(frame, "barvalue") end
+        frame.val = nil
         frame:SetValue(0)
         if frame.Text then frame.Text:SetText("0/0 (0%)") end
         frame:SetStatusBarColor(unpack(C.COLORS.PB_GRAY))
         return frame
     end
 
+    local previousPct = frame.val
     frame.collected = collected
     frame.total     = total
     local pct = (collected / total) * 100
-    frame:SetValue(pct)
     frame.val = pct
+
+    -- Ease the fill toward its new value instead of snapping. The first
+    -- paint of a bar has no previous value to travel from, so it snaps -
+    -- only real progress animates, which is what makes it read as progress.
+    if MCLcore.Anim and previousPct ~= nil and MCLcore.Anim:CanAnimateBar(frame) then
+        MCLcore.Anim:BarTo(frame, pct)
+        if pct > previousPct + 0.01 then
+            MCLcore.Anim:BarSweep(frame)
+        end
+    else
+        if MCLcore.Anim then MCLcore.Anim:Cancel(frame, "barvalue") end
+        frame:SetValue(pct)
+    end
 
     if frame.Text then
         frame.Text:SetText(collected .. "/" .. total .. " (" .. math.floor(pct) .. "%)")

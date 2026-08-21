@@ -172,8 +172,8 @@ local function InitializeSearch()
                     edgeFile = "Interface\\Buttons\\WHITE8x8",
                     edgeSize = 1
                 })
-                dd:SetBackdropColor(0.06, 0.06, 0.09, 0.97)
-                dd:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.8)
+                dd:SetBackdropColor(MCLcore.C.Surface("SURFACE_2"))
+                dd:SetBackdropBorderColor(unpack(MCLcore.C.COLORS.BORDER_DEFAULT))
 
                 -- Scroll frame inside the dropdown
                 dd.scroll = CreateFrame("ScrollFrame", nil, dd, "UIPanelScrollFrameTemplate")
@@ -255,7 +255,7 @@ local function InitializeSearch()
                 })
                 row:SetBackdropColor(0, 0, 0, 0)  -- transparent by default
                 row:SetScript("OnEnter", function(self)
-                    self:SetBackdropColor(0.15, 0.18, 0.25, 0.6)
+                    self:SetBackdropColor(unpack(MCLcore.C.COLORS.SURFACE_RAISED))
                     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                     if type(result.mountId) == "number" then
                         GameTooltip:SetItemByID(result.mountId)
@@ -387,21 +387,16 @@ local function InitializeSearch()
                 for i, tab in ipairs(MCLcore.MCL_MF_Nav.tabs) do
                     if tab.section and tab.section.name == targetSection then
                         -- Use the proper tab selection logic (same as SelectTab function)
-                        -- Deselect all tabs first
-                        for _, t in ipairs(MCLcore.MCL_MF_Nav.tabs) do
-                            if t.SetBackdropBorderColor then
-                                t:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.6)
-                            end
-                        end
-                        
                         -- Hide all tab contents using the proper HideAllTabContents function
                         if MCLcore.HideAllTabContents then
                             MCLcore.HideAllTabContents()
                         end
-                        
-                        -- Select the target tab
-                        if tab.SetBackdropBorderColor then
-                            tab:SetBackdropBorderColor(0.3, 0.6, 0.9, 1)
+
+                        -- Move the whole selection state. This used to repaint
+                        -- only the border, which left the previously selected
+                        -- tab with a selected background and a deselected one.
+                        if MCLcore.Frames and MCLcore.Frames.ApplyTabSelection then
+                            MCLcore.Frames:ApplyTabSelection(tab, MCLcore.MCL_MF_Nav.tabs)
                         end
                         if tab.content and MCL_mainFrame.ScrollFrame then
                             -- Always keep the main scroll child as the scroll child

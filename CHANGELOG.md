@@ -1,5 +1,19 @@
 # Changelog
 
+## 3.11.0
+
+### The collection moves
+
+Opening a section used to swap one static screen for another. Now the window has motion: mount icons arrive in a short cascade rather than appearing all at once, panels glide into place, hover states fade between colours instead of snapping, and progress bars fill to their new value rather than jumping.
+
+It is all driven from one place, so a thousand-icon page costs one timer rather than a thousand.
+
+**Enable Animations** in settings turns the lot off. The game gives addons no reduced-motion setting to read, so MCL carries its own. Switched off, everything lands on its final state immediately - the window snaps the way it always used to, and nothing is ever left half-faded.
+
+### Fixes
+
+- **Opening MCL for the first time during combat reported an error.** Closing the window with Escape needs a key handler, and the game refuses to install one mid-fight. It now waits for the fight to end.
+
 ## 3.10.3
 
 ### Fixes

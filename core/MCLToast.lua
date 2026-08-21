@@ -520,8 +520,12 @@ end
 function Toast:NavigateToSection(sectionName)
     if not sectionName then return end
 
-    -- Make sure the main frame is visible
-    if MCL_mainFrame and not MCL_mainFrame:IsShown() then
+    -- Make sure the main frame is visible. Routed through OpenMainFrame
+    -- because a window mid-close still reports IsShown(): a guarded Show()
+    -- would be skipped and the close fade would hide it a moment later.
+    if MCLcore.Frames and MCLcore.Frames.OpenMainFrame then
+        MCLcore.Frames:OpenMainFrame()
+    elseif MCL_mainFrame and not MCL_mainFrame:IsShown() then
         MCL_mainFrame:Show()
     end
 

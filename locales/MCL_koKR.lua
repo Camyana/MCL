@@ -252,6 +252,7 @@ if L then
     L["Sections"] = "섹션"
     L["MCL | Mount Collection Log"] = "MCL | 탈것 수집 기록"
     L["Enable Mount Card on Hover"] = "마우스 오버 시 탈것 카드 활성화"
+    L["Enable Animations"] = "애니메이션 활성화"
     L["If enabled, the mount card will automatically appear when hovering over mounts."] = "활성화하면 탈것 위로 마우스를 올릴 때 탈것 카드가 자동으로 나타납니다."
     L["|cff00CCFFMount Collection Log Commands:\n|cffFF0000Show:|cffFFFFFF Shows your mount collection log\n|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon\n|cffFF0000Config:|cffFFFFFF Opens the settings\n|cffFF0000Cleanup:|cffFFFFFF Cleans up invalid pinned mounts\n|cffFF0000Help:|cffFFFFFF Shows commands"] = "|cff00CCFF탈것 수집 기록 명령어:\n|cffFF0000Show:|cffFFFFFF 탈것 수집 기록을 표시합니다\n|cffFF0000Icon:|cffFFFFFF 미니맵 아이콘을 토글합니다\n|cffFF0000Config:|cffFFFFFF 설정을 엽니다\n|cffFF0000Cleanup:|cffFFFFFF 잘못된 고정 탈것을 정리합니다\n|cffFF0000Help:|cffFFFFFF 명령어를 표시합니다"
     L["How to Use Pinned Mounts"] = "고정 탈것 사용법"

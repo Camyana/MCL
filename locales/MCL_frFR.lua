@@ -251,6 +251,7 @@ if L then
     L["Sections"] = "Sections"
     L["MCL | Mount Collection Log"] = "MCL | Mount Collection Log"
     L["Enable Mount Card on Hover"] = "Activer la carte de monture au survol"
+    L["Enable Animations"] = "Activer les animations"
     L["If enabled, the mount card will automatically appear when hovering over mounts."] = "Si activé, la carte de monture apparaîtra automatiquement lors du survol des montures."
     L["|cff00CCFFMount Collection Log Commands:\n|cffFF0000Show:|cffFFFFFF Shows your mount collection log\n|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon\n|cffFF0000Config:|cffFFFFFF Opens the settings\n|cffFF0000Cleanup:|cffFFFFFF Cleans up invalid pinned mounts\n|cffFF0000Help:|cffFFFFFF Shows commands"] = "|cff00CCFFMount Collection Log Commands:\n|cffFF0000Show:|cffFFFFFF Shows your mount collection log\n|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon\n|cffFF0000Config:|cffFFFFFF Opens the settings\n|cffFF0000Cleanup:|cffFFFFFF Cleans up invalid pinned mounts\n|cffFF0000Help:|cffFFFFFF Shows commands"
     L["How to Use Pinned Mounts"] = "Comment utiliser les montures épinglées"

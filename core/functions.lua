@@ -79,7 +79,7 @@ function MCL_functions:resetToDefault(setting)
         MCL_SETTINGS.hideCollectedMounts = false
     end
     if setting == "Opacity" or setting == nil then
-        MCL_SETTINGS.opacity = 0.95
+        MCL_SETTINGS.opacity = 0.94
     end
     if setting == "Texture" or setting == nil then
         MCL_SETTINGS.statusBarTexture = nil
@@ -130,6 +130,9 @@ function MCL_functions:resetToDefault(setting)
         MCL_SETTINGS.enableSectionCompleteSound = true
         MCL_SETTINGS.toastPosition = nil
     end
+    if setting == "Animations" or setting == nil then
+        MCL_SETTINGS.enableAnimations = true
+    end
 end
 
 if MCL_SETTINGS == nil then
@@ -164,6 +167,11 @@ if MCL_SETTINGS.enableSectionCompleteToast == nil then
 end
 if MCL_SETTINGS.enableSectionCompleteSound == nil then
     MCL_SETTINGS.enableSectionCompleteSound = true
+end
+
+-- Ensure the animation toggle exists for existing users
+if MCL_SETTINGS.enableAnimations == nil then
+    MCL_SETTINGS.enableAnimations = true
 end
 
 -- Tables Mounts into Global List
@@ -1219,8 +1227,8 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
 
                 frame:SetBackdrop({
                     edgeFile = [[Interface\Buttons\WHITE8x8]],
-                    edgeSize = frame_size + 2,
-                    bgFile = [[Interface\Buttons\WHITE8x8]],              
+                    edgeSize = 1,
+                    bgFile = [[Interface\Buttons\WHITE8x8]],
                 })
 
                 frame.pin = frame:CreateTexture(nil, "OVERLAY")
@@ -1244,7 +1252,7 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
 
                 frame.dragonRidable = isSteadyFlight
 
-                frame:SetBackdropBorderColor(1, 0, 0, 0.03)
+                frame:SetBackdropBorderColor(unpack(MCLcore.C.COLORS.BORDER_SUBTLE))
                 frame:SetBackdropColor(0, 0, 0, MCL_SETTINGS.opacity)
 
                 frame.tex = frame:CreateTexture()
@@ -1313,7 +1321,15 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
                     frame.border:SetStartPoint("BOTTOMLEFT", 4, 4)
                     frame.border:SetEndPoint("BOTTOMRIGHT", -4, 4)
                     
-                    frame:SetWidth(815)
+                    -- Was a hardcoded 815px inside a window that resizes to
+                    -- 1600, which left 745px of dead space to the right of
+                    -- every pinned row. Derived from the container instead.
+                    -- Width rather than a LEFT/RIGHT anchor pair, because
+                    -- the rows are positioned by BOTTOMLEFT below and a
+                    -- second horizontal anchor would over-constrain them.
+                    local rowWidth = (category and category:GetWidth() or 0) - 20
+                    if rowWidth < 400 then rowWidth = 815 end
+                    frame:SetWidth(rowWidth)
                     frame:SetHeight(75)
                     
                     local positionRelativeTo = previous_frame
@@ -1339,7 +1355,7 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
                         frame:SetBackdropBorderColor(0, 0.8, 0, 0.8)
                         frame:SetBackdropColor(0, 0.2, 0, 0.15)
                         frame.tex:SetVertexColor(1, 1, 1, 1)
-                        frame.mountName:SetTextColor(0, 1, 0)
+                        frame.mountName:SetTextColor(unpack(MCLcore.C.COLORS.STATUS_HIGH))
                     else
                         frame:SetBackdropBorderColor(0.8, 0.3, 0.3, 0.8)
                         frame:SetBackdropColor(0.2, 0.05, 0.05, 0.15)
@@ -1362,7 +1378,7 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
                         if IsMountCollected(mount_Id) then
                             self:SetBackdropColor(0, 0.2, 0, 0.15)
                             if self.mountName then
-                                self.mountName:SetTextColor(0, 1, 0)
+                                self.mountName:SetTextColor(unpack(MCLcore.C.COLORS.STATUS_HIGH))
                             end
                         else
                             self:SetBackdropColor(0.2, 0.05, 0.05, 0.15)
@@ -1530,7 +1546,7 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
             frame:SetBackdropBorderColor(0, 0.8, 0, 0.8)  -- Green border
             frame:SetBackdropColor(0, 0.2, 0, 0.15)       -- Subtle green background
             frame.tex:SetVertexColor(1, 1, 1, 1)          -- Full color icon
-            frame.mountName:SetTextColor(0, 1, 0)         -- Green mount name
+            frame.mountName:SetTextColor(unpack(MCLcore.C.COLORS.STATUS_HIGH))         -- Green mount name
         else
             -- Uncollected mount styling
             frame:SetBackdropBorderColor(0.8, 0.3, 0.3, 0.8)  -- Red border
@@ -1557,7 +1573,7 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
             if IsMountCollected(mount_Id) then
                 self:SetBackdropColor(0, 0.2, 0, 0.15)
                 if self.mountName then
-                    self.mountName:SetTextColor(0, 1, 0)
+                    self.mountName:SetTextColor(unpack(MCLcore.C.COLORS.STATUS_HIGH))
                 end
             else
                 self:SetBackdropColor(0.2, 0.05, 0.05, 0.15)
@@ -1826,16 +1842,31 @@ function UpdateProgressBar(frame, total, collected)
     else
         if total == 0 then
             -- Handle zero total case properly
+            if MCLcore.Anim then MCLcore.Anim:Cancel(frame, "barvalue") end
+            frame.val = nil
             frame:SetValue(0)
             frame.Text:SetText("0/0 (0%)")
             frame:SetStatusBarColor(0.3, 0.3, 0.3)  -- Dark gray for no data
             return frame
         end
+        local previousPct = frame.val
         frame.collected = collected
         frame.total = total
-        frame:SetValue((collected/total)*100)
-        frame.Text:SetText(collected.."/"..total.." ("..math.floor(((collected/total)*100)).."%)")
-        frame.val = (collected/total)*100
+        local pct = (collected/total)*100
+        frame.Text:SetText(collected.."/"..total.." ("..math.floor(pct).."%)")
+        frame.val = pct
+
+        -- Ease the fill toward its new value. A bar with no previous value
+        -- snaps, so only genuine progress animates.
+        if MCLcore.Anim and previousPct ~= nil and MCLcore.Anim:CanAnimateBar(frame) then
+            MCLcore.Anim:BarTo(frame, pct)
+            if pct > previousPct + 0.01 then
+                MCLcore.Anim:BarSweep(frame)
+            end
+        else
+            if MCLcore.Anim then MCLcore.Anim:Cancel(frame, "barvalue") end
+            frame:SetValue(pct)
+        end
     end
     
     if frame.val == nil then
@@ -2041,17 +2072,19 @@ function MCL_functions:updateFromSettings(setting, val)
         end
     end
     if setting == "opacity" then
-        local val = MCL_SETTINGS.opacity or 0.85
+        -- Colours come from C.Surface so the slider and the initial paint
+        -- can never disagree about what a surface looks like.
+        local Surface = MCLcore.C.Surface
         if MCL_mainFrame and MCL_mainFrame.SetBackdropColor then
-            MCL_mainFrame:SetBackdropColor(0.10, 0.10, 0.18, val)
+            MCL_mainFrame:SetBackdropColor(Surface("SURFACE_1"))
         end
         if MCL_mainFrame and MCL_mainFrame.headerBar then
-            MCL_mainFrame.headerBar:SetBackdropColor(0.08, 0.08, 0.12, val)
+            MCL_mainFrame.headerBar:SetBackdropColor(Surface("CHROME_BAR"))
         end
         if MCLcore.MCL_MF_Nav then
-            MCLcore.MCL_MF_Nav:SetBackdropColor(0.06, 0.06, 0.09, val)
+            MCLcore.MCL_MF_Nav:SetBackdropColor(Surface("SURFACE_0"))
             if MCLcore.MCL_MF_Nav.headerBar then
-                MCLcore.MCL_MF_Nav.headerBar:SetBackdropColor(0.08, 0.08, 0.12, val)
+                MCLcore.MCL_MF_Nav.headerBar:SetBackdropColor(Surface("CHROME_BAR"))
             end
         end
     elseif setting:lower() == "unobtainable" then
@@ -2246,7 +2279,7 @@ function MCL_functions:UpdatePinnedMountStyling(mountID)
                 frame:SetBackdropColor(0, 0.2, 0, 0.15)       -- Subtle green background
                 frame.tex:SetVertexColor(1, 1, 1, 1)          -- Full color icon
                 if frame.mountName then
-                    frame.mountName:SetTextColor(0, 1, 0)     -- Green mount name
+                    frame.mountName:SetTextColor(unpack(MCLcore.C.COLORS.STATUS_HIGH))     -- Green mount name
                 end
             else
                 -- Uncollected mount styling

@@ -251,6 +251,7 @@ if L then
     L["Sections"] = "分類"
     L["MCL | Mount Collection Log"] = "MCL | 坐騎收集日誌"
     L["Enable Mount Card on Hover"] = "滑鼠懸停時啟用坐騎卡片"
+    L["Enable Animations"] = "啟用動畫"
     L["If enabled, the mount card will automatically appear when hovering over mounts."] = "啟用後，滑鼠懸停在坐騎上時會自動顯示坐騎卡片。"
     L[" default UI theme. Requires UI reload."] = "啟用後，附加元件將使用暴雪的預設UI主題。需要重新載入介面。"
     L["|cff00CCFFMount Collection Log Commands:\n|cffFF0000Show:|cffFFFFFF Shows your mount collection log\n|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon\n|cffFF0000Config:|cffFFFFFF Opens the settings\n|cffFF0000Help:|cffFFFFFF Shows commands"] = "|cff00CCFF坐騎收集日誌指令:\n|cffFF0000Show:|cffFFFFFF 顯示你的坐騎收集日誌\n|cffFF0000Icon:|cffFFFFFF 切換小地圖按鈕\n|cffFF0000Config:|cffFFFFFF 開啟設定選項\n|cffFF0000Help:|cffFFFFFF 顯示指令"

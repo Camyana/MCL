@@ -8,10 +8,103 @@ local MCL_frames = MCLcore.Frames;
 MCLcore.TabTable = {}
 MCLcore.statusBarFrames  = {}
 
+local C = MCLcore.C
+local COLORS = C.COLORS
+local Surface = C.Surface
+local ApplyType = C.ApplyType
+
 MCLcore.nav_width = 180
 local nav_width = MCLcore.nav_width
-local main_frame_width = 800
+-- Must not be narrower than the SetResizeBounds minimum below, or a
+-- first-run window snaps wider the instant the user touches the grip.
+local main_frame_width = 900
 local main_frame_height = 600
+
+-- =========================================================
+-- Nav sidebar metrics
+-- =========================================================
+-- The sidebar holds a list whose length comes from the player's data - how
+-- many expansions exist, whether the Hidden tab is enabled - inside a frame
+-- whose height is whatever the user dragged the window to. Those two
+-- numbers have nothing to do with each other, so a fixed item height only
+-- ever fits by luck: with today's section list at a 700px window the tail
+-- of the list renders below the bottom edge of the window.
+--
+-- ComputeNavMetrics searches for the largest item height that fits, trying
+-- both a 3-wide and a 4-wide expansion grid, and returns the whole metric
+-- set. It never exceeds the defaults, so a short list on a tall window
+-- keeps its normal proportions instead of stretching into giant buttons.
+local NAV_TOP_OFFSET = 70   -- header (34) + 4 + search bar (26) + 6
+local NAV_BOTTOM_PAD = 12
+local NAV_GRID_GAP   = 10   -- between the icon grid and the tabs below it
+
+local NAV_FULL = { itemH = C.DIMS.NAV_ITEM_H, gap = C.DIMS.NAV_ITEM_GAP, iconSize = 36, iconPad = 8 }
+-- Below these the labels stop being readable and the expansion icons stop
+-- being distinguishable, so the sidebar overflows rather than shrink further.
+local NAV_MIN  = { itemH = 20, gap = 1, iconSize = 24, iconPad = 3 }
+
+local function NavRequiredHeight(m, itemCount, gridRows)
+    return itemCount * (m.itemH + m.gap)
+         + gridRows * (m.iconSize + m.iconPad)
+         + (gridRows > 0 and NAV_GRID_GAP or 0)
+end
+
+-- Every metric is derived from itemH by the same interpolation factor, so
+-- the sidebar shrinks as one piece rather than squashing the tabs while
+-- the icons stay large.
+local function NavMetricsFor(itemH, columns, gridRows)
+    local span = NAV_FULL.itemH - NAV_MIN.itemH
+    local t = (span > 0) and ((NAV_FULL.itemH - itemH) / span) or 0
+    local function lerp(a, b) return math.floor(a + (b - a) * t + 0.5) end
+    local m = {
+        itemH    = itemH,
+        gap      = lerp(NAV_FULL.gap,      NAV_MIN.gap),
+        iconSize = lerp(NAV_FULL.iconSize, NAV_MIN.iconSize),
+        iconPad  = lerp(NAV_FULL.iconPad,  NAV_MIN.iconPad),
+        gridCols = columns,
+        gridRows = gridRows,
+    }
+    m.stride = m.itemH + m.gap
+    return m
+end
+
+function MCL_frames:ComputeNavMetrics(itemCount, expansionCount)
+    local _, frameHeight = MCL_frames:GetCurrentFrameDimensions()
+    local available = (frameHeight or 600) - NAV_TOP_OFFSET - NAV_BOTTOM_PAD
+    expansionCount = expansionCount or 0
+
+    -- Largest item height that fits, for a given grid width.
+    local function bestFor(columns)
+        local gridRows = math.ceil(expansionCount / columns)
+        for itemH = NAV_FULL.itemH, NAV_MIN.itemH, -1 do
+            local m = NavMetricsFor(itemH, columns, gridRows)
+            if available <= 0 or NavRequiredHeight(m, itemCount, gridRows) <= available then
+                return m
+            end
+        end
+        return nil
+    end
+
+    -- Three columns is the sidebar's identity, so it is only given up when
+    -- keeping it would squeeze the tabs uncomfortably. Reflowing the icon
+    -- grid from 3-wide to 4-wide as the window is dragged is a far more
+    -- noticeable change than a couple of pixels off each row.
+    local NAV_COMFORT_H = 26
+    local best = bestFor(3)
+    if not best or best.itemH < NAV_COMFORT_H then
+        local wide = bestFor(4)
+        if wide and (not best or wide.itemH > best.itemH) then
+            best = wide
+        end
+    end
+
+    -- Nothing fits even at the floor: take the tightest layout there is and
+    -- let it overflow, rather than returning something even taller.
+    if not best then
+        best = NavMetricsFor(NAV_MIN.itemH, 4, math.ceil(expansionCount / 4))
+    end
+    return best
+end
 
 -- Sort modes for mount lists within categories
 local SORT_MODES
@@ -81,6 +174,11 @@ local function ReleaseFrameChildren(frame)
     local children = {frame:GetChildren()}
     for _, child in ipairs(children) do
         ReleaseFrameChildren(child) -- depth-first
+        -- Kill any in-flight tween or animation group before the frame is
+        -- orphaned, otherwise it keeps ticking against a dead widget.
+        if MCLcore.Anim then
+            MCLcore.Anim:Release(child)
+        end
         child:Hide()
         child:ClearAllPoints()
         -- Not all frame types support every script handler (e.g. StatusBar
@@ -131,6 +229,90 @@ local function ThrottledFrameCreation(categoryData, callback)
     end
     
     processNextBatch()
+end
+
+-- =========================================================
+-- Mount icon hover
+-- =========================================================
+-- Everything here is allocated on the FIRST hover, never at creation. A
+-- full build produces well over a thousand of these buttons and a user
+-- will hover a few dozen of them; eagerly giving each one a glow texture
+-- and a two-child animation group is real memory for no benefit.
+--
+-- The pop is deliberately a one-shot that returns to 1.0 rather than a
+-- scale that is held while hovered. A frame parked at a non-1.0 scale
+-- reports the wrong size to any layout code that measures it, and a
+-- recycled frame whose group was stopped mid-flight would stay enlarged
+-- forever. The persistent part of the hover state is carried by the
+-- border colour and the glow, which have no such failure mode.
+local MOUNT_HOVER_BORDER = { 0.52, 0.82, 1.00, 1 }
+
+local function EnsureMountHoverFX(backdropFrame)
+    if backdropFrame.__mclFX then return backdropFrame.__mclFX end
+
+    local fx = {}
+    fx.glow = backdropFrame:CreateTexture(nil, "OVERLAY")
+    fx.glow:SetPoint("TOPLEFT", backdropFrame, "TOPLEFT", -4, 4)
+    fx.glow:SetPoint("BOTTOMRIGHT", backdropFrame, "BOTTOMRIGHT", 4, -4)
+    fx.glow:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
+    fx.glow:SetBlendMode("ADD")
+    fx.glow:SetVertexColor(0.36, 0.68, 0.92, 1)
+    fx.glow:SetAlpha(0)
+
+    local pop = backdropFrame:CreateAnimationGroup()
+    local up = pop:CreateAnimation("Scale")
+    up:SetScaleFrom(1, 1); up:SetScaleTo(1.10, 1.10)
+    up:SetOrigin("CENTER", 0, 0); up:SetDuration(0.09)
+    up:SetSmoothing("OUT"); up:SetOrder(1)
+    local down = pop:CreateAnimation("Scale")
+    down:SetScaleFrom(1.10, 1.10); down:SetScaleTo(1, 1)
+    down:SetOrigin("CENTER", 0, 0); down:SetDuration(0.07)
+    down:SetSmoothing("IN"); down:SetOrder(2)
+    local function settle() backdropFrame:SetScale(1) end
+    pop:SetScript("OnFinished", settle)
+    pop:SetScript("OnStop", settle)
+
+    fx.pop = pop
+    backdropFrame.__mclPulse = pop   -- so Anim:Release stops it on recycle
+    backdropFrame.__mclFX = fx
+    return fx
+end
+
+local function AttachMountHover(backdropFrame, mountFrame)
+    -- The scripts live on the Button, which is what actually takes mouse
+    -- input; the visuals live on the backdrop behind it.
+    mountFrame:SetScript("OnEnter", function()
+        local A = MCLcore.Anim
+        if not (A and A:IsEnabled()) then
+            backdropFrame:SetBackdropBorderColor(unpack(MOUNT_HOVER_BORDER))
+            return
+        end
+        local fx = EnsureMountHoverFX(backdropFrame)
+        backdropFrame.__mclBaseLevel = backdropFrame.__mclBaseLevel or backdropFrame:GetFrameLevel()
+        backdropFrame:SetFrameLevel(backdropFrame.__mclBaseLevel + 5)
+        if not fx.pop:IsPlaying() then fx.pop:Play() end
+        A:Tween(fx.glow, "glow", 0.12, { fx.glow:GetAlpha() }, { 0.55 },
+            function(t, v) t:SetAlpha(v) end, "outQuad")
+        A:BorderColor(backdropFrame, MOUNT_HOVER_BORDER, 0.12, "outQuad")
+    end)
+
+    mountFrame:SetScript("OnLeave", function()
+        local A = MCLcore.Anim
+        local rest = backdropFrame.restBorder or { 0.27, 0.28, 0.34, 0.6 }
+        if not (A and A:IsEnabled()) then
+            backdropFrame:SetBackdropBorderColor(unpack(rest))
+            return
+        end
+        local fx = backdropFrame.__mclFX
+        if fx then
+            A:Tween(fx.glow, "glow", 0.16, { fx.glow:GetAlpha() }, { 0 },
+                function(t, v) t:SetAlpha(v) end, "inOutQuad")
+        end
+        A:BorderColor(backdropFrame, rest, 0.16, "inOutQuad")
+        if backdropFrame.__mclBaseLevel then
+            backdropFrame:SetFrameLevel(backdropFrame.__mclBaseLevel)
+        end
+    end)
 end
 
 -- Throttled Mount Creation Helper
@@ -249,6 +431,10 @@ local function ThrottledMountCreation(mountList, categoryFrame, config, callback
                         backdropFrame:SetSize(backdropSize, backdropSize)
                         backdropFrame:SetPoint("TOPLEFT", categoryFrame, "TOPLEFT", iconX - 1, iconY + 1)
                         backdropFrame.mountID = mountId
+                        -- Reading order for the staggered reveal. Only a tag:
+                        -- the animation itself is played from RevealGrid when
+                        -- the tab is actually shown.
+                        backdropFrame.__mclRevealIndex = displayedIndex
                         
                         -- Create mount frame
                         local mountFrame = CreateFrame("Button", nil, backdropFrame)
@@ -275,26 +461,37 @@ local function ThrottledMountCreation(mountList, categoryFrame, config, callback
                                 local pin_check = MCLcore.Function and MCLcore.Function.CheckIfPinned and MCLcore.Function:CheckIfPinned("m"..mount_Id)
                                 mountFrame.pin:SetAlpha(pin_check and 1 or 0)
                                 
-                                if IsMountCollected(mount_Id) then
+                                backdropFrame:SetBackdrop({
+                                    bgFile = "Interface\\Buttons\\WHITE8x8",
+                                    edgeFile = "Interface\\Buttons\\WHITE8x8",
+                                    edgeSize = 1
+                                })
+
+                                local collected = IsMountCollected(mount_Id)
+                                backdropFrame.collected = collected
+                                if collected then
                                     mountFrame.tex:SetVertexColor(1, 1, 1, 1)
-                                    backdropFrame:SetBackdrop({
-                                        bgFile = "Interface\\Buttons\\WHITE8x8",
-                                        edgeFile = "Interface\\Buttons\\WHITE8x8",
-                                        edgeSize = 1
-                                    })
-                                    backdropFrame:SetBackdropColor(0.12, 0.18, 0.12, 0.5)
-                                    backdropFrame:SetBackdropBorderColor(0.25, 0.65, 0.25, 0.8)
+                                    backdropFrame.restBg     = { 0.12, 0.18, 0.12, 0.5 }
+                                    backdropFrame.restBorder = { 0.25, 0.65, 0.25, 0.8 }
                                 else
-                                    mountFrame.tex:SetVertexColor(0.45, 0.45, 0.45, 0.75)
-                                    backdropFrame:SetBackdrop({
-                                        bgFile = "Interface\\Buttons\\WHITE8x8",
-                                        edgeFile = "Interface\\Buttons\\WHITE8x8",
-                                        edgeSize = 1
-                                    })
-                                    backdropFrame:SetBackdropColor(0.08, 0.08, 0.1, 0.4)
-                                    backdropFrame:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.5)
+                                    -- Desaturate rather than multiply the icon down. Tinting
+                                    -- to 0.45 grey muddies the art; draining the colour keeps
+                                    -- the silhouette readable while still reading as inactive.
+                                    mountFrame.tex:SetDesaturated(true)
+                                    mountFrame.tex:SetVertexColor(0.7, 0.7, 0.7, 0.85)
+                                    backdropFrame.restBg     = { 0.078, 0.082, 0.098, 0.5 }
+                                    backdropFrame.restBorder = { 0.27, 0.28, 0.34, 0.6 }
                                 end
-                                
+                                backdropFrame:SetBackdropColor(unpack(backdropFrame.restBg))
+                                backdropFrame:SetBackdropBorderColor(unpack(backdropFrame.restBorder))
+
+                                -- Hover feedback. The grid is the main surface of the
+                                -- addon and had none at all: twelve icons to a row with a
+                                -- tooltip anchored to the corner gave no way to tell which
+                                -- icon the tooltip belonged to. Installed before
+                                -- LinkMountItem, which chains onto these with HookScript.
+                                AttachMountHover(backdropFrame, mountFrame)
+
                                 if MCLcore.Function and MCLcore.Function.LinkMountItem then
                                     MCLcore.Function:LinkMountItem(mountId, mountFrame, false, false)
                                 end
@@ -342,33 +539,62 @@ local function ThrottledMountCreation(mountList, categoryFrame, config, callback
 end
 
 -- Helper function to style navigation buttons for both themes
+-- =========================================================
+-- Nav button styling and hover
+-- =========================================================
+-- Resting, hover and selected states used to be written out longhand at
+-- six separate sites with slightly different literals. They live here now
+-- so a nav tab, an expansion icon and a header button can never drift.
+local NAV_STATE = {
+    normal = {
+        bg     = { 0.135, 0.142, 0.168, 0.95 },
+        border = { 0.20,  0.21,  0.26,  0.9 },
+        text   = { 0.72,  0.76,  0.84,  1 },
+    },
+    hover = {
+        bg     = { 0.170, 0.190, 0.240, 1 },
+        border = { 0.30,  0.60,  0.90,  0.8 },
+        text   = { 0.92,  0.94,  0.98,  1 },
+    },
+    selected = {
+        bg     = { 0.150, 0.200, 0.290, 1 },
+        border = { 0.30,  0.60,  0.90,  1 },
+        text   = { 0.52,  0.82,  1.00,  1 },
+    },
+}
+
+-- Hover-in is faster than hover-out on purpose: a quick attack reads as
+-- responsive, while a slower release stops the sidebar twitching as the
+-- cursor sweeps across it.
+local function NavGlide(button, stateName)
+    local state = NAV_STATE[stateName]
+    if not (button and state) then return end
+    local isRest = (stateName ~= "hover")
+    local duration = isRest and 0.16 or 0.10
+    local ease = isRest and "inOutQuad" or "outQuad"
+    if MCLcore.Anim then
+        MCLcore.Anim:GlideTo(button, state, duration, ease)
+    else
+        button:SetBackdropColor(unpack(state.bg))
+        button:SetBackdropBorderColor(unpack(state.border))
+        if button.text then button.text:SetTextColor(unpack(state.text)) end
+    end
+end
+
 local function StyleNavButton(button, isExpansionIcon)
     if not button then return end
-    
-    if isExpansionIcon then
-        -- Expansion icon buttons: subtle dark frame with 1px border
-        button:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-            insets = { left = 1, right = 1, top = 1, bottom = 1 },
-        })
-        button:SetBackdropColor(0.1, 0.1, 0.14, 0.9)
-        button:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.8)
-    else
-        -- Full-width nav buttons: matching header button style
-        button:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-            insets = { left = 1, right = 1, top = 1, bottom = 1 },
-        })
-        button:SetBackdropColor(0.1, 0.1, 0.14, 0.9)
-        button:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.6)
-        
-        if button.text then
-            button.text:SetTextColor(0.7, 0.78, 0.88, 1)
-        end
+
+    button:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+        insets = { left = 1, right = 1, top = 1, bottom = 1 },
+    })
+    button:SetBackdropColor(unpack(NAV_STATE.normal.bg))
+    button:SetBackdropBorderColor(unpack(NAV_STATE.normal.border))
+
+    if not isExpansionIcon and button.text then
+        button.text:SetTextColor(unpack(NAV_STATE.normal.text))
     end
 end
 
@@ -386,31 +612,46 @@ local function ScrollFrame_OnMouseWheel(self, delta)
 end
 
 
-function MCL_frames:openSettings()
-	-- Ensure the MCL window is visible
-	if MCLcore.MCL_MF and not MCLcore.MCL_MF:IsShown() then
-		MCLcore.MCL_MF:Show()
+-- =========================================================
+-- Tab selection state
+-- =========================================================
+-- Which tab is selected is written from five places besides SelectTab -
+-- openSettings, RefreshLayout's restore, the Overview bar click, and the
+-- search jump in Core.lua - and every one of them used to repaint the
+-- buttons by hand with its own copy of the literals. They had already
+-- drifted apart before this change; now there is one writer.
+--
+-- currentlySelectedTab is assigned BEFORE MoveNavSelector on purpose: the
+-- marker's deferred retry, for a tab whose rect has not been laid out
+-- yet, is guarded on exactly that field.
+function MCL_frames:ApplyTabSelection(tab, tabs)
+	tabs = tabs or (MCLcore.MCL_MF_Nav and MCLcore.MCL_MF_Nav.tabs)
+	if not (tab and tabs) then return end
+
+	for _, t in ipairs(tabs) do
+		if t.SetBackdropBorderColor then
+			NavGlide(t, "normal")
+		end
 	end
+	NavGlide(tab, "selected")
+	MCLcore.currentlySelectedTab = tab
+	MCL_frames:MoveNavSelector(tab)
+end
+
+function MCL_frames:openSettings()
+	-- Ensure the MCL window is visible. Not a bare Show(): a window that is
+	-- mid-close still reports IsShown(), so Show() would be skipped and the
+	-- fade would hide the settings panel a moment after opening it.
+	MCL_frames:OpenMainFrame()
 	-- Navigate to the in-addon Settings tab
 	local navFrame = MCLcore.MCL_MF_Nav
 	if navFrame and navFrame.tabs then
 		for _, tab in ipairs(navFrame.tabs) do
 			if tab.section and tab.section.name == "Settings" then
-				-- Deselect all tabs
 				for _, t in ipairs(navFrame.tabs) do
 					if t.content then t.content:Hide() end
-					if t.SetBackdropBorderColor then
-						t:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.6)
-						t:SetBackdropColor(0.1, 0.1, 0.14, 0.9)
-						if t.text then t.text:SetTextColor(0.7, 0.78, 0.88, 1) end
-					end
 				end
-				-- Select the Settings tab
-				if tab.SetBackdropBorderColor then
-					tab:SetBackdropBorderColor(0.3, 0.6, 0.9, 1)
-					tab:SetBackdropColor(0.15, 0.18, 0.25, 1)
-					if tab.text then tab.text:SetTextColor(0.5, 0.85, 1, 1) end
-				end
+				MCL_frames:ApplyTabSelection(tab, navFrame.tabs)
 				if MCL_mainFrame and MCL_mainFrame.ScrollFrame then
 					MCL_mainFrame.ScrollFrame:SetScrollChild(MCL_mainFrame.ScrollChild)
 					if tab.content then tab.content:Show() end
@@ -422,6 +663,180 @@ function MCL_frames:openSettings()
 	end
 end
 
+-- Every close routes through here rather than calling Hide() directly, so
+-- there is one place that owns the behaviour.
+--
+-- It does NOT animate. A fade has to change the alpha of the frame, and
+-- WoW propagates a frame's alpha to every descendant - which is why
+-- SetIgnoreParentAlpha exists. SetTabs builds every tab's content up front
+-- and hides it, so this window owns roughly four thousand frames even
+-- though one tab is on screen; a ten-step fade meant ~40,000 alpha
+-- propagations per open and per close, and the game hitched every time.
+-- Scale was worse and went first, but alpha alone still stuttered.
+--
+-- Making the window fade cheap needs the content built lazily per tab
+-- instead of all at once. Until then, opening and closing is instant.
+function MCL_frames:CloseMainFrame()
+    local frame = MCLcore.MCL_MF or MCL_mainFrame
+    if not frame or not frame:IsShown() then return end
+    -- OnHide does the teardown: nav, search dropdown, mount card.
+    frame:Hide()
+end
+
+-- =========================================================
+-- Staggered grid reveal
+-- =========================================================
+-- Driven by tab VISIBILITY, never by creation. SetTabs builds every
+-- expansion's content up front and then hides it, so fading buttons in as
+-- they are created would start animation groups on hidden frames - those
+-- never advance, OnFinished never fires, and every icon on every
+-- unselected tab would be stranded at alpha 0 forever.
+--
+-- The cascade is not new motion so much as existing jank made deliberate:
+-- ThrottledMountCreation already materialises icons in visible bursts of
+-- twenty, which currently reads as stutter.
+local REVEAL_STEP   = 0.014   -- seconds between icons
+local REVEAL_CAP    = 0.45    -- everything past ~32 icons starts together
+local REVEAL_BUDGET = 96      -- roughly two screenfuls; the rest just appear
+
+function MCL_frames:RevealGrid(content)
+    if not content then return end
+
+    -- Once per build. Re-cascading every time the user returns to a tab
+    -- they have already seen gets tiresome by the tenth switch.
+    if content.__mclRevealed then return end
+    content.__mclRevealed = true
+
+    local anim = MCLcore.Anim
+    local window = MCLcore.MCL_MF
+    -- An animation group on a frame that is not actually visible will not
+    -- advance, so if the window is shut we simply skip - the icons are
+    -- already at full alpha and stay that way.
+    local canAnimate = anim and anim:IsEnabled() and window and window:IsShown()
+    if not canAnimate then return end
+
+    local revealed = {}
+    local index = 0
+    for _, categoryFrame in ipairs({ content:GetChildren() }) do
+        -- Skip collapsed categories entirely. Their mount buttons are hidden
+        -- but still carry a reveal index, and animation groups do not advance
+        -- on hidden frames - so a collapsed category near the top of a
+        -- section would eat the whole budget on icons nobody can see and
+        -- leave the visible grid with no cascade at all.
+        if categoryFrame:IsShown() then
+            for _, child in ipairs({ categoryFrame:GetChildren() }) do
+                if child.__mclRevealIndex and child:IsShown() then
+                    index = index + 1
+                    if index <= REVEAL_BUDGET then
+                        anim:PopIn(child, math.min((index - 1) * REVEAL_STEP, REVEAL_CAP), 0.16)
+                        revealed[#revealed + 1] = child
+                    end
+                end
+            end
+        end
+    end
+
+    if #revealed == 0 then return end
+
+    -- Safety net. Nothing in this window is worth leaving invisible, so if
+    -- anything stops the groups from finishing - the tab being switched
+    -- away from mid-cascade, the window closing - force every icon home.
+    C_Timer.After(REVEAL_CAP + 0.4, function()
+        for _, child in ipairs(revealed) do
+            if child.SetAlpha then child:SetAlpha(1) end
+        end
+    end)
+end
+
+-- =========================================================
+-- Nav selection marker
+-- =========================================================
+-- Selection used to be expressed only by recolouring the selected button.
+-- On a 3-wide grid of unlabelled 36px expansion icons that is close to
+-- invisible: "the border of icon 7 changed" is not something peripheral
+-- vision picks up. A marker that physically travels from icon 4 to icon 7
+-- is, and it gives one persistent "you are here" for both the icon grid
+-- and the full-width tabs.
+--
+-- It lives on the nav frame, which survives SetTabs - only the tabs
+-- themselves are destroyed - so it is created once.
+function MCL_frames:MoveNavSelector(tab, attempt)
+    local nav = MCLcore.MCL_MF_Nav
+    if not (nav and tab) then return end
+    -- The window can be selected into while hidden (a toast jump, or the
+    -- initial build), and a frame that has never been laid out has no rect
+    -- at all. Without a bound the retry below re-arms itself every frame
+    -- for the rest of the session.
+    attempt = (attempt or 0) + 1
+    if attempt > 8 then return end
+
+    local marker = nav.__mclSelector
+    if not marker then
+        marker = nav:CreateTexture(nil, "OVERLAY")
+        marker:SetColorTexture(unpack(COLORS.ACCENT))
+        marker:SetWidth(3)
+        marker:Hide()
+        nav.__mclSelector = marker
+    end
+
+    local navLeft, navTop = nav:GetLeft(), nav:GetTop()
+    local tabLeft, tabTop = tab:GetLeft(), tab:GetTop()
+    -- A frame that has not been laid out yet has no rect; try again once
+    -- the current frame's layout pass has finished.
+    if not (navLeft and navTop and tabLeft and tabTop) then
+        C_Timer.After(0, function()
+            if MCLcore.currentlySelectedTab == tab then
+                MCL_frames:MoveNavSelector(tab, attempt)
+            end
+        end)
+        return
+    end
+
+    -- Clamped: full-width tabs are anchored at nav-local x = 1, so an
+    -- unclamped -3 put two of the marker's three pixels outside the
+    -- sidebar, over the game world.
+    local toX = math.max(0, tabLeft - navLeft - 3)
+    local toY = tabTop - navTop
+    local toH = tab:GetHeight()
+
+    local function place(_, x, y, h)
+        marker:SetHeight(h)
+        marker:ClearAllPoints()
+        marker:SetPoint("TOPLEFT", nav, "TOPLEFT", x, y)
+        marker.__x, marker.__y, marker.__h = x, y, h
+    end
+
+    local animate = MCLcore.Anim and MCLcore.Anim:IsEnabled()
+    if not animate or not marker:IsShown() or marker.__x == nil then
+        place(nil, toX, toY, toH)
+        marker:Show()
+        return
+    end
+
+    marker:Show()
+    MCLcore.Anim:Tween(marker, "navsel", 0.20,
+        { marker.__x, marker.__y, marker.__h },
+        { toX, toY, toH },
+        place, "outCubic")
+end
+
+function MCL_frames:HideNavSelector()
+    local nav = MCLcore.MCL_MF_Nav
+    local marker = nav and nav.__mclSelector
+    if not marker then return end
+    if MCLcore.Anim then MCLcore.Anim:Cancel(marker, "navsel") end
+    marker.__x, marker.__y, marker.__h = nil, nil, nil
+    marker:Hide()
+end
+
+-- The counterpart to CloseMainFrame, so callers have one pair to use and
+-- no site has to remember what showing the window involves.
+function MCL_frames:OpenMainFrame()
+    local frame = MCLcore.MCL_MF or MCL_mainFrame
+    if not frame then return end
+    frame:Show()
+end
+
 function MCL_frames:CreateMainFrame()
     MCL_mainFrame = CreateFrame("Frame", "MCLFrame", UIParent, "MCLCleanFrameTemplate");
     MCL_mainFrame:SetBackdrop({
@@ -429,13 +844,17 @@ function MCL_frames:CreateMainFrame()
         edgeFile = "Interface\\Buttons\\WHITE8x8",
         edgeSize = 1,
     })
-    MCL_mainFrame:SetBackdropColor(0.10, 0.10, 0.18, MCL_SETTINGS.opacity)
-    MCL_mainFrame:SetBackdropBorderColor(0.2, 0.2, 0.25, 0.8)
+    -- The body sits one step above the sidebar, and the window's own edge
+    -- is the strongest border in the UI - it used to be dimmer than the
+    -- cards inside it, which made the whole thing read as a loose pile of
+    -- rectangles rather than a window with contents.
+    MCL_mainFrame:SetBackdropColor(Surface("SURFACE_1"))
+    MCL_mainFrame:SetBackdropBorderColor(unpack(COLORS.BORDER_STRONG))
     
     -- =====================================================
     -- TITLE BAR
     -- =====================================================
-    local HEADER_HEIGHT = 30
+    local HEADER_HEIGHT = 34
     
     -- Header background bar
     MCL_mainFrame.headerBar = CreateFrame("Frame", nil, MCL_mainFrame, "BackdropTemplate")
@@ -445,15 +864,15 @@ function MCL_frames:CreateMainFrame()
     MCL_mainFrame.headerBar:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
     })
-    MCL_mainFrame.headerBar:SetBackdropColor(0.08, 0.08, 0.12, MCL_SETTINGS.opacity)
+    MCL_mainFrame.headerBar:SetBackdropColor(Surface("CHROME_BAR"))
     MCL_mainFrame.headerBar:SetFrameLevel(MCL_mainFrame:GetFrameLevel() + 3)
-    
+
     -- Accent line at bottom of header
     MCL_mainFrame.headerAccent = MCL_mainFrame.headerBar:CreateTexture(nil, "OVERLAY")
     MCL_mainFrame.headerAccent:SetHeight(1)
     MCL_mainFrame.headerAccent:SetPoint("BOTTOMLEFT", MCL_mainFrame.headerBar, "BOTTOMLEFT", 0, 0)
     MCL_mainFrame.headerAccent:SetPoint("BOTTOMRIGHT", MCL_mainFrame.headerBar, "BOTTOMRIGHT", 0, 0)
-    MCL_mainFrame.headerAccent:SetColorTexture(0.2, 0.6, 0.9, 0.6)
+    MCL_mainFrame.headerAccent:SetColorTexture(unpack(COLORS.ACCENT_RULE))
     
     -- Make header bar draggable (inherits from parent)
     MCL_mainFrame.headerBar:EnableMouse(true)
@@ -465,10 +884,13 @@ function MCL_frames:CreateMainFrame()
     MCL_mainFrame.title = MCL_mainFrame.headerBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     MCL_mainFrame.title:SetPoint("LEFT", MCL_mainFrame.headerBar, "LEFT", 10, 0)
     MCL_mainFrame.title:SetText(L["Mount Collection Log"])
-    MCL_mainFrame.title:SetTextColor(0.4, 0.78, 0.95, 1)
+    MCL_mainFrame.title:SetTextColor(unpack(COLORS.ACCENT))
+    -- The window title used to be 12pt - the same size as a tertiary label,
+    -- and smaller than the "Total Mounts" sub-heading inside it. Nothing led.
+    ApplyType(MCL_mainFrame.title, C.TYPE.DISPLAY, true)
     
     -- Helper: consistent title bar button styling
-    local TBAR_BTN_HEIGHT = 18
+    local TBAR_BTN_HEIGHT = 20
     local TBAR_BTN_PADDING = 5
     
     local function CreateHeaderButton(parent, width, labelText, tooltipTitle, tooltipBody, onClick)
@@ -480,18 +902,31 @@ function MCL_frames:CreateMainFrame()
             edgeSize = 1,
             insets = { left = 1, right = 1, top = 1, bottom = 1 },
         })
-        btn:SetBackdropColor(0.12, 0.12, 0.16, 0.9)
-        btn:SetBackdropBorderColor(0.3, 0.3, 0.35, 0.8)
-        
+        -- Resting and hover states are carried on the button so the
+        -- variants below (the red close, the icon buttons) only have to
+        -- override the one field that differs, instead of restating the
+        -- whole handler.
+        btn.stateNormal = {
+            bg     = { 0.135, 0.142, 0.168, 0.95 },
+            border = { 0.27,  0.28,  0.34,  0.9 },
+            text   = { 0.72,  0.76,  0.84,  1 },
+        }
+        btn.stateHover = {
+            bg     = { 0.170, 0.190, 0.240, 1 },
+            border = { 0.30,  0.60,  0.90,  1 },
+            text   = { 0.52,  0.82,  1.00,  1 },
+        }
+
+        btn:SetBackdropColor(unpack(btn.stateNormal.bg))
+        btn:SetBackdropBorderColor(unpack(btn.stateNormal.border))
+
         btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         btn.text:SetPoint("CENTER", 0, 0)
         btn.text:SetText(labelText)
-        btn.text:SetTextColor(0.65, 0.75, 0.85, 1)
-        
+        btn.text:SetTextColor(unpack(btn.stateNormal.text))
+
         btn:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(0.18, 0.22, 0.3, 1)
-            self:SetBackdropBorderColor(0.3, 0.6, 0.9, 1)
-            self.text:SetTextColor(0.5, 0.85, 1, 1)
+            MCLcore.Anim:GlideTo(self, self.stateHover, 0.10, "outQuad")
             if tooltipTitle then
                 GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
                 GameTooltip:SetText(tooltipTitle, 1, 1, 1)
@@ -502,13 +937,11 @@ function MCL_frames:CreateMainFrame()
             end
         end)
         btn:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(0.12, 0.12, 0.16, 0.9)
-            self:SetBackdropBorderColor(0.3, 0.3, 0.35, 0.8)
-            self.text:SetTextColor(0.65, 0.75, 0.85, 1)
+            MCLcore.Anim:GlideTo(self, self.stateNormal, 0.16, "inOutQuad")
             GameTooltip:Hide()
         end)
         btn:SetScript("OnClick", onClick)
-        
+
         return btn
     end
     
@@ -516,20 +949,17 @@ function MCL_frames:CreateMainFrame()
     MCL_mainFrame.customClose = CreateHeaderButton(
         MCL_mainFrame.headerBar, 22, "X",
         nil, nil,
-        function() MCL_mainFrame:Hide() end
+        function() MCL_frames:CloseMainFrame() end
     )
     MCL_mainFrame.customClose:SetPoint("RIGHT", MCL_mainFrame.headerBar, "RIGHT", -TBAR_BTN_PADDING, 0)
-    -- Make close button red on hover
-    MCL_mainFrame.customClose:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.6, 0.1, 0.1, 1)
-        self:SetBackdropBorderColor(0.8, 0.2, 0.2, 1)
-        self.text:SetTextColor(1, 1, 1, 1)
-    end)
-    MCL_mainFrame.customClose:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.12, 0.12, 0.16, 0.9)
-        self:SetBackdropBorderColor(0.3, 0.3, 0.35, 0.8)
-        self.text:SetTextColor(0.65, 0.75, 0.85, 1)
-    end)
+    -- Close is the one destructive control in the header, so it is the one
+    -- that hovers red. Only the hover state differs - everything else is
+    -- inherited from CreateHeaderButton.
+    MCL_mainFrame.customClose.stateHover = {
+        bg     = { 0.78, 0.28, 0.28, 1 },
+        border = { 0.90, 0.42, 0.42, 1 },
+        text   = { 1,    1,    1,    1 },
+    }
     
     -- Refresh button
     MCL_mainFrame.refresh = CreateHeaderButton(
@@ -548,23 +978,12 @@ function MCL_frames:CreateMainFrame()
     MCL_mainFrame.refresh.icon:SetSize(12, 12)
     MCL_mainFrame.refresh.icon:SetPoint("CENTER", 0, 0)
     MCL_mainFrame.refresh.icon:SetTexture("Interface\\Buttons\\UI-RefreshButton")
-    MCL_mainFrame.refresh.icon:SetVertexColor(0.65, 0.75, 0.85, 1)
-    -- Override hover to also tint the icon
-    MCL_mainFrame.refresh:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.18, 0.22, 0.3, 1)
-        self:SetBackdropBorderColor(0.3, 0.6, 0.9, 1)
-        self.icon:SetVertexColor(0.5, 0.85, 1, 1)
-        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:SetText(L["Refresh Layout"], 1, 1, 1)
-        GameTooltip:AddLine(L["Refreshes the mount collection display"], 0.7, 0.7, 0.7)
-        GameTooltip:Show()
-    end)
-    MCL_mainFrame.refresh:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.12, 0.12, 0.16, 0.9)
-        self:SetBackdropBorderColor(0.3, 0.3, 0.35, 0.8)
-        self.icon:SetVertexColor(0.65, 0.75, 0.85, 1)
-        GameTooltip:Hide()
-    end)
+    MCL_mainFrame.refresh.icon:SetDesaturated(true)
+    MCL_mainFrame.refresh.icon:SetVertexColor(0.72, 0.76, 0.84, 1)
+    -- The shared handler tints frame.icon when the state names one, so an
+    -- icon button needs two extra fields rather than two extra handlers.
+    MCL_mainFrame.refresh.stateNormal.icon = { 0.72, 0.76, 0.84, 1 }
+    MCL_mainFrame.refresh.stateHover.icon  = { 0.52, 0.82, 1.00, 1 }
     
     -- SA button
     MCL_mainFrame.sa = CreateHeaderButton(
@@ -610,23 +1029,11 @@ function MCL_frames:CreateMainFrame()
     MCL_mainFrame.report.icon:SetSize(12, 12)
     MCL_mainFrame.report.icon:SetPoint("CENTER", 0, 0)
     MCL_mainFrame.report.icon:SetTexture("Interface\\HELPFRAME\\HelpIcon-Bug")
-    MCL_mainFrame.report.icon:SetVertexColor(0.9, 0.4, 0.4, 1)
-    -- Override hover to also tint the icon
-    MCL_mainFrame.report:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.18, 0.22, 0.3, 1)
-        self:SetBackdropBorderColor(0.9, 0.3, 0.3, 1)
-        self.icon:SetVertexColor(1, 0.5, 0.5, 1)
-        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:SetText(L["Report Issue"], 1, 1, 1)
-        GameTooltip:AddLine(L["Report a missing or incorrect mount"], 0.7, 0.7, 0.7)
-        GameTooltip:Show()
-    end)
-    MCL_mainFrame.report:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.12, 0.12, 0.16, 0.9)
-        self:SetBackdropBorderColor(0.3, 0.3, 0.35, 0.8)
-        self.icon:SetVertexColor(0.9, 0.4, 0.4, 1)
-        GameTooltip:Hide()
-    end)
+    MCL_mainFrame.report.icon:SetDesaturated(true)
+    MCL_mainFrame.report.icon:SetVertexColor(0.70, 0.42, 0.42, 1)
+    MCL_mainFrame.report.stateNormal.icon = { 0.70, 0.42, 0.42, 1 }
+    MCL_mainFrame.report.stateHover.border = { 0.90, 0.42, 0.42, 1 }
+    MCL_mainFrame.report.stateHover.icon   = { 1,    0.55, 0.55, 1 }
 
     -- Compare button (group compare feature)
     MCL_mainFrame.compare = CreateHeaderButton(
@@ -667,9 +1074,33 @@ function MCL_frames:CreateMainFrame()
 	MCL_mainFrame.resizeGrip = CreateFrame("Button", nil, MCL_mainFrame)
 	MCL_mainFrame.resizeGrip:SetSize(16, 16)
 	MCL_mainFrame.resizeGrip:SetPoint("BOTTOMRIGHT", MCL_mainFrame, "BOTTOMRIGHT", -2, 2)
-	MCL_mainFrame.resizeGrip:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
-	MCL_mainFrame.resizeGrip:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
-	MCL_mainFrame.resizeGrip:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+	-- A dot triangle rather than the Classic-era chat-window grabber. That
+	-- texture is a warm gold bevel: the only skeuomorphic, only warm-toned
+	-- element in an otherwise flat cool-dark window, parked in the corner.
+	-- Dots rather than rotated hairlines because a 1px line put through
+	-- SetRotation antialiases away to almost nothing.
+	MCL_mainFrame.resizeGrip.dots = {}
+	for row = 1, 3 do
+		for col = 1, row do
+			local dot = MCL_mainFrame.resizeGrip:CreateTexture(nil, "OVERLAY")
+			dot:SetColorTexture(1, 1, 1, 1)
+			dot:SetVertexColor(unpack(COLORS.BORDER_STRONG))
+			dot:SetSize(2, 2)
+			dot:SetPoint("BOTTOMRIGHT", MCL_mainFrame.resizeGrip, "BOTTOMRIGHT",
+				-2 - (col - 1) * 4, 2 + (row - col) * 4)
+			table.insert(MCL_mainFrame.resizeGrip.dots, dot)
+		end
+	end
+	MCL_mainFrame.resizeGrip:SetScript("OnEnter", function(self)
+		for _, dot in ipairs(self.dots) do
+			MCLcore.Anim:VertexColor(dot, COLORS.ACCENT_BRIGHT, 0.12)
+		end
+	end)
+	MCL_mainFrame.resizeGrip:SetScript("OnLeave", function(self)
+		for _, dot in ipairs(self.dots) do
+			MCLcore.Anim:VertexColor(dot, COLORS.BORDER_STRONG, 0.16, "inOutQuad")
+		end
+	end)
 	MCL_mainFrame.resizeGrip:SetScript("OnMouseDown", function(self)
 		MCL_mainFrame:StartSizing("BOTTOMRIGHT")
 	end)
@@ -684,7 +1115,7 @@ function MCL_frames:CreateMainFrame()
 	MCL_mainFrame.ScrollFrame = CreateFrame("ScrollFrame", nil, MCL_mainFrame, "MinimalScrollFrameTemplate");
 	-- Anchor scroll frame to the main frame, not Bg
     MCL_mainFrame.ScrollFrame:ClearAllPoints()
-    MCL_mainFrame.ScrollFrame:SetPoint("TOPLEFT", MCL_mainFrame, "TOPLEFT", 10, -40)
+    MCL_mainFrame.ScrollFrame:SetPoint("TOPLEFT", MCL_mainFrame, "TOPLEFT", 10, -44)
     MCL_mainFrame.ScrollFrame:SetPoint("BOTTOMRIGHT", MCL_mainFrame, "BOTTOMRIGHT", -10, 10)
 	MCL_mainFrame.ScrollFrame:SetClipsChildren(true);
 	MCL_mainFrame.ScrollFrame:SetScript("OnMouseWheel", ScrollFrame_OnMouseWheel);
@@ -694,20 +1125,23 @@ function MCL_frames:CreateMainFrame()
 	MCL_mainFrame.ScrollFrame.ScrollBar:ClearAllPoints();
 	MCL_mainFrame.ScrollFrame.ScrollBar:SetPoint("TOPLEFT", MCL_mainFrame.ScrollFrame, "TOPRIGHT", 2, -2);
 	MCL_mainFrame.ScrollFrame.ScrollBar:SetPoint("BOTTOMRIGHT", MCL_mainFrame.ScrollFrame, "BOTTOMRIGHT", 6, 2);
-	MCL_mainFrame.ScrollFrame.ScrollBar:SetWidth(4)
+	MCL_mainFrame.ScrollFrame.ScrollBar:SetWidth(6)
 
 	-- Style the scrollbar thumb to be a slim house-style bar
 	local scrollThumb = MCL_mainFrame.ScrollFrame.ScrollBar:GetThumbTexture()
 	if scrollThumb then
-		scrollThumb:SetColorTexture(0.25, 0.3, 0.4, 0.7)
-		scrollThumb:SetWidth(4)
-		scrollThumb:SetHeight(40)
+		-- Was 4px at 70% alpha against a near-black panel: barely visible,
+		-- and WoW gives a scrollbar thumb no expanded hit area, so it was
+		-- also nearly undraggable. The explicit SetHeight is gone because
+		-- the scroll range overwrites it on the next frame anyway.
+		scrollThumb:SetColorTexture(0.28, 0.32, 0.42, 0.9)
+		scrollThumb:SetWidth(6)
 	end
 	-- Hide the up/down scroll buttons for a clean look
 	local scrollUp = MCL_mainFrame.ScrollFrame.ScrollBar.ScrollUpButton or MCL_mainFrame.ScrollFrame.ScrollBar.Back
 	local scrollDown = MCL_mainFrame.ScrollFrame.ScrollBar.ScrollDownButton or MCL_mainFrame.ScrollFrame.ScrollBar.Forward
-	if scrollUp then scrollUp:SetAlpha(0); scrollUp:SetSize(1,1) end
-	if scrollDown then scrollDown:SetAlpha(0); scrollDown:SetSize(1,1) end
+	if scrollUp then scrollUp:Hide() end
+	if scrollDown then scrollDown:Hide() end
 
     -- Create and assign a dedicated scroll child frame
     if not MCL_mainFrame.ScrollChild then
@@ -730,13 +1164,38 @@ function MCL_frames:CreateMainFrame()
     -- Handling the key ourselves touches nothing outside the addon.
     -- Keyboard input is propagated for everything except Escape, so no
     -- other key is swallowed while the window is open.
-    MCL_mainFrame:EnableKeyboard(true)
-    MCL_mainFrame:SetPropagateKeyboardInput(true)
+    --
+    -- Both calls are protected in combat - they can intercept keybinds,
+    -- so the game refuses them mid-fight and logs a blocked action.  A
+    -- window built during a fight arms itself once the fight ends.
+    local function ArmEscape()
+        if InCombatLockdown() then return false end
+        MCL_mainFrame:EnableKeyboard(true)
+        MCL_mainFrame:SetPropagateKeyboardInput(true)
+        return true
+    end
+
+    if not ArmEscape() then
+        local waitForPeace = CreateFrame("Frame")
+        waitForPeace:RegisterEvent("PLAYER_REGEN_ENABLED")
+        waitForPeace:SetScript("OnEvent", function(self)
+            if ArmEscape() then
+                self:UnregisterAllEvents()
+                self:SetScript("OnEvent", nil)
+            end
+        end)
+    end
+
     MCL_mainFrame:SetScript("OnKeyDown", function(self, key)
         if key == "ESCAPE" then
-            self:SetPropagateKeyboardInput(false)
-            self:Hide()
-        else
+            -- Refused in combat, in which case Escape also reaches the
+            -- game menu.  A second window opening is a smaller cost than
+            -- an error in everyone's log.
+            if not InCombatLockdown() then
+                self:SetPropagateKeyboardInput(false)
+            end
+            MCL_frames:CloseMainFrame()
+        elseif not InCombatLockdown() then
             self:SetPropagateKeyboardInput(true)
         end
     end)
@@ -744,7 +1203,9 @@ function MCL_frames:CreateMainFrame()
     MCL_mainFrame:SetScript("OnShow", function(self)
         -- A fresh window must not inherit the key swallow from the last
         -- time Escape closed it.
-        self:SetPropagateKeyboardInput(true)
+        if not InCombatLockdown() then
+            self:SetPropagateKeyboardInput(true)
+        end
         if MCLcore.MCL_MF_Nav then
             MCLcore.MCL_MF_Nav:Show()
         end
@@ -821,6 +1282,13 @@ function MCLcore:BuildSectionsOrdered()
 end
 
 function MCL_frames:SetTabs()
+    -- Suppress per-bar animation for the duration of the rebuild: this
+    -- function pushes a value into every progress bar in the window, and a
+    -- hundred bars all easing at once reads as a slot machine.
+    MCLcore.rebuilding = true
+    -- The marker points at tabs that are about to be destroyed.
+    MCL_frames:HideNavSelector()
+
     -- Always update stats before building tabs/UI
     if MCLcore.Function and MCLcore.Function.UpdateCollection then
         MCLcore.Function:UpdateCollection()
@@ -889,6 +1357,16 @@ function MCL_frames:SetTabs()
         end
     end
 
+    -- Size the sidebar to the window before laying anything out. The full
+    -- width entries are: Overview, every non-expansion section, Pinned,
+    -- Hidden (when enabled), Settings and About.
+    local navItemCount = (overviewSection and 1 or 0)
+        + #otherSections
+        + (pinnedSection and 1 or 0)
+        + ((hiddenSection and MCL_SETTINGS and MCL_SETTINGS.enableHiddenMounts) and 1 or 0)
+        + 2  -- Settings, About
+    local NAV = MCL_frames:ComputeNavMetrics(navItemCount, #expansionSections)
+
     if tabFrame.tabs then
         for _, tab in ipairs(tabFrame.tabs) do
             -- Properly release content frame children before discarding
@@ -913,7 +1391,7 @@ function MCL_frames:SetTabs()
     -- Reset status bar tracking since content frames are being rebuilt
     MCLcore.statusBarFrames = {}
 
-    local navYOffset = -66  -- Below header (30) + search bar (26) + spacing (10)
+    local navYOffset = -NAV_TOP_OFFSET  -- header (34) + 4 + search bar (26) + 6
     local tabIndex = 1
     local selectedTab = nil
 
@@ -947,13 +1425,6 @@ function MCL_frames:SetTabs()
     
     -- Expose HideAllTabContents globally for access from other files
     MCLcore.HideAllTabContents = HideAllTabContents
-    local function DeselectAllTabs()
-        for _, t in ipairs(tabFrame.tabs) do
-            t:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.6)
-            t:SetBackdropColor(0.1, 0.1, 0.14, 0.9)
-            if t.text then t.text:SetTextColor(0.7, 0.78, 0.88, 1) end
-        end
-    end
     local function SelectTab(tab)
         -- Check if we need to refresh layout when switching away from pinned section
         if MCLcore.Function and MCLcore.Function.CheckAndRefreshAfterPinnedChanges then
@@ -961,7 +1432,6 @@ function MCL_frames:SetTabs()
             MCLcore.Function:CheckAndRefreshAfterPinnedChanges(newSectionName)
         end
         
-        DeselectAllTabs()
         HideAllTabContents()
         
         -- Hide search dropdown when switching tabs
@@ -981,10 +1451,8 @@ function MCL_frames:SetTabs()
             end
         end
         
-        tab:SetBackdropBorderColor(0.3, 0.6, 0.9, 1)
-        tab:SetBackdropColor(0.15, 0.18, 0.25, 1)
-        if tab.text then tab.text:SetTextColor(0.5, 0.85, 1, 1) end
-        
+        MCL_frames:ApplyTabSelection(tab, tabFrame.tabs)
+
         -- Always ensure the main scroll child is the scroll child
         if MCL_mainFrame.ScrollChild then
             MCL_mainFrame.ScrollFrame:SetScrollChild(MCL_mainFrame.ScrollChild)
@@ -993,8 +1461,18 @@ function MCL_frames:SetTabs()
         -- Show only the selected tab's content
         if tab.content then
             tab.content:Show()
+            -- Ride in from 6px below. The click replaces the entire content
+            -- region, and with twenty expansion tabs that all render similar
+            -- two-column grids, an instant swap gives no evidence the click
+            -- landed on the tab that was aimed at. The upward travel also
+            -- points the eye at the top of the list, which is where the
+            -- scroll reset below has just put it.
+            if MCLcore.Anim then
+                MCLcore.Anim:EnterFrom(tab.content, 0, -6, 0.16)
+            end
+            MCL_frames:RevealGrid(tab.content)
         end
-        
+
         MCL_mainFrame.ScrollFrame:SetVerticalScroll(0)
         -- Store the currently selected tab globally for search functionality
         MCLcore.currentlySelectedTab = tab
@@ -1003,7 +1481,7 @@ function MCL_frames:SetTabs()
     -- 1. Overview tab (always first)
     if overviewSection then
         local tab = CreateFrame("Button", nil, tabFrame, "BackdropTemplate")
-        tab:SetSize(nav_width + 8, 32)  -- Use nav width for sidebar tabs
+        tab:SetSize(nav_width + 8, NAV.itemH)  -- Use nav width for sidebar tabs
         tab:SetPoint("TOPLEFT", tabFrame, "TOPLEFT", 1, navYOffset)
         StyleNavButton(tab, false)  -- Use our styling function
         tab.text = tab:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -1037,13 +1515,13 @@ function MCL_frames:SetTabs()
         end
         table.insert(MCLcore.sectionFrames, tab.content)
         tabIndex = tabIndex + 1
-        navYOffset = navYOffset - 36
+        navYOffset = navYOffset - NAV.stride
         selectedTab = tab
         -- Store globally for search functionality
         MCLcore.currentlySelectedTab = tab
     end
     -- 2. Expansion grid (icon-only, 3 per row)
-    local gridCols, iconSize, iconPad = 3, 36, 8
+    local gridCols, iconSize, iconPad = NAV.gridCols, NAV.iconSize, NAV.iconPad
     local gridStartY = navYOffset
     
     -- Calculate centering for expansion icons within the nav sidebar
@@ -1065,17 +1543,21 @@ function MCL_frames:SetTabs()
         -- Green checkmark for completed sections
         local btnStats = MCLcore.stats and MCLcore.stats[v.name]
         if btnStats and btnStats.collected and btnStats.total and btnStats.collected >= btnStats.total and btnStats.total > 0 then
+            -- Scales with the icon: a fixed 14px tick swamps a 24px icon
+            -- once the sidebar shrinks to fit a short window.
+            local tickSize = math.max(10, math.floor(iconSize * 0.4))
             btn.checkmark = btn:CreateTexture(nil, "OVERLAY")
-            btn.checkmark:SetSize(14, 14)
+            btn.checkmark:SetSize(tickSize, tickSize)
             btn.checkmark:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", 3, -3)
-            btn.checkmark:SetTexture("Interface\\RaidFrame\\ReadyCheck-Ready")
+            btn.checkmark:SetTexture(C.TEXTURES.CHECKBOX)
+            btn.checkmark:SetDesaturated(true)
+            btn.checkmark:SetVertexColor(unpack(COLORS.STATUS_HIGH))
         end
         -- Add tooltip with name and mount count on hover
         btn:SetScript("OnEnter", function(self)
             -- Only highlight if not the selected tab
             if MCLcore.currentlySelectedTab ~= self then
-                self:SetBackdropBorderColor(0.3, 0.6, 0.9, 0.8)
-                self:SetBackdropColor(0.15, 0.18, 0.25, 1)
+                NavGlide(self, "hover")
             end
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
             local sectionStats = MCLcore.stats and MCLcore.stats[v.name]
@@ -1088,8 +1570,7 @@ function MCL_frames:SetTabs()
         end)
         btn:SetScript("OnLeave", function(self)
             if MCLcore.currentlySelectedTab ~= self then
-                self:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.8)
-                self:SetBackdropColor(0.1, 0.1, 0.14, 0.9)
+                NavGlide(self, "normal")
             end
             GameTooltip:Hide()
         end)
@@ -1119,11 +1600,11 @@ function MCL_frames:SetTabs()
         table.insert(MCLcore.sectionFrames, btn.content)
         tabIndex = tabIndex + 1
     end
-    navYOffset = gridStartY - math.ceil(#expansionSections / gridCols) * (iconSize + iconPad) - 10
+    navYOffset = gridStartY - math.ceil(#expansionSections / gridCols) * (iconSize + iconPad) - NAV_GRID_GAP
     -- 3. Remaining full-width tabs
     for _, v in ipairs(otherSections) do
         local tab = CreateFrame("Button", nil, tabFrame, "BackdropTemplate")
-        tab:SetSize(nav_width + 8, 32)  -- Use nav width for sidebar tabs
+        tab:SetSize(nav_width + 8, NAV.itemH)  -- Use nav width for sidebar tabs
         tab:SetPoint("TOPLEFT", tabFrame, "TOPLEFT", 1, navYOffset)
         StyleNavButton(tab, false)  -- Use our styling function
         tab.text = tab:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -1134,7 +1615,9 @@ function MCL_frames:SetTabs()
         tab.checkmark = tab:CreateTexture(nil, "OVERLAY")
         tab.checkmark:SetSize(12, 12)
         tab.checkmark:SetPoint("RIGHT", tab, "RIGHT", -6, 0)
-        tab.checkmark:SetTexture("Interface\\RaidFrame\\ReadyCheck-Ready")
+        tab.checkmark:SetTexture(C.TEXTURES.CHECKBOX)
+        tab.checkmark:SetDesaturated(true)
+        tab.checkmark:SetVertexColor(unpack(COLORS.STATUS_HIGH))
         tab.checkmark:Hide()  -- hidden by default, shown when section is complete
 
         -- Right-aligned count (always offset to leave room for checkmark)
@@ -1175,12 +1658,12 @@ function MCL_frames:SetTabs()
         end
         table.insert(MCLcore.sectionFrames, tab.content)
         tabIndex = tabIndex + 1
-        navYOffset = navYOffset - 28
+        navYOffset = navYOffset - NAV.stride
     end
     -- 4. Pinned tab (always last)
     if pinnedSection then
         local tab = CreateFrame("Button", nil, tabFrame, "BackdropTemplate")
-        tab:SetSize(nav_width + 8, 32)  -- Use nav width for sidebar tabs
+        tab:SetSize(nav_width + 8, NAV.itemH)  -- Use nav width for sidebar tabs
         tab:SetPoint("TOPLEFT", tabFrame, "TOPLEFT", 1, navYOffset)
         StyleNavButton(tab, false)  -- Use our styling function
         tab.text = tab:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -1191,7 +1674,9 @@ function MCL_frames:SetTabs()
         tab.checkmark = tab:CreateTexture(nil, "OVERLAY")
         tab.checkmark:SetSize(12, 12)
         tab.checkmark:SetPoint("RIGHT", tab, "RIGHT", -6, 0)
-        tab.checkmark:SetTexture("Interface\\RaidFrame\\ReadyCheck-Ready")
+        tab.checkmark:SetTexture(C.TEXTURES.CHECKBOX)
+        tab.checkmark:SetDesaturated(true)
+        tab.checkmark:SetVertexColor(unpack(COLORS.STATUS_HIGH))
         tab.checkmark:Hide()
 
         -- Right-aligned count (offset to match other tabs)
@@ -1247,13 +1732,13 @@ function MCL_frames:SetTabs()
         end
         table.insert(MCLcore.sectionFrames, tab.content)
         tabIndex = tabIndex + 1
-        navYOffset = navYOffset - 28
+        navYOffset = navYOffset - NAV.stride
     end
 
     -- 4b. Hidden tab (directly below Pinned; only when the feature is enabled in settings)
     if hiddenSection and MCL_SETTINGS and MCL_SETTINGS.enableHiddenMounts then
         local tab = CreateFrame("Button", nil, tabFrame, "BackdropTemplate")
-        tab:SetSize(nav_width + 8, 32)
+        tab:SetSize(nav_width + 8, NAV.itemH)
         tab:SetPoint("TOPLEFT", tabFrame, "TOPLEFT", 1, navYOffset)
         StyleNavButton(tab, false)
         tab.text = tab:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -1263,7 +1748,9 @@ function MCL_frames:SetTabs()
         tab.checkmark = tab:CreateTexture(nil, "OVERLAY")
         tab.checkmark:SetSize(12, 12)
         tab.checkmark:SetPoint("RIGHT", tab, "RIGHT", -6, 0)
-        tab.checkmark:SetTexture("Interface\\RaidFrame\\ReadyCheck-Ready")
+        tab.checkmark:SetTexture(C.TEXTURES.CHECKBOX)
+        tab.checkmark:SetDesaturated(true)
+        tab.checkmark:SetVertexColor(unpack(COLORS.STATUS_HIGH))
         tab.checkmark:Hide()
         tab.countText = tab:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         tab.countText:SetPoint("RIGHT", tab.checkmark, "LEFT", -2, 0)
@@ -1306,13 +1793,13 @@ function MCL_frames:SetTabs()
         end
         table.insert(MCLcore.sectionFrames, tab.content)
         tabIndex = tabIndex + 1
-        navYOffset = navYOffset - 28
+        navYOffset = navYOffset - NAV.stride
     end
 
     -- 5. Settings tab (always last)
     do
         local tab = CreateFrame("Button", nil, tabFrame, "BackdropTemplate")
-        tab:SetSize(nav_width + 8, 32)  -- Use nav width for sidebar tabs
+        tab:SetSize(nav_width + 8, NAV.itemH)  -- Use nav width for sidebar tabs
         tab:SetPoint("TOPLEFT", tabFrame, "TOPLEFT", 1, navYOffset)
         StyleNavButton(tab, false)  -- Use our styling function
         tab.text = tab:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -1335,14 +1822,14 @@ function MCL_frames:SetTabs()
         end
         table.insert(MCLcore.sectionFrames, tab.content)
         tabIndex = tabIndex + 1
-        navYOffset = navYOffset - 28
+        navYOffset = navYOffset - NAV.stride
     end
 
     -- 8. About tab
     do
         local tab = CreateFrame("Button", nil, tabFrame, "BackdropTemplate")
         local aboutText = L["About"]
-        tab:SetSize(nav_width + 8, 32)
+        tab:SetSize(nav_width + 8, NAV.itemH)
         tab:SetPoint("TOPLEFT", tabFrame, "TOPLEFT", 1, navYOffset)
         StyleNavButton(tab, false)
         tab.text = tab:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -1364,9 +1851,38 @@ function MCL_frames:SetTabs()
         end
         table.insert(MCLcore.sectionFrames, tab.content)
         tabIndex = tabIndex + 1
-        navYOffset = navYOffset - 28
+        navYOffset = navYOffset - NAV.stride
     end
     
+    -- Wire hover feedback once, over every tab that was just built. Doing
+    -- it here rather than at each of the six creation sites is what keeps
+    -- those six in step - they had already drifted apart once.
+    -- Labels track the item height. A 12pt string in a 20px button that has
+    -- a count and a checkmark on its right leaves no air at all.
+    local labelSize = (NAV.itemH <= 24) and C.TYPE.CAPTION or C.TYPE.BODY
+    for _, t in ipairs(tabFrame.tabs) do
+        if t.text then ApplyType(t.text, labelSize) end
+        if t.countText then ApplyType(t.countText, C.TYPE.CAPTION) end
+        if not t.__mclHoverWired then
+            t.__mclHoverWired = true
+            -- Re-apply the resting style now that t.text exists; several
+            -- creation sites call StyleNavButton before creating the label.
+            StyleNavButton(t, t.icon ~= nil)
+            t:HookScript("OnEnter", function(self)
+                if MCLcore.currentlySelectedTab ~= self then
+                    NavGlide(self, "hover")
+                end
+            end)
+            t:HookScript("OnLeave", function(self)
+                if MCLcore.currentlySelectedTab ~= self then
+                    NavGlide(self, "normal")
+                end
+            end)
+        end
+    end
+
+    MCLcore.rebuilding = nil
+
     -- Select Overview by default
     if selectedTab then
         SelectTab(selectedTab)
@@ -1395,53 +1911,54 @@ function MCL_frames:createNavFrame(relativeFrame, title)
             edgeFile = "Interface\\Buttons\\WHITE8x8",
             edgeSize = 1,
         })
-        frame:SetBackdropColor(0.06, 0.06, 0.09, MCL_SETTINGS.opacity)
-        frame:SetBackdropBorderColor(0.2, 0.2, 0.25, 0.8)
+        frame:SetBackdropColor(Surface("SURFACE_0"))
+        frame:SetBackdropBorderColor(unpack(COLORS.BORDER_STRONG))
     end
     
     -- Header bar (matches main frame header exactly)
     frame.headerBar = CreateFrame("Frame", nil, frame, "BackdropTemplate")
     frame.headerBar:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
     frame.headerBar:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 1, 0)  -- extend 1px right to cover main frame left border
-    frame.headerBar:SetHeight(30)
+    frame.headerBar:SetHeight(34)
     frame.headerBar:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
     })
-    frame.headerBar:SetBackdropColor(0.08, 0.08, 0.12, MCL_SETTINGS.opacity)
+    frame.headerBar:SetBackdropColor(Surface("CHROME_BAR"))
     frame.headerBar:SetFrameLevel(frame:GetFrameLevel() + 5)  -- above main frame's borderFrame
     
     frame.title = frame.headerBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     frame.title:SetPoint("CENTER", frame.headerBar, "CENTER", 0, 0)
     frame.title:SetText(title or "")
-    frame.title:SetTextColor(0.4, 0.78, 0.95, 1)
+    frame.title:SetTextColor(unpack(COLORS.ACCENT))
+    ApplyType(frame.title, C.TYPE.HEADING, true)
     
     -- Accent line at bottom of header (same alpha as main header: 0.6)
     frame.titleAccent = frame.headerBar:CreateTexture(nil, "OVERLAY")
     frame.titleAccent:SetHeight(1)
     frame.titleAccent:SetPoint("BOTTOMLEFT", frame.headerBar, "BOTTOMLEFT", 0, 0)
     frame.titleAccent:SetPoint("BOTTOMRIGHT", frame.headerBar, "BOTTOMRIGHT", 0, 0)
-    frame.titleAccent:SetColorTexture(0.2, 0.6, 0.9, 0.6)
+    frame.titleAccent:SetColorTexture(unpack(COLORS.ACCENT_RULE))
     
     -- Create search bar (flush with nav frame inner border)
     frame.searchContainer = CreateFrame("Frame", nil, frame, "BackdropTemplate")
     frame.searchContainer:SetHeight(26)
-    frame.searchContainer:SetPoint("TOPLEFT", frame, "TOPLEFT", 1, -37)
-    frame.searchContainer:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -1, -37)
+    frame.searchContainer:SetPoint("TOPLEFT", frame, "TOPLEFT", 1, -38)
+    frame.searchContainer:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -1, -38)
     frame.searchContainer:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
         edgeSize = 1,
         insets = { left = 1, right = 1, top = 1, bottom = 1 },
     })
-    frame.searchContainer:SetBackdropColor(0.1, 0.1, 0.14, 0.95)
-    frame.searchContainer:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.8)
+    frame.searchContainer:SetBackdropColor(unpack(COLORS.SURFACE_3))
+    frame.searchContainer:SetBackdropBorderColor(unpack(COLORS.BORDER_DEFAULT))
 
     -- Search icon (magnifying glass)
     frame.searchIcon = frame.searchContainer:CreateTexture(nil, "OVERLAY")
     frame.searchIcon:SetSize(14, 14)
     frame.searchIcon:SetPoint("LEFT", frame.searchContainer, "LEFT", 6, 0)
     frame.searchIcon:SetTexture("Interface\\Common\\UI-Searchbox-Icon")
-    frame.searchIcon:SetVertexColor(0.5, 0.5, 0.5, 0.8)
+    frame.searchIcon:SetVertexColor(unpack(COLORS.TEXT_MUTED))
 
     -- Create search editbox (shifted right for icon)
     frame.searchBox = CreateFrame("EditBox", nil, frame.searchContainer)
@@ -1502,20 +2019,20 @@ function MCL_frames:createNavFrame(relativeFrame, title)
     frame.searchPlaceholder = frame.searchContainer:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     frame.searchPlaceholder:SetPoint("LEFT", frame.searchIcon, "RIGHT", 5, 0)
     frame.searchPlaceholder:SetText(L["Search mounts..."])
-    frame.searchPlaceholder:SetTextColor(0.45, 0.45, 0.45, 0.8)
+    frame.searchPlaceholder:SetTextColor(unpack(COLORS.TEXT_DISABLED))
 
     -- Show/hide placeholder based on editbox focus and content, plus glow effect
     frame.searchBox:SetScript("OnEditFocusGained", function(self)
         frame.searchPlaceholder:Hide()
-        frame.searchContainer:SetBackdropBorderColor(0.3, 0.6, 0.9, 1)
-        frame.searchIcon:SetVertexColor(0.4, 0.78, 0.95, 1)
+        MCLcore.Anim:BorderColor(frame.searchContainer, COLORS.BORDER_ACCENT, 0.12)
+        MCLcore.Anim:VertexColor(frame.searchIcon, COLORS.ACCENT, 0.12)
     end)
     frame.searchBox:SetScript("OnEditFocusLost", function(self)
         if self:GetText() == "" then
             frame.searchPlaceholder:Show()
         end
-        frame.searchContainer:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.8)
-        frame.searchIcon:SetVertexColor(0.5, 0.5, 0.5, 0.8)
+        MCLcore.Anim:BorderColor(frame.searchContainer, COLORS.BORDER_DEFAULT, 0.16, "inOutQuad")
+        MCLcore.Anim:VertexColor(frame.searchIcon, COLORS.TEXT_MUTED, 0.16, "inOutQuad")
     end)
     
     -- Create clear search button
@@ -1523,6 +2040,14 @@ function MCL_frames:createNavFrame(relativeFrame, title)
     frame.clearButton:SetSize(16, 16)
     frame.clearButton:SetPoint("RIGHT", frame.searchContainer, "RIGHT", -3, 0)
     frame.clearButton:SetNormalTexture("Interface\\FriendsFrame\\ClearBroadcastIcon")
+    -- Borrowed Blizzard art arrives at full saturation in whatever palette
+    -- its own UI used. Draining it and re-tinting is what lets it sit in
+    -- this window without announcing where it came from.
+    local clearTex = frame.clearButton:GetNormalTexture()
+    if clearTex then
+        clearTex:SetDesaturated(true)
+        clearTex:SetVertexColor(unpack(COLORS.TEXT_MUTED))
+    end
     frame.clearButton:SetScript("OnClick", function()
         frame.searchBox:SetText("")
         frame.searchBox:ClearFocus()
@@ -1530,11 +2055,13 @@ function MCL_frames:createNavFrame(relativeFrame, title)
         frame.searchPlaceholder:Show()
     end)
     frame.clearButton:SetScript("OnEnter", function(self)
+        MCLcore.Anim:VertexColor(self:GetNormalTexture(), COLORS.TEXT_PRIMARY, 0.12)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetText(L["Clear Search"], 1, 1, 1)
         GameTooltip:Show()
     end)
-    frame.clearButton:SetScript("OnLeave", function()
+    frame.clearButton:SetScript("OnLeave", function(self)
+        MCLcore.Anim:VertexColor(self:GetNormalTexture(), COLORS.TEXT_MUTED, 0.16, "inOutQuad")
         GameTooltip:Hide()
     end)
     
@@ -1547,50 +2074,25 @@ end
 
 -- IMPORTANT: Ensure SetTabs is called before any code that uses MCLcore.overview
 
-function MCL_frames:progressBar(relativeFrame, top)
-    MyStatusBar = CreateFrame("StatusBar", nil, relativeFrame, "BackdropTemplate")
-    
-    -- Safe texture handling with fallback (use Widgets helper when available)
-    local textureToUse
-    if MCLcore.Widgets then
-        textureToUse = MCLcore.Widgets:GetStatusBarTexture()
-    else
-        textureToUse = "Interface\\TargetingFrame\\UI-StatusBar"
-        if MCLcore.media and MCL_SETTINGS and MCL_SETTINGS.statusBarTexture then
-            local settingsTexture = MCLcore.media:Fetch("statusbar", MCL_SETTINGS.statusBarTexture)
-            if settingsTexture then
-                textureToUse = settingsTexture
-            end
-        end
-    end
-    
-    MyStatusBar:SetStatusBarTexture(textureToUse)
-    MyStatusBar:GetStatusBarTexture():SetHorizTile(false)
-    MyStatusBar:SetMinMaxValues(0, 100)
-    MyStatusBar:SetValue(0)
-    MyStatusBar:SetWidth(150)
-    MyStatusBar:SetHeight(15)
-    if top then
-        MyStatusBar:SetPoint("BOTTOMLEFT", relativeFrame, "BOTTOMLEFT", 0, 10)
-    else
-        MyStatusBar:SetPoint("BOTTOMLEFT", relativeFrame, "BOTTOMLEFT", 0, 10)
-    end
-
-    MyStatusBar:SetStatusBarColor(0.1, 0.9, 0.1)
-
-    MyStatusBar.bg = MyStatusBar:CreateTexture(nil, "BACKGROUND")
-    MyStatusBar.bg:SetTexture("Interface\\TARGETINGFRAME\\UI-Status-Bar")
-    MyStatusBar.bg:SetAllPoints(true)
-    MyStatusBar.bg:SetVertexColor(0.843, 0.874, 0.898, 0.5)
-    MyStatusBar.Text = MyStatusBar:CreateFontString()
-    MyStatusBar.Text:SetFontObject(GameFontWhite)
-    MyStatusBar.Text:SetPoint("CENTER")
-    MyStatusBar.Text:SetJustifyH("CENTER")
-    MyStatusBar.Text:SetText()
-
-    table.insert(MCLcore.statusBarFrames, MyStatusBar)
-
-    return MyStatusBar
+-- Section header progress bar.
+--
+-- This used to be a second, independent StatusBar implementation, and its
+-- output rendered forty pixels from the widget-built category bars with a
+-- different height, a different text size, no border, and a pale grey
+-- Blizzard texture washed over the background - the most visible
+-- inconsistency in the window. It now builds the same widget as everything
+-- else and only keeps its own anchoring.
+--
+-- Gone with it: a `MyStatusBar` global that every call overwrote, a
+-- fluorescent 0.1/0.9/0.1 green that flashed before the first real update,
+-- and a `top` parameter whose two branches were byte-identical.
+function MCL_frames:progressBar(relativeFrame)
+    local pBar = MCLcore.Widgets:CreateProgressBar({
+        parent = relativeFrame,
+        width  = C.DIMS.PB_WIDTH,
+        anchor = { "BOTTOMLEFT", relativeFrame, "BOTTOMLEFT", 0, 10 },
+    })
+    return pBar
 end
 
 function MCL_frames:createContentFrame(relativeFrame, title, sectionIcon)
@@ -1610,8 +2112,8 @@ function MCL_frames:createContentFrame(relativeFrame, title, sectionIcon)
             edgeFile = "Interface\\Buttons\\WHITE8x8",
             edgeSize = 1
         })
-        frame:SetBackdropColor(0.06, 0.06, 0.09, 1)
-        frame:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.8)
+        frame:SetBackdropColor(Surface("SURFACE_2"))
+        frame:SetBackdropBorderColor(unpack(COLORS.BORDER_SUBTLE))
     else
         frame:SetBackdropColor(0, 0, 0, 0)  -- Transparent background for other content
     end
@@ -1625,7 +2127,8 @@ function MCL_frames:createContentFrame(relativeFrame, title, sectionIcon)
     frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     frame.title:SetPoint("TOPLEFT", frame, "TOPLEFT", titleAnchorX, -10)
     frame.title:SetText(L[title]) -- Localized for display
-    frame.title:SetTextColor(0.4, 0.78, 0.95, 1)  -- House style blue
+    frame.title:SetTextColor(unpack(COLORS.ACCENT))
+    ApplyType(frame.title, C.TYPE.DISPLAY, true)
     
     -- Section icon (anchored to title for vertical centering)
     if sectionIcon then
@@ -1646,15 +2149,15 @@ function MCL_frames:createContentFrame(relativeFrame, title, sectionIcon)
             edgeFile = "Interface\\Buttons\\WHITE8x8",
             edgeSize = 1
         })
-        instructionsFrame:SetBackdropColor(0.08, 0.08, 0.14, 0.6)
-        instructionsFrame:SetBackdropBorderColor(0.2, 0.4, 0.7, 0.6)
+        instructionsFrame:SetBackdropColor(Surface("SURFACE_2", 0.7))
+        instructionsFrame:SetBackdropBorderColor(unpack(COLORS.ACCENT_RULE))
         
         -- Create the instruction text with color formatting
         local instructionsText = instructionsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         instructionsText:SetPoint("LEFT", instructionsFrame, "LEFT", 10, 0)
         -- Use color codes to make "Ctrl + Right Click" bold and orange
         instructionsText:SetText(title == "Hidden" and L["Hide Instructions Text"] or L["Pin Instructions Text"])
-        instructionsText:SetTextColor(0.9, 0.9, 1, 1)  -- Light blue-white for the rest of the text
+        instructionsText:SetTextColor(unpack(COLORS.TEXT_BODY))
         
         -- Adjust frame height to accommodate instructions
         frame:SetHeight(85)  -- Increased to make room for instructions
@@ -1665,7 +2168,7 @@ function MCL_frames:createContentFrame(relativeFrame, title, sectionIcon)
         local yOffset = title == "Overview" and -15 or -55  -- Adjust based on whether instructions are present
         frame.pBar:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 15, yOffset)  -- Aligned with title padding
         frame.pBar:SetWidth(availableWidth - 30)  -- Account for padding on both sides
-        frame.pBar:SetHeight(20)
+        frame.pBar:SetHeight(C.DIMS.PB_HEIGHT)    -- Same height as the category bars below it
     end
 
     -- Add sort control and filter toggle for category-based sections (not Overview, Pinned, or Settings)
@@ -1678,7 +2181,7 @@ function MCL_frames:createContentFrame(relativeFrame, title, sectionIcon)
         local sortLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         sortLabel:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -15, -10)
         sortLabel:SetText(L["Sort:"])
-        sortLabel:SetTextColor(0.5, 0.55, 0.65, 1)
+        sortLabel:SetTextColor(unpack(COLORS.TEXT_MUTED))
 
         local sortBtn = CreateFrame("Button", nil, frame, "BackdropTemplate")
         sortBtn:SetSize(120, 20)
@@ -1688,8 +2191,8 @@ function MCL_frames:createContentFrame(relativeFrame, title, sectionIcon)
             edgeFile = "Interface\\Buttons\\WHITE8x8",
             edgeSize = 1
         })
-        sortBtn:SetBackdropColor(0.1, 0.1, 0.14, 0.9)
-        sortBtn:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.8)
+        sortBtn:SetBackdropColor(unpack(NAV_STATE.normal.bg))
+        sortBtn:SetBackdropBorderColor(unpack(NAV_STATE.normal.border))
 
         sortBtn.text = sortBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         sortBtn.text:SetPoint("CENTER")
@@ -1702,15 +2205,13 @@ function MCL_frames:createContentFrame(relativeFrame, title, sectionIcon)
             end
         end
         sortBtn.text:SetText(currentLabel)
-        sortBtn.text:SetTextColor(0.7, 0.78, 0.88, 1)
+        sortBtn.text:SetTextColor(unpack(NAV_STATE.normal.text))
 
         sortBtn:SetScript("OnEnter", function(self)
-            self:SetBackdropBorderColor(0.3, 0.6, 0.9, 1)
-            self:SetBackdropColor(0.15, 0.18, 0.25, 0.9)
+            NavGlide(self, "hover")
         end)
         sortBtn:SetScript("OnLeave", function(self)
-            self:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.8)
-            self:SetBackdropColor(0.1, 0.1, 0.14, 0.9)
+            NavGlide(self, "normal")
         end)
         sortBtn:SetScript("OnClick", function(self)
             -- Cycle to next sort mode
@@ -1741,17 +2242,17 @@ function MCL_frames:createContentFrame(relativeFrame, title, sectionIcon)
             edgeFile = "Interface\\Buttons\\WHITE8x8",
             edgeSize = 1
         })
-        filterBtn:SetBackdropColor(0.1, 0.1, 0.14, 0.9)
+        filterBtn:SetBackdropColor(unpack(NAV_STATE.normal.bg))
 
         local function updateFilterBtnState(btn)
             if MCL_SETTINGS.hideCollectedMounts then
-                btn:SetBackdropBorderColor(0.3, 0.6, 0.9, 1)
+                btn:SetBackdropBorderColor(unpack(COLORS.BORDER_ACCENT))
                 btn.text:SetText(L["Uncollected Only"])
-                btn.text:SetTextColor(0.5, 0.85, 1, 1)
+                btn.text:SetTextColor(unpack(COLORS.ACCENT_BRIGHT))
             else
-                btn:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.8)
+                btn:SetBackdropBorderColor(unpack(NAV_STATE.normal.border))
                 btn.text:SetText(L["Show All"])
-                btn.text:SetTextColor(0.7, 0.78, 0.88, 1)
+                btn.text:SetTextColor(unpack(NAV_STATE.normal.text))
             end
         end
 
@@ -1761,9 +2262,9 @@ function MCL_frames:createContentFrame(relativeFrame, title, sectionIcon)
 
         filterBtn:SetScript("OnEnter", function(self)
             if not MCL_SETTINGS.hideCollectedMounts then
-                self:SetBackdropBorderColor(0.3, 0.6, 0.9, 1)
+                MCLcore.Anim:BorderColor(self, COLORS.BORDER_ACCENT, 0.10)
             end
-            self:SetBackdropColor(0.15, 0.18, 0.25, 0.9)
+            MCLcore.Anim:BackdropColor(self, NAV_STATE.hover.bg, 0.10)
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
             GameTooltip:SetText(L["Filter Collected"], 1, 1, 1)
             if MCL_SETTINGS.hideCollectedMounts then
@@ -1775,9 +2276,9 @@ function MCL_frames:createContentFrame(relativeFrame, title, sectionIcon)
         end)
         filterBtn:SetScript("OnLeave", function(self)
             if not MCL_SETTINGS.hideCollectedMounts then
-                self:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.8)
+                MCLcore.Anim:BorderColor(self, NAV_STATE.normal.border, 0.16, "inOutQuad")
             end
-            self:SetBackdropColor(0.1, 0.1, 0.14, 0.9)
+            MCLcore.Anim:BackdropColor(self, NAV_STATE.normal.bg, 0.16, "inOutQuad")
             GameTooltip:Hide()
         end)
         filterBtn:SetScript("OnClick", function(self)
@@ -1966,7 +2467,9 @@ function MCL_frames:RefreshZoneDrops()
                         row.check = row:CreateTexture(nil, "OVERLAY")
                         row.check:SetSize(14, 14)
                         row.check:SetPoint("BOTTOMRIGHT", row.icon, "BOTTOMRIGHT", 2, -2)
-                        row.check:SetTexture("Interface\\RaidFrame\\ReadyCheck-Ready")
+                        row.check:SetTexture(C.TEXTURES.CHECKBOX)
+                        row.check:SetDesaturated(true)
+                        row.check:SetVertexColor(unpack(COLORS.STATUS_HIGH))
                     end
 
                     -- Mount name
@@ -2979,7 +3482,9 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     -- =====================================================
     -- CARD 1: Display Options
     -- =====================================================
-    local displayCard = createCard(frame, L["Display Options"], yPos, 220)
+    -- 250 rather than 220: the card now holds seven rows at a 30px stride
+    -- starting at -34, so the last one lands at -214.
+    local displayCard = createCard(frame, L["Display Options"], yPos, 250)
     
     local displayY = -34
     
@@ -3021,7 +3526,30 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     hoverLabel:SetText(L["Enable Mount Card on Hover"])
     hoverLabel:SetTextColor(0.7, 0.78, 0.88, 1)
     displayY = displayY - 30
-    
+
+    -- Enable Animations
+    -- WoW exposes no reduced-motion cvar to addons, so the addon has to
+    -- carry its own switch. Every animation helper applies its end state
+    -- synchronously when this is off, so turning it off snaps rather than
+    -- skips - nothing is ever left half-faded.
+    local animCheck = CreateFrame("CheckButton", nil, displayCard)
+    animCheck:SetSize(18, 18)
+    animCheck:SetPoint("TOPLEFT", displayCard, "TOPLEFT", 12, displayY)
+    animCheck:SetChecked(not (MCL_SETTINGS.enableAnimations == false))
+    animCheck.originalOnClick = function(self)
+        MCL_SETTINGS.enableAnimations = self:GetChecked()
+        -- Land anything already in flight rather than freezing it.
+        if not MCL_SETTINGS.enableAnimations and MCLcore.Anim then
+            MCLcore.Anim:StopAll()
+        end
+    end
+    styleCheckbox(animCheck)
+    local animLabel = displayCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    animLabel:SetPoint("LEFT", animCheck, "RIGHT", 8, 0)
+    animLabel:SetText(L["Enable Animations"])
+    animLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+    displayY = displayY - 30
+
     -- Show Minimap Icon
     local mmIcon = MCLcore.minimapIcon
     local mmAddon = MCLcore.minimapAddon
@@ -3087,7 +3615,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     hiddenSettingLabel:SetText(L["Enable Hidden Mounts"])
     hiddenSettingLabel:SetTextColor(0.7, 0.78, 0.88, 1)
 
-    yPos = yPos - 230
+    yPos = yPos - 260
     
     -- =====================================================
     -- CARD 3: Layout
@@ -3403,7 +3931,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     -- =====================================================
     local opacityCard = createCard(frame, L["Window Opacity"], yPos, 110)
     
-    local opacityValue = MCL_SETTINGS.opacity or 0.85
+    local opacityValue = MCL_SETTINGS.opacity or 0.94
     local opacityLabel = opacityCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     opacityLabel:SetPoint("TOPLEFT", opacityCard, "TOPLEFT", 12, -34)
     opacityLabel:SetText((L["Opacity"]) .. ": " .. math.floor(opacityValue * 100) .. "%")
@@ -4361,7 +4889,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
             MCL_SETTINGS.unobtainable = false
             MCL_SETTINGS.mountsPerRow = 12
             MCL_SETTINGS.statusBarTexture = "Blizzard"
-            MCL_SETTINGS.opacity = 0.85
+            MCL_SETTINGS.opacity = 0.94
             MCL_SETTINGS.enableMountCardHover = true
             MCL_SETTINGS.enableCollectedToast = true
             MCL_SETTINGS.enableCollectedSound = true
@@ -4428,14 +4956,15 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
             edgeFile = "Interface\\Buttons\\WHITE8x8",
             edgeSize = 1,
         })
-        totalFrame:SetBackdropColor(0.08, 0.08, 0.12, 0.85)
-        totalFrame:SetBackdropBorderColor(0.3, 0.6, 0.9, 0.7)
+        totalFrame:SetBackdropColor(Surface("SURFACE_2"))
+        totalFrame:SetBackdropBorderColor(unpack(COLORS.BORDER_ACCENT))
 
         -- Title label
         local totalTitle = totalFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
         totalTitle:SetPoint("TOPLEFT", totalFrame, "TOPLEFT", 8, -6)
         totalTitle:SetText(L["Total Mounts"])
-        totalTitle:SetTextColor(0.5, 0.85, 1, 1)
+        totalTitle:SetTextColor(unpack(COLORS.ACCENT_BRIGHT))
+        ApplyType(totalTitle, C.TYPE.HEADING, true)
 
         -- Count label (right-aligned)
         local totalCount = totalFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -4503,8 +5032,8 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
                 edgeFile = "Interface\\Buttons\\WHITE8x8",
                 edgeSize = 1
             })
-            sectionFrame:SetBackdropColor(0.06, 0.06, 0.09, 0.7)
-            sectionFrame:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.6)
+            sectionFrame:SetBackdropColor(Surface("SURFACE_2"))
+            sectionFrame:SetBackdropBorderColor(unpack(COLORS.BORDER_SUBTLE))
 
             -- Section icon (use expansion icon if available)
             local iconXOffset = 5
@@ -4520,7 +5049,8 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
             sectionFrame.title = sectionFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             sectionFrame.title:SetPoint("TOPLEFT", sectionFrame, "TOPLEFT", iconXOffset, -4)
             sectionFrame.title:SetText(L[v.name] or v.name)
-            sectionFrame.title:SetTextColor(0.7, 0.78, 0.88, 1)
+            sectionFrame.title:SetTextColor(unpack(COLORS.TEXT_BODY))
+            ApplyType(sectionFrame.title, C.TYPE.SUBHEAD)
             
             -- Create progress bar container with dynamic width based on column width
             local progressContainer = CreateFrame("Frame", nil, sectionFrame)
@@ -4542,7 +5072,9 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
                 pBar.originalR = r
                 pBar.originalG = g
                 pBar.originalB = b
-                pBar:SetStatusBarColor(0.8, 0.5, 0.9, 1)  -- Purple hover color
+                -- Was 0.8/0.5/0.9 - the only magenta in the entire window,
+                -- belonging to no part of the palette.
+                pBar:SetStatusBarColor(unpack(COLORS.ACCENT_BRIGHT))
             end)
             pBar:HookScript("OnLeave", function()
                 -- Restore the stored original color
@@ -4562,7 +5094,7 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
                             pBar:SetStatusBarColor(MCL_SETTINGS.progressColors.complete.r, MCL_SETTINGS.progressColors.complete.g, MCL_SETTINGS.progressColors.complete.b)
                         end
                     else
-                        pBar:SetStatusBarColor(0.5, 0.5, 0.5)  -- Gray for no data
+                        pBar:SetStatusBarColor(unpack(COLORS.STATUS_NEUTRAL))
                     end
                 end
             end)
@@ -4586,17 +5118,8 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
                                 -- Use the same selection logic as in SetTabs
                                 for _, t in ipairs(navFrame.tabs) do
                                     if t.content then t.content:Hide() end
-                                    if t.SetBackdropBorderColor then
-                                        t:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.6)
-                                        t:SetBackdropColor(0.1, 0.1, 0.14, 0.9)
-                                        if t.text then t.text:SetTextColor(0.7, 0.78, 0.88, 1) end
-                                    end
                                 end
-                                if tab.SetBackdropBorderColor then
-                                    tab:SetBackdropBorderColor(0.3, 0.6, 0.9, 1)
-                                    tab:SetBackdropColor(0.15, 0.18, 0.25, 1)
-                                    if tab.text then tab.text:SetTextColor(0.5, 0.85, 1, 1) end
-                                end
+                                MCL_frames:ApplyTabSelection(tab, navFrame.tabs)
                                 if MCL_mainFrame and MCL_mainFrame.ScrollFrame then
                                     -- Always keep the main scroll child as the scroll child
                                     MCL_mainFrame.ScrollFrame:SetScrollChild(MCL_mainFrame.ScrollChild)
@@ -4853,7 +5376,7 @@ for _, categoryName in ipairs(sortedCategoryNames) do
         
         -- Calculate mount size to fit exactly within available width
         local desiredSpacing = 4  -- Fixed spacing between mounts
-        local minMountSize = 16  -- Absolute minimum mount size (reduced from 24)
+        local minMountSize = 24  -- Below this a mount icon is unreadable art
         local maxMountSize = 48  -- Maximum mount size
         
         -- Try the preferred mounts per row first
@@ -4875,7 +5398,7 @@ for _, categoryName in ipairs(sortedCategoryNames) do
         -- Recalculate actual spacing to center the grid
         local actualMountWidth = mountSize * mountsPerRow
         local actualSpacing = mountsPerRow > 1 and math.floor((availableMountWidth - actualMountWidth) / (mountsPerRow - 1)) or 0
-        actualSpacing = math.max(1, actualSpacing)  -- Minimum 1px spacing (reduced from 2)
+        actualSpacing = math.max(3, actualSpacing)  -- Never let the grid fuse into one slab
         
         -- Calculate dynamic height based on actual mount layout.
         -- displayedMounts can be 0 temporarily (e.g., mount journal not ready or hide-collected enabled).
@@ -4901,20 +5424,17 @@ for _, categoryName in ipairs(sortedCategoryNames) do
             edgeFile = "Interface\\Buttons\\WHITE8x8",
             edgeSize = 1
         })
-        categoryFrame:SetBackdropColor(0.06, 0.06, 0.09, 0.9)
-        categoryFrame:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.8)
+        categoryFrame:SetBackdropColor(Surface("SURFACE_2"))
+        categoryFrame:SetBackdropBorderColor(unpack(COLORS.BORDER_SUBTLE))
 
         -- Category title
         categoryFrame.title = categoryFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
         -- Slightly reduce the category header font size (e.g. "Achievements", "Decor Duels")
-        local titleFont, titleSize, titleFlags = categoryFrame.title:GetFont()
-        if titleFont and titleSize then
-            categoryFrame.title:SetFont(titleFont, titleSize - 3, titleFlags)
-        end
+        ApplyType(categoryFrame.title, C.TYPE.SUBHEAD)
         -- Title sits just right of the toggle button (toggle left=9, width 16 -> 27)
         categoryFrame.title:SetPoint("TOPLEFT", categoryFrame, "TOPLEFT", 27, -8)
         categoryFrame.title:SetText(L[categoryData.name] or L[categoryName] or categoryData.name or categoryName)
-        categoryFrame.title:SetTextColor(0.7, 0.78, 0.88, 1)
+        categoryFrame.title:SetTextColor(unpack(COLORS.TEXT_BODY))
 
         -- Collapse/expand state
         local collapseKey = (sectionName or "Unknown") .. ":" .. (categoryData.name or categoryName)
@@ -4934,11 +5454,11 @@ for _, categoryName in ipairs(sortedCategoryNames) do
             edgeSize = 1,
             insets = { left = 1, right = 1, top = 1, bottom = 1 },
         })
-        categoryFrame.toggleBtn:SetBackdropColor(0.10, 0.10, 0.15, 0.9)
-        categoryFrame.toggleBtn:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.8)
+        categoryFrame.toggleBtn:SetBackdropColor(unpack(COLORS.SURFACE_3))
+        categoryFrame.toggleBtn:SetBackdropBorderColor(unpack(COLORS.BORDER_DEFAULT))
         categoryFrame.toggleLabel = categoryFrame.toggleBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         categoryFrame.toggleLabel:SetPoint("CENTER", 0, 1)
-        categoryFrame.toggleLabel:SetTextColor(0.5, 0.55, 0.65, 1)
+        categoryFrame.toggleLabel:SetTextColor(unpack(COLORS.TEXT_MUTED))
         if categoryFrame.isCollapsed then
             categoryFrame.toggleLabel:SetText("+")
         else
@@ -4952,16 +5472,18 @@ for _, categoryName in ipairs(sortedCategoryNames) do
         categoryFrame.titleBtn:SetHeight(28)
         categoryFrame.titleBtn:SetFrameLevel(categoryFrame:GetFrameLevel() + 5)
         categoryFrame.titleBtn:SetScript("OnEnter", function()
-            categoryFrame.title:SetTextColor(0.4, 0.78, 0.95, 1)
-            categoryFrame:SetBackdropBorderColor(0.3, 0.6, 0.9, 0.8)
-            categoryFrame.toggleBtn:SetBackdropBorderColor(0.3, 0.6, 0.9, 0.8)
-            categoryFrame.toggleLabel:SetTextColor(0.4, 0.78, 0.95, 1)
+            local A = MCLcore.Anim
+            A:TextColor(categoryFrame.title, COLORS.ACCENT, 0.10)
+            A:BorderColor(categoryFrame, COLORS.BORDER_ACCENT, 0.10)
+            A:BorderColor(categoryFrame.toggleBtn, COLORS.BORDER_ACCENT, 0.10)
+            A:TextColor(categoryFrame.toggleLabel, COLORS.ACCENT, 0.10)
         end)
         categoryFrame.titleBtn:SetScript("OnLeave", function()
-            categoryFrame.title:SetTextColor(0.7, 0.78, 0.88, 1)
-            categoryFrame:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.8)
-            categoryFrame.toggleBtn:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.8)
-            categoryFrame.toggleLabel:SetTextColor(0.5, 0.55, 0.65, 1)
+            local A = MCLcore.Anim
+            A:TextColor(categoryFrame.title, COLORS.TEXT_BODY, 0.16, "inOutQuad")
+            A:BorderColor(categoryFrame, COLORS.BORDER_SUBTLE, 0.16, "inOutQuad")
+            A:BorderColor(categoryFrame.toggleBtn, COLORS.BORDER_DEFAULT, 0.16, "inOutQuad")
+            A:TextColor(categoryFrame.toggleLabel, COLORS.TEXT_MUTED, 0.16, "inOutQuad")
         end)
 
         -- Store in list for reflow
@@ -5006,7 +5528,7 @@ for _, categoryName in ipairs(sortedCategoryNames) do
         
         -- Calculate mount size to fit exactly within available width
         local desiredSpacing = 4  -- Fixed spacing between mounts
-        local minMountSize = 16  -- Absolute minimum mount size (reduced from 24)
+        local minMountSize = 24  -- Below this a mount icon is unreadable art
         local maxMountSize = 48  -- Maximum mount size
         
         -- Try the preferred mounts per row first
@@ -5028,7 +5550,7 @@ for _, categoryName in ipairs(sortedCategoryNames) do
         -- Recalculate actual spacing to center the grid
         local actualMountWidth = mountSize * mountsPerRow
         local actualSpacing = mountsPerRow > 1 and math.floor((availableMountWidth - actualMountWidth) / (mountsPerRow - 1)) or 0
-        actualSpacing = math.max(1, actualSpacing)  -- Minimum 1px spacing (reduced from 2)
+        actualSpacing = math.max(3, actualSpacing)  -- Never let the grid fuse into one slab
         
         -- Y-axis spacing (only affected by height changes)
         local rowSpacing = 4  -- Minimal Y-axis spacing between rows
@@ -5479,7 +6001,7 @@ function MCL_frames:RefreshLayout()
     
     -- Update scroll frame size
     MCL_mainFrame.ScrollFrame:ClearAllPoints()
-    MCL_mainFrame.ScrollFrame:SetPoint("TOPLEFT", MCL_mainFrame, "TOPLEFT", 10, -40)
+    MCL_mainFrame.ScrollFrame:SetPoint("TOPLEFT", MCL_mainFrame, "TOPLEFT", 10, -44)
     MCL_mainFrame.ScrollFrame:SetPoint("BOTTOMRIGHT", MCL_mainFrame, "BOTTOMRIGHT", -10, 10)
     
     -- Update scroll child size (width matches ScrollFrame viewport)
@@ -5523,20 +6045,13 @@ function MCL_frames:RefreshLayout()
         if selectedTabName and navFrame and navFrame.tabs then
             for _, tab in ipairs(navFrame.tabs) do
                 if tab.section and tab.section.name == selectedTabName then
-                    -- Use the same selection logic as in SetTabs
+                    -- SetTabs above ends by selecting Overview, so this has
+                    -- to move the whole selection state - marker and
+                    -- currentlySelectedTab included - not just repaint borders.
                     for _, t in ipairs(navFrame.tabs) do
                         if t.content then t.content:Hide() end
-                        if t.SetBackdropBorderColor then
-                            t:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.6)
-                            t:SetBackdropColor(0.1, 0.1, 0.14, 0.9)
-                            if t.text then t.text:SetTextColor(0.7, 0.78, 0.88, 1) end
-                        end
                     end
-                    if tab.SetBackdropBorderColor then
-                        tab:SetBackdropBorderColor(0.3, 0.6, 0.9, 1)
-                        tab:SetBackdropColor(0.15, 0.18, 0.25, 1)
-                        if tab.text then tab.text:SetTextColor(0.5, 0.85, 1, 1) end
-                    end
+                    MCL_frames:ApplyTabSelection(tab, navFrame.tabs)
                     if MCL_mainFrame and MCL_mainFrame.ScrollFrame then
                         -- Always keep the main scroll child as the scroll child
                         MCL_mainFrame.ScrollFrame:SetScrollChild(MCL_mainFrame.ScrollChild)
@@ -5578,72 +6093,15 @@ end
 function MCL_frames:RestoreFrameSize()
     if MCL_mainFrame and MCL_SETTINGS then
         local width = MCL_SETTINGS.frameWidth or main_frame_width
-       
         local height = MCL_SETTINGS.frameHeight or main_frame_height
+
+        -- Clamp to the resize bounds. Raising the default width to 900 fixes
+        -- new installs, but an upgrading user still has an 800px width in
+        -- saved variables and would keep getting the snap-on-first-drag.
+        width  = math.max(900, math.min(width, 1600))
+        height = math.max(600, math.min(height, 1000))
+
         MCL_mainFrame:SetSize(width, height)
     end
 end
 
--- Function to calculate minimum height based on navigation content
-function MCL_frames:CalculateMinHeight()
-    local baseHeight = 100  -- Base height for frame borders, title, etc.
-    local navStartY = -20   -- Starting Y position for nav items
-    local currentY = navStartY
-    
-    -- Calculate sections like in SetTabs
-    local sections = MCLcore.sectionsOrdered or MCLcore.sections
-    if not sections then
-        return baseHeight + 200  -- Fallback minimum
-    end
-    
-    local overviewSection, pinnedSection, hiddenSection, expansionSections, otherSections = nil, nil, nil, {}, {}
-    for _, v in ipairs(sections) do
-        if v.name == "Overview" then
-            overviewSection = v
-        elseif v.name == "Pinned" then
-            pinnedSection = v
-        elseif v.name == "Hidden" then
-            hiddenSection = v
-        elseif v.isExpansion then
-            table.insert(expansionSections, v)
-        else
-            table.insert(otherSections, v)
-        end
-    end
-    
-    -- 1. Overview section (32px height + 4px spacing)
-    if overviewSection then
-        currentY = currentY - 36
-    end
-    
-    -- 2. Expansion grid (calculate rows needed)
-    if #expansionSections > 0 then
-        local gridCols = 3
-        local iconSize = 36
-        local iconPad = 8
-        local gridRows = math.ceil(#expansionSections / gridCols)
-        local gridHeight = gridRows * (iconSize + iconPad)
-        currentY = currentY - gridHeight - 10  -- 10px spacing after grid
-    end
-    
-    -- 3. Other sections (28px each)
-    for _, v in ipairs(otherSections) do
-        currentY = currentY - 28
-    end
-    
-    -- 4. Pinned section (28px)
-    if pinnedSection then
-        currentY = currentY - 28
-    end
-
-    -- 4b. Hidden section (28px, only when the feature is enabled)
-    if hiddenSection and MCL_SETTINGS and MCL_SETTINGS.enableHiddenMounts then
-        currentY = currentY - 28
-    end
-    
-    -- Convert negative Y offset to positive height requirement
-    local requiredNavHeight = math.abs(currentY) + 40  -- 40px bottom padding
-    local totalMinHeight = baseHeight + requiredNavHeight
-    
-    return math.max(totalMinHeight, 300)  -- Ensure at least 300px minimum
-end
