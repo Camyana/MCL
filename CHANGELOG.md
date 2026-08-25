@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.11.1
+
+### Fixes
+
+- **Section counts could appear doubled**, with two different numbers printed on top of each other. The window rebuilds itself when mounts finish resolving, and two parts of it were being built a second time on top of the first rather than replacing it — the sidebar and the overview page. The two layers held counts from before and after the late mounts arrived, which is why the numbers underneath disagreed, and why it only happened on some logins.
+
 ## 3.11.0
 
 ### The collection moves

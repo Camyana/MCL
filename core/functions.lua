@@ -318,7 +318,34 @@ function MCL_functions:initSections()
         end
     end
 
-    MCLcore.MCL_MF_Nav = MCLcore.Frames:createNavFrame(MCLcore.MCL_MF, MCLcore.L["Sections"])
+    -- Reuse the nav frame rather than rebuilding it.
+    --
+    -- initSections runs more than once - again when mounts resolve late,
+    -- and on the recovery path - and this line used to hand back a brand
+    -- new nav each time, parented to the same window and drawn straight
+    -- on top of the one before it.  The old one was never hidden, so its
+    -- section counts stayed on screen underneath the new ones: two
+    -- numbers in the same place, which is the doubled text people saw.
+    -- The counts differed because the old nav was built before the late
+    -- mounts resolved, which is also why it only showed up sometimes.
+    --
+    -- SetTabs tears down and rebuilds the tabs on the frame it is given,
+    -- so keeping the frame loses nothing.  The overview below has always
+    -- been guarded this way.
+    local nav = MCLcore.MCL_MF_Nav
+    local reusable = nav and nav.IsObjectType and nav:IsObjectType("Frame")
+        and nav:GetParent() == MCLcore.MCL_MF
+
+    if not reusable then
+        -- A nav belonging to a window that has gone: get rid of it rather
+        -- than leaving it parented and visible.
+        if nav and nav.Hide then
+            nav:Hide()
+            nav:ClearAllPoints()
+            nav:SetParent(nil)
+        end
+        MCLcore.MCL_MF_Nav = MCLcore.Frames:createNavFrame(MCLcore.MCL_MF, MCLcore.L["Sections"])
+    end
 
     -- Create the overview parent frame before SetTabs
     if not MCLcore.overview or not MCLcore.overview:IsObjectType("Frame") then

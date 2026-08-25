@@ -4920,6 +4920,18 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
         return
     end
 
+    -- Empty the frame before filling it.
+    --
+    -- This builds straight into the frame it is handed, and the overview
+    -- frame is deliberately kept across rebuilds.  initSections runs more
+    -- than once - again when mounts resolve late, and on the recovery
+    -- path - so without this the second pass stacked an entire second
+    -- overview on top of the first, every bar and count drawn twice in
+    -- the same place.  Same fault the section counts had.
+    ReleaseFrameChildren(relativeFrame)
+    MCLcore.overviewFrames = {}
+    MCLcore.overviewTotalBar = nil
+
     -- Calculate available width from the parent frame, accounting for internal padding
     local currentWidth, _ = MCL_frames:GetCurrentFrameDimensions()
     local contentWidth = currentWidth - 40   -- content frame width (matches parent overview frame)
