@@ -1,5 +1,24 @@
 # Changelog
 
+## 3.12.0
+
+### Window scale
+
+The window can now be scaled from 70% to 140%, under **Display Options**. It reads differently on a 1080p screen than on a 4K one, and this is the dial for that.
+
+It applies as soon as you let go of the slider rather than while you drag it — the slider lives inside the window it resizes, so applying mid-drag pulled it out from under the cursor.
+
+### New mounts
+
+Five additions to the Blizzard Store list, including the customisable dragon and the subscription reward.
+
+### Fixes
+
+- **An empty bar sat below every section.** The section's progress bar was pinned to the bottom edge of a frame that grows to fit its contents, so it rode that edge down and ended up beneath the whole list. It now sits where it was meant to, under the section title.
+- **The mount card stayed behind when you moved the window.** It was being held on screen, which overrode the fact that it is attached to the window's corner — drag the window low and the card was pushed back to the top. It travels with the window now.
+- **The mount card ignored the window scale.** It floats free of the window so it can appear over anything, which also meant it never picked the scale up.
+- **A category with nothing in it drew an empty bar.** Categories are skipped now when there is nothing to show, rather than only when everything in them is collected and hidden.
+
 ## 3.11.1
 
 ### Fixes

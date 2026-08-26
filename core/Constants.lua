@@ -166,6 +166,31 @@ C.TYPE = {
     CAPTION = 10,   -- counts, hints, placeholders
 }
 
+-- How big the window is drawn.  Growing the type on its own does not
+-- work: every card, column and mount grid here is sized in fixed pixels,
+-- so larger text simply overflows the boxes holding it.  Scaling the
+-- frame moves the text and the boxes together, which is what "it looks
+-- different at another resolution" actually calls for.
+C.UI_SCALE_MIN = 0.7
+C.UI_SCALE_MAX = 1.4
+
+function C.UIScale()
+    local scale = MCL_SETTINGS and MCL_SETTINGS.uiScale
+    if type(scale) ~= "number" then return 1 end
+    return math.max(C.UI_SCALE_MIN, math.min(scale, C.UI_SCALE_MAX))
+end
+
+-- The mount card hangs off UIParent rather than the window, because it
+-- follows the cursor and has to sit above everything.  That also means it
+-- inherits nothing from the window, so it is scaled by hand here.
+-- Anything else that floats free of the main frame belongs in this list.
+function C.ApplyUIScale(scale)
+    scale = scale or C.UIScale()
+    if MCL_mainFrame then MCL_mainFrame:SetScale(scale) end
+    if MCL_MountCard then MCL_MountCard:SetScale(scale) end
+    return scale
+end
+
 -- Re-size a FontString in place, keeping its font file and optionally
 -- forcing an outline for the two heaviest steps.
 function C.ApplyType(fontString, size, outline)

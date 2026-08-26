@@ -170,6 +170,9 @@ if MCL_SETTINGS.enableSectionCompleteSound == nil then
 end
 
 -- Ensure the animation toggle exists for existing users
+if MCL_SETTINGS.uiScale == nil then
+    MCL_SETTINGS.uiScale = 1
+end
 if MCL_SETTINGS.enableAnimations == nil then
     MCL_SETTINGS.enableAnimations = true
 end

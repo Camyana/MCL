@@ -409,11 +409,22 @@ function MountCard:CreateMountCard()
     -- Create main frame with MCL styling (matching PetCard)
     local f = CreateFrame("Frame", "MCL_MountCard", UIParent, "BackdropTemplate")
     f:SetSize(cardWidth, cardHeight)  -- Use dynamic dimensions
+    -- Parented to UIParent so it can follow the cursor over anything, so
+    -- the window's scale does not reach it on its own.
+    if MCLcore.C and MCLcore.C.UIScale then f:SetScale(MCLcore.C.UIScale()) end
     f:SetFrameStrata("HIGH")
     f:SetFrameLevel(100)
     f:SetMovable(false)  -- Disable moving since it's anchored
     f:EnableMouse(true)
-    f:SetClampedToScreen(true)
+    -- Deliberately not clamped to the screen.
+    --
+    -- The card is anchored to the window's top-right corner and is meant
+    -- to travel with it.  Clamping overrides that: drag the window low
+    -- and the card, being tall, would hang off the bottom, so the game
+    -- shoved it back up - leaving it stranded at the top of the screen
+    -- while the window sat at the bottom.  Following the window it is
+    -- attached to matters more than staying fully on screen; the window
+    -- itself is not clamped either.
     f:Hide()  -- Start hidden
     
     -- Apply MCL house style (consistent with header bar)

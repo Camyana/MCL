@@ -816,7 +816,7 @@ MCLcore.mountList[15] = {
 		},
 		BlizzardStore = {
 			name = "Blizzard Store",
-			mounts = {54811, 69846, 78924, 97989, 107951, 112326, 122469, 147901, 156564, 160589, 166775, 166774, 166776, "m1266", "m1267", "m1290", "m1346", "m1291", "m1456", "m1330", "m1531", "m1581", "m1312", "m1594", "m1583", "m1797", 203727, "m1795", "m1692", 228751, 229128, 219450, 224574, "m2237", 229418, 230184, 230200, 230201, 230185, 227362, 235344, 231297, 233285, 233284, 233282, 233283, 233286, 238943, 238994, 238966, 221270, 190581, 212228, 225250, 206167, 246698, 247848, 258427, 258423, 258425, 243194, 248088, 242795, 252679, 252681, 258477, 248681, 239076, 262661, "m2700", "m2701", "m2702", "m2703", 233019, 233020, 190636},
+			mounts = {54811, 69846, 78924, 97989, 107951, 112326, 122469, 147901, 156564, 160589, 166775, 166774, 166776, "m1266", "m1267", "m1290", "m1346", "m1291", "m1456", "m1330", "m1531", "m1581", "m1312", "m1594", "m1583", "m1797", 203727, "m1795", "m1692", 228751, 229128, 219450, 224574, "m2237", 229418, 230184, 230200, 230201, 230185, 227362, 235344, 231297, 233285, 233284, 233282, 233283, 233286, 238943, 238994, 238966, 221270, 190581, 212228, 225250, 206167, 246698, 247848, 258427, 258423, 258425, 243194, 248088, 242795, 252679, 252681, 258477, 248681, 239076, 262661, "m2700", "m2701", "m2702", "m2703", 233019, 233020, 190636, 267078, 268472, 268474, 273655, 274164},
 			mountID = {1266, 1267, 1290, 1346, 1291, 1456, 1330, 1531, 1581}
 		},
 		CollectorsEdition = {
@@ -2459,13 +2459,18 @@ MCLcore.mountNotes = {
 	[263452] = "Trading Post (March 2026) for 550 Trader's Tender.",
 	[263580] = "Requires 120 Glowing Moths captured to purchase",
 	[265656] = "Reward from the achievement \"Insurmountable\" (collect 600 mounts). Added in The Midnight expansion.",
+	[267078] = "Purchased from the In-Game Shop. Fully customizable - wings, claws, tail, saddle and colors are chosen from the Mount Journal.",
 	[268363] = "Trading Post (May 2026) for 500 Trader's Tender.",
 	[268364] = "Trading Post (May 2026) for 500 Trader's Tender.",
+	[268472] = "Purchased from the In-Game Shop. Added May 2026 alongside the Amberback Arboon.",
+	[268474] = "Purchased from the In-Game Shop. Added May 2026 alongside the Blossomback Arboon.",
 	[268876] = "Trading Post Traveler's Log reward (June 2026). Earned by completing the monthly activities bar.",
 	[268877] = "Trading Post (June 2026) for 700 Trader's Tender.",
 	[269240] = "Combine 4 Delicious Sporesnack, which drop from Rotmire in the Sporefall raid on any difficulty. Only one Delicious Sporesnack can be earned per week, so this requires a minimum of 4 weeks.",
 	[273317] = "Trading Post (July 2026) for 700 Trader's Tender.",
 	[273651] = "Trading Post Traveler's Log reward (July 2026). Earned by completing the monthly activities bar.",
+	[273655] = "Granted automatically with an active recurring 6-month or 12-month subscription, or purchased separately from the In-Game Shop. Added July 2026.",
+	[274164] = "Purchased from the In-Game Shop. Provides a mailbox and gear repair while summoned. Added in Patch 12.1.0.",
 	[274260] = "Included with the World of Warcraft BlizzCon Bundle and the BlizzCon Ultimate Collection for BlizzCon 2026. The bundles are on sale until September 28, 2026.",
 	[274649] = "Sold by Kifaan in Val for 15 Voidlight Marl. Requires completing the achievement \"A Trip Around the Stars.\"",
 	[274650] = "Sold by Kifaan in Naigtal for 15 Voidlight Marl. Requires completing the achievement \"A Trip Through the Stars.\"",
