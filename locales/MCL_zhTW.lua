@@ -252,6 +252,8 @@ if L then
     L["MCL | Mount Collection Log"] = "MCL | 坐騎收集日誌"
     L["Enable Mount Card on Hover"] = "滑鼠懸停時啟用坐騎卡片"
     L["Enable Animations"] = "啟用動畫"
+    L["Show a message when MCL is ready"] = "MCL 就緒時顯示提示"
+    L["MCL is ready"] = "MCL 已就緒"
     L["Window Scale"] = "視窗縮放"
     L["If enabled, the mount card will automatically appear when hovering over mounts."] = "啟用後，滑鼠懸停在坐騎上時會自動顯示坐騎卡片。"
     L[" default UI theme. Requires UI reload."] = "啟用後，附加元件將使用暴雪的預設UI主題。需要重新載入介面。"

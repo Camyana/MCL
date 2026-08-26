@@ -173,6 +173,9 @@ end
 if MCL_SETTINGS.uiScale == nil then
     MCL_SETTINGS.uiScale = 1
 end
+if MCL_SETTINGS.showReadyToast == nil then
+    MCL_SETTINGS.showReadyToast = false
+end
 if MCL_SETTINGS.enableAnimations == nil then
     MCL_SETTINGS.enableAnimations = true
 end

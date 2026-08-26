@@ -856,3 +856,99 @@ zoneAlertFrame:SetScript("OnEvent", function()
         Toast:ShowZoneAlert(mapID)
     end)
 end)
+
+-- ========================================================
+-- Ready toast
+--
+-- A quiet line in the top-left when MCL has finished
+-- loading.  Off unless asked for, and built to be missable:
+-- one row, small type, no chrome to speak of.  Something
+-- that appears on every login has to be ignorable, or it
+-- becomes a thing to dismiss rather than a thing to read.
+--
+-- Deliberately not the mount-collected toast above: that one
+-- is themed, carries mount art, and sits wherever the player
+-- dragged it.
+-- ========================================================
+local READY_HEIGHT = 24
+local READY_DWELL  = 3       -- seconds on screen before it fades
+local readyFrame
+
+local function EnsureReadyFrame()
+    if readyFrame then return readyFrame end
+
+    local f = CreateFrame("Button", "MCL_ReadyToast", UIParent)
+    f:SetHeight(READY_HEIGHT)
+    f:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 16, -16)
+    f:SetFrameStrata("HIGH")
+    f:SetAlpha(0)
+    f:Hide()
+
+    f.icon = f:CreateTexture(nil, "ARTWORK")
+    f.icon:SetSize(14, 14)
+    f.icon:SetPoint("LEFT", f, "LEFT", 0, 0)
+    f.icon:SetTexture("Interface\\AddOns\\MCL\\mcl-logo-32")
+    f.icon:SetAlpha(0.8)
+
+    f.text = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    f.text:SetPoint("LEFT", f.icon, "RIGHT", 6, 0)
+    f.text:SetTextColor(0.62, 0.68, 0.76, 1)
+
+    f.fadeOut = f:CreateAnimationGroup()
+    local ao = f.fadeOut:CreateAnimation("Alpha")
+    ao:SetFromAlpha(1); ao:SetToAlpha(0); ao:SetDuration(0.6)
+    f.fadeOut:SetScript("OnFinished", function()
+        f:SetAlpha(0)
+        f:Hide()
+    end)
+
+    -- Brightens a little under the cursor, so it reads as clickable
+    -- without announcing itself when it isn't.
+    f:SetScript("OnEnter", function(self)
+        self.text:SetTextColor(0.40, 0.78, 0.95, 1)
+    end)
+    f:SetScript("OnLeave", function(self)
+        self.text:SetTextColor(0.62, 0.68, 0.76, 1)
+    end)
+
+    f:RegisterForClicks("AnyUp")
+    f:SetScript("OnClick", function(self)
+        self.dwell = nil
+        self:Hide()
+        if MCLcore.Frames and MCLcore.Frames.OpenMainFrame then
+            MCLcore.Frames:OpenMainFrame()
+        end
+    end)
+
+    readyFrame = f
+    return f
+end
+
+function Toast:ShowReady()
+    -- Off unless switched on.
+    if not (MCL_SETTINGS and MCL_SETTINGS.showReadyToast) then return end
+
+    local f = EnsureReadyFrame()
+    f.text:SetText(L["MCL is ready"])
+    -- The row is only as wide as the line in it, so there is no invisible
+    -- box sitting over the corner of the screen catching clicks.
+    f:SetWidth(14 + 6 + f.text:GetStringWidth())
+
+    if f.fadeOut:IsPlaying() then f.fadeOut:Stop() end
+    f:SetAlpha(1)
+    f:Show()
+
+    -- Each showing owns its timer, so an earlier one cannot dismiss a
+    -- later one part-way through.
+    f.dwell = (f.dwell or 0) + 1
+    local mine = f.dwell
+    C_Timer.After(READY_DWELL, function()
+        if f.dwell ~= mine or not f:IsShown() then return end
+        if MCLcore.Anim and MCLcore.Anim.IsEnabled and not MCLcore.Anim:IsEnabled() then
+            f:SetAlpha(0)
+            f:Hide()
+        else
+            f.fadeOut:Play()
+        end
+    end)
+end

@@ -457,6 +457,12 @@ function MCL_Load:Init(force, showOnComplete)
                 end
 
                 MCL_Load:HideLoadingIndicator()
+
+                -- Everything is counted and the window is built: say so.
+                if MCLcore.Toast and MCLcore.Toast.ShowReady then
+                    MCLcore.Toast:ShowReady()
+                end
+
                 init_load = false -- Ensure that the initialization does not repeat unnecessarily.
             else
                 retries = retries + 1

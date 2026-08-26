@@ -2091,15 +2091,6 @@ end
 -- Gone with it: a `MyStatusBar` global that every call overwrote, a
 -- fluorescent 0.1/0.9/0.1 green that flashed before the first real update,
 -- and a `top` parameter whose two branches were byte-identical.
-function MCL_frames:progressBar(relativeFrame)
-    local pBar = MCLcore.Widgets:CreateProgressBar({
-        parent = relativeFrame,
-        width  = C.DIMS.PB_WIDTH,
-        anchor = { "BOTTOMLEFT", relativeFrame, "BOTTOMLEFT", 0, 10 },
-    })
-    return pBar
-end
-
 function MCL_frames:createContentFrame(relativeFrame, title, sectionIcon)
     -- Calculate dynamic width based on current main frame width
     local currentWidth, _ = MCL_frames:GetCurrentFrameDimensions()
@@ -2168,20 +2159,13 @@ function MCL_frames:createContentFrame(relativeFrame, title, sectionIcon)
         frame:SetHeight(85)  -- Increased to make room for instructions
     end
 
-    if title ~= "Pinned" and title ~= "Hidden" then
-        frame.pBar = MCLcore.Frames:progressBar(frame)
-        -- Anchored to the top, not the bottom.
-        --
-        -- This frame is 50 tall when it is built and then resized to fit
-        -- however many categories the section has.  Hung off BOTTOMLEFT,
-        -- the bar rode that edge down and ended up below the whole
-        -- section - the empty full-width bar under every list.  The top
-        -- edge does not move, so the bar stays where it was meant to be:
-        -- under the title, above the categories, which start at -50.
-        frame.pBar:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -30)
-        frame.pBar:SetWidth(availableWidth - 30)  -- Account for padding on both sides
-        frame.pBar:SetHeight(C.DIMS.PB_HEIGHT)    -- Same height as the category bars below it
-    end
+    -- No section-level progress bar.
+    --
+    -- It duplicated what is already on screen twice over: the sidebar
+    -- carries the section's count, and every category below has its own
+    -- bar.  A full-width empty bar under the title added a row of chrome
+    -- without adding an answer.  The updates in functions.lua are all
+    -- guarded on `.pBar` existing, so they simply do nothing now.
 
     -- Add sort control and filter toggle for category-based sections (not Overview, Pinned, or Settings)
     if title ~= "Overview" and title ~= "Pinned" and title ~= "Settings" then
@@ -3496,7 +3480,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     -- =====================================================
     -- 250 rather than 220: the card now holds seven rows at a 30px stride
     -- starting at -34, so the last one lands at -214.
-    local displayCard = createCard(frame, L["Display Options"], yPos, 320)
+    local displayCard = createCard(frame, L["Display Options"], yPos, 350)
     
     local displayY = -34
     
@@ -3560,6 +3544,26 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     animLabel:SetPoint("LEFT", animCheck, "RIGHT", 8, 0)
     animLabel:SetText(L["Enable Animations"])
     animLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+    displayY = displayY - 30
+
+    -- Show a line in the corner when MCL has finished loading
+    local readyCheck = CreateFrame("CheckButton", nil, displayCard)
+    readyCheck:SetSize(18, 18)
+    readyCheck:SetPoint("TOPLEFT", displayCard, "TOPLEFT", 12, displayY)
+    readyCheck:SetChecked(MCL_SETTINGS.showReadyToast and true or false)
+    readyCheck.originalOnClick = function(self)
+        MCL_SETTINGS.showReadyToast = self:GetChecked() and true or false
+        -- Show it once on the way in, so ticking the box demonstrates
+        -- what the box does.
+        if MCL_SETTINGS.showReadyToast and MCLcore.Toast and MCLcore.Toast.ShowReady then
+            MCLcore.Toast:ShowReady()
+        end
+    end
+    styleCheckbox(readyCheck)
+    local readyLabel = displayCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    readyLabel:SetPoint("LEFT", readyCheck, "RIGHT", 8, 0)
+    readyLabel:SetText(L["Show a message when MCL is ready"])
+    readyLabel:SetTextColor(0.7, 0.78, 0.88, 1)
     displayY = displayY - 34
 
     -- Window scale
@@ -3690,7 +3694,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     hiddenSettingLabel:SetText(L["Enable Hidden Mounts"])
     hiddenSettingLabel:SetTextColor(0.7, 0.78, 0.88, 1)
 
-    yPos = yPos - 330
+    yPos = yPos - 360
     
     -- =====================================================
     -- CARD 3: Layout

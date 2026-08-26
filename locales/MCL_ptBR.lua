@@ -252,6 +252,8 @@ if L then
     L["MCL | Mount Collection Log"] = "MCL | Registro de Coleção de Montarias"
     L["Enable Mount Card on Hover"] = "Ativar Cartão de Montaria ao Passar o Mouse"
     L["Enable Animations"] = "Ativar animações"
+    L["Show a message when MCL is ready"] = "Mostrar uma mensagem quando o MCL estiver pronto"
+    L["MCL is ready"] = "MCL está pronto"
     L["Window Scale"] = "Escala da janela"
     L["If enabled, the mount card will automatically appear when hovering over mounts."] = "Se habilitado, o cartão da montaria aparecerá automaticamente ao passar o mouse sobre as montarias."
     L["|cff00CCFFMount Collection Log Commands:\n|cffFF0000Show:|cffFFFFFF Shows your mount collection log\n|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon\n|cffFF0000Config:|cffFFFFFF Opens the settings\n|cffFF0000Cleanup:|cffFFFFFF Cleans up invalid pinned mounts\n|cffFF0000Help:|cffFFFFFF Shows commands"] = "|cff00CCFFComandos do Registro de Coleção de Montarias:\n|cffFF0000Show:|cffFFFFFF Mostra seu registro de coleção de montarias\n|cffFF0000Icon:|cffFFFFFF Alterna o ícone do minimapa\n|cffFF0000Config:|cffFFFFFF Abre as configurações\n|cffFF0000Cleanup:|cffFFFFFF Limpa montarias fixadas inválidas\n|cffFF0000Help:|cffFFFFFF Mostra os comandos"

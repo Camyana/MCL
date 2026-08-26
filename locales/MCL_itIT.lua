@@ -252,6 +252,8 @@ if L then
     L["MCL | Mount Collection Log"] = "MCL | Registro Collezione Cavalcature"
     L["Enable Mount Card on Hover"] = "Abilita scheda cavalcatura al passaggio"
     L["Enable Animations"] = "Attiva animazioni"
+    L["Show a message when MCL is ready"] = "Mostra un messaggio quando MCL è pronto"
+    L["MCL is ready"] = "MCL è pronto"
     L["Window Scale"] = "Scala della finestra"
     L["If enabled, the mount card will automatically appear when hovering over mounts."] = "Se abilitato, la scheda della cavalcatura apparirà automaticamente passando sopra le cavalcature."
     L["|cff00CCFFMount Collection Log Commands:\n|cffFF0000Show:|cffFFFFFF Shows your mount collection log\n|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon\n|cffFF0000Config:|cffFFFFFF Opens the settings\n|cffFF0000Cleanup:|cffFFFFFF Cleans up invalid pinned mounts\n|cffFF0000Help:|cffFFFFFF Shows commands"] = "|cff00CCFFComandi del Registro Collezione Cavalcature:\n|cffFF0000Show:|cffFFFFFF Mostra il tuo registro collezione cavalcature\n|cffFF0000Icon:|cffFFFFFF Attiva/disattiva l'icona della minimappa\n|cffFF0000Config:|cffFFFFFF Apre le impostazioni\n|cffFF0000Cleanup:|cffFFFFFF Rimuove le cavalcature fissate non valide\n|cffFF0000Help:|cffFFFFFF Mostra i comandi"

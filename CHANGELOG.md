@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.13.0
+
+### A quiet word when MCL is ready
+
+**Show a message when MCL is ready**, under Display Options, puts a small line in the top-left corner once the addon has finished loading. Click it to open MCL; it fades on its own after a few seconds.
+
+It is off unless you ask for it, and it is meant to be missable — one line, small type, no panel around it. Something that shows up on every login should be ignorable.
+
+### Fixes
+
+- **A coloured wash covered every section.** The section's progress bar ended up anchored at both its top and its bottom, which stretches a frame to fill everything between — so it was drawn across the whole page. Introduced in 3.12.0.
+- **The empty bar under each section title is gone for good.** It repeated what the sidebar and the category bars already say, so rather than move it again it has been removed.
+
 ## 3.12.0
 
 ### Window scale

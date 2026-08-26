@@ -251,6 +251,8 @@ if L then
     L["MCL | Mount Collection Log"] = "MCL | Mount Collection Log"
     L["Enable Mount Card on Hover"] = "Enable Mount Card on Hover"
     L["Enable Animations"] = "Enable Animations"
+    L["Show a message when MCL is ready"] = "Show a message when MCL is ready"
+    L["MCL is ready"] = "MCL is ready"
     L["Window Scale"] = "Window Scale"
     L["If enabled, the mount card will automatically appear when hovering over mounts."] = "If enabled, the mount card will automatically appear when hovering over mounts."
     L["|cff00CCFFMount Collection Log Commands:\n|cffFF0000Show:|cffFFFFFF Shows your mount collection log\n|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon\n|cffFF0000Config:|cffFFFFFF Opens the settings\n|cffFF0000Cleanup:|cffFFFFFF Cleans up invalid pinned mounts\n|cffFF0000Help:|cffFFFFFF Shows commands"] = "|cff00CCFFMount Collection Log Commands:\n|cffFF0000Show:|cffFFFFFF Shows your mount collection log\n|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon\n|cffFF0000Config:|cffFFFFFF Opens the settings\n|cffFF0000Cleanup:|cffFFFFFF Cleans up invalid pinned mounts\n|cffFF0000Help:|cffFFFFFF Shows commands"
