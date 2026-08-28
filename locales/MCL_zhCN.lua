@@ -249,6 +249,7 @@ if L then
     L["Enable Animations"] = "启用动画"
     L["Show a message when MCL is ready"] = "MCL 就绪时显示提示"
     L["MCL is ready"] = "MCL 已就绪"
+    L["Could not finish loading - try /reload."] = "加载未能完成 - 请尝试 /reload。"
     L["Window Scale"] = "窗口缩放"
     L["If enabled, the mount card will automatically appear when hovering over mounts."] = "启用后，鼠标悬停在坐骑上时会自动显示坐骑卡片。"
     L["Pin Instructions Text"] = "|cffFF8800|TInterface\\GossipFrame\\AvailableQuestIcon:0:0:0:0:32:32:0:32:0:32|t Ctrl + 右键|r 收藏/取消收藏坐骑"

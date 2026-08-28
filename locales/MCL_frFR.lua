@@ -254,6 +254,7 @@ if L then
     L["Enable Animations"] = "Activer les animations"
     L["Show a message when MCL is ready"] = "Afficher un message quand MCL est prêt"
     L["MCL is ready"] = "MCL est prêt"
+    L["Could not finish loading - try /reload."] = "Le chargement n'a pas pu se terminer - essayez /reload."
     L["Window Scale"] = "Échelle de la fenêtre"
     L["If enabled, the mount card will automatically appear when hovering over mounts."] = "Si activé, la carte de monture apparaîtra automatiquement lors du survol des montures."
     L["|cff00CCFFMount Collection Log Commands:\n|cffFF0000Show:|cffFFFFFF Shows your mount collection log\n|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon\n|cffFF0000Config:|cffFFFFFF Opens the settings\n|cffFF0000Cleanup:|cffFFFFFF Cleans up invalid pinned mounts\n|cffFF0000Help:|cffFFFFFF Shows commands"] = "|cff00CCFFMount Collection Log Commands:\n|cffFF0000Show:|cffFFFFFF Shows your mount collection log\n|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon\n|cffFF0000Config:|cffFFFFFF Opens the settings\n|cffFF0000Cleanup:|cffFFFFFF Cleans up invalid pinned mounts\n|cffFF0000Help:|cffFFFFFF Shows commands"

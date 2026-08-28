@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.13.1
+
+### Fixes
+
+- **"Script ran too long" on login, followed by a failed recovery.** Building the window creates a frame for every mount in the game, and on a slower machine that can run past the time the game allows a single piece of code. The recovery made it worse: it deleted your saved data — pinned mounts included — and then tried again immediately, with no more time available than the attempt that had just run out, so it failed too. Nothing is deleted now, and the retry waits for a moment when there is time to finish.
+- **Errors no longer appear in chat.** If loading really cannot finish, MCL says so once, in one line, instead of printing what went wrong internally.
+- **Installing for the first time no longer reports corrupted data.** Empty saved variables on a first run were being treated as damage.
+
 ## 3.13.0
 
 ### A quiet word when MCL is ready

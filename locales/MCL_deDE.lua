@@ -255,6 +255,7 @@ if L then
     L["Enable Animations"] = "Animationen aktivieren"
     L["Show a message when MCL is ready"] = "Meldung anzeigen, wenn MCL bereit ist"
     L["MCL is ready"] = "MCL ist bereit"
+    L["Could not finish loading - try /reload."] = "Laden konnte nicht abgeschlossen werden - versuche /reload."
     L["Window Scale"] = "Fenstergröße"
     L["If enabled, the mount card will automatically appear when hovering over mounts."] = "Wenn aktiviert, erscheint die Reittier-Karte automatisch beim Hover über Reittiere."
     L["|cff00CCFFMount Collection Log Commands:\n|cffFF0000Show:|cffFFFFFF Shows your mount collection log\n|cffFF0000Icon:|cffFFFFFF Toggles the minimap icon\n|cffFF0000Config:|cffFFFFFF Opens the settings\n|cffFF0000Cleanup:|cffFFFFFF Cleans up invalid pinned mounts\n|cffFF0000Help:|cffFFFFFF Shows commands"] = "|cff00CCFFReittier-Sammlungs-Log Befehle:\n|cffFF0000Show:|cffFFFFFF Zeigt Ihr Reittier-Sammlungs-Log\n|cffFF0000Icon:|cffFFFFFF Schaltet das Minikartensymbol um\n|cffFF0000Config:|cffFFFFFF Öffnet die Einstellungen\n|cffFF0000Cleanup:|cffFFFFFF Bereinigt ungültige angeheftete Reittiere\n|cffFF0000Help:|cffFFFFFF Zeigt Befehle"

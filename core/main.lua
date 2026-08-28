@@ -369,7 +369,8 @@ end
 function MCL_Load:Init(force, showOnComplete)
     local function proceed()
         local retries = 0
-        local function repeatCheck()
+        local repeatCheck
+        repeatCheck = function()
             if MCL_Load:PreLoad() then
                 -- Initialization steps
                 if MCLcore.MCL_MF == nil then
@@ -393,48 +394,71 @@ function MCL_Load:Init(force, showOnComplete)
                         local validationPassed = true
                         
                         -- Validate saved variables
-                        if not MCL_DB or type(MCL_DB) ~= "table" then
-                            print("MCL: Corrupted database detected, resetting...")
+                        -- nil is a first run, not damage.  Saying "corrupted"
+                        -- to somebody installing the addon for the first time
+                        -- reads as something having gone wrong when nothing
+                        -- has, so only a value of the wrong type is reported.
+                        if type(MCL_DB) ~= "table" then
+                            if MCL_DB ~= nil then
+                                print("MCL: Corrupted database detected, resetting...")
+                            end
                             MCL_DB = {}
                             validationPassed = false
                         end
                         
-                        if not MOUNTLIST or type(MOUNTLIST) ~= "table" then
-                            print("MCL: Corrupted mount list detected, resetting...")
+                        if type(MOUNTLIST) ~= "table" then
+                            if MOUNTLIST ~= nil then
+                                print("MCL: Corrupted mount list detected, resetting...")
+                            end
                             MOUNTLIST = {}
                             validationPassed = false
                         end
                         
-                        if not MCL_PINNED or type(MCL_PINNED) ~= "table" then
-                            print("MCL: Corrupted pinned list detected, resetting...")
+                        if type(MCL_PINNED) ~= "table" then
+                            if MCL_PINNED ~= nil then
+                                print("MCL: Corrupted pinned list detected, resetting...")
+                            end
                             MCL_PINNED = {}
                             validationPassed = false
                         end
                         
-                        if not MCL_SETTINGS or type(MCL_SETTINGS) ~= "table" then
-                            print("MCL: Corrupted settings detected, resetting...")
+                        if type(MCL_SETTINGS) ~= "table" then
+                            if MCL_SETTINGS ~= nil then
+                                print("MCL: Corrupted settings detected, resetting...")
+                            end
                             MCL_SETTINGS = {}
                             validationPassed = false
                         end
                         
-                        -- Wrap initialization in protected call
-                        local success, error = pcall(MCLcore.Function.initSections, MCLcore.Function)
+                        -- Building the window means creating a frame for every mount
+                        -- in the game, and on a slower machine that can exceed the
+                        -- client's per-execution time budget.  The client reports that
+                        -- as "script ran too long", and it says something about the
+                        -- machine, not about the saved data.
+                        --
+                        -- What used to happen: wipe MCL_DB, MOUNTLIST and MCL_PINNED,
+                        -- then immediately try again.  Both halves were wrong.  Nothing
+                        -- was corrupt, so it threw away the player's pinned mounts for
+                        -- no reason; and the retry ran inside the same execution as the
+                        -- attempt that had just run out of time, so it had no budget
+                        -- either and failed the same way.  That is the pair of errors
+                        -- people were seeing.
+                        --
+                        -- A later frame gets a fresh budget, so waiting is the whole
+                        -- fix.  Nothing is deleted on the way.
+                        local success = pcall(MCLcore.Function.initSections, MCLcore.Function)
                         if not success then
-                            print("MCL Error during initialization: " .. tostring(error))
-                            print("MCL: Attempting recovery...")
-                            
-                            -- Try to recover by resetting data and trying again
-                            MCL_DB = {}
-                            MOUNTLIST = {}
-                            MCL_PINNED = {}
-                            
-                            local retrySuccess, retryError = pcall(MCLcore.Function.initSections, MCLcore.Function)
-                            if not retrySuccess then
-                                print("MCL Error: Recovery failed - " .. tostring(retryError))
-                                return false
+                            retries = retries + 1
+                            if retries < MAX_INIT_RETRIES then
+                                C_Timer.After(1, repeatCheck)
                             else
-                                print("MCL: Recovery successful")
+                                -- Out of attempts.  One plain line rather than a Lua
+                                -- error in the chat frame: there is nothing in it a
+                                -- player can act on.
+                                print("|cFF1FB7EBMCL|r " .. L["Could not finish loading - try /reload."])
+                                MCL_Load:HideLoadingIndicator()
                             end
+                            return false
                         end
                     else
                         print("MCL Error: Function module or initSections not available")
