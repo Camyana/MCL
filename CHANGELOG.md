@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.13.2
+
+### September 2026 Trading Post
+
+- **Crested Aqua Leafmimic** - 500 Trader's Tender
+- **Crested Verdant Leafmimic** - 500 Trader's Tender
+- **Ornery Breezestrider** - 325 Trader's Tender, back from September 2025
+- **Cinder-Plumed Highland Gryphon** - 650 Trader's Tender, back from September 2025
+
+### Moved
+
+- **Conqueror's Scythemaw** now sits under PVP rather than Battle for Azeroth. It comes from Conqueror of Azeroth, a War Mode achievement, so PVP is where people will look for it.
+
 ## 3.13.1
 
 ### Fixes
