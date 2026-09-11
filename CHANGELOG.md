@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.13.3
+
+### Fixes
+
+- **Mounts that had no tooltip at all.** Hovering Kah, Legend of the Deep — and a number of other mounts that come from an item — showed nothing. MCL was waiting on the item's name to arrive from the server before it would build a tooltip, and for an item the game has not seen this session that name never came. It now asks for the tooltip by item instead, which works whether the item is known yet or not.
+- **Guide pins showing a question mark, and pins for mounts you already own.** Thirty-one mounts in the zone guide were filed under the wrong spell, so MCL could not match them to your collection. Living Infernal Core in the Nighthold was one of them: its pin drew a blank question-mark icon and stayed on the map even for people who already had the mount. Every one of them now points at the right mount, which fixes the icon, the collected state, and the pin clearing once you own it.
+
 ## 3.13.2
 
 ### September 2026 Trading Post

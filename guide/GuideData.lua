@@ -342,7 +342,7 @@ MCL_GUIDE_DATA.mounts = {
 		},
 		instanceDifficulties = { 6 },
 	},
-	[73510] = {
+	[215159] = {
 		name = "Long-Forgotten Hippogryph",
 		method = "NPC",
 		itemId = 138258,
@@ -535,7 +535,7 @@ MCL_GUIDE_DATA.mounts = {
 		method = "",
 		itemId = 85429,
 	},
-	[127139] = {
+	[239013] = {
 		name = "Lightforged Warframe",
 		method = "",
 		itemId = 152788,
@@ -836,7 +836,7 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 554, x = 57.4, y = 57.8 },
 		},
 	},
-	[164862] = {
+	[214791] = {
 		name = "Brinedeep Bottom-Feeder",
 		method = "",
 		itemId = 138811,
@@ -1143,7 +1143,7 @@ MCL_GUIDE_DATA.mounts = {
 		method = "",
 		itemId = 128706,
 	},
-	[192229] = {
+	[215558] = {
 		name = "Ratstallion",
 		method = "SPECIAL",
 		itemId = 138387,
@@ -1158,7 +1158,7 @@ MCL_GUIDE_DATA.mounts = {
 		method = "SPECIAL",
 		itemId = 129280,
 	},
-	[197211] = {
+	[254260] = {
 		name = "Bleakhoof Ruinstrider",
 		method = "SPECIAL",
 		itemId = 153041,
@@ -1168,18 +1168,7 @@ MCL_GUIDE_DATA.mounts = {
 		method = "SPECIAL",
 		itemId = 143864,
 	},
-	[206221] = {
-		name = "Living Infernal Core",
-		method = "BOSS",
-		itemId = 137574,
-		chance = 100,
-		lockBossName = "Gul'dan",
-		blackMarket = true,
-		coords = {
-			{ m = 680, x = 44.8, y = 60.2 },
-		},
-	},
-	[211135] = {
+	[230987] = {
 		name = "Arcanist's Manasaber",
 		method = "SPECIAL",
 		itemId = 142436,
@@ -3037,12 +3026,12 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1970 },
 		},
 	},
-	[365040] = {
+	[342671] = {
 		name = "Pale Regal Cervid",
 		method = "USE",
 		itemId = 187639,
 	},
-	[365042] = {
+	[359277] = {
 		name = "Reins of the Sundered Zerethsteed",
 		method = "USE",
 		itemId = 187641,
@@ -3050,12 +3039,12 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1970, x = 60.5, y = 30.5 },
 		},
 	},
-	[365045] = {
+	[359278] = {
 		name = "Deathrunner",
 		method = "USE",
 		itemId = 187638,
 	},
-	[365046] = {
+	[342678] = {
 		name = "Vespoid Flutterer",
 		method = "USE",
 		itemId = 187660,
@@ -3063,7 +3052,7 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1970, x = 50.3, y = 27 },
 		},
 	},
-	[365047] = {
+	[359364] = {
 		name = "Bronzewing Vespoid",
 		method = "USE",
 		itemId = 187663,
@@ -3071,7 +3060,7 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1970, x = 50.6, y = 31.8 },
 		},
 	},
-	[365048] = {
+	[359366] = {
 		name = "Buzz",
 		method = "USE",
 		itemId = 187665,
@@ -3083,7 +3072,7 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1970, x = 64.3, y = 63.4 },
 		},
 	},
-	[365049] = {
+	[359367] = {
 		name = "Forged Spiteflyer",
 		method = "USE",
 		itemId = 187664,
@@ -3091,7 +3080,7 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1970, x = 53.3, y = 25.6 },
 		},
 	},
-	[365050] = {
+	[342668] = {
 		name = "Desertwing Hunter",
 		method = "USE",
 		itemId = 187666,
@@ -3099,12 +3088,12 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1970, x = 62, y = 43.5 },
 		},
 	},
-	[365051] = {
+	[359372] = {
 		name = "Mawdapted Raptora",
 		method = "USE",
 		itemId = 187667,
 	},
-	[365052] = {
+	[359373] = {
 		name = "Raptora Swooper",
 		method = "USE",
 		itemId = 187668,
@@ -3113,7 +3102,7 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1970, x = 67.4, y = 40.1 },
 		},
 	},
-	[365055] = {
+	[359401] = {
 		name = "Genesis Crawler",
 		method = "USE",
 		itemId = 187677,
@@ -3121,7 +3110,7 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1970, x = 31.5, y = 50.3 },
 		},
 	},
-	[365056] = {
+	[359402] = {
 		name = "Tarachnid Creeper",
 		method = "USE",
 		itemId = 187678,
@@ -3129,7 +3118,7 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1970, x = 62.8, y = 22 },
 		},
 	},
-	[365057] = {
+	[359403] = {
 		name = "Ineffable Skitterer",
 		method = "USE",
 		itemId = 187679,
@@ -3137,12 +3126,12 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1970, x = 34.9, y = 48.7 },
 		},
 	},
-	[365058] = {
+	[359413] = {
 		name = "Goldplate Bufonid",
 		method = "USE",
 		itemId = 187683,
 	},
-	[365062] = {
+	[363703] = {
 		name = "Prototype Leaper",
 		method = "USE",
 		itemId = 188809,
@@ -3150,17 +3139,17 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1970, x = 67, y = 69.4 },
 		},
 	},
-	[365063] = {
+	[363706] = {
 		name = "Russet Bufonid",
 		method = "USE",
 		itemId = 188810,
 	},
-	[365064] = {
+	[359230] = {
 		name = "Curious Crystalsniffer",
 		method = "USE",
 		itemId = 187630,
 	},
-	[365065] = {
+	[359231] = {
 		name = "Darkened Vombata",
 		method = "USE",
 		itemId = 187631,
@@ -3168,7 +3157,7 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1970, x = 64.1, y = 35.6 },
 		},
 	},
-	[365068] = {
+	[359232] = {
 		name = "Adorned Vombata",
 		method = "USE",
 		itemId = 187632,
@@ -3176,17 +3165,17 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1970, x = 37.1, y = 78.3 },
 		},
 	},
-	[365072] = {
+	[346719] = {
 		name = "Serenade",
 		method = "USE",
 		itemId = 187669,
 	},
-	[365073] = {
+	[359376] = {
 		name = "Bronze Helicid",
 		method = "USE",
 		itemId = 187670,
 	},
-	[365074] = {
+	[359377] = {
 		name = "Unsuccessful Prototype Fleetpod",
 		method = "USE",
 		itemId = 187671,
@@ -3194,7 +3183,7 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1970, x = 47.7, y = 34.5 },
 		},
 	},
-	[365076] = {
+	[359378] = {
 		name = "Scarlet Helicid",
 		method = "USE",
 		itemId = 187672,
@@ -3202,7 +3191,7 @@ MCL_GUIDE_DATA.mounts = {
 			{ m = 1970, x = 47.7, y = 9.5 },
 		},
 	},
-	[367704] = {
+	[367673] = {
 		name = "Heartbond Lupine",
 		method = "USE",
 		itemId = 190580,

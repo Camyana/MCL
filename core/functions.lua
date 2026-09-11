@@ -678,6 +678,31 @@ local function AddOriginTooltipLine(frame, isPinned)
     end
 end
 
+-- Put an item's tooltip on screen, cached or not.
+--
+-- GetItemInfo returns nothing for an item the client has never seen, and
+-- the callers below resolve their link ONCE when the button is built -
+-- at login, when almost nothing is cached.  The nil was then captured in
+-- the hover closure for the lifetime of that button, and the draw was
+-- wrapped in `if (itemLink)` with no else, so those mounts showed no
+-- tooltip at all, however many times you hovered.  Which mounts were
+-- affected came down to what happened to be in the cache, so it looked
+-- arbitrary - and the mount card still appeared, because it does not
+-- come through here.
+--
+-- SetItemByID works on an uncached item: it asks the server and fills
+-- the tooltip in when the reply lands.  Re-reading GetItemInfo at hover
+-- time also gives a second chance to find it cached by then.
+local function ShowItemTooltip(frame, itemId)
+    local _, link = GetItemInfo(itemId)
+    if link then
+        frame:SetHyperlinksEnabled(true)
+        GameTooltip:SetHyperlink(link)
+    else
+        GameTooltip:SetItemByID(itemId)
+    end
+end
+
 function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
 	--Adding a tooltip for mounts
     if string.sub(id, 1, 1) == "m" then
@@ -892,14 +917,11 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
                 if isItemMountSourceReady() then
                     -- Source data is ready, show tooltip immediately
                     GameTooltip:SetOwner(frame, "ANCHOR_TOP")
-                    if (itemLink) then
-                        frame:SetHyperlinksEnabled(true)
-                        GameTooltip:SetHyperlink(itemLink)
-                        local _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(mountID)
-                        GameTooltip:AddLine(source)
-                        AddOriginTooltipLine(frame, pin)
-                        GameTooltip:Show()
-                    end
+                    ShowItemTooltip(frame, id)
+                    local _, description, source, _, mountTypeID, _, _, _, _ = C_MountJournal.GetMountInfoExtraByID(mountID)
+                    GameTooltip:AddLine(source)
+                    AddOriginTooltipLine(frame, pin)
+                    GameTooltip:Show()
                 else
                     -- Force load data and delay tooltip
                     C_MountJournal.GetMountInfoByID(mountID) -- Ensure data is loaded
@@ -925,13 +947,10 @@ function MCL_functions:LinkMountItem(id, frame, pin, dragonriding)
                             sourceText = sourceText or L["Unknown"]
                             
                             GameTooltip:SetOwner(frame, "ANCHOR_TOP")
-                            if (itemLink) then
-                                frame:SetHyperlinksEnabled(true)
-                                GameTooltip:SetHyperlink(itemLink)
-                                GameTooltip:AddLine(sourceText)
-                                AddOriginTooltipLine(frame, pin)
-                                GameTooltip:Show()
-                            end
+                            ShowItemTooltip(frame, id)
+                            GameTooltip:AddLine(sourceText)
+                            AddOriginTooltipLine(frame, pin)
+                            GameTooltip:Show()
                         end
                     end)
                 end
