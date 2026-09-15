@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.13.4
+
+### Fixes
+
+- **Rare alerts on non-English clients.** MCL recognised rares by name, and its data is in English, so on any other client a rare whose name is actually translated never raised an alert. On a French client that was every Harandar rare with a real-word name: Pterrock, Treetop, Mindrot, Stumpy, Queen Lashtongue, Annulus the Worldshaker and Tallcap the Truthspreader all stayed silent, while the ones with invented names that French keeps as they are still fired. Rares are now recognised by the game's own ID for them, which is the same in every language. Once a rare has been seen that way, MCL also remembers what your client calls it, so nameplates pick it up too. Names written with a curly apostrophe, such as Oro'ohna on some clients, now match as well.
+- **The alert showing the wrong rare.** The picture above the alert could show the previous rare that popped instead of the new one, because the old model hadn't finished clearing when MCL checked. It could also swap a correctly loaded model for the plain rare marker a moment later. Both are fixed.
+- **Guide pins sitting on top of world quests.** MCL's map pins were drawn above everything on the world map, which put them in front of world quest icons and stopped you hovering or clicking those quests. They now sit just below world quests and still above the map's own art, points of interest and rare markers.
+
 ## 3.13.3
 
 ### Fixes

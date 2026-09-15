@@ -50,6 +50,7 @@ local DEFAULT_SCALE  = 1.0   -- already small; no need to shrink it
 local BANNER_LIFE    = 8     -- seconds on screen before it fades
 
 local lookup      = nil     -- lowercased rare name → mount entries
+local vigLookup   = nil     -- vignette ID → the same entries, in any language
 local lastAlert   = {}      -- lowercased rare name → GetTime() of last alert
 local scanTicker  = nil
 local trackTicker = nil     -- runs only while a waypoint is being tracked
@@ -66,17 +67,32 @@ end
 -- ─── What drops from what ───────────────────────────────────
 -- Rare coords are the ones carrying a per-day kill credit, plus the
 -- single-rare NPC drops that have no pool.
+-- The game does not always spell a name the way the data does, even in
+-- English: the client writes Oro’ohna with a typographic apostrophe
+-- where the data has a plain one, and the two never compared equal.
+local function NameKey(name)
+    return (name:lower():gsub("’", "'"))
+end
+
 local function BuildLookup()
     lookup = {}
+    vigLookup = {}
     if not MCL_GUIDE_DATA or not MCL_GUIDE_DATA.mounts then return end
 
     for spellId, rec in pairs(MCL_GUIDE_DATA.mounts) do
         if type(rec) == "table" and rec.coords then
             for _, wp in ipairs(rec.coords) do
                 if wp.n and (wp.dq or rec.method == "NPC") then
-                    local key = wp.n:lower()
+                    local entry = { spellId = spellId, name = rec.name, wp = wp }
+                    local key = NameKey(wp.n)
                     lookup[key] = lookup[key] or {}
-                    table.insert(lookup[key], { spellId = spellId, name = rec.name, wp = wp })
+                    table.insert(lookup[key], entry)
+                    -- wp.v is the rare's vignette: the same number on
+                    -- every realm and in every language.
+                    if wp.v then
+                        vigLookup[wp.v] = vigLookup[wp.v] or {}
+                        table.insert(vigLookup[wp.v], entry)
+                    end
                 end
             end
         end
@@ -90,8 +106,6 @@ local function IsCollected(spellId)
     return collected
 end
 
--- Returns the mounts this rare can still give you as
--- { {name=, icon=, mountID=}, ... }, or nil if there's nothing to stop for.
 -- Names in the data have to match what the game calls the rare, exactly,
 -- or the alert silently never fires - which is precisely what happened
 -- with "Lockjaw" against the vignette's "Lockjaw the Snapper".  So a miss
@@ -99,7 +113,7 @@ end
 -- begins with, at a word boundary.  A shortened name still works; an
 -- unrelated rare still doesn't.
 local function Entries(rareName)
-    local key = rareName:lower()
+    local key = NameKey(rareName)
     local hit = lookup[key]
     if hit then return hit end
 
@@ -114,14 +128,9 @@ local function Entries(rareName)
     return nil
 end
 
-function Alert:MountsFrom(rareName)
-    -- The other door names come through, alongside CheckName: callers
-    -- pass UnitName straight in, and that can be a secret value.
-    rareName = plain(rareName)
-    if type(rareName) ~= "string" or rareName == "" then return nil end
-    if not lookup then BuildLookup() end
-
-    local entries = Entries(rareName)
+-- The mounts these entries can still give you, as
+-- { {name=, icon=, mountID=}, ... }, or nil if there's nothing to stop for.
+local function MountsFromEntries(entries)
     if not entries then return nil end
 
     local out, seen
@@ -150,6 +159,38 @@ function Alert:MountsFrom(rareName)
         end
     end
     return out
+end
+
+function Alert:MountsFrom(rareName)
+    -- The other door names come through, alongside CheckName: callers
+    -- pass UnitName straight in, and that can be a secret value.
+    rareName = plain(rareName)
+    if type(rareName) ~= "string" or rareName == "" then return nil end
+    if not lookup then BuildLookup() end
+    return MountsFromEntries(Entries(rareName))
+end
+
+-- The one match that does not care what language the client is in.  A
+-- name does: the data is English throughout, and a French client calls
+-- Pterrock "Pterroche", Queen Lashtongue "Reine Fouettelangue".  Every
+-- rare whose name is actually translated - rather than being an invented
+-- word that survives translation intact - went unannounced because of
+-- it.  The vignette ID is the same number everywhere.
+function Alert:MountsForVignette(vignetteID)
+    if not vignetteID then return nil end
+    if not lookup then BuildLookup() end
+    return MountsFromEntries(vigLookup and vigLookup[vignetteID])
+end
+
+-- Having been told by a vignette what this rare is called here, keep it.
+-- The nameplate and area-POI sweeps have only a name to go on, and they
+-- would otherwise go on missing the same rares all session.
+local function LearnName(name, entries)
+    name = plain(name)
+    if type(name) ~= "string" or name == "" or not entries then return end
+    if not lookup then BuildLookup() end
+    local key = NameKey(name)
+    if not lookup[key] then lookup[key] = entries end
 end
 
 -- A unit under a player's control: their pet, their minion, anything
@@ -909,8 +950,19 @@ local function ShowRareModel(f, npcID, unit, rareName)
     f.modelToken = (f.modelToken or 0) + 1
     local token = f.modelToken
 
+    -- ClearModel does not always take hold before the next question is
+    -- asked, so the previous creature's file ID can still be sitting
+    -- there - and reading that as "the model has arrived" is what put
+    -- the last rare that popped on the new rare's alert.  Note what was
+    -- there beforehand, and only trust an ID once it is not that one.
+    local staleID = model.GetModelFileID and model:GetModelFileID() or nil
+    local loaded = false
+
     local function request()
         model:ClearModel()
+        if model.GetModelFileID and model:GetModelFileID() == nil then
+            staleID = nil       -- cleared properly; any model now is ours
+        end
         if unit and plain(UnitExists(unit)) and model.SetUnit then
             if pcall(model.SetUnit, model, unit) then return true end
         end
@@ -922,7 +974,8 @@ local function ShowRareModel(f, npcID, unit, rareName)
 
     local function arrived()
         if not model.GetModelFileID then return true end
-        return model:GetModelFileID() ~= nil
+        local id = model:GetModelFileID()
+        return loaded or (id ~= nil and id ~= staleID)
     end
 
     local framed = false
@@ -967,7 +1020,9 @@ local function ShowRareModel(f, npcID, unit, rareName)
 
     -- The model tells us when it's ready, which beats guessing.
     model:SetScript("OnModelLoaded", function()
-        if f.modelToken == token and f:IsShown() then frame() end
+        if f.modelToken ~= token then return end
+        loaded = true
+        if f:IsShown() then frame() end
     end)
 
     f.modelFramed = false
@@ -986,10 +1041,21 @@ local function ShowRareModel(f, npcID, unit, rareName)
     local delays = { 0.1, 0.25, 0.5, 1.0 }
     local i = 0
     local function retry()
-        if f.modelToken ~= token or not f:IsShown() then return end
+        if framed or f.modelToken ~= token or not f:IsShown() then return end
         if arrived() then frame() return end
         i = i + 1
-        if i > #delays then fallback() return end
+        if i > #delays then
+            -- Out of tries.  A model loaded at all is the one we asked
+            -- for - the same rare twice running reloads the same file
+            -- and fires no load event - so show it rather than dropping
+            -- to the marker.
+            if model.GetModelFileID and model:GetModelFileID() ~= nil then
+                frame()
+            else
+                fallback()
+            end
+            return
+        end
         request()
         C_Timer.After(delays[i], retry)
     end
@@ -1119,7 +1185,7 @@ end
 -- `unit` is set when the sighting came from a nameplate, a mouseover or
 -- the target — the cases where we can act on it directly rather than
 -- waiting for a click.
-local function CheckName(name, npcID, unit, livePos)
+local function CheckName(name, npcID, unit, livePos, vignetteID)
     -- UnitName is a secret value for some units in 12.x, and every use
     -- below is a string operation that would throw on one.  This is the
     -- single door every detection path comes through, so the guard lives
@@ -1137,7 +1203,19 @@ local function CheckName(name, npcID, unit, livePos)
 
     if Alert:IsIgnored(name) then return end
 
-    local mounts = Alert:MountsFrom(name)
+    -- The vignette ID first, because it is the only identifier that
+    -- survives translation.  Matching on it also teaches the name
+    -- sweeps what this rare is called on this client.
+    local mounts
+    if vignetteID then
+        if not lookup then BuildLookup() end
+        local entries = vigLookup and vigLookup[vignetteID]
+        if entries then
+            LearnName(name, entries)
+            mounts = MountsFromEntries(entries)
+        end
+    end
+    mounts = mounts or Alert:MountsFrom(name)
     if not mounts then return end
 
     Announce(name, mounts, npcID, livePos)
@@ -1173,7 +1251,9 @@ local function ScanVignettes()
     for _, guid in ipairs(guids) do
         local info = C_VignetteInfo.GetVignetteInfo(guid)
         if info and info.name then
-            Watch("vignette", info.name, Alert:MountsFrom(info.name) ~= nil)
+            Watch("vignette", info.name,
+                (Alert:MountsForVignette(info.vignetteID)
+                    or Alert:MountsFrom(info.name)) ~= nil)
 
             -- The vignette knows where it is right now, which beats a
             -- stored spawn point for anything that patrols.
@@ -1188,7 +1268,8 @@ local function ScanVignettes()
                     end
                 end
             end
-            CheckName(info.name, NpcIDFromGUID(info.objectGUID), nil, livePos)
+            CheckName(info.name, NpcIDFromGUID(info.objectGUID), nil, livePos,
+                info.vignetteID)
         end
     end
 end

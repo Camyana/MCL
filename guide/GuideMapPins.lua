@@ -875,6 +875,35 @@ distanceWatcher:SetScript("OnUpdate", function()
     end
 end)
 
+-- Where our pins sit among the game's own.  They used to ask for the
+-- TOOLTIP strata, which put them above every world quest and in front
+-- of the mouse with it: a quest underneath an MCL pin could not be
+-- hovered or clicked.  They now stay in the canvas's strata and take a
+-- frame level from the map's own pin-level manager.
+--
+-- Those levels are absolute - counted up from 2000, not from the
+-- canvas - and the map's art is itself made of pins at the bottom of
+-- that range: explored-area overlays, fog of war, zone highlights.  A
+-- level just above the canvas put our pins underneath all of it, and
+-- they vanished across whole regions of the map.  So the anchor is the
+-- world-quest layer: everything below it (map art, POIs, vignettes)
+-- stays under our pins, world quests and everything above stay over.
+--
+-- offset 1..4 = step marker, pin, pin visual, route line.
+local FALLBACK_WQ_LEVEL = 2400   -- only if the manager can't be asked
+local function CanvasLevel(canvas, offset)
+    local wq
+    local map = WorldMapFrame
+    if map and map.GetPinFrameLevelsManager then
+        local ok, mgr = pcall(map.GetPinFrameLevelsManager, map)
+        if ok and mgr and mgr.GetValidFrameLevel then
+            local ok2, lvl = pcall(mgr.GetValidFrameLevel, mgr, "PIN_FRAME_LEVEL_WORLD_QUEST")
+            if ok2 and type(lvl) == "number" then wq = lvl end
+        end
+    end
+    return (wq or FALLBACK_WQ_LEVEL) - 5 + offset
+end
+
 -- Pin pool & active-pin tracking (forward-declared for cluster code)
 local pinPool = {}
 local activePins = {}
@@ -882,8 +911,11 @@ local activePins = {}
 local MCL_GuidePinMixin = {}
 
 function MCL_GuidePinMixin:OnLoad()
-    self:SetFrameStrata("TOOLTIP")
-    self:SetFrameLevel(2500)
+    local canvas = self:GetParent()
+    if canvas and canvas.GetFrameStrata then
+        self:SetFrameStrata(canvas:GetFrameStrata())
+    end
+    self:SetFrameLevel(CanvasLevel(canvas, 2))
 end
 
 function MCL_GuidePinMixin:OnAcquired(mountData, waypoint)
@@ -1496,8 +1528,6 @@ local function AcquirePin(canvas)
     local pin = table.remove(pinPool)
     if not pin then
         pin = CreateFrame("Button", nil, canvas)
-        pin:SetFrameStrata("TOOLTIP")
-        pin:SetFrameLevel(2500)
 
         -- Mixin
         for k, v in pairs(MCL_GuidePinMixin) do
@@ -1518,6 +1548,10 @@ local function AcquirePin(canvas)
         -- the client, not raised as a Lua error.  Both default to false
         -- for a frame we create, so asking for it gained nothing anyway.
     end
+    -- Re-stated on every acquire: a pin out of the pool was levelled
+    -- against whatever canvas it was last used on.
+    pin:SetFrameStrata(canvas:GetFrameStrata())
+    pin:SetFrameLevel(CanvasLevel(canvas, 2))
     pin:Show()
     table.insert(activePins, pin)
     return pin
@@ -1586,8 +1620,6 @@ local function AcquireStepMarker(canvas)
     local mk = table.remove(stepMarkerPool)
     if not mk then
         mk = CreateFrame("Frame", nil, canvas)
-        mk:SetFrameStrata("TOOLTIP")
-        mk:SetFrameLevel(2400)          -- just under the mount pins
         mk:EnableMouse(false)
 
         mk.border = mk:CreateTexture(nil, "BACKGROUND")
@@ -1608,6 +1640,8 @@ local function AcquireStepMarker(canvas)
         mk.label:SetTextColor(STEP_MARKER_COLOR[1], STEP_MARKER_COLOR[2], STEP_MARKER_COLOR[3], 1)
     end
     mk:SetParent(canvas)
+    mk:SetFrameStrata(canvas:GetFrameStrata())
+    mk:SetFrameLevel(CanvasLevel(canvas, 1))   -- just under the mount pins
     mk:Show()
     table.insert(activeStepMarkers, mk)
     return mk
@@ -1719,8 +1753,8 @@ local function GetRouteLayer(canvas)
     end
     routeLayer:SetParent(canvas)
     routeLayer:SetAllPoints(canvas)
-    routeLayer:SetFrameStrata("TOOLTIP")
-    routeLayer:SetFrameLevel(2600)
+    routeLayer:SetFrameStrata(canvas:GetFrameStrata())
+    routeLayer:SetFrameLevel(CanvasLevel(canvas, 4))
     routeLayer:Show()
     return routeLayer
 end
