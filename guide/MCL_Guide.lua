@@ -610,6 +610,29 @@ function Guide:IsUnavailableOnChar(mountID)
     return isFactionSpecific == true and faction ~= nil and faction ~= playerFactionIndex
 end
 
+-- Mounts the player has told us they do not want to see: a category
+-- switched off with the eye in the collection window, or a single mount
+-- hidden outright.  Both are choices about what to chase, so they belong
+-- on the map as much as in the list.
+function Guide:IsHiddenByPlayer(mountID)
+    if not mountID then return false end
+
+    local F = MCLcore and MCLcore.Function
+    if F and F.CheckIfHidden and F:CheckIfHidden("m" .. mountID) then
+        return true
+    end
+
+    local hidden = MCL_SETTINGS and MCL_SETTINGS.hiddenCategories
+    if hidden and next(hidden) and self.MapPins and self.MapPins.GetSectionInfo then
+        local section, category = self.MapPins:GetSectionInfo(mountID)
+        if section and category and hidden[section .. ":" .. category] then
+            return true
+        end
+    end
+
+    return false
+end
+
 function Guide:GetMountsForZone(mapID, includeChildren)
     if not mapID then return {} end
 
@@ -676,6 +699,9 @@ function Guide:GetMountsForZone(mapID, includeChildren)
                         local debugAll = MCL_GUIDE_SETTINGS.debugShowAll
                         if not debugAll and isUnavailable then
                             -- skip mounts unavailable to this character (class/faction)
+                        elseif not debugAll and Guide:IsHiddenByPlayer(checkID) then
+                            -- skip a category the player switched off, or a
+                            -- mount they hid
                         elseif not debugAll and rec.isCollected == true then
                             -- skip collected mounts from map pins & zone panel
                         elseif not debugAll and isUnobtainable then

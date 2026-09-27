@@ -1141,6 +1141,67 @@ function MCL_functions:ToggleHidden(mountID, frame)
     end
 end
 
+-- Hide or un-hide every mount in one category, which is what the eye on
+-- a category header does.  It goes through MCL_HIDDEN rather than
+-- keeping a list of its own, so a category switched off behaves exactly
+-- like a mount hidden by hand: it leaves the category, drops out of the
+-- counts, and turns up in the Hidden tab.
+function MCL_functions:SetCategoryHidden(mountIDs, sectionName, categoryName, hidden)
+    if type(mountIDs) ~= "table" or #mountIDs == 0 then return 0 end
+    if not MCL_HIDDEN then MCL_HIDDEN = {} end
+
+    -- Reaching for the eye is asking for hidden mounts, so turn the
+    -- feature on rather than quietly doing nothing with the click.
+    if hidden and MCL_SETTINGS then
+        MCL_SETTINGS.enableHiddenMounts = true
+    end
+
+    local wanted = {}
+    for _, id in ipairs(mountIDs) do wanted["m" .. id] = true end
+
+    local changed = 0
+    if hidden then
+        -- Read the table directly rather than through CheckIfHidden,
+        -- which answers "no" whenever the feature is switched off.
+        local already = {}
+        for _, v in pairs(MCL_HIDDEN) do
+            if v and v.mountID then already[v.mountID] = true end
+        end
+        for key in pairs(wanted) do
+            if not already[key] then
+                -- A mount can't be both pinned and hidden.
+                local isPinned, pIdx = self:CheckIfPinned(key)
+                if isPinned and pIdx then
+                    table.remove(MCL_PINNED, pIdx)
+                    self:RebuildPinnedLookup()
+                end
+                table.insert(MCL_HIDDEN, {
+                    mountID  = key,
+                    category = categoryName or "Unknown",
+                    section  = sectionName or "Unknown",
+                })
+                changed = changed + 1
+            end
+        end
+    else
+        for i = #MCL_HIDDEN, 1, -1 do
+            local v = MCL_HIDDEN[i]
+            if v and v.mountID and wanted[v.mountID] then
+                table.remove(MCL_HIDDEN, i)
+                changed = changed + 1
+            end
+        end
+    end
+
+    self:RebuildHiddenLookup()
+    MCLcore.hiddenMountsChanged = true
+    if self.CalculateSectionStats then self:CalculateSectionStats() end
+    if MCLcore.Frames and MCLcore.Frames.RefreshLayout then
+        MCLcore.Frames:RefreshLayout()
+    end
+    return changed
+end
+
 -- Clear all hidden mounts (used by the /mcl unhide command during the mockup;
 -- the Hidden tab will offer per-mount un-hiding once built).
 function MCL_functions:UnhideAll()

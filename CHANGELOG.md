@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.13.5
+
+### Hide a whole category at once
+
+Every category header now carries an eye. Click it and that category's mounts move to the Hidden tab: out of your collection counts, off the world map, and out of the list. Click it again and they all come back. The category keeps its header while it is hidden, dimmed and with a crossed-out eye, so you switch it back on in the same place you switched it off.
+
+This is for the mounts you are never going to chase - the trading card game mounts, the old promotional ones - and it saves hiding them one at a time. Using the eye turns on the hidden mounts feature if you had not already.
+
+### Fixes
+
+- **Hidden mounts still had map pins.** A mount you hid by hand left the collection list but its pin stayed on the map. Hidden mounts are now hidden everywhere.
+
 ## 3.13.4
 
 ### Fixes

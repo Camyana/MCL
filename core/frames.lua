@@ -5369,9 +5369,21 @@ if not MCL_SETTINGS.collapsedCategories then
     MCL_SETTINGS.collapsedCategories = {}
 end
 
+-- Categories switched off with the eye in the header, keyed the same
+-- way as the collapse state: "Section:Category".
+if not MCL_SETTINGS.hiddenCategories then
+    MCL_SETTINGS.hiddenCategories = {}
+end
+
 -- Track all category frames for reflow
 local categoryFramesList = {}
 local COLLAPSED_HEIGHT = 30
+
+-- The eye on a category header, in its two states.  A plain eye while
+-- the category is showing; the addon's own crossed-out eye - the same
+-- mark the Hidden tab carries - once it has been hidden.
+local EYE_ATLAS_SHOWN = "UI_Editor_Eye_Icon"
+local EYE_TEXTURE_HIDDEN = "Interface\\AddOns\\MCL\\icons\\unobtainable.blp"
 
 local leftColumnY = -50
 local rightColumnY = -50
@@ -5396,6 +5408,13 @@ for _, categoryName in ipairs(sortedCategoryNames) do
         for _, mount in ipairs(categoryData.mountID) do
             table.insert(mountList, mount)
         end
+    end
+
+    -- Kept before the hidden ones are filtered out below: switching a
+    -- category back on has to know which mounts were its own.
+    local fullMountList = {}
+    for _, mount in ipairs(mountList) do
+        fullMountList[#fullMountList + 1] = mount
     end
 
     -- Exclude user-hidden mounts: they should not count toward the category
@@ -5449,7 +5468,15 @@ for _, categoryName in ipairs(sortedCategoryNames) do
     -- Apply user-selected sort mode to the mount list
     SortMountList(mountList, MCL_SETTINGS.mountSortMode)
 
-    if #mountList > 0 then
+    -- A category whose mounts have all been hidden keeps its header, so
+    -- the eye that hid them is still there to bring them back.  Without
+    -- this the whole block disappears at the moment it is switched off
+    -- and the Hidden tab is the only way back.
+    local eyeKey = (sectionName or "Unknown") .. ":" .. (categoryData.name or categoryName)
+    local eyeHidden = MCL_SETTINGS.hiddenCategories
+        and MCL_SETTINGS.hiddenCategories[eyeKey] and true or false
+
+    if #mountList > 0 or eyeHidden then
         categoryIndex = categoryIndex + 1
         -- Determine which column to use (alternate left/right)
         local isLeftColumn = (categoryIndex % 2 == 1)
@@ -5556,6 +5583,79 @@ for _, categoryName in ipairs(sortedCategoryNames) do
             categoryFrame.toggleLabel:SetText("\226\136\146")  -- minus sign U+2212
         end
 
+        -- ── Eye: keep this category off the world map ─────────
+        -- Asked for by players who will never chase the TCG or the
+        -- promotional mounts and do not want their pins on the map.
+        -- The category stays listed here, dimmed, so switching it back
+        -- on is done in the same place it was switched off - nothing
+        -- vanishes with no way back to it.
+        categoryFrame.hideKey = collapseKey
+        categoryFrame.eyeBtn = CreateFrame("Button", nil, categoryFrame)
+        categoryFrame.eyeBtn:SetSize(16, 16)
+        categoryFrame.eyeBtn:SetPoint("TOPRIGHT", categoryFrame, "TOPRIGHT", -9, -6)
+        -- Above the title bar, which covers the whole header and
+        -- collapses the category when clicked.
+        categoryFrame.eyeBtn:SetFrameLevel(categoryFrame:GetFrameLevel() + 6)
+        categoryFrame.eyeIcon = categoryFrame.eyeBtn:CreateTexture(nil, "ARTWORK")
+        categoryFrame.eyeIcon:SetAllPoints()
+
+        local function SetCategoryMapHidden(cf, hidden)
+            cf.mapHidden = hidden and true or false
+            MCL_SETTINGS.hiddenCategories[cf.hideKey] = hidden or nil
+            if hidden then
+                cf.eyeIcon:SetTexture(EYE_TEXTURE_HIDDEN)
+                cf.eyeIcon:SetDesaturated(false)
+                cf.eyeIcon:SetAlpha(1)
+            else
+                -- Ask whether the atlas exists rather than setting it and
+                -- hoping: a name the client does not know leaves a blank
+                -- 16x16 hole where the eye should be.
+                if C_Texture and C_Texture.GetAtlasInfo
+                    and C_Texture.GetAtlasInfo(EYE_ATLAS_SHOWN) then
+                    cf.eyeIcon:SetAtlas(EYE_ATLAS_SHOWN)
+                else
+                    cf.eyeIcon:SetTexture(EYE_TEXTURE_HIDDEN)
+                end
+                cf.eyeIcon:SetDesaturated(true)
+                cf.eyeIcon:SetAlpha(0.45)
+            end
+            cf.title:SetTextColor(unpack(hidden and COLORS.TEXT_MUTED or COLORS.TEXT_BODY))
+        end
+        categoryFrame.SetMapHidden = SetCategoryMapHidden
+        SetCategoryMapHidden(categoryFrame, eyeHidden)
+
+        categoryFrame.eyeBtn:SetScript("OnClick", function()
+            local hide = not categoryFrame.mapHidden
+            -- Written before the move, because moving the mounts rebuilds
+            -- every category frame and the new one reads this back.
+            SetCategoryMapHidden(categoryFrame, hide)
+
+            local ids = {}
+            for _, raw in ipairs(fullMountList) do
+                local mid = MCLcore.Function:GetMountID(raw)
+                if mid then ids[#ids + 1] = mid end
+            end
+            MCLcore.Function:SetCategoryHidden(ids, sectionName,
+                categoryData.name or categoryName, hide)
+
+            -- RefreshPins refreshes the zone panel with it.
+            if MCL_GUIDE and MCL_GUIDE.MapPins and MCL_GUIDE.MapPins.RefreshPins then
+                MCL_GUIDE.MapPins:RefreshPins()
+            end
+        end)
+
+        categoryFrame.eyeBtn:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText(categoryFrame.mapHidden
+                and L["Show this category"] or L["Hide this category"], 1, 1, 1)
+            GameTooltip:AddLine(L["Moves this category's mounts to the Hidden tab: out of your collection counts and off the map. Click again to bring them back."],
+                0.7, 0.7, 0.7, true)
+            GameTooltip:Show()
+        end)
+        categoryFrame.eyeBtn:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+        end)
+
         -- Clickable title bar for toggling
         categoryFrame.titleBtn = CreateFrame("Button", nil, categoryFrame)
         categoryFrame.titleBtn:SetPoint("TOPLEFT", categoryFrame, "TOPLEFT", 0, 0)
@@ -5571,7 +5671,9 @@ for _, categoryName in ipairs(sortedCategoryNames) do
         end)
         categoryFrame.titleBtn:SetScript("OnLeave", function()
             local A = MCLcore.Anim
-            A:TextColor(categoryFrame.title, COLORS.TEXT_BODY, 0.16, "inOutQuad")
+            A:TextColor(categoryFrame.title,
+                categoryFrame.mapHidden and COLORS.TEXT_MUTED or COLORS.TEXT_BODY,
+                0.16, "inOutQuad")
             A:BorderColor(categoryFrame, COLORS.BORDER_SUBTLE, 0.16, "inOutQuad")
             A:BorderColor(categoryFrame.toggleBtn, COLORS.BORDER_DEFAULT, 0.16, "inOutQuad")
             A:TextColor(categoryFrame.toggleLabel, COLORS.TEXT_MUTED, 0.16, "inOutQuad")
@@ -5681,7 +5783,8 @@ for _, categoryName in ipairs(sortedCategoryNames) do
                 cf.toggleLabel:SetText("+")
                 -- Hide all children except titleBtn and toggleBtn
                 for _, child in ipairs({cf:GetChildren()}) do
-                    if child ~= cf.titleBtn and child ~= cf.toggleBtn then
+                    if child ~= cf.titleBtn and child ~= cf.toggleBtn
+                        and child ~= cf.eyeBtn then
                         child:Hide()
                     end
                 end
