@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.13.6
+
+### October 2026 Trading Post
+
+- **Ghastly Charger's Skull** - 700 Trader's Tender. A Trading Card Game mount, and this is the first time it has been buyable with Tender.
+- **Reins of the Bilebound Ur'zul** - 700 Trader's Tender, also a Legion Remix reward.
+- **The Headless Horseman's Hallowed Charger** - 700 Trader's Tender, back from October 2025.
+
+Both new arrivals keep their place under Promotion as well, so you will find them wherever you go looking.
+
 ## 3.13.5
 
 ### Hide a whole category at once
