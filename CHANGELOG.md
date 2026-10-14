@@ -1,5 +1,22 @@
 # Changelog
 
+## 3.13.8
+
+### Fixes
+
+- **Mounts failing to appear on 12.1.5, with a wall of errors in chat.** Patch 12.1.5 removed the old global item functions from the game, and MCL still used them, so every mount that comes from an item failed to build and reported "attempt to call a nil value". MCL now uses the current API everywhere, and still works on the older game versions it supports.
+
+### New in Patch 12.1.5
+
+Four mounts, and a **12.1.5 - What's New?** section to go with them:
+
+- **Loa-Blessed Wayfarer** - reward from the achievement "Let Me Solo Him: Kindo'jan". Defeat Kindo'jan in the Labyrinth on Tier 11 with nobody else in your party, during Midnight Season 2. Filed under Delves, which is where the game itself puts the achievement.
+- **Corrupted Swarmer** - 2,500 Voidlight Marl from Estelia Archtender in Silvermoon City.
+- **Sporebearer Fungal Strider** - 5,000,000 gold from Showena in Harandar.
+- **Living Heartsbane Cauldron** - In-Game Shop.
+
+The four Trading Post mounts added in 12.1.5 - the Hot Motocross Bunmovers - are deliberately left out until they actually appear in the shop.
+
 ## 3.13.7
 
 ### Patch 12.1.5

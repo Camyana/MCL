@@ -1,5 +1,13 @@
 local MCL, MCLcore = ...;
 
+-- 12.1.5 removed the deprecated global item functions, and every mount
+-- built from an item died on the first call with "attempt to call a nil
+-- value".  C_Item has carried the same calls for several expansions;
+-- falling back to the global keeps the older clients the .toc still
+-- lists working.
+local GetItemInfo = (C_Item and C_Item.GetItemInfo) or GetItemInfo
+local GetItemIcon = (C_Item and C_Item.GetItemIconByID) or GetItemIcon
+
 MCLcore.Function = {};
 local MCL_functions = MCLcore.Function;
 local L = MCLcore.L

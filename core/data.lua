@@ -816,7 +816,7 @@ MCLcore.mountList[15] = {
 		},
 		BlizzardStore = {
 			name = "Blizzard Store",
-			mounts = {54811, 69846, 78924, 97989, 107951, 112326, 122469, 147901, 156564, 160589, 166775, 166774, 166776, "m1266", "m1267", "m1290", "m1346", "m1291", "m1456", "m1330", "m1531", "m1581", "m1312", "m1594", "m1583", "m1797", 203727, "m1795", "m1692", 228751, 229128, 219450, 224574, "m2237", 229418, 230184, 230200, 230201, 230185, 227362, 235344, 231297, 233285, 233284, 233282, 233283, 233286, 238943, 238994, 238966, 221270, 190581, 212228, 225250, 206167, 246698, 247848, 258427, 258423, 258425, 243194, 248088, 242795, 252679, 252681, 258477, 248681, 239076, 262661, "m2700", "m2701", "m2702", "m2703", 233019, 233020, 190636, 267078, 268472, 268474, 273655, 274164},
+			mounts = {54811, 69846, 78924, 97989, 107951, 112326, 122469, 147901, 156564, 160589, 166775, 166774, 166776, "m1266", "m1267", "m1290", "m1346", "m1291", "m1456", "m1330", "m1531", "m1581", "m1312", "m1594", "m1583", "m1797", 203727, "m1795", "m1692", 228751, 229128, 219450, 224574, "m2237", 229418, 230184, 230200, 230201, 230185, 227362, 235344, 231297, 233285, 233284, 233282, 233283, 233286, 238943, 238994, 238966, 221270, 190581, 212228, 225250, 206167, 246698, 247848, 258427, 258423, 258425, 243194, 248088, 242795, 252679, 252681, 258477, 248681, 239076, 262661, "m2700", "m2701", "m2702", "m2703", 233019, 233020, 190636, 267078, 268472, 268474, 273655, 274164, 275756},
 			mountID = {1266, 1267, 1290, 1346, 1291, 1456, 1330, 1531, 1581}
 		},
 		CollectorsEdition = {
@@ -1151,7 +1151,7 @@ MCLcore.mountList[20] = {
 		},
 		Delves = {
 			name = "Delves",
-			mounts = {263222, 262496, 262500, 262502, 275657, 276162},
+			mounts = {263222, 262496, 262500, 262502, 275657, 276162, 283363},
 			mountID = {}
 		},
 		Dungeon = {
@@ -1216,7 +1216,7 @@ MCLcore.mountList[20] = {
 		},
 		Zone = {
 			name = "Zone",
-			mounts = {250782, 257197, 256424, 257180, 275654},
+			mounts = {250782, 257197, 256424, 257180, 275654, 276926, 282414},
 			mountID = {}
 		},
 	}
@@ -1546,6 +1546,26 @@ MCLcore.mountList[24] = {
 		},
 	}
 }
+MCLcore.mountList[25] = {
+	name = "Patch 12.1.5",
+	categories = {
+		Delves = {
+			name = "Delves",
+			mounts = {283363},
+			mountID = {}
+		},
+		Vendor = {
+			name = "Vendor",
+			mounts = {276926, 282414},
+			mountID = {}
+		},
+		BlizzardStore = {
+			name = "Blizzard Store",
+			mounts = {275756},
+			mountID = {}
+		},
+	}
+}
 MCLcore.sectionNames[1] = {
 	name = "Midnight",
 	mounts = MCLcore.mountList[20],
@@ -1702,6 +1722,7 @@ local whatsNew = {
 	{ toc = 120005, name = "12.0.5 - What's New?", list = 22 },
 	{ toc = 120007, name = "12.0.7 - What's New?", list = 23 },
 	{ toc = 120100, name = "12.1 - What's New?", list = 24 },
+	{ toc = 120105, name = "12.1.5 - What's New?", list = 25 },
 }
 
 local current
@@ -2490,6 +2511,8 @@ MCLcore.mountNotes = {
 	[274649] = "Sold by Kifaan in Val for 15 Voidlight Marl. Requires completing the achievement \"A Trip Around the Stars.\"",
 	[274650] = "Sold by Kifaan in Naigtal for 15 Voidlight Marl. Requires completing the achievement \"A Trip Through the Stars.\"",
 	[274681] = "Trading Post (August 2026) for 550 Trader's Tender.",
+	[275756] = "Purchased from the In-Game Shop. Added in Patch 12.1.5.",
+	[276926] = "Purchased from Estelia Archtender in Silvermoon City for 2,500 Voidlight Marl.",
 	[278574] = "Trading Post (September 2026) for 500 Trader's Tender.",
 	[278575] = "Trading Post (September 2026) for 500 Trader's Tender.",
 	[275464] = "Has a chance to drop from Ahune during the Midsummer Fire Festival. Account-wide on your first defeat of Ahune each day, with an increasing chance each consecutive day you defeat the boss.",
@@ -2523,6 +2546,8 @@ MCLcore.mountNotes = {
 	[276882] = "Reward from the achievement \"Midnight Keystone Legend: Season Two.\" Reach 3,000 Mythic+ rating during Midnight Season 2.",
 	[277192] = "Reward from the achievement \"Umbral Champion: Midnight Season One.\" Finish Midnight Season 1 in the top 1% of Mythic+ rating in your region. Awarded after the season closes.",
 	[273838] = "Reward from a Zul'jarra's Forces Renown questline, unlocked at Renown 10 and time-gated to one quest a day.",
+	[282414] = "Purchased from Showena in Harandar for 5,000,000 gold. Speak to Hoshena in the Den in Harandar to choose which passengers ride along with you.",
+	[283363] = "Reward from the achievement \"Let Me Solo Him: Kindo'jan\": defeat Kindo'jan in the Labyrinth on Tier 11 with no other players in your party, during Midnight Season 2.",
 	["m1046"] = "Paladin only. Automatically learned by Dark Iron Dwarf Paladins. Alliance.",
 	["m1047"] = "Paladin only. Automatically learned by Dwarf Paladins. Alliance.",
 	["m1445"] = "You must solo the entire dungeon Plaguefall on Heroic or Mythic difficulty. {{m:1536,22.2,41.4}}\nAfter defeating the last boss, backtrack to the Domina Venomblade boss arena.\nThe Slime Serpent appears in the pool on the side.",
