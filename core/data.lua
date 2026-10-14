@@ -1691,27 +1691,30 @@ MCLcore.sectionNames[24] = {
 	icon = "Interface\\AddOns\\MCL\\icons\\mcl.blp",
 	isExpansion = false,
 }
+-- The "What's New?" section follows the patch you are logged into.
+-- This was a chain of exact matches, so the section disappeared the
+-- moment Blizzard shipped a patch MCL had not been told about - which
+-- is exactly what 12.1.5 did.  The newest list at or below the running
+-- build now wins, so a patch MCL does not know yet keeps showing the
+-- most recent mounts it does know rather than nothing at all.
 local _, _, _, tocVersion = GetBuildInfo()
-if tocVersion == 120005 then
+local whatsNew = {
+	{ toc = 120005, name = "12.0.5 - What's New?", list = 22 },
+	{ toc = 120007, name = "12.0.7 - What's New?", list = 23 },
+	{ toc = 120100, name = "12.1 - What's New?", list = 24 },
+}
+
+local current
+for _, patch in ipairs(whatsNew) do
+	if tocVersion and tocVersion >= patch.toc then
+		current = patch
+	end
+end
+
+if current then
 	MCLcore.sectionNames[25] = {
-		name = "12.0.5 - What's New?",
-		mounts = MCLcore.mountList[22],
-		icon = "Interface\\AddOns\\MCL\\icons\\midnight.blp",
-		isExpansion = false,
-		hiddenFromOverview = true,
-	}
-elseif tocVersion == 120007 then
-	MCLcore.sectionNames[25] = {
-		name = "12.0.7 - What's New?",
-		mounts = MCLcore.mountList[23],
-		icon = "Interface\\AddOns\\MCL\\icons\\midnight.blp",
-		isExpansion = false,
-		hiddenFromOverview = true,
-	}
-elseif tocVersion == 120100 then
-	MCLcore.sectionNames[25] = {
-		name = "12.1 - What's New?",
-		mounts = MCLcore.mountList[24],
+		name = current.name,
+		mounts = MCLcore.mountList[current.list],
 		icon = "Interface\\AddOns\\MCL\\icons\\midnight.blp",
 		isExpansion = false,
 		hiddenFromOverview = true,

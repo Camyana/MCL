@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.13.7
+
+### Patch 12.1.5
+
+- **MCL now runs on 12.1.5** without being marked out of date.
+- **The "What's New?" section no longer vanishes on a new patch.** It was tied to an exact patch number, so the day Blizzard shipped one MCL had not been updated for, the section simply stopped appearing. It now falls back to the most recent patch list MCL knows about.
+
+### Fixes
+
+- **Missing renown and cost on the Coiled Isle mounts.** Violet-Backed Skyfang and Indigo Coiled Horror told you they needed Zul'jarra's Forces renown, but the Renown, Required, Current and Cost rows were all blank. Both now show the renown they need (19 and 17) and their price in Voidlight Marl (8,000 and 6,000), with your current standing beside it.
+- **Spirit of Tok'jara** now shows the Renown 10 its questline needs.
+- **Missing prices on four vendor mounts.** Sea-Dwelling Isle Serpent, Caustic Venomfang, Preyhunter's Fury and Corroded Soul Crusher each named a price in their instructions but left the Cost row empty. Every vendor mount in the guide now has its cost filled in.
+
 ## 3.13.6
 
 ### October 2026 Trading Post

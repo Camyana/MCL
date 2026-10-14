@@ -161,6 +161,9 @@ MCL_GUIDE_REP_DATA = {
     [1261584] = { { factionId = 2770, factionName = "Slayer's Duellum", renown = false, levelName = "Exalted", note = "" } }, -- Prowling Shredclaw
     [1261585] = { { factionId = 2770, factionName = "Slayer's Duellum", renown = false, levelName = "Exalted", note = "" } }, -- Frenzied Shredclaw
     [1266702] = { { factionId = 2699, factionName = "The Singularity", renown = true, level = 19, note = "" } }, -- Voidbound Stormray
+    [1292668] = { { factionId = 2772, factionName = "Zul'jarra's Forces", renown = true, level = 10, note = "" } }, -- Spirit of Tok'jara
+    [1299963] = { { factionId = 2772, factionName = "Zul'jarra's Forces", renown = true, level = 19, note = "" } }, -- Violet-Backed Skyfang
+    [1300778] = { { factionId = 2772, factionName = "Zul'jarra's Forces", renown = true, level = 17, note = "" } }, -- Indigo Coiled Horror
 }
 
 -- Quartermaster / vendor locations by factionId

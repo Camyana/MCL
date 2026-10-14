@@ -499,4 +499,10 @@ MCL_GUIDE_CURRENCY_DATA = {
     [1296758] = { { type = "item", id = 275436, amount = 1 } }, -- Profit-Green Shreddertank
     [1296759] = { { type = "item", id = 275436, amount = 1 } }, -- High-Yield Shreddertank
     [1296760] = { { type = "item", id = 275436, amount = 1 } }, -- Speculative Shreddertank
+    [1299963] = { { type = "currency", id = 3316, amount = 8000 } }, -- Violet-Backed Skyfang
+    [1300778] = { { type = "currency", id = 3316, amount = 6000 } }, -- Indigo Coiled Horror
+    [1297216] = { { type = "currency", id = 3546, amount = 2500 } }, -- Sea-Dwelling Isle Serpent
+    [1297217] = { { type = "currency", id = 3448, amount = 10000 } }, -- Caustic Venomfang
+    [1297408] = { { type = "currency", id = 3392, amount = 2250 } }, -- Preyhunter's Fury
+    [1298808] = { { type = "currency", id = 3316, amount = 10 } }, -- Corroded Soul Crusher
 }
