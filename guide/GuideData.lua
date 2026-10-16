@@ -2315,8 +2315,9 @@ MCL_GUIDE_DATA.mounts = {
 		itemId = 174753,
 		chance = 33,
 		coords = {
-			-- Aqir assault, present-day (N'Zoth) Uldum = UiMapID 1527, not Cata Uldum (249)
-			{ m = 1527, x = 68, y = 31.4 },
+			-- Rotfeaster, up only during the Amathet assault.  Present-day
+			-- (N'Zoth) Uldum = UiMapID 1527, not Cata Uldum (249)
+			{ m = 1527, x = 68.2, y = 32.0 },
 		},
 	},
 	[316276] = {

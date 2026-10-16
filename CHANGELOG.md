@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.13.9
+
+### Fixes
+
+- **Waste Marauder was showing the Shadowbarb Drone's instructions.** Its notes described the Aqir Hatchling questline, Shadowbarb Eggs and all - none of which get you this mount. It actually drops from Rotfeaster in Uldum at roughly a 3% chance, and Rotfeaster is only up while Assault: Amathet Advance is the active assault. The guide made the same mistake, calling it an Aqir assault rare. Both now say the right thing, and the map coordinates have been nudged onto Rotfeaster's spot.
+
+Thanks to KomsBoult for the report.
+
 ## 3.13.8
 
 ### Fixes
