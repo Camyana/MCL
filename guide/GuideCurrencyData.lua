@@ -480,8 +480,8 @@ MCL_GUIDE_CURRENCY_DATA = {
     [1261585] = { { type = "currency", id = 3316, amount = 6000 } }, -- Frenzied Shredclaw
     [1263369] = { { type = "currency", id = 1166, amount = 5000 } }, -- Skypaw Glimmerfur
     [1263387] = { { type = "currency", id = 1166, amount = 5000 } }, -- Crimson Lupine
-    [1264621] = { { type = "gold", id = 0, amount = 4000 } }, -- Brawlin' Bruno
-    [1264643] = { { type = "gold", id = 0, amount = 10000 } }, -- Ballistic Bronco
+    [1264621] = { { type = "gold", id = 0, amount = 40000000 } }, -- Brawlin' Bruno
+    [1264643] = { { type = "gold", id = 0, amount = 100000000 } }, -- Ballistic Bronco
     [1264988] = { { type = "currency", id = 1166, amount = 5000 } }, -- Snowpaw Glimmerfur Prowler
     [1266702] = { { type = "currency", id = 3316, amount = 8000 } }, -- Voidbound Stormray
     [1294663] = { { type = "currency", id = 3316, amount = 15 } }, -- Netherforged Nullframe

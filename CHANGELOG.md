@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.13.10
+
+### Fixes
+
+- **Brawler's Burly Mushan Beast was pointing into the middle of Krasarang Wilds.** Its vendor entry named the right seller and zone - Paul North in Brawl'gar Arena - but carried Krasarang's map ID, so the waypoint dropped you in the woods on the wrong continent. It now points at Paul North where he actually stands.
+- **Crimson Water Strider was filed under the wrong Nat Pagle.** MCL had it as The Anglers at Exalted, which put a marker on the Nat Pagle in Krasarang Wilds - and that one sells the Azure Water Strider. The Crimson comes from the Nat Pagle at your Draenor garrison's Fishing Shack, and he wants to be your Best Friend first.
+- **Brawlin' Bruno and Ballistic Bronco listed sellers who no longer exist.** Both pointed at "Bad Luck" Symmes and Dershway the Triggered, who were removed when the Brawler's Guild returned, and at Ulaani, who only trades in Brawler's Gold. They are sold by Quackenbush in Bizmo's Brawlpub and Paul North in Brawl'gar Arena. Their prices were out by a wide margin too - 40 silver and 1 gold instead of 4,000 and 10,000 - and the guide now tells you the rank you need: 6 for Bruno, max rank for the Bronco.
+
+Thanks to KomsBoult for the first two reports.
+
 ## 3.13.9
 
 ### Fixes

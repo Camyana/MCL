@@ -283,7 +283,7 @@ MCL_GUIDE_VENDOR_DATA = {
     [532] = { { npc = "Landro Longshot", zone = "Booty Bay", m = 210, x = 42.4, y = 71.4 } },  -- Ghastly Charger
     [545] = { { npc = "Hiren Loresong", zone = "Isle of Thunder", m = 118, x = 76.2, y = 19.6 } },  -- Golden Primal Direhorn
     [546] = { { npc = "Vasarin Redmorn", zone = "Isle of Thunder", m = 118, x = 76.2, y = 19.6 } },  -- Crimson Primal Direhorn
-    [550] = { { npc = "Paul North", zone = "Brawl'gar Arena", m = 418, x = 48.4, y = 29.2 } },  -- Brawler's Burly Mushan Beast
+    [550] = { { npc = "Paul North", zone = "Brawl'gar Arena", m = 503, x = 51.5, y = 29.8 } },  -- Brawler's Burly Mushan Beast
     [552] = { { npc = "Auzin", zone = "Dalaran", m = 125, x = 51.0, y = 47.6 } },  -- Ironbound Wraithcharger
     [554] = { { npc = "Necrolord Sipe", zone = "Stormwind City", m = 84, x = 76.8, y = 65.4 } },  -- Vicious Kaldorei Warsaber
     [555] = { { npc = "Deathguard Netharian", zone = "Orgrimmar", m = 85, x = 41.8, y = 73 } },  -- Vicious Skeletal Warhorse
@@ -546,13 +546,13 @@ MCL_GUIDE_VENDOR_DATA = {
     [2792] = { { npc = "Thraxadar", zone = "Masters' Perch", m = 2444, x = 39.3, y = 81.1 } },  -- Frenzied Shredclaw
     [2803] = { { npc = "Collector Ta'steld", zone = "Oribos", m = 1670, x = 55.2, y = 63.4 } },  -- Skypaw Glimmerfur
     [2804] = { { npc = "Collector Ta'steld", zone = "Oribos", m = 1670, x = 55.2, y = 63.4 } },  -- Crimson Lupine
-    [2807] = {
-        { npc = "Ulaani", zone = "Bizmo's Brawlpub", m = 500, x = 27, y = 25 },
-        { npc = "\"Bad Luck\" Symmes", zone = "Brawl'gar Arena", m = 503, x = 52, y = 23 },
+    [2807] = {  -- Brawlin' Bruno (Brawler's Guild rank 6)
+        { npc = "Quackenbush", zone = "Bizmo's Brawlpub", m = 500, x = 27, y = 25 },
+        { npc = "Paul North", zone = "Brawl'gar Arena", m = 503, x = 51.5, y = 29.8 },
     },
-    [2808] = {
-        { npc = "Dershway the Triggered", zone = "Bizmo's Brawlpub", m = 500, x = 27, y = 25 },
-        { npc = "\"Bad Luck\" Symmes", zone = "Brawl'gar Arena", m = 503, x = 52, y = 23 },
+    [2808] = {  -- Ballistic Bronco (Brawler's Guild rank 8)
+        { npc = "Quackenbush", zone = "Bizmo's Brawlpub", m = 500, x = 27, y = 25 },
+        { npc = "Paul North", zone = "Brawl'gar Arena", m = 503, x = 51.5, y = 29.8 },
     },
     [2815] = { { npc = "Collector Ta'steld", zone = "Oribos", m = 1670, x = 55.2, y = 63.4 } },  -- Snowpaw Glimmerfur Prowler
     [2828] = { { npc = "Void Researcher Anomander", zone = "Voidstorm", m = 2664, x = 47.1, y = 66.2 } },  -- Voidbound Stormray

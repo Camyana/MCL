@@ -37,7 +37,7 @@ MCL_GUIDE_REP_DATA = {
     [127174] = { { factionId = 1269, factionName = "Golden Lotus", renown = false, levelName = "Exalted", note = "" } }, -- Azure Riding Crane
     [127176] = { { factionId = 1269, factionName = "Golden Lotus", renown = false, levelName = "Exalted", note = "" } }, -- Golden Riding Crane
     [127177] = { { factionId = 1269, factionName = "Golden Lotus", renown = false, levelName = "Exalted", note = "" } }, -- Regal Riding Crane
-    [127271] = { { factionId = 1302, factionName = "The Anglers", renown = false, levelName = "Exalted", note = "" } }, -- Crimson Water Strider
+    [127271] = { { factionId = 1358, factionName = "Nat Pagle", renown = false, friendship = true, level = 6, levelName = "Best Friend", note = "Garrison Fishing Shack (Draenor)" } }, -- Crimson Water Strider
     [129918] = { { factionId = 1341, factionName = "The August Celestials", renown = false, levelName = "Exalted", note = "" } }, -- Thundering August Cloud Serpent
     [129932] = { { factionId = 1270, factionName = "Shado-Pan", renown = false, levelName = "Exalted", note = "" } }, -- Green Shado-Pan Riding Tiger
     [129934] = { { factionId = 1270, factionName = "Shado-Pan", renown = false, levelName = "Exalted", note = "" } }, -- Blue Shado-Pan Riding Tiger
@@ -160,6 +160,14 @@ MCL_GUIDE_REP_DATA = {
     [1261357] = { { factionId = 2696, factionName = "Amani Tribe", renown = true, level = 17, note = "" } },
     [1261584] = { { factionId = 2770, factionName = "Slayer's Duellum", renown = false, levelName = "Exalted", note = "" } }, -- Prowling Shredclaw
     [1261585] = { { factionId = 2770, factionName = "Slayer's Duellum", renown = false, levelName = "Exalted", note = "" } }, -- Frenzied Shredclaw
+    [1264621] = {  -- Brawlin' Bruno
+        { factionId = 2766, factionName = "Brawl'gar Arena", renown = false, friendship = true, level = 6, levelName = "Rank 6", faction = "Horde", note = "" },
+        { factionId = 2767, factionName = "Bizmo's Brawlpub", renown = false, friendship = true, level = 6, levelName = "Rank 6", faction = "Alliance", note = "" },
+    },
+    [1264643] = {  -- Ballistic Bronco
+        { factionId = 2766, factionName = "Brawl'gar Arena", renown = false, friendship = true, level = 8, levelName = "Max Rank", faction = "Horde", note = "" },
+        { factionId = 2767, factionName = "Bizmo's Brawlpub", renown = false, friendship = true, level = 8, levelName = "Max Rank", faction = "Alliance", note = "" },
+    },
     [1266702] = { { factionId = 2699, factionName = "The Singularity", renown = true, level = 19, note = "" } }, -- Voidbound Stormray
     [1292668] = { { factionId = 2772, factionName = "Zul'jarra's Forces", renown = true, level = 10, note = "" } }, -- Spirit of Tok'jara
     [1299963] = { { factionId = 2772, factionName = "Zul'jarra's Forces", renown = true, level = 19, note = "" } }, -- Violet-Backed Skyfang
@@ -186,7 +194,7 @@ MCL_GUIDE_REP_VENDORS = {
     [1337] = { npc = "Ambersmith Zikk", npcId = 64599, m = 422, x = 55, y = 35.5 },
     [1341] = { npc = "Sage Lotusbloom", npcId = 64001, m = 390, x = 65, y = 44 },
     [1345] = { npc = "Tan Shin Tiao", npcId = 64605, m = 390, x = 83, y = 29.6 },
-    [1358] = { npc = "Nat Pagle", npcId = 63721, m = 418, x = 68.4, y = 43.5 },
+    [1358] = { npc = "Nat Pagle", npcId = 85984 },  -- Garrison Fishing Shack: Lunarfall (582) / Frostwall (590) - faction-specific, so no single map ID
     [1375] = { npc = "Ishi", npcId = 67019, m = 418, x = 12.7, y = 54 },
     [1376] = { npc = "Proveditor Grantley", npcId = 67021, m = 418, x = 89, y = 32 },
     [1387] = { npc = "Hiren Loresong", npcId = 68000, m = 504, x = 63.6, y = 73.2 },
