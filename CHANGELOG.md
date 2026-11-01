@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.13.11
+
+### November 2026 Trading Post
+
+- **Aubergine Warturkey** - 500 Trader's Tender
+- **Hot Motocross Bunmover 4400** - 500 Trader's Tender
+- **Hot Motocross Bunmover 4600** - this month's Traveler's Log reward, yours free once you fill the bar
+- **Highlands Gobbler** - 500 Trader's Tender, back from November 2025
+
+Two of the four Bunmovers datamined in 12.1.5 have turned up. The 4000 and the 4200 are still waiting their turn, and stay out of the list until they actually appear in the shop.
+
 ## 3.13.10
 
 ### Fixes

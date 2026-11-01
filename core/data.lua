@@ -1444,6 +1444,11 @@ MCLcore.mountList[21] = {
 			mounts = {93671, 250191, 247723},
 			mountID = {}
 		},
+		Nov2026 = {
+			name = "November 2026",
+			mounts = {250928, 282648, 282649, 250926},
+			mountID = {}
+		},
 		BonusRewards = {
 			name = "Bonus Rewards",
 			mounts = {211085, 263451},
@@ -1451,7 +1456,7 @@ MCLcore.mountList[21] = {
 		},
 		TradingPostTBA = {
 			name = "Future Trading Post",
-			mounts = {"m1595", 226044, 235554, 235557, 235659, 238902, 238901, 238968, 238900, 243593, 243597, 243590, 243592, 247791, 246919, 247794, 247722, 247720, 246917, 246920, 250108, 250106, 250928, 250927, 250105, 260896, 262707, 260894, 262706, 263449, 263450, 260895, 262708},
+			mounts = {"m1595", 226044, 235554, 235557, 235659, 238902, 238901, 238968, 238900, 243593, 243597, 243590, 243592, 247791, 246919, 247794, 247722, 247720, 246917, 246920, 250108, 250106, 250927, 250105, 260896, 262707, 260894, 262706, 263449, 263450, 260895, 262708},
 			mountID = {}
 		},
 	}
@@ -2444,9 +2449,9 @@ MCLcore.mountNotes = {
 	[250106] = "Datamined for the Trading Post (Patch 11.2.5). Not yet offered in any monthly rotation.",
 	[250108] = "Datamined for the Trading Post (Patch 11.2.5). Not yet offered in any monthly rotation.",
 	[250191] = "Legion Remix reward. Also offered on the Trading Post (October 2026) for 700 Trader's Tender.",
-	[250926] = "Trading Post (November 2025) for 500 Trader's Tender.",
+	[250926] = "Trading Post (November 2025 and November 2026) for 500 Trader's Tender.",
 	[250927] = "Datamined for the Trading Post (Patch 11.2.5). Not yet offered in any monthly rotation.",
-	[250928] = "Datamined for the Trading Post (Patch 11.2.5). Not yet offered in any monthly rotation.",
+	[250928] = "Trading Post (November 2026) for 500 Trader's Tender.",
 	[250929] = "Trading Post Traveler's Log reward (November 2025). Earned by completing the monthly activities bar.",
 	[246735] = "Rare drop from any of the 15 rare creatures in Harandar - the same pool that drops the Vibrant Petalwing. Rares reset daily, and all 15 are pinned on the world map by the Guide; a rare you have already killed today is greyed out until reset.",
 	[252012] = "Rare drop from any of the 15 rare creatures in Harandar - the same pool that drops the Rootstalker Grimlynx. Rares reset daily, and all 15 are pinned on the world map by the Guide; a rare you have already killed today is greyed out until reset.",
@@ -2547,6 +2552,8 @@ MCLcore.mountNotes = {
 	[277192] = "Reward from the achievement \"Umbral Champion: Midnight Season One.\" Finish Midnight Season 1 in the top 1% of Mythic+ rating in your region. Awarded after the season closes.",
 	[273838] = "Reward from a Zul'jarra's Forces Renown questline, unlocked at Renown 10 and time-gated to one quest a day.",
 	[282414] = "Purchased from Showena in Harandar for 5,000,000 gold. Speak to Hoshena in the Den in Harandar to choose which passengers ride along with you.",
+	[282648] = "Trading Post (November 2026) for 500 Trader's Tender.",
+	[282649] = "Trading Post Traveler's Log reward (November 2026). Earned by completing the monthly activities bar.",
 	[283363] = "Reward from the achievement \"Let Me Solo Him: Kindo'jan\": defeat Kindo'jan in the Labyrinth on Tier 11 with no other players in your party, during Midnight Season 2.",
 	["m1046"] = "Paladin only. Automatically learned by Dark Iron Dwarf Paladins. Alliance.",
 	["m1047"] = "Paladin only. Automatically learned by Dwarf Paladins. Alliance.",
