@@ -488,18 +488,18 @@ local function GetBanner()
     f.panel:SetBackdrop({
         bgFile   = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+        edgeSize = MCL_PixelEdge(f.panel),
     })
-    f.panel:SetBackdropColor(0.055, 0.055, 0.070, 0.96)
+    f.panel:SetBackdropColor(MCL_SHADE("SURFACE_SUNKEN", 0.96))
     -- Muted edge, so the cyan reads as emphasis rather than outline.
-    f.panel:SetBackdropBorderColor(0.20, 0.23, 0.30, 0.95)
+    f.panel:SetBackdropBorderColor(MCL_SHADE("BORDER_ACCENT_DIM", 0.95))
 
     -- A soft drop shadow.  Against a night zone the 1px border alone is
     -- all that separates near-black panel from near-black world.
     f.shadow = f:CreateTexture(nil, "BACKGROUND", nil, -1)
     f.shadow:SetPoint("TOPLEFT", f.panel, "TOPLEFT", -5, 5)
     f.shadow:SetPoint("BOTTOMRIGHT", f.panel, "BOTTOMRIGHT", 5, -5)
-    f.shadow:SetColorTexture(0, 0, 0, 0.45)
+    f.shadow:SetColorTexture(MCL_SHADE("OVERLAY_SCRIM", 0.45))
 
     -- A hairline above and below the name.  The title sits in its own
     -- register that way, which is what carries the layout: everything
@@ -507,7 +507,7 @@ local function GetBanner()
     local function Rule()
         local t = f.panel:CreateTexture(nil, "ARTWORK")
         t:SetHeight(1)
-        t:SetColorTexture(0.32, 0.38, 0.47, 0.9)
+        t:SetColorTexture(unpack(MCL_COLORS.DIVIDER))
         return t
     end
     f.ruleTop, f.ruleBottom = Rule(), Rule()
@@ -536,7 +536,7 @@ local function GetBanner()
     f.eyebrow = f.panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     f.eyebrow:SetPoint("TOPLEFT", f.panel, "TOPLEFT", CARD_PAD, -7)
     f.eyebrow:SetText((L["Rare Sighting"] or "Rare Sighting"):upper())
-    f.eyebrow:SetTextColor(0.44, 0.51, 0.62)
+    f.eyebrow:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
     local ebFile, _, ebFlags = f.eyebrow:GetFont()
     f.eyebrow:SetFont(ebFile, 10, ebFlags)
 
@@ -548,7 +548,7 @@ local function GetBanner()
     f.rare:SetWidth(BANNER_W - CARD_PAD * 2 - 4)
     f.rare:SetJustifyH("CENTER")
     f.rare:SetWordWrap(false)
-    f.rare:SetTextColor(0.30, 0.72, 0.96)
+    f.rare:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
     local _, rareFontSize = f.rare:GetFont()
     f.rareFontSize = rareFontSize or 16
 
@@ -560,7 +560,7 @@ local function GetBanner()
     f.sub:SetJustifyH("CENTER")
     -- 10pt at 66% grey on near-black was the least readable thing on a
     -- card whose whole job is to be read at a glance.
-    f.sub:SetTextColor(0.80, 0.84, 0.90)
+    f.sub:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
     f.sub:SetText(L["Click for a waypoint"])
     local subFile, _, subFlags = f.sub:GetFont()
     f.sub:SetFont(subFile, 12, subFlags)
@@ -568,7 +568,7 @@ local function GetBanner()
     f.reward = f.panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     f.reward:SetPoint("TOP", f.sub, "BOTTOM", 0, -5)
     f.reward:SetJustifyH("CENTER")
-    f.reward:SetTextColor(1.00, 0.82, 0.00)
+    f.reward:SetTextColor(unpack(MCL_COLORS.TEXT_GOLD))
     -- The reward is why you're being interrupted; at the same size as the
     -- instruction it read as a footnote to it.
     local rwFile, _, rwFlags = f.reward:GetFont()
@@ -582,9 +582,9 @@ local function GetBanner()
     f.close.x = f.close:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     f.close.x:SetPoint("CENTER")
     f.close.x:SetText("×")
-    f.close.x:SetTextColor(0.62, 0.67, 0.74)
-    f.close:SetScript("OnEnter", function(self) self.x:SetTextColor(1, 1, 1) end)
-    f.close:SetScript("OnLeave", function(self) self.x:SetTextColor(0.62, 0.67, 0.74) end)
+    f.close.x:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
+    f.close:SetScript("OnEnter", function(self) self.x:SetTextColor(unpack(MCL_COLORS.TEXT_PRIMARY)) end)
+    f.close:SetScript("OnLeave", function(self) self.x:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT)) end)
     f.close:SetScript("OnClick", function()
         if bannerTimer then bannerTimer:Cancel(); bannerTimer = nil end
         f.fadeOut:Play()
@@ -596,7 +596,7 @@ local function GetBanner()
     f.life = f.panel:CreateTexture(nil, "OVERLAY")
     f.life:SetPoint("BOTTOMLEFT", f.panel, "BOTTOMLEFT", 1, 1)
     f.life:SetHeight(2)
-    f.life:SetColorTexture(0.30, 0.66, 0.96, 0.75)
+    f.life:SetColorTexture(MCL_SHADE("BORDER_ACCENT", 0.75))
     f.life:Hide()
 
     f.mountIcons = {}
@@ -624,7 +624,7 @@ local function GetBanner()
 
     f.barHighlight = f.bar:CreateTexture(nil, "HIGHLIGHT")
     f.barHighlight:SetAllPoints()
-    f.barHighlight:SetColorTexture(1, 1, 1, 0.05)
+    f.barHighlight:SetColorTexture(MCL_SHADE("HIGHLIGHT_WHITE", 0.05))
 
     -- Right-click on the card: dismiss, or with shift, stop alerting for
     -- this rare.  Shared with the parent frame's handler so the gesture
@@ -690,7 +690,7 @@ local function GetBanner()
 
     f.unlockHint = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     f.unlockHint:SetPoint("TOP", f, "BOTTOM", 0, -4)
-    f.unlockHint:SetText("|cFF1FB7EB" .. L["Drag to position"] .. "|r")
+    f.unlockHint:SetText(MCL_HEX("TEXT_ACCENT") .. L["Drag to position"] .. "|r")
     f.unlockHint:Hide()
 
     -- Model frames ignore parent alpha, so they're hidden outright when
@@ -842,12 +842,12 @@ local function LayoutMountIcons(f, mounts)
                 -- so the row reads as part of the panel.
                 btn.border = btn:CreateTexture(nil, "BACKGROUND")
                 btn.border:SetAllPoints()
-                btn.border:SetColorTexture(0.26, 0.31, 0.40, 1)
+                btn.border:SetColorTexture(MCL_SHADE("DIVIDER", 1))
 
                 btn.fill = btn:CreateTexture(nil, "BORDER")
                 btn.fill:SetPoint("TOPLEFT", 1, -1)
                 btn.fill:SetPoint("BOTTOMRIGHT", -1, 1)
-                btn.fill:SetColorTexture(0.03, 0.03, 0.05, 1)
+                btn.fill:SetColorTexture(unpack(MCL_COLORS.SURFACE_SUNKEN))
 
                 btn.tex = btn:CreateTexture(nil, "ARTWORK")
                 btn.tex:SetPoint("TOPLEFT", 3, -3)
@@ -856,12 +856,12 @@ local function LayoutMountIcons(f, mounts)
 
                 btn.glow = btn:CreateTexture(nil, "OVERLAY")
                 btn.glow:SetAllPoints()
-                btn.glow:SetColorTexture(0.30, 0.66, 0.96, 0)
+                btn.glow:SetColorTexture(MCL_SHADE("BORDER_ACCENT", 0))
                 btn:SetScript("OnShow", function(self) self.glow:SetAlpha(0) end)
 
                 btn:SetScript("OnEnter", function(self)
                     if f:GetAlpha() < 0.05 then return end
-                    self.glow:SetColorTexture(0.30, 0.66, 0.96, 0.35)
+                    self.glow:SetColorTexture(MCL_SHADE("BORDER_ACCENT", 0.35))
                     -- The count summarises; hovering says which one.
                     if self.mountName then f.reward:SetText(self.mountName) end
                     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
@@ -880,11 +880,11 @@ local function LayoutMountIcons(f, mounts)
                         GameTooltip:AddLine(self.mountName or "", 1, 0.82, 0)
                     end
                     GameTooltip:AddLine(" ")
-                    GameTooltip:AddLine("|cFF1FB7EBMCL|r  " .. L["Not Collected"], 1, 0.4, 0.4)
+                    GameTooltip:AddLine(MCL_HEX("TEXT_ACCENT") .. "MCL|r  " .. L["Not Collected"], 1, 0.4, 0.4)
                     GameTooltip:Show()
                 end)
                 btn:SetScript("OnLeave", function(self)
-                    self.glow:SetColorTexture(0.30, 0.66, 0.96, 0)
+                    self.glow:SetColorTexture(MCL_SHADE("BORDER_ACCENT", 0))
                     if f.rewardText then f.reward:SetText(f.rewardText) end
                     GameTooltip:Hide()
                 end)
@@ -1462,7 +1462,7 @@ local function HookRareScanner()
                 local list = Alert:MountsFrom(s.name)
                 if list and GameTooltip:IsShown() then
                     GameTooltip:AddLine(" ")
-                    GameTooltip:AddLine("|cFF1FB7EBMCL|r  " .. L["Mount"] .. ": " .. table.concat(MountNames(list), ", "), 1, 0.82, 0)
+                    GameTooltip:AddLine(MCL_HEX("TEXT_ACCENT") .. "MCL|r  " .. L["Mount"] .. ": " .. table.concat(MountNames(list), ", "), 1, 0.82, 0)
                     GameTooltip:Show()
                 end
             end)

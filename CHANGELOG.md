@@ -1,5 +1,214 @@
 # Changelog
 
+## 3.14.0
+
+### World of Warcraft: Forever
+
+MCL now runs on Forever, Blizzard's third version of the game, which went live on
+4 November. Forever keeps its own mount collection - nothing you earn there shows
+up on retail, and nothing you already own on retail comes with you - so it gets a
+collection log of its own rather than the retail one with most of it greyed out.
+
+The Forever client holds 144 mounts. 99 of them are the vanilla mounts MCL has
+always tracked, filed where they already were: racial mounts under Alliance and
+Horde, Rivendare's Deathcharger under Dungeon Drop, the Qiraji battle tanks under
+Raid Drop, the Winterspring Frostsaber and the Venomhide Ravasaur under
+Reputation, the Black War mounts under PvP. The other 45 exist only in Forever
+and are collected in a Forever section:
+
+- **Galestriders** - eight of them, from Genn Fairweather. 20 gold at level 40,
+  200 gold for the Swift versions at 60, both wanting Galestrider Riding.
+- **Reins of the Pack Kodo** - 6,000 Merchant's Favor from Huey Sunnydale or
+  Okamache, once you are exalted with Durotar Supply and Logistics or the Azeroth
+  Commerce Authority.
+- **Reins of the Spectral Bear** - 55 points in the Legacy system.
+- **Cerulean Prideclaw** and **Veteran Adventurer's Loyal Companion** - the
+  Skyborne packs, the Warcraft Forever Collection and the Collector's Edition.
+- **The Forsaken paladin mounts** - Summon Warhorse and Summon Forsaken Charger.
+
+Two more came from Wowhead's Forever database rather than the wiki, which has
+neither: the **Striped Dawnsaber** is the reward for *Your First Feline Friend*
+and the **White Kodo** for *Your First Riding Kodo*. Both are filed under Quest.
+
+Five are real mounts with no source anyone has published - four skeletal
+horses and the Lavender Kodo, all Horde-only. They sit in **Unconfirmed**, split
+by family, and move into their real categories as sources are revealed; MCL
+would rather tell you it does not know than invent a vendor. On an Alliance
+character the section does not appear at all, since there is nothing in it you
+could collect.
+
+Three more - the Verdant Sea Turtle, the Crimson Rooster and the Spectral Wolf
+Pack - ship an item but are not in the mount journal: asked about them, the game
+returns nothing. They are held back until it does, and `/mcl audit` is how
+anyone will notice.
+
+**Mounts Forever has not shipped yet are held back, not listed.** The five
+Devilsaurs, four Warden Sabers, the Caravan Kodo, the Golden Sabercat and the
+Swift Hyjal Stag all have a row in the mount journal, but the item that teaches
+each one is not in the game yet - in game they drew as a green placeholder icon
+over a checkerboard model. They come back automatically, in their own
+categories, the moment Blizzard ships them. The four Druid Moose stay out for
+good: they are druid forms, not collectible mounts. Three placeholder rows are
+left out until they get real names.
+
+### Art styles
+
+MCL can now be drawn two ways, and asks which you want the first time it
+loads. **Modern** is the dark blue-grey style it has always had. **Forever**
+is gold on dark wood, cut to match Forever's own window frames - gold
+headings and labels, white values, bronze borders. Each choice shows a small
+preview of the real window in that palette rather than just naming it.
+
+Forever installs default to the Forever style and retail installs to Modern,
+but either client can use either; the picker offers both. It lives in
+Settings under Art Style afterwards. Changing it there asks for a reload,
+because frames that have already been drawn are still carrying the old
+colours.
+
+Making this possible meant finishing a job Constants.lua only ever started.
+It described itself as the central palette, but nothing outside Widgets.lua
+read it - core/frames.lua alone had 255 colours written straight into the
+call site, 588 across the addon, in 197 distinct values. All of them now go
+through the palette. Where several near-identical greys were doing the same
+job - three different values were all "body text" - they have collapsed to
+one, so Modern looks the same as before but slightly more consistent.
+
+### Forever sections
+
+Forever has one expansion and only ever will, so the expansion grouping has
+gone. Sections are named for how you actually get a mount: Alliance, Horde,
+Reputation, Dungeons & Raids, Quest, PvP, Class, Rewards and
+Unconfirmed.
+
+**The Galestriders are Skyborne racial mounts.** Forever adds two new races -
+High Order Skyborne on Alliance and Windshaper Skyborne on Horde - and Genn
+Fairweather on Zephras Isle sells to both. All eight now sit under a Skyborne
+category in each faction, with the other racial mounts, instead of in a
+section of their own.
+
+**The pre-1.4 epic racial mounts are gone from the list.** Fourteen of them -
+Nightsaber, Frostsaber, Palomino, Teal Kodo and the rest - were filed as
+"Original Epic Mounts", which is retail framing that means nothing on a realm
+that started last week. Forever's epic tier is the **Swift** set, sold at
+around 1000 gold by the same racial vendors, and those are already filed with
+their race. The fourteen survive only as the trade-ins for it, through quests
+like *Frostsaber Replacement* and *New Kodo - Teal*. Nobody on a fresh realm
+owns one to trade, no vendor sells them, and no source exists for any of the
+fourteen. They are out.
+
+Two more went for the same reason. The **Riding Turtle** was never a profession
+mount: it came from redeeming a Trading Card Game code with Landro Longshot in
+Booty Bay, and Forever has no card game. And the two **Black Qiraji Battle Tank**
+rows Forever carries are the ones retail labels Legacy, not the tank players
+earn - that one is not in the Forever client at all. The list now stands at
+104 mounts, which is exactly the number the game's own journal reports.
+
+**The dungeon and raid mounts are right.** Stratholme, Zul'Gurub and the
+Ahn'Qiraj Temple are all present in Forever, and Wowhead confirms the drops
+from Rivendare, Bloodlord Mandokir, High Priest Thekal and the Ahn'Qiraj
+trash. Forever adds a lot of its own instances on top - Blackmaw Hold, The
+Drowned City, The Hall of Thanes, Nightmare Grove, Scarlet Enclave - none of
+which drop a mount yet.
+
+### Fixes
+
+- **The SA and DFA buttons are gone on Forever.** They copy a link to your
+  character on simplearmory.com and dataforazeroth.com, and both index retail
+  characters only, so on Forever they handed out a URL for a character neither
+  site has heard of. They are no longer built there. Retail keeps them.
+- **The Alterac Valley mounts were missing their requirement.** The Stormpike
+  Battle Charger needs exalted with the Stormpike Guard and the Frostwolf
+  Howler exalted with the Frostwolf Clan. MCL showed a price and no
+  requirement, because the quartermaster enforces it rather than the item.
+  Both now carry it, with their quartermaster on the map, at 200 gold each.
+- **The Black War mounts need PvP Rank 11** - Commander for the Alliance,
+  Lieutenant General for the Horde - now earned through Forever's Rank Points
+  system rather than the old honour ranks. The item no longer carries the old
+  rank field (it reads 15 in Classic Era and 0 in Forever), so the requirement
+  is not visible in the client data; it is now in each mount's notes.
+- **Categories you cannot collect from are no longer drawn.** Empty "Kodos
+  (0/0)" and "Skeletal Horses (0/0)" cards appeared because nothing in them
+  could ever show on that character - either the other faction's mounts, or
+  mounts the journal does not contain at all. Forever ships some mount rows the
+  journal never exposes; asked about the Crimson Rooster, it returns nothing. A
+  category is now skipped once the loaded journal has accounted for every mount
+  in it that way - but never while the journal is still loading, when every
+  mount looks unknown and skipping would empty the whole window. The same
+  rule applies to whole sections, so a tab that would read 0/0 for your
+  character is left out of the sidebar. Retail benefits too.
+- **`/mcl audit`** checks every mount MCL lists against the live journal and
+  names the ones it has never heard of. MCL's data is built from the game's
+  database tables, which cannot see this; only the running game can. Useful
+  after any patch, on either version.
+- **The nav and header buttons follow the art style.** Their resting, hover
+  and selected colours were written as plain tables rather than calls, so the
+  colour pass missed all 23 of them and the sidebar stayed blue-grey under the
+  Forever theme. They now name palette tokens, re-read when the window is
+  built - which also means they were holding colours captured before the saved
+  art style had been applied at all.
+
+### The Guide, on Forever
+
+The Guide works on Forever, with its own data. None of the retail guide data
+could be reused: Forever has a completely separate set of map IDs. Elwynn
+Forest is 1429 there and 37 on retail, and of 60 Forever maps exactly one -
+Azeroth itself - shares an ID with retail. Every retail pin would have landed
+somewhere else entirely.
+
+78 of the 104 mounts now have guide data: 76 map pins across 15 zones, 68
+vendor entries with names and coordinates, 52 quest sources, prices for 68,
+and the Pack Kodo's two reputations - which cost 6,000 Merchant's Favor, a
+price Wowhead reports as zero copper because it is not gold. Zone pins, the zone panel, zone toasts,
+rare alerts, the step tracker and the route compass all run as they do on
+retail.
+
+Prices come from the Forever client itself. Wowhead's Forever pages for
+anything that existed in vanilla carry prices from older Classic data, so they
+quote 40 gold horses and 1,000 gold swift mounts where Forever charges 20 and 200
+- Forever moved to Burning Crusade style riding, where the training is expensive
+and the mount is cheap. MCL reads the price the client itself holds, before any
+reputation discount.
+
+Forever also has a starter mount quest line that nothing had documented -
+*Your First Horse*, *Your First Riding Wolf*, *Your First Riding Ram*, *Your
+First Mechanostrider*, *Your First Riding Raptor*, *Your First Riding Kodo*,
+*Your First Feline Friend*, *Your First Riding Galestrider* and *A Steed in
+Death as They Were in Life*. Those are in the guide, and three of them
+resolved mounts that were sitting in Unconfirmed.
+
+Two of the eight Galestriders were missing because Wowhead records only six
+of Genn Fairweather's stock. Where a source is documented elsewhere and
+Wowhead simply has not caught up, dev/forever_guide_overrides.json fills it in
+with the reason written down; those entries drop out automatically once the
+scrape finds them.
+
+The other 26 have no guide entry. Some have no place on a map - class mounts,
+shop mounts, the Legacy reward - and the rest have no published source yet.
+Vendor and quest data ships with the client so it is known; drop and spawn data
+is crowd-sourced and Forever is days old. Those mounts are simply absent from the guide rather than
+carrying a guessed location, and `dev/forever_guide_scrape.py` regenerates the
+lot as coverage fills in.
+
+MCL no longer starts up on ADDON_LOADED. It used to do all of its
+initialisation on whichever of ADDON_LOADED or PLAYER_LOGIN came first, which
+is always the former - and that fires before VARIABLES_LOADED. Part of that
+work loads Blizzard's Collections addon, so Collections loaded inside MCL's
+own insecure execution, and every variables-loaded callback it registered
+while loading carried MCL's taint into Blizzard's shared list. The callbacks
+after them in that list then ran tainted too, one of which is Blizzard's
+gamepad action bar code calling a protected function - which the client
+reported as MCL trying to call `SetPreferredGamepadInteractTarget`, a function
+MCL has never heard of. Start-up now waits for PLAYER_LOGIN, which runs after
+that list has been dispatched.
+
+MCL also now reports blocked actions properly. When the client says an addon has
+been blocked from something only the Blizzard UI may do, the popup names the
+addon but never the call, and wrapping the call in pcall does not help - the
+popup is raised in C before Lua sees it. MCL now prints the function name to
+chat when it is the addon at fault, and `/mcl blocked` repeats the last one. It
+also no longer sets mount journal filters before the Collections UI has loaded,
+which was both pointless and a candidate for exactly that popup.
+
 ## 3.13.11
 
 ### November 2026 Trading Post

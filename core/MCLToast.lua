@@ -157,16 +157,16 @@ local function EnsureToastFrame()
     toastFrame:SetBackdrop({
         bgFile   = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+        edgeSize = MCL_PixelEdge(toastFrame),
     })
-    toastFrame:SetBackdropColor(0.06, 0.06, 0.09, 0.95)
-    toastFrame:SetBackdropBorderColor(0.2, 0.6, 0.9, 0.8)
+    toastFrame:SetBackdropColor(MCL_SHADE("SURFACE_SUNKEN", 0.95))
+    toastFrame:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT))
 
     -- Glow border (animated later)
     toastFrame.glow = toastFrame:CreateTexture(nil, "BACKGROUND", nil, -1)
     toastFrame.glow:SetPoint("TOPLEFT", -3, 3)
     toastFrame.glow:SetPoint("BOTTOMRIGHT", 3, -3)
-    toastFrame.glow:SetColorTexture(0.2, 0.6, 0.9, 0.15)
+    toastFrame.glow:SetColorTexture(MCL_SHADE("BORDER_ACCENT", 0.15))
 
     -- Header stripe
     toastFrame.header = CreateFrame("Frame", nil, toastFrame, "BackdropTemplate")
@@ -174,26 +174,26 @@ local function EnsureToastFrame()
     toastFrame.header:SetPoint("TOPRIGHT", -1, -1)
     toastFrame.header:SetHeight(22)
     toastFrame.header:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    toastFrame.header:SetBackdropColor(0.08, 0.08, 0.12, 1)
+    toastFrame.header:SetBackdropColor(unpack(MCL_COLORS.SURFACE_WINDOW))
 
     -- Accent line under header
     toastFrame.accent = toastFrame:CreateTexture(nil, "OVERLAY")
     toastFrame.accent:SetHeight(1)
     toastFrame.accent:SetPoint("TOPLEFT", toastFrame.header, "BOTTOMLEFT", 0, 0)
     toastFrame.accent:SetPoint("TOPRIGHT", toastFrame.header, "BOTTOMRIGHT", 0, 0)
-    toastFrame.accent:SetColorTexture(0.2, 0.6, 0.9, 0.6)
+    toastFrame.accent:SetColorTexture(MCL_SHADE("BORDER_ACCENT", 0.6))
 
     -- MCL label (top-left of header)
     toastFrame.label = toastFrame.header:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     toastFrame.label:SetPoint("LEFT", toastFrame.header, "LEFT", 8, 0)
     toastFrame.label:SetText("MCL")
-    toastFrame.label:SetTextColor(0.4, 0.78, 0.95, 1)
+    toastFrame.label:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
     -- "Mount Collected!" text  (top-right of header)
     toastFrame.headerRight = toastFrame.header:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     toastFrame.headerRight:SetPoint("RIGHT", toastFrame.header, "RIGHT", -8, 0)
     toastFrame.headerRight:SetText(L["Mount Collected!"])
-    toastFrame.headerRight:SetTextColor(0.3, 0.85, 0.4, 1)
+    toastFrame.headerRight:SetTextColor(unpack(MCL_COLORS.TEXT_SUCCESS))
 
     -- Mount icon (centered in content area below header)
     toastFrame.icon = toastFrame:CreateTexture(nil, "ARTWORK")
@@ -205,29 +205,29 @@ local function EnsureToastFrame()
     toastFrame.iconBorder = CreateFrame("Frame", nil, toastFrame, "BackdropTemplate")
     toastFrame.iconBorder:SetPoint("TOPLEFT", toastFrame.icon, "TOPLEFT", -1, 1)
     toastFrame.iconBorder:SetPoint("BOTTOMRIGHT", toastFrame.icon, "BOTTOMRIGHT", 1, -1)
-    toastFrame.iconBorder:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    toastFrame.iconBorder:SetBackdropBorderColor(0.3, 0.6, 0.9, 0.8)
+    toastFrame.iconBorder:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = MCL_PixelEdge(toastFrame.iconBorder) })
+    toastFrame.iconBorder:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT))
 
     -- Mount name
     toastFrame.mountName = toastFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     toastFrame.mountName:SetPoint("TOPLEFT", toastFrame.icon, "TOPRIGHT", 8, 2)
     toastFrame.mountName:SetPoint("RIGHT", toastFrame, "RIGHT", -10, 0)
     toastFrame.mountName:SetJustifyH("LEFT")
-    toastFrame.mountName:SetTextColor(1, 1, 1, 1)
+    toastFrame.mountName:SetTextColor(unpack(MCL_COLORS.TEXT_PRIMARY))
 
     -- Category progress text
     toastFrame.categoryText = toastFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     toastFrame.categoryText:SetPoint("TOPLEFT", toastFrame.mountName, "BOTTOMLEFT", 0, -3)
     toastFrame.categoryText:SetPoint("RIGHT", toastFrame, "RIGHT", -10, 0)
     toastFrame.categoryText:SetJustifyH("LEFT")
-    toastFrame.categoryText:SetTextColor(0.7, 0.78, 0.88, 1)
+    toastFrame.categoryText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
 
     -- Section progress text
     toastFrame.sectionText = toastFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     toastFrame.sectionText:SetPoint("TOPLEFT", toastFrame.categoryText, "BOTTOMLEFT", 0, -2)
     toastFrame.sectionText:SetPoint("RIGHT", toastFrame, "RIGHT", -10, 0)
     toastFrame.sectionText:SetJustifyH("LEFT")
-    toastFrame.sectionText:SetTextColor(0.5, 0.55, 0.65, 1)
+    toastFrame.sectionText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
     -- Start hidden
     toastFrame:SetAlpha(0)
@@ -461,7 +461,7 @@ function Toast:ToggleUnlock()
         frame.sectionText:SetText("")
         frame.icon:SetTexture("Interface\\AddOns\\MCL\\mcl-logo-32")
         frame.icon:SetTexCoord(0, 1, 0, 1)
-        frame:SetBackdropBorderColor(0.9, 0.7, 0.2, 1)
+        frame:SetBackdropBorderColor(MCL_SHADE("BORDER_GOLD", 1))
 
         -- Make draggable
         frame:SetMovable(true)
@@ -480,7 +480,7 @@ function Toast:ToggleUnlock()
         frame:SetMovable(false)
         frame:SetScript("OnDragStart", nil)
         frame:SetScript("OnDragStop", nil)
-        frame:SetBackdropBorderColor(0.2, 0.6, 0.9, 0.8)
+        frame:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT))
 
         -- Save final position
         local point, _, relPoint, x, y = frame:GetPoint()
@@ -627,10 +627,10 @@ local function EnsureZoneToastFrame()
     f:SetBackdrop({
         bgFile   = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+        edgeSize = MCL_PixelEdge(f),
     })
-    f:SetBackdropColor(0.06, 0.06, 0.09, 0.95)
-    f:SetBackdropBorderColor(0.2, 0.6, 0.9, 0.8)
+    f:SetBackdropColor(MCL_SHADE("SURFACE_SUNKEN", 0.95))
+    f:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT))
 
     -- Header stripe
     f.header = CreateFrame("Frame", nil, f, "BackdropTemplate")
@@ -638,25 +638,25 @@ local function EnsureZoneToastFrame()
     f.header:SetPoint("TOPRIGHT", -1, -1)
     f.header:SetHeight(20)
     f.header:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    f.header:SetBackdropColor(0.08, 0.08, 0.12, 1)
+    f.header:SetBackdropColor(unpack(MCL_COLORS.SURFACE_WINDOW))
 
     -- Accent line
     f.accent = f:CreateTexture(nil, "OVERLAY")
     f.accent:SetHeight(1)
     f.accent:SetPoint("TOPLEFT", f.header, "BOTTOMLEFT")
     f.accent:SetPoint("TOPRIGHT", f.header, "BOTTOMRIGHT")
-    f.accent:SetColorTexture(0.2, 0.6, 0.9, 0.6)
+    f.accent:SetColorTexture(MCL_SHADE("BORDER_ACCENT", 0.6))
 
     -- MCL label
     f.label = f.header:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     f.label:SetPoint("LEFT", f.header, "LEFT", 8, 0)
     f.label:SetText("MCL")
-    f.label:SetTextColor(0.4, 0.78, 0.95, 1)
+    f.label:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
     -- Zone name (right side of header)
     f.zoneName = f.header:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     f.zoneName:SetPoint("RIGHT", f.header, "RIGHT", -8, 0)
-    f.zoneName:SetTextColor(0.6, 0.75, 0.9, 1)
+    f.zoneName:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
     -- Mount rows container
     f.rows = {}
@@ -777,7 +777,7 @@ function Toast:ShowZoneAlert(mapID)
         row.name = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         row.name:SetPoint("LEFT", row.icon, "RIGHT", 4, 0)
         row.name:SetText(m.name)
-        row.name:SetTextColor(0.95, 0.95, 1, 1)
+        row.name:SetTextColor(unpack(MCL_COLORS.TEXT_PRIMARY))
 
         -- Drop chance (right-aligned)
         if m.chance and m.chance > 0 then
@@ -816,7 +816,7 @@ function Toast:ShowZoneAlert(mapID)
         moreRow.text = moreRow:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         moreRow.text:SetPoint("LEFT", 0, 0)
         moreRow.text:SetText(string.format("... +%d %s", overflow, L["more"]))
-        moreRow.text:SetTextColor(0.5, 0.55, 0.65, 1)
+        moreRow.text:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
         table.insert(f.rows, moreRow)
         yOff = yOff - ZONE_TOAST_ROW_H
     end
@@ -892,7 +892,7 @@ local function EnsureReadyFrame()
 
     f.text = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     f.text:SetPoint("LEFT", f.icon, "RIGHT", 6, 0)
-    f.text:SetTextColor(0.62, 0.68, 0.76, 1)
+    f.text:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
     f.fadeOut = f:CreateAnimationGroup()
     local ao = f.fadeOut:CreateAnimation("Alpha")
@@ -905,10 +905,10 @@ local function EnsureReadyFrame()
     -- Brightens a little under the cursor, so it reads as clickable
     -- without announcing itself when it isn't.
     f:SetScript("OnEnter", function(self)
-        self.text:SetTextColor(0.40, 0.78, 0.95, 1)
+        self.text:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
     end)
     f:SetScript("OnLeave", function(self)
-        self.text:SetTextColor(0.62, 0.68, 0.76, 1)
+        self.text:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
     end)
 
     f:RegisterForClicks("AnyUp")

@@ -178,7 +178,7 @@ local function InitializeSearch()
                 dd:SetBackdrop({
                     bgFile = "Interface\\Buttons\\WHITE8x8",
                     edgeFile = "Interface\\Buttons\\WHITE8x8",
-                    edgeSize = 1
+                    edgeSize = MCL_PixelEdge(dd)
                 })
                 dd:SetBackdropColor(MCLcore.C.Surface("SURFACE_2"))
                 dd:SetBackdropBorderColor(unpack(MCLcore.C.COLORS.BORDER_DEFAULT))
@@ -230,7 +230,7 @@ local function InitializeSearch()
             if not dd.header then
                 dd.header = dd.scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 dd.header:SetPoint("TOPLEFT", dd.scrollChild, "TOPLEFT", 4, -2)
-                dd.header:SetTextColor(0.5, 0.55, 0.65, 1)
+                dd.header:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
             end
             local header = dd.header
             header:Show()
@@ -261,7 +261,7 @@ local function InitializeSearch()
                 row:SetBackdrop({
                     bgFile = "Interface\\Buttons\\WHITE8x8",
                 })
-                row:SetBackdropColor(0, 0, 0, 0)  -- transparent by default
+                row:SetBackdropColor(unpack(MCL_COLORS.TRANSPARENT))  -- transparent by default
                 row:SetScript("OnEnter", function(self)
                     self:SetBackdropColor(unpack(MCLcore.C.COLORS.SURFACE_RAISED))
                     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
@@ -285,7 +285,7 @@ local function InitializeSearch()
                     end
                 end)
                 row:SetScript("OnLeave", function(self)
-                    self:SetBackdropColor(0, 0, 0, 0)
+                    self:SetBackdropColor(unpack(MCL_COLORS.TRANSPARENT))
                     GameTooltip:Hide()
                 end)
 
@@ -316,17 +316,17 @@ local function InitializeSearch()
                 nameText:SetWordWrap(false)
                 if result.isCollected then
                     nameText:SetText(result.mountName or L["Unknown"])
-                    nameText:SetTextColor(0.7, 0.78, 0.88, 1)
+                    nameText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
                 else
                     nameText:SetText(result.mountName or L["Unknown"])
-                    nameText:SetTextColor(0.45, 0.5, 0.55, 1)
+                    nameText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
                 end
 
                 -- Source (section > category) on the right
                 local sourceText = row:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
                 sourceText:SetPoint("RIGHT", row, "RIGHT", -4, 0)
                 sourceText:SetJustifyH("RIGHT")
-                sourceText:SetTextColor(0.4, 0.45, 0.5, 1)
+                sourceText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
                 local shortSource = (result.category and L[result.category] or result.category) or (result.section and L[result.section] or result.section) or ""
                 if #shortSource > 20 then
                     shortSource = shortSource:sub(1, 18) .. ".."
@@ -338,7 +338,7 @@ local function InitializeSearch()
                     local dot = row:CreateTexture(nil, "OVERLAY")
                     dot:SetSize(8, 8)
                     dot:SetPoint("RIGHT", sourceText, "LEFT", -4, 0)
-                    dot:SetColorTexture(0.3, 0.85, 0.3, 1)
+                    dot:SetColorTexture(MCL_SHADE("BORDER_SUCCESS", 1))
                 end
 
                 table.insert(dd.rows, row)
@@ -349,7 +349,7 @@ local function InitializeSearch()
             if #self.searchResults > maxResults then
                 if not dd.moreText then
                     dd.moreText = dd.scrollChild:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-                    dd.moreText:SetTextColor(0.4, 0.45, 0.5, 1)
+                    dd.moreText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
                 end
                 dd.moreText:ClearAllPoints()
                 dd.moreText:SetPoint("TOPLEFT", dd.scrollChild, "TOPLEFT", 8, yOffset - 4)
@@ -495,7 +495,7 @@ local function InitializeSearch()
                     mountFrame.searchGlowFrame:SetFrameLevel(mountFrame:GetFrameLevel() + 20)
                     mountFrame.searchGlowFrame.tex = mountFrame.searchGlowFrame:CreateTexture(nil, "OVERLAY", nil, 7)
                     mountFrame.searchGlowFrame.tex:SetAllPoints(mountFrame.searchGlowFrame)
-                    mountFrame.searchGlowFrame.tex:SetColorTexture(1, 1, 0, 0.5)
+                    mountFrame.searchGlowFrame.tex:SetColorTexture(MCL_SHADE("BORDER_GOLD", 0.5))
                 end
                 mountFrame.searchGlowFrame:Show()
                 
@@ -504,10 +504,10 @@ local function InitializeSearch()
                 local pulseTimer = C_Timer.NewTicker(0.35, function()
                     pulseCount = pulseCount + 1
                     if pulseCount % 2 == 1 then
-                        mountFrame:SetBackdropBorderColor(0.4, 0.78, 0.95, 1)  -- House style title blue
+                        mountFrame:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT_BRIGHT))  -- House style title blue
                         if mountFrame.searchGlowFrame then mountFrame.searchGlowFrame.tex:SetAlpha(0.5) end
                     else
-                        mountFrame:SetBackdropBorderColor(0.2, 0.5, 0.85, 1)  -- House style accent blue
+                        mountFrame:SetBackdropBorderColor(MCL_SHADE("BORDER_ACCENT", 1))  -- House style accent blue
                         if mountFrame.searchGlowFrame then mountFrame.searchGlowFrame.tex:SetAlpha(0.15) end
                     end
                 end)
@@ -623,6 +623,22 @@ SlashCmdList["MCL"] = function(msg)
         end
     elseif cmd == "config" or cmd == "settings" then
         MCLcore.Frames:openSettings();
+    elseif cmd == "audit" then
+        -- Which listed mounts the live journal does not know about.
+        if MCLcore.Function and MCLcore.Function.AuditJournal then
+            MCLcore.Function:AuditJournal()
+        end
+    elseif cmd == "blocked" then
+        -- What the "blocked from an action only available to the Blizzard
+        -- UI" popup refuses to tell you: which call it was.
+        local b = MCLcore.lastBlockedAction
+        if b then
+            print("|cff00CCFF[MCL]|r Last blocked action: |cffFF6060" .. b.event
+                .. "|r on |cffFFFFFF" .. b.func .. "|r ("
+                .. string.format("%.0f", GetTime() - b.when) .. "s ago)")
+        else
+            print("|cff00CCFF[MCL]|r No blocked action recorded this session.")
+        end
     elseif cmd == "refresh" then
         if MCLcore.Main and type(MCLcore.Main.Init) == "function" then
             MCLcore.Main:Init(true)

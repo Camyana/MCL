@@ -381,15 +381,15 @@ local function CreateSectionHeader(parent, text, yOffset, currentOpacity, parent
     header:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+        edgeSize = MCL_PixelEdge(header),
         insets = { left = 1, right = 1, top = 1, bottom = 1 },
     })
-    header:SetBackdropColor(0.1, 0.1, 0.14, opacity)
-    header:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.6)
+    header:SetBackdropColor(MCL_SHADE("SURFACE_PANEL", opacity))
+    header:SetBackdropBorderColor(MCL_SHADE("BORDER_DEFAULT", 0.6))
     
     local headerText = header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     headerText:SetPoint("LEFT", header, "LEFT", 8, 0)
-    headerText:SetTextColor(0.4, 0.78, 0.95, 1)
+    headerText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
     headerText:SetText(text)
     
     return header
@@ -432,10 +432,10 @@ function MountCard:CreateMountCard()
     f:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+        edgeSize = MCL_PixelEdge(f),
     })
-    f:SetBackdropColor(0.06, 0.06, 0.09, currentOpacity)
-    f:SetBackdropBorderColor(0.2, 0.2, 0.25, 0.8)
+    f:SetBackdropColor(MCL_SHADE("SURFACE_SUNKEN", currentOpacity))
+    f:SetBackdropBorderColor(MCL_SHADE("BORDER_SUBTLE", 0.8))
     
     -- Header bar at top of mount card (matching main frame header)
     f.headerBar = CreateFrame("Frame", nil, f, "BackdropTemplate")
@@ -445,7 +445,7 @@ function MountCard:CreateMountCard()
     f.headerBar:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
     })
-    f.headerBar:SetBackdropColor(0.08, 0.08, 0.12, 0.98)
+    f.headerBar:SetBackdropColor(MCL_SHADE("SURFACE_WINDOW", 0.98))
     f.headerBar:SetFrameLevel(f:GetFrameLevel() + 2)
     
     -- Accent line at bottom of header
@@ -453,7 +453,7 @@ function MountCard:CreateMountCard()
     f.headerAccent:SetHeight(1)
     f.headerAccent:SetPoint("BOTTOMLEFT", f.headerBar, "BOTTOMLEFT", 0, 0)
     f.headerAccent:SetPoint("BOTTOMRIGHT", f.headerBar, "BOTTOMRIGHT", 0, 0)
-    f.headerAccent:SetColorTexture(0.2, 0.6, 0.9, 0.6)
+    f.headerAccent:SetColorTexture(MCL_SHADE("BORDER_ACCENT", 0.6))
     
     -- Title bar with mount icon and name (clickable to copy name)
     f.titleFrame = CreateFrame("Button", nil, f.headerBar)
@@ -469,7 +469,7 @@ function MountCard:CreateMountCard()
     -- Mount name in title bar
     f.mountName = f.titleFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     f.mountName:SetPoint("LEFT", f.mountIcon, "RIGHT", 8, 0)
-    f.mountName:SetTextColor(0.4, 0.78, 0.95, 1)
+    f.mountName:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
     -- Report button in title bar (parented to headerBar, above titleFrame)
     f.reportBtn = CreateFrame("Button", nil, f.headerBar)
@@ -482,18 +482,18 @@ function MountCard:CreateMountCard()
     f.reportBtnText = f.reportBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     f.reportBtnText:SetAllPoints(f.reportBtn)
     f.reportBtnText:SetText("|TInterface\\HELPFRAME\\HelpIcon-Bug:12:12|t " .. L["Report"])
-    f.reportBtnText:SetTextColor(0.9, 0.4, 0.4, 1)
+    f.reportBtnText:SetTextColor(unpack(MCL_COLORS.TEXT_DANGER))
     f.reportBtnText:SetJustifyH("RIGHT")
 
     f.reportBtn:SetScript("OnEnter", function(self)
-        f.reportBtnText:SetTextColor(1, 0.5, 0.5, 1)
+        f.reportBtnText:SetTextColor(unpack(MCL_COLORS.TEXT_DANGER))
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
         GameTooltip:AddLine(L["Report Issue"], 1, 0.4, 0.4)
         GameTooltip:AddLine(L["Click to copy a pre-filled report URL for this mount"], 0.6, 0.6, 0.6)
         GameTooltip:Show()
     end)
     f.reportBtn:SetScript("OnLeave", function(self)
-        f.reportBtnText:SetTextColor(0.9, 0.4, 0.4, 1)
+        f.reportBtnText:SetTextColor(unpack(MCL_COLORS.TEXT_DANGER))
         GameTooltip:Hide()
     end)
     f.reportBtn:SetScript("OnClick", function(self)
@@ -504,10 +504,10 @@ function MountCard:CreateMountCard()
             f.copyEditBox:SetFocus()
             f.copyEditBox:HighlightText()
         end
-        f.reportBtnText:SetTextColor(0.3, 0.85, 0.4, 1)
+        f.reportBtnText:SetTextColor(unpack(MCL_COLORS.TEXT_SUCCESS))
         f.reportBtnText:SetText("|TInterface\\HELPFRAME\\HelpIcon-Bug:12:12|t " .. L["Copied!"])
         C_Timer.After(1.5, function()
-            f.reportBtnText:SetTextColor(0.9, 0.4, 0.4, 1)
+            f.reportBtnText:SetTextColor(unpack(MCL_COLORS.TEXT_DANGER))
             f.reportBtnText:SetText("|TInterface\\HELPFRAME\\HelpIcon-Bug:12:12|t " .. L["Report"])
         end)
     end)
@@ -523,18 +523,18 @@ function MountCard:CreateMountCard()
     f.wowheadBtnText = f.wowheadBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     f.wowheadBtnText:SetAllPoints(f.wowheadBtn)
     f.wowheadBtnText:SetText("|TInterface\\HELPFRAME\\HelpIcon-KnowledgeBase:12:12|t " .. L["Wowhead"])
-    f.wowheadBtnText:SetTextColor(0.9, 0.6, 0.2, 1)
+    f.wowheadBtnText:SetTextColor(unpack(MCL_COLORS.TEXT_WARNING))
     f.wowheadBtnText:SetJustifyH("RIGHT")
 
     f.wowheadBtn:SetScript("OnEnter", function(self)
-        f.wowheadBtnText:SetTextColor(1, 0.8, 0.3, 1)
+        f.wowheadBtnText:SetTextColor(unpack(MCL_COLORS.TEXT_HIGHLIGHT))
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
         GameTooltip:AddLine(L["Wowhead"], 1, 0.82, 0)
         GameTooltip:AddLine(L["Click to copy Wowhead URL"], 0.6, 0.6, 0.6)
         GameTooltip:Show()
     end)
     f.wowheadBtn:SetScript("OnLeave", function(self)
-        f.wowheadBtnText:SetTextColor(0.9, 0.6, 0.2, 1)
+        f.wowheadBtnText:SetTextColor(unpack(MCL_COLORS.TEXT_WARNING))
         GameTooltip:Hide()
     end)
     f.wowheadBtn:SetScript("OnClick", function(self)
@@ -548,10 +548,10 @@ function MountCard:CreateMountCard()
                 card.copyEditBox:SetFocus()
                 card.copyEditBox:HighlightText()
             end
-            f.wowheadBtnText:SetTextColor(0.3, 0.85, 0.4, 1)
+            f.wowheadBtnText:SetTextColor(unpack(MCL_COLORS.TEXT_SUCCESS))
             f.wowheadBtnText:SetText("|TInterface\\HELPFRAME\\HelpIcon-KnowledgeBase:12:12|t " .. L["Copied!"])
             C_Timer.After(1.5, function()
-                f.wowheadBtnText:SetTextColor(0.9, 0.6, 0.2, 1)
+                f.wowheadBtnText:SetTextColor(unpack(MCL_COLORS.TEXT_WARNING))
                 f.wowheadBtnText:SetText("|TInterface\\HELPFRAME\\HelpIcon-KnowledgeBase:12:12|t " .. L["Wowhead"])
             end)
         end
@@ -561,7 +561,7 @@ function MountCard:CreateMountCard()
     f.copyHint = f.titleFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     f.copyHint:SetPoint("RIGHT", f.wowheadBtn, "LEFT", -8, 0)
     f.copyHint:SetText(L["Click to copy"])
-    f.copyHint:SetTextColor(0.5, 0.5, 0.5, 0)
+    f.copyHint:SetTextColor(MCL_SHADE("TEXT_MUTED", 0))
 
     -- Inline copy popup anchored to the title bar
     f.copyPopup = CreateFrame("Frame", nil, f, "BackdropTemplate")
@@ -571,11 +571,11 @@ function MountCard:CreateMountCard()
     f.copyPopup:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+        edgeSize = MCL_PixelEdge(f.copyPopup),
         insets = { left = 1, right = 1, top = 1, bottom = 1 },
     })
-    f.copyPopup:SetBackdropColor(0.1, 0.1, 0.14, 0.95)
-    f.copyPopup:SetBackdropBorderColor(0.3, 0.6, 0.9, 0.8)
+    f.copyPopup:SetBackdropColor(unpack(MCL_COLORS.SURFACE_PANEL))
+    f.copyPopup:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT))
     f.copyPopup:EnableMouse(true)
     f.copyPopup:Hide()
 
@@ -583,7 +583,7 @@ function MountCard:CreateMountCard()
     local copyLabel = f.copyPopup:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     copyLabel:SetPoint("LEFT", f.copyPopup, "LEFT", 6, 0)
     copyLabel:SetText(L["Ctrl+C:"])
-    copyLabel:SetTextColor(0.5, 0.5, 0.5, 1)
+    copyLabel:SetTextColor(unpack(MCL_COLORS.TEXT_MUTED))
 
     -- EditBox inside the popup
     f.copyEditBox = CreateFrame("EditBox", nil, f.copyPopup)
@@ -604,11 +604,11 @@ function MountCard:CreateMountCard()
     end)
 
     f.titleFrame:SetScript("OnEnter", function(self)
-        f.copyHint:SetTextColor(0.5, 0.5, 0.5, 0.8)
+        f.copyHint:SetTextColor(MCL_SHADE("TEXT_MUTED", 0.8))
     end)
     f.titleFrame:SetScript("OnLeave", function(self)
         if not f.copyPopup:IsShown() then
-            f.copyHint:SetTextColor(0.5, 0.5, 0.5, 0)
+            f.copyHint:SetTextColor(MCL_SHADE("TEXT_MUTED", 0))
         end
     end)
     f.titleFrame:SetScript("OnClick", function(self)
@@ -617,14 +617,14 @@ function MountCard:CreateMountCard()
             if ChatEdit_GetActiveWindow() then
                 ChatEdit_InsertLink(name)
                 -- Brief flash to confirm
-                f.copyHint:SetTextColor(0, 1, 0, 1)
+                f.copyHint:SetTextColor(unpack(MCL_COLORS.TEXT_SUCCESS))
                 f.copyHint:SetText(L["Linked!"])
                 C_Timer.After(1, function()
                     f.copyHint:SetText(L["Click to copy"])
                     if f.titleFrame:IsMouseOver() then
-                        f.copyHint:SetTextColor(0.5, 0.5, 0.5, 0.8)
+                        f.copyHint:SetTextColor(MCL_SHADE("TEXT_MUTED", 0.8))
                     else
-                        f.copyHint:SetTextColor(0.5, 0.5, 0.5, 0)
+                        f.copyHint:SetTextColor(MCL_SHADE("TEXT_MUTED", 0))
                     end
                 end)
             else
@@ -797,7 +797,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
         local errorText = parentFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         errorText:SetPoint("CENTER", parentFrame, "CENTER", 0, 0)
         errorText:SetText(L["Mount information not available"])
-        errorText:SetTextColor(1, 0.5, 0.5, 1)
+        errorText:SetTextColor(unpack(MCL_COLORS.TEXT_DANGER))
         print("MCL Debug: No mountInfo found for ID:", mountData.mountID or mountData.id)
         return
     end
@@ -848,7 +848,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
         descriptionText:SetPoint("TOPRIGHT", parentFrame, "TOPRIGHT", -10, yOffset)  -- Reduced right margin from -30 to -10
         descriptionText:SetText(mountInfo.description)
         -- set descriptionText to a soft yellow
-        descriptionText:SetTextColor(0.9, 0.9, 0.2, 1)
+        descriptionText:SetTextColor(unpack(MCL_COLORS.TEXT_HIGHLIGHT))
         descriptionText:SetJustifyH("LEFT")
         descriptionText:SetWordWrap(true)
         
@@ -922,26 +922,26 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
             wpBtn:SetBackdrop({
                 bgFile = "Interface\\Buttons\\WHITE8x8",
                 edgeFile = "Interface\\Buttons\\WHITE8x8",
-                edgeSize = 1,
+                edgeSize = MCL_PixelEdge(wpBtn),
             })
-            wpBtn:SetBackdropColor(0.1, 0.15, 0.22, 0.9)
-            wpBtn:SetBackdropBorderColor(0.2, 0.6, 0.9, 0.5)
+            wpBtn:SetBackdropColor(MCL_SHADE("SURFACE_ACCENT", 0.9))
+            wpBtn:SetBackdropBorderColor(MCL_SHADE("BORDER_ACCENT", 0.5))
 
             local wpText = wpBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             wpText:SetPoint("CENTER")
             wpText:SetText(string.format("%s (%.1f, %.1f)", zoneName, wpX, wpY))
-            wpText:SetTextColor(0.4, 0.78, 0.95, 1)
+            wpText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
             local textWidth = wpText:GetStringWidth()
             wpBtn:SetSize(textWidth + 16, 18)
 
             wpBtn:SetScript("OnEnter", function(self)
-                self:SetBackdropBorderColor(0.3, 0.7, 1, 1)
-                self:SetBackdropColor(0.15, 0.2, 0.28, 1)
+                self:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT_BRIGHT))
+                self:SetBackdropColor(MCL_SHADE("SURFACE_ACCENT", 1))
             end)
             wpBtn:SetScript("OnLeave", function(self)
-                self:SetBackdropBorderColor(0.2, 0.6, 0.9, 0.5)
-                self:SetBackdropColor(0.1, 0.15, 0.22, 0.9)
+                self:SetBackdropBorderColor(MCL_SHADE("BORDER_ACCENT", 0.5))
+                self:SetBackdropColor(MCL_SHADE("SURFACE_ACCENT", 0.9))
             end)
             wpBtn:SetScript("OnClick", function()
                 if TomTom and TomTom.AddWaypoint then
@@ -957,9 +957,9 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                     C_SuperTrack.SetSuperTrackedUserWaypoint(true)
                 end
                 OpenWorldMap(wpMapId)
-                wpText:SetTextColor(0.3, 0.85, 0.4, 1)
+                wpText:SetTextColor(unpack(MCL_COLORS.TEXT_SUCCESS))
                 C_Timer.After(1.5, function()
-                    wpText:SetTextColor(0.4, 0.78, 0.95, 1)
+                    wpText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
                 end)
             end)
 
@@ -1069,10 +1069,10 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
             instrBtn:SetBackdrop({
                 bgFile = "Interface\\Buttons\\WHITE8x8",
                 edgeFile = "Interface\\Buttons\\WHITE8x8",
-                edgeSize = 1,
+                edgeSize = MCL_PixelEdge(instrBtn),
             })
-            instrBtn:SetBackdropColor(0.1, 0.13, 0.18, 0.9)
-            instrBtn:SetBackdropBorderColor(0.25, 0.4, 0.6, 0.6)
+            instrBtn:SetBackdropColor(MCL_SHADE("SURFACE_RAISED", 0.9))
+            instrBtn:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT_DIM))
 
             local instrIcon = instrBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             instrIcon:SetPoint("LEFT", instrBtn, "LEFT", 8, 0)
@@ -1081,7 +1081,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
             local instrLabel = instrBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             instrLabel:SetPoint("LEFT", instrIcon, "RIGHT", 4, 0)
             instrLabel:SetText(L["Instructions"])
-            instrLabel:SetTextColor(0.5, 0.75, 0.95, 1)
+            instrLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
             local instrCount = instrBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             instrCount:SetPoint("RIGHT", instrBtn, "RIGHT", -8, 0)
@@ -1094,14 +1094,14 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                 end
             end)
             instrBtn:SetScript("OnEnter", function(self)
-                self:SetBackdropBorderColor(0.35, 0.55, 0.8, 0.9)
-                self:SetBackdropColor(0.13, 0.17, 0.24, 1)
-                instrLabel:SetTextColor(0.7, 0.9, 1.0, 1)
+                self:SetBackdropBorderColor(MCL_SHADE("BORDER_ACCENT", 0.9))
+                self:SetBackdropColor(MCL_SHADE("SURFACE_ACCENT", 1))
+                instrLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
             end)
             instrBtn:SetScript("OnLeave", function(self)
-                self:SetBackdropBorderColor(0.25, 0.4, 0.6, 0.6)
-                self:SetBackdropColor(0.1, 0.13, 0.18, 0.9)
-                instrLabel:SetTextColor(0.5, 0.75, 0.95, 1)
+                self:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT_DIM))
+                self:SetBackdropColor(MCL_SHADE("SURFACE_RAISED", 0.9))
+                instrLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
             end)
 
             yOffset = yOffset - 28
@@ -1142,7 +1142,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                                 -- Short connector text stays inline; long text wraps
                                 local textFs = parentFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                                 textFs:SetText(preText)
-                                textFs:SetTextColor(0.7, 0.85, 0.95, 1)
+                                textFs:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
                                 local preWidth = textFs:GetStringWidth()
                                 if xOff + preWidth > contentWidth - 30 then
                                     xOff = 20
@@ -1195,7 +1195,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                             if preText ~= "" then
                                 local textFs = parentFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                                 textFs:SetText(preText)
-                                textFs:SetTextColor(0.7, 0.85, 0.95, 1)
+                                textFs:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
                                 local preWidth = textFs:GetStringWidth()
                                 if xOff + preWidth > contentWidth - 30 then
                                     xOff = 20
@@ -1255,7 +1255,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                             textFs:SetPoint("TOPLEFT", parentFrame, "TOPLEFT", xOff, yOffset - 2)
                             textFs:SetPoint("RIGHT", parentFrame, "RIGHT", -10, 0)
                             textFs:SetText(tail)
-                            textFs:SetTextColor(0.6, 0.75, 0.85, 1)  -- slightly dimmer for description text
+                            textFs:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))  -- slightly dimmer for description text
                             textFs:SetJustifyH("LEFT")
                             textFs:SetWordWrap(true)
                             local tailHeight = textFs:GetStringHeight()
@@ -1274,13 +1274,13 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                 local noteLabel = parentFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 noteLabel:SetPoint("TOPLEFT", parentFrame, "TOPLEFT", 10, yOffset)
                 noteLabel:SetText("|cFF8888AA\226\128\162|r")  -- bullet point
-                noteLabel:SetTextColor(0.53, 0.53, 0.67, 1)
+                noteLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
                 local noteText = parentFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 noteText:SetPoint("TOPLEFT", noteLabel, "TOPRIGHT", 4, 0)
                 noteText:SetPoint("RIGHT", parentFrame, "RIGHT", -10, 0)
                 noteText:SetText(trimmed)
-                noteText:SetTextColor(0.7, 0.85, 0.95, 1)
+                noteText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
                 noteText:SetJustifyH("LEFT")
                 noteText:SetWordWrap(true)
 
@@ -1297,10 +1297,10 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
         collapseBtn:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8x8",
             edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
+            edgeSize = MCL_PixelEdge(collapseBtn),
         })
-        collapseBtn:SetBackdropColor(0.1, 0.13, 0.18, 0.9)
-        collapseBtn:SetBackdropBorderColor(0.25, 0.4, 0.6, 0.6)
+        collapseBtn:SetBackdropColor(MCL_SHADE("SURFACE_RAISED", 0.9))
+        collapseBtn:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT_DIM))
 
         local collapseIcon = collapseBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         collapseIcon:SetPoint("LEFT", collapseBtn, "LEFT", 8, 0)
@@ -1309,7 +1309,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
         local collapseLabel = collapseBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         collapseLabel:SetPoint("LEFT", collapseIcon, "RIGHT", 4, 0)
         collapseLabel:SetText(L["Collapse Instructions"])
-        collapseLabel:SetTextColor(0.5, 0.75, 0.95, 1)
+        collapseLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
         collapseBtn:SetScript("OnClick", function()
             if card then
@@ -1318,14 +1318,14 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
             end
         end)
         collapseBtn:SetScript("OnEnter", function(self)
-            self:SetBackdropBorderColor(0.35, 0.55, 0.8, 0.9)
-            self:SetBackdropColor(0.13, 0.17, 0.24, 1)
-            collapseLabel:SetTextColor(0.7, 0.9, 1.0, 1)
+            self:SetBackdropBorderColor(MCL_SHADE("BORDER_ACCENT", 0.9))
+            self:SetBackdropColor(MCL_SHADE("SURFACE_ACCENT", 1))
+            collapseLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
         end)
         collapseBtn:SetScript("OnLeave", function(self)
-            self:SetBackdropBorderColor(0.25, 0.4, 0.6, 0.6)
-            self:SetBackdropColor(0.1, 0.13, 0.18, 0.9)
-            collapseLabel:SetTextColor(0.5, 0.75, 0.95, 1)
+            self:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT_DIM))
+            self:SetBackdropColor(MCL_SHADE("SURFACE_RAISED", 0.9))
+            collapseLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
         end)
 
         yOffset = yOffset - 28
@@ -1384,7 +1384,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
             sourceText:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
             sourceText:SetPoint("TOPRIGHT", detailsFrame, "TOPRIGHT", 0, detailsYOffset)
             sourceText:SetText(blizzardSourceText)
-            sourceText:SetTextColor(0.65, 0.75, 0.85, 1)
+            sourceText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
             sourceText:SetJustifyH("LEFT")
             sourceText:SetWordWrap(true)
             
@@ -1428,12 +1428,12 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
             local methodLabel = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             methodLabel:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
             methodLabel:SetText(L["Source:"])
-            methodLabel:SetTextColor(0.5, 0.55, 0.65, 1)
+            methodLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
             local methodValue = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             methodValue:SetPoint("LEFT", methodLabel, "RIGHT", 4, 0)
             methodValue:SetText(GUIDE_METHOD_LABELS[guideDropInfo.method] or guideDropInfo.method or L["Unknown"])
-            methodValue:SetTextColor(0.4, 0.78, 0.95, 1)
+            methodValue:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
             detailsYOffset = detailsYOffset - 16
         end
 
@@ -1442,7 +1442,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
             local chanceLabel = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             chanceLabel:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
             chanceLabel:SetText(L["Drop Rate:"])
-            chanceLabel:SetTextColor(0.5, 0.55, 0.65, 1)
+            chanceLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
             local pct = (1 / guideDropInfo.chance) * 100
             local chanceStr
@@ -1459,13 +1459,13 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
             chanceValue:SetText(chanceStr)
             -- Colour by rarity: green ≥10%, yellow ≥1%, orange ≥0.1%, red <0.1%
             if pct >= 10 then
-                chanceValue:SetTextColor(0.3, 0.85, 0.4, 1)
+                chanceValue:SetTextColor(unpack(MCL_COLORS.TEXT_SUCCESS))
             elseif pct >= 1 then
-                chanceValue:SetTextColor(0.9, 0.9, 0.2, 1)
+                chanceValue:SetTextColor(unpack(MCL_COLORS.TEXT_HIGHLIGHT))
             elseif pct >= 0.1 then
-                chanceValue:SetTextColor(0.9, 0.55, 0.1, 1)
+                chanceValue:SetTextColor(unpack(MCL_COLORS.TEXT_WARNING))
             else
-                chanceValue:SetTextColor(0.9, 0.25, 0.25, 1)
+                chanceValue:SetTextColor(unpack(MCL_COLORS.TEXT_DANGER))
             end
             detailsYOffset = detailsYOffset - 16
         end
@@ -1481,12 +1481,12 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                     local npcLabel = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                     npcLabel:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
                     npcLabel:SetText(L["NPC:"])
-                    npcLabel:SetTextColor(0.5, 0.55, 0.65, 1)
+                    npcLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
                     local npcValue = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                     npcValue:SetPoint("LEFT", npcLabel, "RIGHT", 4, 0)
                     npcValue:SetText(npcDisplayName)
-                    npcValue:SetTextColor(0.8, 0.8, 0.85, 1)
+                    npcValue:SetTextColor(unpack(MCL_COLORS.TEXT_BODY))
                     detailsYOffset = detailsYOffset - 16
                 end
             end
@@ -1505,12 +1505,12 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                     local zoneLabel = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                     zoneLabel:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
                     zoneLabel:SetText(L["Zone:"])
-                    zoneLabel:SetTextColor(0.5, 0.55, 0.65, 1)
+                    zoneLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
                     local zoneValue = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                     zoneValue:SetPoint("LEFT", zoneLabel, "RIGHT", 4, 0)
                     zoneValue:SetText(zoneMapInfo.name)
-                    zoneValue:SetTextColor(0.8, 0.8, 0.85, 1)
+                    zoneValue:SetTextColor(unpack(MCL_COLORS.TEXT_BODY))
                     detailsYOffset = detailsYOffset - 16
                 end
             end
@@ -1522,12 +1522,12 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                     local coordLabel = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                     coordLabel:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
                     coordLabel:SetText(L["Coords:"])
-                    coordLabel:SetTextColor(0.5, 0.55, 0.65, 1)
+                    coordLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
                     local coordValue = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                     coordValue:SetPoint("LEFT", coordLabel, "RIGHT", 4, 0)
                     coordValue:SetText(string.format("%.1f, %.1f", c.x, c.y))
-                    coordValue:SetTextColor(0.8, 0.8, 0.85, 1)
+                    coordValue:SetTextColor(unpack(MCL_COLORS.TEXT_BODY))
 
                     -- Waypoint button (pin icon) via widget factory
                     if c.m and c.m > 0 then
@@ -1560,38 +1560,38 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
             local facLabel = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             facLabel:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
             facLabel:SetText(rep.isFriendship and "Friendship:" or rep.isRenown and "Renown:" or "Reputation:")
-            facLabel:SetTextColor(0.5, 0.55, 0.65, 1)
+            facLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
             local facValue = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             facValue:SetPoint("LEFT", facLabel, "RIGHT", 4, 0)
             facValue:SetText(rep.factionName)
-            facValue:SetTextColor(0.4, 0.78, 0.95, 1)
+            facValue:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
             detailsYOffset = detailsYOffset - 16
 
             -- Row 2: Required | Current  (two-column)
             local reqLabel = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             reqLabel:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
             reqLabel:SetText(L["Required:"])
-            reqLabel:SetTextColor(0.5, 0.55, 0.65, 1)
+            reqLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
             local reqValue = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             reqValue:SetPoint("LEFT", reqLabel, "RIGHT", 4, 0)
             reqValue:SetText(rep.requiredText)
-            reqValue:SetTextColor(0.9, 0.9, 0.2, 1)
+            reqValue:SetTextColor(unpack(MCL_COLORS.TEXT_HIGHLIGHT))
 
             -- Current standing on the right side
             local curLabel = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             curLabel:SetPoint("LEFT", reqValue, "RIGHT", 16, 0)
             curLabel:SetText(L["Current:"])
-            curLabel:SetTextColor(0.5, 0.55, 0.65, 1)
+            curLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
             local curValue = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             curValue:SetPoint("LEFT", curLabel, "RIGHT", 4, 0)
             curValue:SetText(rep.currentText)
             if rep.isMet then
-                curValue:SetTextColor(0.3, 0.85, 0.4, 1)
+                curValue:SetTextColor(unpack(MCL_COLORS.TEXT_SUCCESS))
             else
-                curValue:SetTextColor(0.9, 0.25, 0.25, 1)
+                curValue:SetTextColor(unpack(MCL_COLORS.TEXT_DANGER))
             end
             detailsYOffset = detailsYOffset - 16
 
@@ -1600,12 +1600,12 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                 local vLabel = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 vLabel:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
                 vLabel:SetText(L["Vendor:"])
-                vLabel:SetTextColor(0.5, 0.55, 0.65, 1)
+                vLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
                 local vValue = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 vValue:SetPoint("LEFT", vLabel, "RIGHT", 4, 0)
                 vValue:SetText(string.format("%s (%.1f, %.1f)", rep.vendorName, rep.vendorX, rep.vendorY))
-                vValue:SetTextColor(0.8, 0.8, 0.85, 1)
+                vValue:SetTextColor(unpack(MCL_COLORS.TEXT_BODY))
 
                 -- Waypoint button via widget factory
                 MCLcore.Widgets:CreateWaypointButton({
@@ -1674,7 +1674,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                         labelText = vd.faction .. " Vendor:"
                     end
                     vLabel:SetText(labelText)
-                    vLabel:SetTextColor(0.5, 0.55, 0.65, 1)
+                    vLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
                     local vValue = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                     vValue:SetPoint("LEFT", vLabel, "RIGHT", 4, 0)
@@ -1683,7 +1683,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                     else
                         vValue:SetText(vd.npc)
                     end
-                    vValue:SetTextColor(0.8, 0.8, 0.85, 1)
+                    vValue:SetTextColor(unpack(MCL_COLORS.TEXT_BODY))
 
                     -- Waypoint button (only if we have coordinates) via widget factory
                     if vd.m and vd.x and vd.y then
@@ -1704,12 +1704,12 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                         local vzLabel = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                         vzLabel:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
                         vzLabel:SetText(L["Location:"])
-                        vzLabel:SetTextColor(0.5, 0.55, 0.65, 1)
+                        vzLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
                         local vzValue = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                         vzValue:SetPoint("LEFT", vzLabel, "RIGHT", 4, 0)
                         vzValue:SetText(vd.zone)
-                        vzValue:SetTextColor(0.8, 0.8, 0.85, 1)
+                        vzValue:SetTextColor(unpack(MCL_COLORS.TEXT_BODY))
                         detailsYOffset = detailsYOffset - 16
                     end
                 end
@@ -1730,7 +1730,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
             local qLabel = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             qLabel:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
             qLabel:SetText(L["Quest:"])
-            qLabel:SetTextColor(0.5, 0.55, 0.65, 1)
+            qLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
             -- Quest name as a clickable button (opens quest in Wowhead)
             local qBtn = CreateFrame("Button", nil, detailsFrame)
@@ -1738,11 +1738,11 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
             local qBtnText = qBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             qBtnText:SetPoint("LEFT", qBtn, "LEFT", 0, 0)
             qBtnText:SetText(qd.quest)
-            qBtnText:SetTextColor(1, 0.82, 0, 1)
+            qBtnText:SetTextColor(unpack(MCL_COLORS.TEXT_GOLD))
             qBtn:SetSize(qBtnText:GetStringWidth() + 4, 14)
 
             qBtn:SetScript("OnEnter", function(self)
-                qBtnText:SetTextColor(1, 1, 0.5, 1)
+                qBtnText:SetTextColor(unpack(MCL_COLORS.TEXT_HIGHLIGHT))
                 GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT")
                 if qd.questId then
                     GameTooltip:SetHyperlink(string.format("quest:%d", qd.questId))
@@ -1752,7 +1752,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                 GameTooltip:Show()
             end)
             qBtn:SetScript("OnLeave", function(self)
-                qBtnText:SetTextColor(1, 0.82, 0, 1)
+                qBtnText:SetTextColor(unpack(MCL_COLORS.TEXT_GOLD))
                 GameTooltip:Hide()
             end)
 
@@ -1773,7 +1773,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                 local qnLabel = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 qnLabel:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
                 qnLabel:SetText(L["Quest Giver:"])
-                qnLabel:SetTextColor(0.5, 0.55, 0.65, 1)
+                qnLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
                 local qnValue = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 qnValue:SetPoint("LEFT", qnLabel, "RIGHT", 4, 0)
@@ -1782,7 +1782,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                 else
                     qnValue:SetText(qd.npc)
                 end
-                qnValue:SetTextColor(0.8, 0.8, 0.85, 1)
+                qnValue:SetTextColor(unpack(MCL_COLORS.TEXT_BODY))
 
                 -- Waypoint button (only if we have coordinates) via widget factory
                 if qd.m and qd.x and qd.y then
@@ -1805,12 +1805,12 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                 local qzLabel = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 qzLabel:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
                 qzLabel:SetText(L["Quest Zone:"])
-                qzLabel:SetTextColor(0.5, 0.55, 0.65, 1)
+                qzLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
                 local qzValue = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 qzValue:SetPoint("LEFT", qzLabel, "RIGHT", 4, 0)
                 qzValue:SetText(qd.zone)
-                qzValue:SetTextColor(0.8, 0.8, 0.85, 1)
+                qzValue:SetTextColor(unpack(MCL_COLORS.TEXT_BODY))
                 detailsYOffset = detailsYOffset - 16
             end
         end
@@ -1833,7 +1833,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                 local costHeader = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 costHeader:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", 0, detailsYOffset)
                 costHeader:SetText(L["Cost:"])
-                costHeader:SetTextColor(0.5, 0.55, 0.65, 1)
+                costHeader:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
                 local headerWidth = costHeader:GetStringWidth() or 30
                 local costInlineOffset = headerWidth + 6
 
@@ -1882,7 +1882,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                     local nameStr = detailsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                     nameStr:SetPoint("TOPLEFT", detailsFrame, "TOPLEFT", rowAnchorOffset, detailsYOffset)
                     nameStr:SetText(costName)
-                    nameStr:SetTextColor(0.8, 0.8, 0.85, 1)
+                    nameStr:SetTextColor(unpack(MCL_COLORS.TEXT_BODY))
 
                     -- Display amount: "have / need"
                     local isMet = playerHas >= required
@@ -1899,9 +1899,9 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                     amtStr:SetPoint("LEFT", nameStr, "RIGHT", 6, 0)
                     amtStr:SetText(displayHas .. " / " .. displayNeed)
                     if isMet then
-                        amtStr:SetTextColor(0.3, 0.85, 0.4, 1)
+                        amtStr:SetTextColor(unpack(MCL_COLORS.TEXT_SUCCESS))
                     else
-                        amtStr:SetTextColor(0.9, 0.25, 0.25, 1)
+                        amtStr:SetTextColor(unpack(MCL_COLORS.TEXT_DANGER))
                     end
 
                     detailsYOffset = detailsYOffset - 16
@@ -1962,15 +1962,15 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                 local achLabel = achBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 achLabel:SetPoint("LEFT", achBtn, "LEFT", 0, 0)
                 achLabel:SetText(L["Achievement:"])
-                achLabel:SetTextColor(0.5, 0.55, 0.65, 1)
+                achLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
                 local achValue = achBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 achValue:SetPoint("LEFT", achLabel, "RIGHT", 4, 0)
                 achValue:SetText(achName)
                 if achCompleted then
-                    achValue:SetTextColor(0.3, 0.85, 0.4, 1)
+                    achValue:SetTextColor(unpack(MCL_COLORS.TEXT_SUCCESS))
                 else
-                    achValue:SetTextColor(0.9, 0.9, 0.2, 1)
+                    achValue:SetTextColor(unpack(MCL_COLORS.TEXT_HIGHLIGHT))
                 end
 
                 achBtn:SetScript("OnClick", function()
@@ -1997,7 +1997,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                     end
                 end)
                 achBtn:SetScript("OnEnter", function(self)
-                    achValue:SetTextColor(1, 1, 1, 1)
+                    achValue:SetTextColor(unpack(MCL_COLORS.TEXT_PRIMARY))
                     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 
                     -- Custom achievement tooltip with manual criteria tracking
@@ -2050,9 +2050,9 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
                 end)
                 achBtn:SetScript("OnLeave", function()
                     if achCompleted then
-                        achValue:SetTextColor(0.3, 0.85, 0.4, 1)
+                        achValue:SetTextColor(unpack(MCL_COLORS.TEXT_SUCCESS))
                     else
-                        achValue:SetTextColor(0.9, 0.9, 0.2, 1)
+                        achValue:SetTextColor(unpack(MCL_COLORS.TEXT_HIGHLIGHT))
                     end
                     GameTooltip:Hide()
                 end)
@@ -2083,10 +2083,10 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
     modelFrame:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1
+        edgeSize = MCL_PixelEdge(modelFrame)
     })
-    modelFrame:SetBackdropColor(0.04, 0.04, 0.06, 0.6)
-    modelFrame:SetBackdropBorderColor(0.2, 0.2, 0.25, 0.5)
+    modelFrame:SetBackdropColor(MCL_SHADE("SURFACE_SUNKEN", 0.6))
+    modelFrame:SetBackdropBorderColor(MCL_SHADE("BORDER_SUBTLE", 0.5))
     
     -- Create model display using PlayerModel frame (no backdrop)
     local mountModel = CreateFrame("PlayerModel", nil, modelFrame)
@@ -2202,7 +2202,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
         local modelControlsText = modelFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         modelControlsText:SetPoint("BOTTOM", mountModel, "BOTTOM", 0, -25)
         modelControlsText:SetText(L["LMB: rotate | RMB: pan | Scroll: zoom | MMB: reset"])
-        modelControlsText:SetTextColor(0.5, 0.55, 0.65, 0.8)
+        modelControlsText:SetTextColor(MCL_SHADE("TEXT_ACCENT", 0.8))
     else
         -- Fallback: show large mount icon if no model available
         local largeIconFrame = CreateFrame("Frame", nil, modelFrame)
@@ -2218,7 +2218,7 @@ function MountCard:CreateMountCardContent(parentFrame, mountData)
         local noModelText = modelFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         noModelText:SetPoint("BOTTOM", largeIconFrame, "BOTTOM", 0, -15)
         noModelText:SetText(L["3D Model not available"])
-        noModelText:SetTextColor(0.5, 0.55, 0.65, 0.8)
+        noModelText:SetTextColor(MCL_SHADE("TEXT_ACCENT", 0.8))
     end
     
     yOffset = yOffset - modelHeight

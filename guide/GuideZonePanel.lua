@@ -88,7 +88,7 @@ local function AcquireIcon(parent)
         -- highlight
         btn.hl = btn:CreateTexture(nil, "HIGHLIGHT")
         btn.hl:SetAllPoints()
-        btn.hl:SetColorTexture(1, 1, 1, 0.25)
+        btn.hl:SetColorTexture(MCL_SHADE("HIGHLIGHT_WHITE", 0.25))
 
         btn:SetScript("OnEnter", function(self)
             if self.mountData then
@@ -311,7 +311,7 @@ local function GetPanelFrame()
         tile = true, tileSize = 16, edgeSize = 10,
         insets = { left = 2, right = 2, top = 2, bottom = 2 },
     })
-    tabButton:SetBackdropColor(0.05, 0.05, 0.08, 0.95)
+    tabButton:SetBackdropColor(MCL_SHADE("SURFACE_SUNKEN", 0.95))
     tabButton:SetBackdropBorderColor(COLOR_HEADER.r, COLOR_HEADER.g, COLOR_HEADER.b, 0.8)
 
     tabButton.arrow = tabButton:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -392,13 +392,13 @@ local function GetPanelFrame()
     local function UpdatePinToggleVisual()
         local on = MCL_GUIDE_SETTINGS.showMapPins ~= false
         if on then
-            pinToggleButton:SetBackdropColor(0.05, 0.15, 0.08, 0.95)
-            pinToggleButton:SetBackdropBorderColor(0.2, 0.8, 0.3, 0.8)
+            pinToggleButton:SetBackdropColor(unpack(MCL_COLORS.SURFACE_SUCCESS))
+            pinToggleButton:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_SUCCESS))
             pinToggleButton.icon:SetDesaturated(false)
             pinToggleButton.icon:SetAlpha(1.0)
         else
-            pinToggleButton:SetBackdropColor(0.12, 0.05, 0.05, 0.95)
-            pinToggleButton:SetBackdropBorderColor(0.6, 0.2, 0.2, 0.8)
+            pinToggleButton:SetBackdropColor(MCL_SHADE("SURFACE_WINDOW", 0.95))
+            pinToggleButton:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_DANGER))
             pinToggleButton.icon:SetDesaturated(true)
             pinToggleButton.icon:SetAlpha(0.5)
         end
@@ -444,13 +444,13 @@ local function GetPanelFrame()
     local function UpdateRareToggleVisual()
         local on = MCL_GUIDE_SETTINGS.showRarePins ~= false
         if on then
-            rareToggleButton:SetBackdropColor(0.05, 0.15, 0.08, 0.95)
-            rareToggleButton:SetBackdropBorderColor(0.2, 0.8, 0.3, 0.8)
+            rareToggleButton:SetBackdropColor(unpack(MCL_COLORS.SURFACE_SUCCESS))
+            rareToggleButton:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_SUCCESS))
             rareToggleButton.icon:SetDesaturated(false)
             rareToggleButton.icon:SetAlpha(1.0)
         else
-            rareToggleButton:SetBackdropColor(0.12, 0.05, 0.05, 0.95)
-            rareToggleButton:SetBackdropBorderColor(0.6, 0.2, 0.2, 0.8)
+            rareToggleButton:SetBackdropColor(MCL_SHADE("SURFACE_WINDOW", 0.95))
+            rareToggleButton:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_DANGER))
             rareToggleButton.icon:SetDesaturated(true)
             rareToggleButton.icon:SetAlpha(0.5)
         end
@@ -521,7 +521,7 @@ function Panel:ShowIconTooltip(btn)
 
     -- ── MCL source data ──
     GameTooltip:AddLine(" ")
-    GameTooltip:AddLine("|cFF1FB7EB" .. L["--- MCL Guide ---"] .. "|r")
+    GameTooltip:AddLine(MCL_HEX("TEXT_ACCENT") .. L["--- MCL Guide ---"] .. "|r")
 
     if data.method then
         GameTooltip:AddLine(L["Source:"] .. " " .. Guide:GetMethodText(data.method), COLOR_HEADER.r, COLOR_HEADER.g, COLOR_HEADER.b)

@@ -217,8 +217,8 @@ function KethoEditBox_Show(text)
             edgeSize = 8,
             insets = { left = 2, right = 2, top = 2, bottom = 2 },
         })
-        f:SetBackdropColor(0.1, 0.1, 0.1, 0.95)
-        f:SetBackdropBorderColor(0, 0.44, 0.87, 0.8)
+        f:SetBackdropColor(unpack(MCL_COLORS.SURFACE_PANEL))
+        f:SetBackdropBorderColor(MCL_SHADE("BORDER_ACCENT_DIM", 0.8))
 
         -- Movable
         f:SetMovable(true)
@@ -235,7 +235,7 @@ function KethoEditBox_Show(text)
         local copyLabel = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         copyLabel:SetPoint("LEFT", f, "LEFT", 10, 0)
         copyLabel:SetText(L["Ctrl+C:"])
-        copyLabel:SetTextColor(0.5, 0.5, 0.5, 1)
+        copyLabel:SetTextColor(unpack(MCL_COLORS.TEXT_MUTED))
 
         -- EditBox
         local eb = CreateFrame("EditBox", "KethoEditBoxEditBox", f)
@@ -317,6 +317,44 @@ function MCL_functions:compareLink()
     KethoEditBox_Show(string)
 end
 
+-- Does this section hold anything this character could ever collect?
+-- true  - at least one mount the journal knows and this faction can use
+-- false - the loaded journal has accounted for every mount, and each is
+--         either the other faction's or not in the journal at all
+-- nil   - cannot tell yet (journal still loading, or an item not cached)
+--
+-- On Forever every mount left in Unconfirmed is Horde-only, so an Alliance
+-- character got an Unconfirmed tab reading 0/0 with nothing behind it.
+-- Answering nil whenever in doubt is what keeps a cold login from hiding
+-- every section before the journal is ready.
+local function SectionHasAnythingForChar(section)
+    local cats = section.mounts and section.mounts.categories
+    if type(cats) ~= "table" then return true end   -- Pinned, Hidden, Overview
+    local journalReady = C_MountJournal.GetNumMounts
+        and (C_MountJournal.GetNumMounts() or 0) > 0
+    local playerFaction = UnitFactionGroup("player")
+    local sawAny = false
+    for _, cat in pairs(cats) do
+        for _, key in ipairs((type(cat) == "table" and cat.mounts) or {}) do
+            local id = MCL_functions:GetMountID(key)
+            if not id or id <= 0 then return nil end
+            local name, _, _, _, _, _, _, isFactionSpecific, faction = C_MountJournal.GetMountInfoByID(id)
+            if name then
+                if not isFactionSpecific then return true end
+                local side = (faction == 0 and "Horde") or (faction == 1 and "Alliance") or nil
+                if side == nil or side == playerFaction then return true end
+            elseif not journalReady then
+                return nil
+            end
+            sawAny = true
+        end
+    end
+    -- Not "sawAny and false or nil": with false in the middle, Lua's and/or
+    -- idiom always falls through to nil, and nothing would ever be dropped.
+    if sawAny then return false end
+    return nil
+end
+
 function MCL_functions:initSections()
     -- * --------------------------------
     -- * Create variables and assign strings to each section.
@@ -326,8 +364,9 @@ function MCL_functions:initSections()
     MCLcore.sections = {}
 
     for i, v in ipairs(MCLcore.sectionNames) do
-        -- Skip opposite faction section
-        if v.name ~= faction then
+        -- Skip the opposite faction's section, and any section confirmed
+        -- to hold nothing this character can collect.
+        if v.name ~= faction and SectionHasAnythingForChar(v) ~= false then
             table.insert(MCLcore.sections, v)
         end
     end
@@ -368,7 +407,7 @@ function MCL_functions:initSections()
         MCLcore.overview = CreateFrame("Frame", nil, MCL_mainFrame.ScrollChild, "BackdropTemplate")
         MCLcore.overview:SetSize(curWidth - 40, 550)  -- Symmetric padding within scroll viewport
         MCLcore.overview:SetPoint("TOPLEFT", MCL_mainFrame.ScrollChild, "TOPLEFT", 10, 0)  -- Consistent with other content frames
-        MCLcore.overview:SetBackdropColor(0, 0, 0, 0)
+        MCLcore.overview:SetBackdropColor(unpack(MCL_COLORS.TRANSPARENT))
     end
     -- Build the overview content into the overview frame
     MCLcore.Frames:createOverviewCategory(MCLcore.sections, MCLcore.overview)
@@ -384,6 +423,57 @@ function MCL_functions:initSections()
     end    
 end
 
+
+-- * --------------------------------
+-- * /mcl audit
+-- * --------------------------------
+-- Checks every mount MCL lists against the live mount journal and reports
+-- the ones the journal has never heard of. Built for Forever, which ships
+-- mount rows the journal does not expose - GetMountInfoByID returns nothing
+-- for them - but just as useful on retail after a patch. The data files are
+-- generated from the client's database tables, which cannot see this; only
+-- the running game can.
+function MCL_functions:AuditJournal()
+    local numJournal = C_MountJournal.GetNumMounts and C_MountJournal.GetNumMounts() or 0
+    if numJournal == 0 then
+        print("|cff00CCFF[MCL]|r The mount journal has not loaded yet - try again in a few seconds.")
+        return
+    end
+
+    local seen, missing, unresolved = {}, {}, 0
+    local present, factionSpecific = 0, 0
+    for _, section in ipairs(MCLcore.sectionNames or {}) do
+        local cats = section.mounts and section.mounts.categories
+        if type(cats) == "table" then
+            for _, cat in pairs(cats) do
+                for _, key in ipairs((type(cat) == "table" and cat.mounts) or {}) do
+                    local id = MCL_functions:GetMountID(key)
+                    if not id or id <= 0 then
+                        unresolved = unresolved + 1
+                    elseif not seen[id] then
+                        seen[id] = true
+                        local name, _, _, _, _, _, _, isFactionSpecific = C_MountJournal.GetMountInfoByID(id)
+                        if name then
+                            present = present + 1
+                            if isFactionSpecific then factionSpecific = factionSpecific + 1 end
+                        else
+                            missing[#missing + 1] = string.format("m%d  %s / %s",
+                                id, tostring(section.name), tostring(cat.name or "?"))
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    print(string.format("|cff00CCFF[MCL]|r Journal audit: %d listed mounts in the journal "
+        .. "(%d faction-specific), |cffFF6060%d not in it|r, %d unresolved.",
+        present, factionSpecific, #missing, unresolved))
+    table.sort(missing)
+    for _, line in ipairs(missing) do
+        print("    " .. line)
+    end
+end
 
 function MCL_functions:GetCollectedMounts()
     local mounts = {}
@@ -408,7 +498,7 @@ function MCL_functions:CreateBorder(frame, side)
     frame.borders = frame:CreateLine(nil, "BACKGROUND", nil, 0)
     local l = frame.borders
     l:SetThickness(1)
-    l:SetColorTexture(1, 1, 1, 0.4)
+    l:SetColorTexture(MCL_SHADE("HIGHLIGHT_WHITE", 0.4))
 	l:SetStartPoint("BOTTOM"..side)
 	l:SetEndPoint("TOP"..side)
     return frame
@@ -422,7 +512,7 @@ function MCL_functions:CreateFullBorder(self)
             self.borders[i] = self:CreateLine(nil, "BACKGROUND", nil, 0)
             local l = self.borders[i]
             l:SetThickness(2)
-            l:SetColorTexture(0, 0, 0, 0.7)
+            l:SetColorTexture(unpack(MCL_COLORS.OVERLAY_SCRIM))
             if i==1 then
                 l:SetStartPoint("TOPLEFT", 0, 1)
                 l:SetEndPoint("TOPRIGHT", 0, 1)
@@ -1348,7 +1438,7 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
 
                 frame:SetBackdrop({
                     edgeFile = [[Interface\Buttons\WHITE8x8]],
-                    edgeSize = 1,
+                    edgeSize = MCL_PixelEdge(frame),
                     bgFile = [[Interface\Buttons\WHITE8x8]],
                 })
 
@@ -1374,7 +1464,7 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
                 frame.dragonRidable = isSteadyFlight
 
                 frame:SetBackdropBorderColor(unpack(MCLcore.C.COLORS.BORDER_SUBTLE))
-                frame:SetBackdropColor(0, 0, 0, MCL_SETTINGS.opacity)
+                frame:SetBackdropColor(MCL_SHADE("OVERLAY_SCRIM", MCL_SETTINGS.opacity))
 
                 frame.tex = frame:CreateTexture()
                 frame.tex:SetSize(frame_size, frame_size)
@@ -1386,7 +1476,7 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
                     frame.tex:SetTexture(GetItemIcon(val))
                 end
         
-                frame.tex:SetVertexColor(0.75, 0.75, 0.75, 0.3);
+                frame.tex:SetVertexColor(MCL_SHADE("TEXT_BODY", 0.3));
 
                 frame.mountID = mount_Id
                 frame.itemID = val            
@@ -1438,7 +1528,7 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
                     -- Bottom border line for separation
                     frame.border = frame:CreateLine(nil, "BACKGROUND", nil, 0)
                     frame.border:SetThickness(1)
-                    frame.border:SetColorTexture(0.5, 0.5, 0.5, 0.5)
+                    frame.border:SetColorTexture(MCL_SHADE("BORDER_STRONG", 0.5))
                     frame.border:SetStartPoint("BOTTOMLEFT", 4, 4)
                     frame.border:SetEndPoint("BOTTOMRIGHT", -4, 4)
                     
@@ -1473,15 +1563,15 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
                     
                     -- Apply collection status styling
                     if IsMountCollected(mount_Id) then
-                        frame:SetBackdropBorderColor(0, 0.8, 0, 0.8)
-                        frame:SetBackdropColor(0, 0.2, 0, 0.15)
-                        frame.tex:SetVertexColor(1, 1, 1, 1)
+                        frame:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_SUCCESS))
+                        frame:SetBackdropColor(MCL_SHADE("SURFACE_SUCCESS", 0.15))
+                        frame.tex:SetVertexColor(unpack(MCL_COLORS.TINT_NONE))
                         frame.mountName:SetTextColor(unpack(MCLcore.C.COLORS.STATUS_HIGH))
                     else
-                        frame:SetBackdropBorderColor(0.8, 0.3, 0.3, 0.8)
-                        frame:SetBackdropColor(0.2, 0.05, 0.05, 0.15)
-                        frame.tex:SetVertexColor(0.6, 0.6, 0.6, 0.8)
-                        frame.mountName:SetTextColor(0.9, 0.9, 0.9)
+                        frame:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_DANGER))
+                        frame:SetBackdropColor(MCL_SHADE("SURFACE_DANGER", 0.15))
+                        frame.tex:SetVertexColor(unpack(MCL_COLORS.TINT_DIM))
+                        frame.mountName:SetTextColor(unpack(MCL_COLORS.TEXT_PRIMARY))
                     end
 
                     frame.pin:SetSize(20, 20)
@@ -1489,22 +1579,22 @@ function MCL_functions:CreateMountsForCategory(set, relativeFrame, frame_size, t
                     
                     -- Add hover effects
                     frame:SetScript("OnEnter", function(self)
-                        self:SetBackdropColor(1, 1, 1, 0.1)
+                        self:SetBackdropColor(MCL_SHADE("HIGHLIGHT_WHITE", 0.1))
                         if self.mountName then
-                            self.mountName:SetTextColor(1, 1, 1)
+                            self.mountName:SetTextColor(unpack(MCL_COLORS.TEXT_PRIMARY))
                         end
                     end)
                     
                     frame:SetScript("OnLeave", function(self)
                         if IsMountCollected(mount_Id) then
-                            self:SetBackdropColor(0, 0.2, 0, 0.15)
+                            self:SetBackdropColor(MCL_SHADE("SURFACE_SUCCESS", 0.15))
                             if self.mountName then
                                 self.mountName:SetTextColor(unpack(MCLcore.C.COLORS.STATUS_HIGH))
                             end
                         else
-                            self:SetBackdropColor(0.2, 0.05, 0.05, 0.15)
+                            self:SetBackdropColor(MCL_SHADE("SURFACE_DANGER", 0.15))
                             if self.mountName then
-                                self.mountName:SetTextColor(0.9, 0.9, 0.9)
+                                self.mountName:SetTextColor(unpack(MCL_COLORS.TEXT_PRIMARY))
                             end
                         end
                     end)
@@ -1594,7 +1684,7 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
         local mountName, spellID, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected, mountID, _ = C_MountJournal.GetMountInfoByID(mount_Id)
         frame.tex:SetTexture(icon)
 
-        frame.tex:SetVertexColor(0.75, 0.75, 0.75, 0.3);        
+        frame.tex:SetVertexColor(MCL_SHADE("TEXT_BODY", 0.3));        
 
         frame.category = category
         frame.section = section
@@ -1633,7 +1723,7 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
         -- Bottom border line for separation
         frame.border = frame:CreateLine(nil, "BACKGROUND", nil, 0)
         frame.border:SetThickness(1)
-        frame.border:SetColorTexture(0.5, 0.5, 0.5, 0.5)
+        frame.border:SetColorTexture(MCL_SHADE("BORDER_STRONG", 0.5))
         frame.border:SetStartPoint("BOTTOMLEFT", 4, 4)
         frame.border:SetEndPoint("BOTTOMRIGHT", -4, 4)
         
@@ -1664,16 +1754,16 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
         -- Apply collection status styling - more subtle approach
         if IsMountCollected(mount_Id) then
             -- Collected mount styling
-            frame:SetBackdropBorderColor(0, 0.8, 0, 0.8)  -- Green border
-            frame:SetBackdropColor(0, 0.2, 0, 0.15)       -- Subtle green background
-            frame.tex:SetVertexColor(1, 1, 1, 1)          -- Full color icon
+            frame:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_SUCCESS))  -- Green border
+            frame:SetBackdropColor(MCL_SHADE("SURFACE_SUCCESS", 0.15))       -- Subtle green background
+            frame.tex:SetVertexColor(unpack(MCL_COLORS.TINT_NONE))          -- Full color icon
             frame.mountName:SetTextColor(unpack(MCLcore.C.COLORS.STATUS_HIGH))         -- Green mount name
         else
             -- Uncollected mount styling
-            frame:SetBackdropBorderColor(0.8, 0.3, 0.3, 0.8)  -- Red border
-            frame:SetBackdropColor(0.2, 0.05, 0.05, 0.15)     -- Subtle red background
-            frame.tex:SetVertexColor(0.6, 0.6, 0.6, 0.8)      -- Slightly dimmed icon
-            frame.mountName:SetTextColor(0.9, 0.9, 0.9)       -- Light gray mount name
+            frame:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_DANGER))  -- Red border
+            frame:SetBackdropColor(MCL_SHADE("SURFACE_DANGER", 0.15))     -- Subtle red background
+            frame.tex:SetVertexColor(unpack(MCL_COLORS.TINT_DIM))      -- Slightly dimmed icon
+            frame.mountName:SetTextColor(unpack(MCL_COLORS.TEXT_PRIMARY))       -- Light gray mount name
         end
 
         -- Enhance pin icon
@@ -1683,23 +1773,23 @@ function MCL_functions:CreatePinnedMount(mount_Id, category, section)
 
         -- Add hover effects
         frame:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(1, 1, 1, 0.1)  -- Subtle white highlight on hover
+            self:SetBackdropColor(MCL_SHADE("HIGHLIGHT_WHITE", 0.1))  -- Subtle white highlight on hover
             if self.mountName then
-                self.mountName:SetTextColor(1, 1, 1)  -- White text on hover
+                self.mountName:SetTextColor(unpack(MCL_COLORS.TEXT_PRIMARY))  -- White text on hover
             end
         end)
         
         frame:SetScript("OnLeave", function(self)
             -- Restore original colors based on collection status
             if IsMountCollected(mount_Id) then
-                self:SetBackdropColor(0, 0.2, 0, 0.15)
+                self:SetBackdropColor(MCL_SHADE("SURFACE_SUCCESS", 0.15))
                 if self.mountName then
                     self.mountName:SetTextColor(unpack(MCLcore.C.COLORS.STATUS_HIGH))
                 end
             else
-                self:SetBackdropColor(0.2, 0.05, 0.05, 0.15)
+                self:SetBackdropColor(MCL_SHADE("SURFACE_DANGER", 0.15))
                 if self.mountName then
-                    self.mountName:SetTextColor(0.9, 0.9, 0.9)
+                    self.mountName:SetTextColor(unpack(MCL_COLORS.TEXT_PRIMARY))
                 end
             end
         end)
@@ -1933,8 +2023,8 @@ function MCL_functions:UpdateBackground(frame)
         table.remove(MCL_PINNED, pin)
         MCLcore.Function:RebuildPinnedLookup()
     end
-    frame:SetBackdropBorderColor(0, 0.45, 0, 0.4)
-    frame.tex:SetVertexColor(1, 1, 1, 1)
+    frame:SetBackdropBorderColor(MCL_SHADE("BORDER_SUCCESS", 0.4))
+    frame.tex:SetVertexColor(unpack(MCL_COLORS.TINT_NONE))
 end
 
 -- Global alias for backward compatibility
@@ -2082,7 +2172,7 @@ end
 function MCL_functions:UpdateCollection()
     clearOverviewStats()
     if MCLcore.MCL_MF.Bg then
-        MCLcore.MCL_MF.Bg:SetVertexColor(0, 0, 0, MCL_SETTINGS.opacity)
+        MCLcore.MCL_MF.Bg:SetVertexColor(MCL_SHADE("OVERLAY_SCRIM", MCL_SETTINGS.opacity))
     end
     MCLcore.total = 0
     MCLcore.collected = 0
@@ -2396,19 +2486,19 @@ function MCL_functions:UpdatePinnedMountStyling(mountID)
         if frame.mountID and tostring(frame.mountID) == tostring(mountID) then
             if IsMountCollected(mountID) then
                 -- Collected mount styling
-                frame:SetBackdropBorderColor(0, 0.8, 0, 0.8)  -- Green border
-                frame:SetBackdropColor(0, 0.2, 0, 0.15)       -- Subtle green background
-                frame.tex:SetVertexColor(1, 1, 1, 1)          -- Full color icon
+                frame:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_SUCCESS))  -- Green border
+                frame:SetBackdropColor(MCL_SHADE("SURFACE_SUCCESS", 0.15))       -- Subtle green background
+                frame.tex:SetVertexColor(unpack(MCL_COLORS.TINT_NONE))          -- Full color icon
                 if frame.mountName then
                     frame.mountName:SetTextColor(unpack(MCLcore.C.COLORS.STATUS_HIGH))     -- Green mount name
                 end
             else
                 -- Uncollected mount styling
-                frame:SetBackdropBorderColor(0.8, 0.3, 0.3, 0.8)  -- Red border
-                frame:SetBackdropColor(0.2, 0.05, 0.05, 0.15)     -- Subtle red background
-                frame.tex:SetVertexColor(0.6, 0.6, 0.6, 0.8)      -- Slightly dimmed icon
+                frame:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_DANGER))  -- Red border
+                frame:SetBackdropColor(MCL_SHADE("SURFACE_DANGER", 0.15))     -- Subtle red background
+                frame.tex:SetVertexColor(unpack(MCL_COLORS.TINT_DIM))      -- Slightly dimmed icon
                 if frame.mountName then
-                    frame.mountName:SetTextColor(0.9, 0.9, 0.9)   -- Light gray mount name
+                    frame.mountName:SetTextColor(unpack(MCL_COLORS.TEXT_PRIMARY))   -- Light gray mount name
                 end
             end
             break

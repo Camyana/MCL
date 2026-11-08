@@ -125,7 +125,7 @@ function W:StyleCheckbox(checkbox)
     local border = CreateFrame("Frame", nil, checkbox, "BackdropTemplate")
     border:SetPoint("TOPLEFT", -1, 1)
     border:SetPoint("BOTTOMRIGHT", 1, -1)
-    border:SetBackdrop(C.BACKDROP.BORDER_ONLY)
+    border:SetBackdrop(MCL_PixelBackdrop(border, C.BACKDROP.BORDER_ONLY))
     border:SetBackdropBorderColor(unpack(C.COLORS.CB_BORDER_OFF))
     checkbox.borderFrame = border
 
@@ -185,7 +185,7 @@ function W:CreateProgressBar(opts)
     local pBar = CreateFrame("StatusBar", nil, parent, "BackdropTemplate")
 
     -- Backdrop
-    pBar:SetBackdrop(C.BACKDROP.PANEL)
+    pBar:SetBackdrop(MCL_PixelBackdrop(pBar, C.BACKDROP.PANEL))
     pBar:SetBackdropColor(unpack(C.COLORS.PB_BG))
     pBar:SetBackdropBorderColor(unpack(C.COLORS.PB_BORDER))
 
@@ -357,7 +357,7 @@ function W:CreateWaypointButton(opts)
 
     local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
     btn:SetSize(opts.width or C.DIMS.WP_BUTTON_WIDTH, C.DIMS.WP_BUTTON_HEIGHT)
-    btn:SetBackdrop(C.BACKDROP.PANEL)
+    btn:SetBackdrop(MCL_PixelBackdrop(btn, C.BACKDROP.PANEL))
     btn:SetBackdropColor(unpack(C.COLORS.WP_BG))
     btn:SetBackdropBorderColor(unpack(borderColor))
 
@@ -444,7 +444,7 @@ function W:CreateSettingsCard(opts)
     local parent = opts.parent
     local card = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     card:SetHeight(opts.height or 120)
-    card:SetBackdrop(C.BACKDROP.PANEL)
+    card:SetBackdrop(MCL_PixelBackdrop(card, C.BACKDROP.PANEL))
     card:SetBackdropColor(unpack(C.COLORS.CARD_BG))
     card:SetBackdropBorderColor(unpack(C.COLORS.BORDER_DIM))
 

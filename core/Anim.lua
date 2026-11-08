@@ -470,7 +470,7 @@ function A:BarSweep(bar, duration)
         local sheen = bar:CreateTexture(nil, "OVERLAY")
         sheen:SetTexture("Interface\\Buttons\\WHITE8x8")
         sheen:SetBlendMode("ADD")
-        sheen:SetVertexColor(1, 1, 1, 0.20)
+        sheen:SetVertexColor(MCL_SHADE("TINT_NONE", 0.20))
         sheen:SetWidth(26)
         sheen:Hide()
         bar.__mclSheen = sheen

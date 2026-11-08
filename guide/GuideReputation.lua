@@ -244,7 +244,7 @@ function Rep:GetTooltipBlock(spellId)
     local label = repInfo.friendship and L["Friendship Required"]
                 or repInfo.renown and L["Renown Required"]
                 or L["Reputation Required"]
-    table.insert(lines, "|cFF1FB7EB" .. label .. "|r")
+    table.insert(lines, MCL_HEX("TEXT_ACCENT") .. label .. "|r")
 
     local factionName = repInfo.factionName or L["Unknown Faction"]
     table.insert(lines, "  " .. factionName)

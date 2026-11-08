@@ -46,28 +46,39 @@ local ROW_GAP        = 4
 local GUTTER_W       = 20
 
 -- Palette
-local C_WINDOW_BG   = { 0.055, 0.055, 0.070, 0.96 }
-local C_WINDOW_EDGE = { 0.16, 0.18, 0.24, 1.00 }
-local C_HEADER_BG   = { 0.10, 0.11, 0.14, 1.00 }
-local C_STRIP_BG    = { 0.085, 0.09, 0.115, 1.00 }
-local C_DETAIL_BG   = { 0.10, 0.105, 0.13, 0.95 }
-
+-- Done is green in every art style, because it means done.  Everything
+-- else comes from the active style, filled by RefreshPalette() when the
+-- window is built - not at file load, which runs before ADDON_LOADED has
+-- applied the player's saved style.
+--
 -- Bands stay muted; the state reads from the accent stripe down the
 -- left edge, which is where the eye lands without the row shouting.
-local C_BAND_CURRENT = { 0.115, 0.175, 0.245 }
-local C_BAND_PENDING = { 0.135, 0.140, 0.170 }
 local C_BAND_DONE    = { 0.105, 0.150, 0.115 }
-
-local C_EDGE_CURRENT = { 0.30, 0.66, 0.96 }
-local C_EDGE_PENDING = { 0.30, 0.32, 0.38 }
 local C_EDGE_DONE    = { 0.30, 0.68, 0.38 }
 
-local C_TITLE       = { 0.55, 0.80, 0.95 }
-local C_HEADING     = { 1.00, 1.00, 1.00 }
-local C_HEADING_DIM = { 0.62, 0.68, 0.74 }
-local C_DETAIL      = { 0.66, 0.71, 0.78 }
-local C_ACCENT      = { 0.40, 0.78, 0.95 }
-local C_MUTED       = { 0.42, 0.47, 0.54 }
+local C_WINDOW_BG, C_WINDOW_EDGE, C_HEADER_BG, C_STRIP_BG, C_DETAIL_BG
+local C_BAND_CURRENT, C_BAND_PENDING, C_EDGE_CURRENT, C_EDGE_PENDING
+local C_TITLE, C_HEADING, C_HEADING_DIM, C_DETAIL, C_ACCENT, C_MUTED
+
+local function RefreshPalette()
+    local P = MCL_COLORS
+    C_WINDOW_BG    = { MCL_SHADE("SURFACE_SUNKEN", 0.96) }
+    C_WINDOW_EDGE  = { MCL_SHADE("BORDER_DEFAULT", 1) }
+    C_HEADER_BG    = { MCL_SHADE("SURFACE_HEADER", 1) }
+    C_STRIP_BG     = { MCL_SHADE("SURFACE_WINDOW", 1) }
+    C_DETAIL_BG    = { MCL_SHADE("SURFACE_PANEL", 0.95) }
+    C_BAND_CURRENT = P.SURFACE_ACCENT
+    C_BAND_PENDING = P.SURFACE_RAISED
+    C_EDGE_CURRENT = P.BORDER_ACCENT_BRIGHT
+    C_EDGE_PENDING = P.BORDER_DEFAULT
+    C_TITLE        = P.TEXT_ACCENT
+    C_HEADING      = P.TEXT_PRIMARY
+    C_HEADING_DIM  = P.TEXT_BODY
+    C_DETAIL       = P.TEXT_BODY
+    C_ACCENT       = P.TEXT_ACCENT
+    C_MUTED        = P.TEXT_MUTED
+end
+RefreshPalette()
 
 local STAR = "|A:PetJournal-FavoritesIcon:12:12|a"
 
@@ -474,7 +485,7 @@ local function AcquireRow(index)
 
     row.hl = row:CreateTexture(nil, "ARTWORK")
     row.hl:SetAllPoints()
-    row.hl:SetColorTexture(1, 1, 1, 0.06)
+    row.hl:SetColorTexture(MCL_SHADE("HIGHLIGHT_WHITE", 0.06))
     row.hl:Hide()
 
     -- Accent stripe down the left edge carries the row's state.
@@ -613,13 +624,14 @@ local function MakeStripButton(parent, text, width)
     b.label:SetAllPoints()
     b.label:SetText(text)
     b.label:SetTextColor(unpack(C_ACCENT))
-    b:SetScript("OnEnter", function(s) s.label:SetTextColor(1, 1, 1) end)
+    b:SetScript("OnEnter", function(s) s.label:SetTextColor(unpack(MCL_COLORS.TEXT_PRIMARY)) end)
     b:SetScript("OnLeave", function(s) s.label:SetTextColor(unpack(C_ACCENT)) end)
     return b
 end
 
 local function GetFrame()
     if frame then return frame end
+    RefreshPalette()
 
     local f = CreateFrame("Frame", "MCL_GuideStepTracker", UIParent, "BackdropTemplate")
     -- Above the world map: at HIGH the map's scroll container was taking
@@ -649,7 +661,7 @@ local function GetFrame()
     f:SetBackdrop({
         bgFile   = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+        edgeSize = MCL_PixelEdge(f),
     })
     f:SetBackdropColor(unpack(C_WINDOW_BG))
     f:SetBackdropBorderColor(unpack(C_WINDOW_EDGE))
@@ -666,14 +678,14 @@ local function GetFrame()
     f.gripMark = f.grip:CreateTexture(nil, "OVERLAY")
     f.gripMark:SetPoint("CENTER")
     f.gripMark:SetSize(2, 26)
-    f.gripMark:SetColorTexture(0.42, 0.48, 0.58, 0.75)
+    f.gripMark:SetColorTexture(MCL_SHADE("BORDER_ACCENT", 0.75))
 
     f.grip:SetScript("OnEnter", function(self)
-        self:GetParent().gripMark:SetColorTexture(0.30, 0.72, 0.96, 1)
+        self:GetParent().gripMark:SetColorTexture(MCL_SHADE("BORDER_ACCENT", 1))
     end)
     f.grip:SetScript("OnLeave", function(self)
         if not self.sizing then
-            self:GetParent().gripMark:SetColorTexture(0.42, 0.48, 0.58, 0.75)
+            self:GetParent().gripMark:SetColorTexture(MCL_SHADE("BORDER_ACCENT", 0.75))
         end
     end)
     -- Drag scripts rather than mouse down/up: OnMouseUp only fires if the
@@ -689,7 +701,7 @@ local function GetFrame()
         local parent = self:GetParent()
         parent:StopMovingOrSizing()
         MCL_GUIDE_SETTINGS.guideWindowWidth = math.floor(parent:GetWidth() + 0.5)
-        parent.gripMark:SetColorTexture(0.42, 0.48, 0.58, 0.75)
+        parent.gripMark:SetColorTexture(MCL_SHADE("BORDER_ACCENT", 0.75))
         -- Rows follow the width on their own, but a heading that now
         -- wraps onto fewer lines needs the heights worked out again.
         Tracker:Refresh()
@@ -712,7 +724,7 @@ local function GetFrame()
     f.close = MakeStripButton(f, "\195\151", 20)   -- multiplication sign
     f.close:SetPoint("TOPRIGHT", -6, -5)
     f.close.label:SetTextColor(unpack(C_MUTED))
-    f.close:SetScript("OnEnter", function(s) s.label:SetTextColor(1, 0.45, 0.45) end)
+    f.close:SetScript("OnEnter", function(s) s.label:SetTextColor(unpack(MCL_COLORS.TEXT_DANGER)) end)
     f.close:SetScript("OnLeave", function(s) s.label:SetTextColor(unpack(C_MUTED)) end)
     f.close:SetScript("OnClick", function() Tracker:Hide() end)
 
@@ -754,14 +766,14 @@ local function GetFrame()
     f.subtitle:SetPoint("RIGHT", f.status, "LEFT", -8, 0)
     f.subtitle:SetJustifyH("LEFT")
     f.subtitle:SetWordWrap(false)
-    f.subtitle:SetTextColor(1, 1, 1)
+    f.subtitle:SetTextColor(unpack(MCL_COLORS.TEXT_PRIMARY))
 
     -- ── Nav strip: paging + position ────────────────────────
     f.navBg = f:CreateTexture(nil, "BACKGROUND")
     f.navBg:SetPoint("TOPLEFT", 1, -(HEADER_H + SUBTITLE_H + 1))
     f.navBg:SetPoint("TOPRIGHT", -1, -(HEADER_H + SUBTITLE_H + 1))
     f.navBg:SetHeight(NAV_H)
-    f.navBg:SetColorTexture(0.07, 0.075, 0.095, 1)
+    f.navBg:SetColorTexture(unpack(MCL_COLORS.SURFACE_WINDOW))
 
     -- Step back and forward through the route one stop at a time, for
     -- when you want to skip the nearest one and take the next instead.
@@ -795,11 +807,11 @@ local function GetFrame()
 
     f.progressBg = f.progress:CreateTexture(nil, "BACKGROUND")
     f.progressBg:SetAllPoints()
-    f.progressBg:SetColorTexture(0.14, 0.15, 0.18, 1)
+    f.progressBg:SetColorTexture(unpack(MCL_COLORS.SURFACE_HOVER))
 
     f.progressText = f.progress:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     f.progressText:SetPoint("CENTER")
-    f.progressText:SetTextColor(0.88, 0.92, 0.96)
+    f.progressText:SetTextColor(unpack(MCL_COLORS.TEXT_PRIMARY))
 
     local anchor = MCL_GUIDE_SETTINGS and MCL_GUIDE_SETTINGS.stepTrackerAnchor
     if anchor and anchor.point then
@@ -863,7 +875,7 @@ local function SetSubtitle(mountData, suffix)
 
     local name = mountData and (mountData.mountName or mountData.name) or ""
     if suffix and suffix ~= "" and suffix ~= name then
-        name = name .. "  |cFF6E7A85" .. suffix .. "|r"
+        name = name .. "  " .. MCL_HEX("TEXT_MUTED") .. suffix .. "|r"
     end
     f.subtitle:SetText(name)
 end
@@ -877,7 +889,7 @@ local function SetProgress(done, total)
         if done >= total then
             f.progress:SetStatusBarColor(0.30, 0.72, 0.38, 1)
         else
-            f.progress:SetStatusBarColor(0.22, 0.52, 0.72, 1)
+            f.progress:SetStatusBarColor(MCL_SHADE("BORDER_ACCENT", 1))
         end
         f.progress:Show()
     else

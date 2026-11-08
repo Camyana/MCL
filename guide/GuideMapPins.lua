@@ -158,28 +158,42 @@ local MINI_CARD_WIDTH = 320
 local miniCardFrame = nil
 local miniCardLines = {}   -- reusable pool of font strings
 
--- Colours matching MCL house style
-local COLOR_TITLE       = { 0.40, 0.78, 0.95 }  -- MCL blue
+-- Colours.  Two kinds live here.  The ones that carry MCL's look - title,
+-- labels, section headings, rules - come from the active art style and
+-- are refilled by RefreshCardPalette() each time the card is populated,
+-- so they follow a style change.  The rest mean something on their own
+-- (collected green, not-collected red, quest yellow, item-link blue,
+-- the native tooltip's flavour yellow) and stay the same in every style.
 local COLOR_COLLECTED   = { 0.30, 1.00, 0.30 }
 local COLOR_UNCOLLECTED = { 1.00, 0.40, 0.40 }
-local COLOR_METHOD      = { 0.12, 0.72, 0.92 }
-local COLOR_LABEL       = { 0.55, 0.65, 0.75 }
-local COLOR_VALUE       = { 0.85, 0.85, 0.85 }
-local COLOR_GOLD        = { 1.00, 0.82, 0.00 }
-local COLOR_REP         = { 0.60, 0.80, 1.00 }
-local COLOR_ACH         = { 1.00, 1.00, 0.40 }
 local COLOR_ACH_DONE    = { 0.30, 1.00, 0.30 }
-local COLOR_NOTE        = { 0.82, 0.90, 1.00 }
 local COLOR_HINT        = { 0.45, 0.65, 0.45 }
-local COLOR_ORIGIN      = { 0.55, 0.55, 0.55 }
-local COLOR_SEPARATOR   = { 0.20, 0.40, 0.60 }
 local COLOR_QUEST       = { 1.00, 0.90, 0.30 }
 local COLOR_DESC        = { 0.85, 0.85, 0.30 }
-local COLOR_SOURCE      = { 0.70, 0.70, 0.70 }
 local COLOR_ITEM        = { 0.60, 0.80, 1.00 }
-local COLOR_SECTION_HDR = { 0.50, 0.75, 0.95 }
 local COLOR_BMAH        = { 0.90, 0.70, 0.30 }
 local COLOR_DIFF        = { 0.90, 0.65, 0.30 }
+
+local COLOR_TITLE, COLOR_METHOD, COLOR_LABEL, COLOR_VALUE, COLOR_GOLD
+local COLOR_REP, COLOR_ACH, COLOR_NOTE, COLOR_ORIGIN, COLOR_SEPARATOR
+local COLOR_SOURCE, COLOR_SECTION_HDR
+
+local function RefreshCardPalette()
+    local P = MCL_COLORS
+    COLOR_TITLE       = P.TEXT_ACCENT
+    COLOR_METHOD      = P.TEXT_ACCENT
+    COLOR_SECTION_HDR = P.TEXT_ACCENT
+    COLOR_LABEL       = P.TEXT_LABEL
+    COLOR_VALUE       = P.TEXT_VALUE
+    COLOR_GOLD        = P.TEXT_GOLD
+    COLOR_REP         = P.TEXT_ACCENT_BRIGHT
+    COLOR_ACH         = P.TEXT_HIGHLIGHT
+    COLOR_NOTE        = P.TEXT_BODY
+    COLOR_ORIGIN      = P.TEXT_MUTED
+    COLOR_SOURCE      = P.TEXT_MUTED
+    COLOR_SEPARATOR   = P.DIVIDER
+end
+RefreshCardPalette()
 
 -- ─── Note lookup (multi-strategy) ───────────────────────────
 -- Notes in MCLcore.mountNotes are keyed by item ID.  We build a
@@ -294,24 +308,24 @@ local function GetMiniCard()
     f:SetBackdrop({
         bgFile   = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+        edgeSize = MCL_PixelEdge(f),
     })
-    f:SetBackdropColor(0.06, 0.06, 0.09, 0.96)
-    f:SetBackdropBorderColor(0.20, 0.40, 0.60, 0.80)
+    f:SetBackdropColor(MCL_SHADE("SURFACE_SUNKEN", 0.96))
+    f:SetBackdropBorderColor(MCL_SHADE("BORDER_ACCENT_DIM", 0.80))
 
     -- Accent line at top
     f.accent = f:CreateTexture(nil, "OVERLAY")
     f.accent:SetHeight(1)
     f.accent:SetPoint("TOPLEFT", f, "TOPLEFT", 1, -1)
     f.accent:SetPoint("TOPRIGHT", f, "TOPRIGHT", -1, -1)
-    f.accent:SetColorTexture(0.20, 0.60, 0.90, 0.60)
+    f.accent:SetColorTexture(MCL_SHADE("BORDER_ACCENT", 0.60))
 
     -- Header background
     f.headerBg = f:CreateTexture(nil, "BACKGROUND", nil, 1)
     f.headerBg:SetPoint("TOPLEFT", f, "TOPLEFT", 1, -2)
     f.headerBg:SetPoint("TOPRIGHT", f, "TOPRIGHT", -1, -2)
     f.headerBg:SetHeight(36)
-    f.headerBg:SetColorTexture(0.08, 0.08, 0.12, 0.98)
+    f.headerBg:SetColorTexture(MCL_SHADE("SURFACE_WINDOW", 0.98))
 
     -- Mount icon
     f.mountIcon = f:CreateTexture(nil, "ARTWORK")
@@ -396,10 +410,10 @@ local function AddDivider(card, yOff, sepIndex)
     if not card.separators[sepIndex] then
         local tex = card:CreateTexture(nil, "ARTWORK")
         tex:SetHeight(1)
-        tex:SetColorTexture(COLOR_SEPARATOR[1], COLOR_SEPARATOR[2], COLOR_SEPARATOR[3], 0.40)
         card.separators[sepIndex] = tex
     end
     local tex = card.separators[sepIndex]
+    tex:SetColorTexture(COLOR_SEPARATOR[1], COLOR_SEPARATOR[2], COLOR_SEPARATOR[3], 0.40)
     tex:ClearAllPoints()
     tex:SetPoint("TOPLEFT", card, "TOPLEFT", 10, yOff - 3)
     tex:SetPoint("TOPRIGHT", card, "TOPRIGHT", -10, yOff - 3)
@@ -419,6 +433,17 @@ local ShowStepMarkers, ReleaseStepMarkers, GetStepMarkerRects
 
 -- ─── Populate ───────────────────────────────────────────────
 local function PopulateMiniCard(card, data, waypoint)
+    -- ── Style ───────────────────────────────────────────────
+    -- The card is built once and reused, so its chrome is recoloured
+    -- here rather than at creation; otherwise it keeps whichever style
+    -- was active the first time a pin was hovered.
+    RefreshCardPalette()
+    card:SetBackdropColor(MCL_SHADE("SURFACE_SUNKEN", 0.96))
+    card:SetBackdropBorderColor(MCL_SHADE("BORDER_ACCENT_DIM", 0.80))
+    card.accent:SetColorTexture(MCL_SHADE("BORDER_ACCENT", 0.60))
+    card.headerBg:SetColorTexture(MCL_SHADE("SURFACE_WINDOW", 0.98))
+    card.headerSep:SetColorTexture(COLOR_SEPARATOR[1], COLOR_SEPARATOR[2], COLOR_SEPARATOR[3], 0.50)
+
     -- ── Header ──────────────────────────────────────────────
     if data.icon then
         card.mountIcon:SetTexture(data.icon)
@@ -973,10 +998,10 @@ function MCL_GuidePinMixin:OnAcquired(mountData, waypoint)
         self.borderBottom = self.visual:CreateTexture(nil, "OVERLAY")
         self.borderLeft   = self.visual:CreateTexture(nil, "OVERLAY")
         self.borderRight  = self.visual:CreateTexture(nil, "OVERLAY")
-        self.borderTop:SetColorTexture(1, 1, 1, 1)
-        self.borderBottom:SetColorTexture(1, 1, 1, 1)
-        self.borderLeft:SetColorTexture(1, 1, 1, 1)
-        self.borderRight:SetColorTexture(1, 1, 1, 1)
+        self.borderTop:SetColorTexture(MCL_SHADE("HIGHLIGHT_WHITE", 1))
+        self.borderBottom:SetColorTexture(MCL_SHADE("HIGHLIGHT_WHITE", 1))
+        self.borderLeft:SetColorTexture(MCL_SHADE("HIGHLIGHT_WHITE", 1))
+        self.borderRight:SetColorTexture(MCL_SHADE("HIGHLIGHT_WHITE", 1))
     end
     self.borderTop:ClearAllPoints()
     self.borderTop:SetPoint("TOPLEFT")
@@ -1624,7 +1649,7 @@ local function AcquireStepMarker(canvas)
 
         mk.border = mk:CreateTexture(nil, "BACKGROUND")
         mk.border:SetAllPoints()
-        mk.border:SetColorTexture(0.05, 0.05, 0.08, 0.95)
+        mk.border:SetColorTexture(MCL_SHADE("SURFACE_SUNKEN", 0.95))
 
         mk.fill = mk:CreateTexture(nil, "ARTWORK")
         mk.fill:SetPoint("TOPLEFT", 1, -1)
@@ -1633,7 +1658,7 @@ local function AcquireStepMarker(canvas)
 
         mk.num = mk:CreateFontString(nil, "OVERLAY")
         mk.num:SetPoint("CENTER")
-        mk.num:SetTextColor(0.05, 0.05, 0.08, 1)
+        mk.num:SetTextColor(unpack(MCL_COLORS.TEXT_INVERSE))
 
         mk.label = mk:CreateFontString(nil, "OVERLAY")
         mk.label:SetPoint("TOP", mk, "BOTTOM", 0, -1)
@@ -1831,11 +1856,11 @@ local function DrawRoutePath(canvas, mapID, canvasWidth, canvasHeight, scaleComp
 
             local walked = arrived and a.wp and arrived[a.wp]
             if i == current then
-                line:SetColorTexture(0.30, 0.72, 0.96, 0.95)
+                line:SetColorTexture(MCL_SHADE("BORDER_ACCENT", 0.95))
             elseif walked then
-                line:SetColorTexture(0.45, 0.50, 0.58, 0.45)
+                line:SetColorTexture(MCL_SHADE("BORDER_ACCENT", 0.45))
             else
-                line:SetColorTexture(0.30, 0.72, 0.96, 0.50)
+                line:SetColorTexture(MCL_SHADE("BORDER_ACCENT", 0.50))
             end
         end
     end

@@ -318,13 +318,13 @@ local function CreateLoadingFrame()
     f:SetBackdrop({
         bgFile   = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+        edgeSize = MCL_PixelEdge(f),
     })
-    f:SetBackdropColor(0.06, 0.06, 0.10, 0.95)
-    f:SetBackdropBorderColor(0.3, 0.6, 0.9, 0.7)
+    f:SetBackdropColor(MCL_SHADE("SURFACE_SUNKEN", 0.95))
+    f:SetBackdropBorderColor(MCL_SHADE("BORDER_ACCENT", 0.7))
 
     local header = f:CreateTexture(nil, "ARTWORK")
-    header:SetColorTexture(0.10, 0.10, 0.16, 0.9)
+    header:SetColorTexture(MCL_SHADE("SURFACE_PANEL", 0.9))
     header:SetHeight(22)
     header:SetPoint("TOPLEFT", f, "TOPLEFT", 1, -1)
     header:SetPoint("TOPRIGHT", f, "TOPRIGHT", -1, -1)
@@ -332,16 +332,16 @@ local function CreateLoadingFrame()
     local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     title:SetPoint("LEFT", header, "LEFT", 10, 0)
     title:SetText("|cFF1FB7EBMCL|r " .. (LL["Mount Collection Log"] or "Mount Collection Log"))
-    title:SetTextColor(0.5, 0.85, 1, 1)
+    title:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
 
     local msg = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     msg:SetPoint("CENTER", f, "CENTER", 0, -4)
-    msg:SetTextColor(0.85, 0.9, 1, 1)
+    msg:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
     f.msg = msg
 
     local sub = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     sub:SetPoint("BOTTOM", f, "BOTTOM", 0, 10)
-    sub:SetTextColor(0.6, 0.65, 0.75, 1)
+    sub:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
     sub:SetText(LL["Waiting for the game to finish loading mounts..."]
         or "Waiting for the game to finish loading mounts...")
     f.sub = sub
@@ -573,7 +573,40 @@ local function EnsureCollectionsLoaded()
     return true
 end
 
+-- ===================================================================
+-- Blocked-action reporting
+-- ===================================================================
+-- "MCL has been blocked from an action only available to the Blizzard
+-- UI" names the addon but never the call, and pcall does not help: the
+-- popup is raised in C when insecure code touches a protected function,
+-- so wrapping the call only swallows the Lua error underneath it.
+--
+-- These two events carry the function name, which is the only way to
+-- find out what MCL actually touched.  Kept permanently: it prints
+-- nothing unless MCL is the addon at fault, and the last one is held for
+-- /mcl blocked.
+-- ===================================================================
+MCLcore.lastBlockedAction = nil
+
+local blockWatcher = CreateFrame("Frame")
+blockWatcher:RegisterEvent("ADDON_ACTION_BLOCKED")
+blockWatcher:RegisterEvent("ADDON_ACTION_FORBIDDEN")
+blockWatcher:SetScript("OnEvent", function(_, event, addon, func)
+    if addon ~= MCL then return end
+    MCLcore.lastBlockedAction = { event = event, func = func or "?", when = GetTime() }
+    print("|cFF1FB7EBMCL|r |cFFFF6060" .. event .. "|r: " .. tostring(func)
+        .. " - please report this, it tells us exactly what to guard.")
+end)
+
 local function ClearMountFilters()
+    -- The journal's filter state belongs to the Collections UI.  Setting
+    -- it before that UI exists is meaningless at best, and on a client
+    -- where those setters are protected it is what raises the blocked
+    -- action popup.
+    if C_AddOns and C_AddOns.IsAddOnLoaded
+       and not C_AddOns.IsAddOnLoaded("Blizzard_Collections") then
+        return
+    end
     if C_MountJournal.SetCollectedFilterSetting then
         -- Show both collected and not collected
         pcall(C_MountJournal.SetCollectedFilterSetting, LE_MOUNT_JOURNAL_FILTER_COLLECTED, true)
@@ -590,11 +623,47 @@ local function ClearMountFilters()
     end
 end
 
-local function onevent(self, event, arg1, ...)
-    if(login and ((event == "ADDON_LOADED" and MCL == arg1) or (event == "PLAYER_LOGIN"))) then
-        login = nil
-        f:UnregisterEvent("ADDON_LOADED")
-        f:UnregisterEvent("PLAYER_LOGIN")
+-- ===================================================================
+-- Start-up timing, and why it is not ADDON_LOADED
+-- ===================================================================
+-- MCL used to do all of this on whichever of ADDON_LOADED or
+-- PLAYER_LOGIN arrived first, which in practice is always ADDON_LOADED.
+-- That fires BEFORE VARIABLES_LOADED, and the work below reaches into
+-- Blizzard's code - EnsureCollectionsLoaded calls
+-- C_AddOns.LoadAddOn("Blizzard_Collections"), so that addon's entire
+-- load, and every EventUtil.ContinueOnVariablesLoaded callback it
+-- registers while loading, runs inside MCL's insecure execution.
+--
+-- Those tainted entries sit in the shared variables-loaded list.  When
+-- Blizzard later iterates it, the callbacks AFTER them inherit the
+-- taint, and one of those is Blizzard_GamepadActionBars calling
+-- SetPreferredGamepadInteractTarget - a protected function.  MCL gets
+-- the blame for a call it never makes, which is exactly the
+-- ADDON_ACTION_FORBIDDEN report it was collecting.
+--
+-- So ADDON_LOADED now does nothing but note that the saved variables
+-- are in.  Everything else waits for PLAYER_LOGIN, which fires after
+-- VARIABLES_LOADED and so cannot poison that list.
+-- ===================================================================
+local started = false
+
+local function startMCL()
+    if started then return end
+    started = true
+
+        -- Art style, before anything draws.  Themes.lua applies the per
+        -- client default at load, but MCL_SETTINGS only exists once the
+        -- saved variables are in, so the player's own choice is applied
+        -- here - still well before the first frame is built.
+        if MCLcore.C and MCLcore.C.ApplyTheme then
+            MCL_SETTINGS = MCL_SETTINGS or {}
+            MCLcore.C.ApplyTheme(MCLcore.C.ActiveThemeKey())
+        end
+
+        -- First run only: ask which style before the window is built.
+        if MCLcore.StylePicker then
+            MCLcore.StylePicker:MaybePromptOnLogin()
+        end
         
         -- Force load Blizzard_Collections early (Option A)
         EnsureCollectionsLoaded()
@@ -615,6 +684,23 @@ local function onevent(self, event, arg1, ...)
         if MCLcore.MountCard then
             MCLcore.MountCard:CreateMountCard()
         end
+end
+
+local function onevent(self, event, arg1, ...)
+    if event == "ADDON_LOADED" and MCL == arg1 then
+        f:UnregisterEvent("ADDON_LOADED")
+        login = nil
+        -- Nothing but this. See the note above startMCL: anything here
+        -- that touches Blizzard's code taints the variables-loaded list.
+        -- The one exception is a reload-free load after login has already
+        -- happened, where PLAYER_LOGIN will never come.
+        if IsLoggedIn and IsLoggedIn() then
+            startMCL()
+        end
+    elseif event == "PLAYER_LOGIN" then
+        f:UnregisterEvent("PLAYER_LOGIN")
+        login = nil
+        startMCL()
     end
 end
 

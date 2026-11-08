@@ -447,9 +447,9 @@ local function CreateMountRow(parent, data, width)
     nameLabel:SetWordWrap(false)
     nameLabel:SetText(data.mountName or data.name or "Unknown")
     if data.isCollected then
-        nameLabel:SetTextColor(0.30, 0.88, 0.30)
+        nameLabel:SetTextColor(unpack(MCL_COLORS.TEXT_SUCCESS))
     else
-        nameLabel:SetTextColor(1.0, 0.82, 0.0)
+        nameLabel:SetTextColor(unpack(MCL_COLORS.TEXT_GOLD))
     end
     row.Label = nameLabel
 
@@ -467,7 +467,7 @@ local function CreateMountRow(parent, data, width)
     subLabel:SetJustifyH("LEFT")
     subLabel:SetWordWrap(false)
     subLabel:SetText(subText)
-    subLabel:SetTextColor(0.60, 0.65, 0.72)
+    subLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
     row.SubLabel = subLabel
 
     -- Full-row highlight
@@ -477,7 +477,7 @@ local function CreateMountRow(parent, data, width)
         hl:SetAtlas("Options_List_Active", true)
         if hl.SetBlendMode then hl:SetBlendMode("ADD") end
     else
-        hl:SetColorTexture(1, 1, 1, 0.08)
+        hl:SetColorTexture(unpack(MCL_COLORS.HIGHLIGHT_WHITE))
     end
     row:SetHighlightTexture(hl)
 
@@ -508,7 +508,7 @@ local function CreateMountRow(parent, data, width)
         end
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         local name = self.data and (self.data.mountName or self.data.name) or "Mount"
-        GameTooltip:AddLine(name, 0.40, 0.78, 0.95)
+        GameTooltip:AddLine(name, MCL_SHADE("TEXT_ACCENT", 1))
         GameTooltip:AddLine(L["Left-click: Open mount details"], 0.70, 0.70, 0.70)
         GameTooltip:AddLine(L["Right-click: Set waypoint"], 0.70, 0.70, 0.70)
         GameTooltip:AddLine(L["Ctrl+click: Preview mount"], 0.70, 0.70, 0.70)
@@ -663,10 +663,10 @@ local function EnsureCardView()
     bt:SetPoint("LEFT")
     bt:SetJustifyH("LEFT")
     bt:SetText(L["< Back"])
-    bt:SetTextColor(0.4, 0.78, 0.95, 1)
+    bt:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
     bb:SetScript("OnClick", function() MapPanel:ShowListView() end)
-    bb:SetScript("OnEnter", function() bt:SetTextColor(1, 1, 1, 1) end)
-    bb:SetScript("OnLeave", function() bt:SetTextColor(0.4, 0.78, 0.95, 1) end)
+    bb:SetScript("OnEnter", function() bt:SetTextColor(unpack(MCL_COLORS.TEXT_PRIMARY)) end)
+    bb:SetScript("OnLeave", function() bt:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT)) end)
 
     -- Scroll frame for card content
     local sf = CreateFrame("ScrollFrame", "MCL_MapPanelCardScroll", cardView, "ScrollFrameTemplate")
@@ -711,30 +711,30 @@ local function MakeWaypointBtn(parent, mapId, wx, wy, label, xPos, yPos)
     b:SetBackdrop({
         bgFile   = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+        edgeSize = MCL_PixelEdge(b),
     })
-    b:SetBackdropColor(0.1, 0.15, 0.22, 0.9)
-    b:SetBackdropBorderColor(0.2, 0.6, 0.9, 0.5)
+    b:SetBackdropColor(MCL_SHADE("SURFACE_ACCENT", 0.9))
+    b:SetBackdropBorderColor(MCL_SHADE("BORDER_ACCENT", 0.5))
 
     local ico = b:CreateTexture(nil, "ARTWORK")
     ico:SetSize(12, 12)
     ico:SetPoint("LEFT", 4, 0)
     ico:SetTexture("Interface\\AddOns\\MCL\\icons\\pin")
-    ico:SetVertexColor(0.2, 0.6, 0.9, 1)
+    ico:SetVertexColor(unpack(MCL_COLORS.TINT_ACCENT))
 
     local tx = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     tx:SetPoint("LEFT", ico, "RIGHT", 3, 0)
     tx:SetText(label or "Waypoint")
-    tx:SetTextColor(0.4, 0.78, 0.95, 1)
+    tx:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
     b:SetSize(tx:GetStringWidth() + 25, 18)
 
     b:SetScript("OnEnter", function(s)
-        s:SetBackdropBorderColor(0.3, 0.7, 1, 1)
-        s:SetBackdropColor(0.15, 0.2, 0.28, 1)
+        s:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT_BRIGHT))
+        s:SetBackdropColor(MCL_SHADE("SURFACE_ACCENT", 1))
     end)
     b:SetScript("OnLeave", function(s)
-        s:SetBackdropBorderColor(0.2, 0.6, 0.9, 0.5)
-        s:SetBackdropColor(0.1, 0.15, 0.22, 0.9)
+        s:SetBackdropBorderColor(MCL_SHADE("BORDER_ACCENT", 0.5))
+        s:SetBackdropColor(MCL_SHADE("SURFACE_ACCENT", 0.9))
     end)
     b:SetScript("OnClick", function()
         if TomTom and TomTom.AddWaypoint then
@@ -748,10 +748,10 @@ local function MakeWaypointBtn(parent, mapId, wx, wy, label, xPos, yPos)
             C_SuperTrack.SetSuperTrackedUserWaypoint(true)
         end
         OpenWorldMap(mapId)
-        tx:SetTextColor(0.3, 0.85, 0.4, 1)
+        tx:SetTextColor(unpack(MCL_COLORS.TEXT_SUCCESS))
         tx:SetText(L["Set!"])
         C_Timer.After(1.5, function()
-            tx:SetTextColor(0.4, 0.78, 0.95, 1)
+            tx:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
             tx:SetText(label or "Waypoint")
         end)
     end)
@@ -783,13 +783,13 @@ local function PopulateCard(data)
         local l = P:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         l:SetPoint("TOPLEFT", P, "TOPLEFT", 10, y)
         l:SetText(label)
-        l:SetTextColor(unpack(lClr or {0.5, 0.55, 0.65, 1}))
+        l:SetTextColor(unpack(lClr or MCL_COLORS.TEXT_LABEL))
 
         local v = P:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         v:SetPoint("LEFT", l, "RIGHT", 4, 0)
         v:SetWidth(cw - (l:GetStringWidth() or 40) - 12)
         v:SetText(value)
-        v:SetTextColor(unpack(vClr or {0.8, 0.8, 0.85, 1}))
+        v:SetTextColor(unpack(vClr or MCL_COLORS.TEXT_VALUE))
         v:SetJustifyH("LEFT")
         v:SetWordWrap(false)
         y = y - 16
@@ -815,7 +815,7 @@ local function PopulateCard(data)
     mn:SetText(mountName)
 
     if isCollected then
-        mn:SetTextColor(0.30, 0.88, 0.30)
+        mn:SetTextColor(unpack(MCL_COLORS.TEXT_SUCCESS))
         mi:SetDesaturated(true)
         mi:SetAlpha(0.6)
         local ck = hdr:CreateTexture(nil, "OVERLAY")
@@ -823,7 +823,7 @@ local function PopulateCard(data)
         ck:SetPoint("BOTTOMRIGHT", mi, "BOTTOMRIGHT", 2, -2)
         ck:SetAtlas("Tracker-Check")
     else
-        mn:SetTextColor(1, 0.82, 0)
+        mn:SetTextColor(unpack(MCL_COLORS.TEXT_GOLD))
     end
     y = y - 34
 
@@ -835,10 +835,10 @@ local function PopulateCard(data)
     mf:SetBackdrop({
         bgFile   = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+        edgeSize = MCL_PixelEdge(mf),
     })
-    mf:SetBackdropColor(0.04, 0.04, 0.06, 0.6)
-    mf:SetBackdropBorderColor(0.2, 0.2, 0.25, 0.5)
+    mf:SetBackdropColor(MCL_SHADE("SURFACE_SUNKEN", 0.6))
+    mf:SetBackdropBorderColor(MCL_SHADE("BORDER_SUBTLE", 0.5))
 
     if creatureDisplayID and creatureDisplayID > 0 then
         local mdl = CreateFrame("PlayerModel", nil, mf)
@@ -894,17 +894,17 @@ local function PopulateCard(data)
     prevBtn:SetBackdrop({
         bgFile   = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+        edgeSize = MCL_PixelEdge(prevBtn),
     })
-    prevBtn:SetBackdropColor(0.1, 0.13, 0.18, 0.9)
-    prevBtn:SetBackdropBorderColor(0.25, 0.4, 0.6, 0.6)
+    prevBtn:SetBackdropColor(MCL_SHADE("SURFACE_RAISED", 0.9))
+    prevBtn:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT_DIM))
     local prevTxt = prevBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     prevTxt:SetAllPoints()
     prevTxt:SetText(L["Preview"])
-    prevTxt:SetTextColor(0.4, 0.78, 0.95, 1)
+    prevTxt:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
     prevBtn:SetScript("OnClick", function() DressUpMount(mountID) end)
-    prevBtn:SetScript("OnEnter", function(s) s:SetBackdropBorderColor(0.35, 0.55, 0.8, 0.9); prevTxt:SetTextColor(1, 1, 1, 1) end)
-    prevBtn:SetScript("OnLeave", function(s) s:SetBackdropBorderColor(0.25, 0.4, 0.6, 0.6); prevTxt:SetTextColor(0.4, 0.78, 0.95, 1) end)
+    prevBtn:SetScript("OnEnter", function(s) s:SetBackdropBorderColor(MCL_SHADE("BORDER_ACCENT", 0.9)); prevTxt:SetTextColor(unpack(MCL_COLORS.TEXT_PRIMARY)) end)
+    prevBtn:SetScript("OnLeave", function(s) s:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT_DIM)); prevTxt:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT)) end)
 
     -- Wowhead button
     local whBtn = CreateFrame("Button", nil, aRow, "BackdropTemplate")
@@ -913,14 +913,14 @@ local function PopulateCard(data)
     whBtn:SetBackdrop({
         bgFile   = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+        edgeSize = MCL_PixelEdge(whBtn),
     })
-    whBtn:SetBackdropColor(0.1, 0.13, 0.18, 0.9)
-    whBtn:SetBackdropBorderColor(0.6, 0.45, 0.15, 0.6)
+    whBtn:SetBackdropColor(MCL_SHADE("SURFACE_RAISED", 0.9))
+    whBtn:SetBackdropBorderColor(MCL_SHADE("BORDER_GOLD", 0.6))
     local whTxt = whBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     whTxt:SetAllPoints()
     whTxt:SetText(L["Wowhead"])
-    whTxt:SetTextColor(0.9, 0.6, 0.2, 1)
+    whTxt:SetTextColor(unpack(MCL_COLORS.TEXT_WARNING))
     whBtn:SetScript("OnClick", function()
         -- Lazy-create copy popup
         if not cardView._copyPopup then
@@ -931,10 +931,10 @@ local function PopulateCard(data)
             cp:SetBackdrop({
                 bgFile   = "Interface\\Buttons\\WHITE8x8",
                 edgeFile = "Interface\\Buttons\\WHITE8x8",
-                edgeSize = 1,
+                edgeSize = MCL_PixelEdge(cp),
             })
-            cp:SetBackdropColor(0.1, 0.1, 0.14, 0.95)
-            cp:SetBackdropBorderColor(0.3, 0.6, 0.9, 0.8)
+            cp:SetBackdropColor(unpack(MCL_COLORS.SURFACE_PANEL))
+            cp:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT))
             cp:EnableMouse(true)
             cp:Hide()
             local eb = CreateFrame("EditBox", nil, cp)
@@ -957,15 +957,15 @@ local function PopulateCard(data)
         cardView._copyPopup:Show()
         cardView._copyEB:SetFocus()
         cardView._copyEB:HighlightText()
-        whTxt:SetTextColor(0.3, 0.85, 0.4, 1)
+        whTxt:SetTextColor(unpack(MCL_COLORS.TEXT_SUCCESS))
         whTxt:SetText(L["Copied!"])
         C_Timer.After(1.5, function()
-            whTxt:SetTextColor(0.9, 0.6, 0.2, 1)
+            whTxt:SetTextColor(unpack(MCL_COLORS.TEXT_WARNING))
             whTxt:SetText(L["Wowhead"])
         end)
     end)
-    whBtn:SetScript("OnEnter", function(s) s:SetBackdropBorderColor(0.8, 0.6, 0.2, 0.9); whTxt:SetTextColor(1, 0.8, 0.3, 1) end)
-    whBtn:SetScript("OnLeave", function(s) s:SetBackdropBorderColor(0.6, 0.45, 0.15, 0.6); whTxt:SetTextColor(0.9, 0.6, 0.2, 1) end)
+    whBtn:SetScript("OnEnter", function(s) s:SetBackdropBorderColor(MCL_SHADE("BORDER_GOLD", 0.9)); whTxt:SetTextColor(unpack(MCL_COLORS.TEXT_HIGHLIGHT)) end)
+    whBtn:SetScript("OnLeave", function(s) s:SetBackdropBorderColor(MCL_SHADE("BORDER_GOLD", 0.6)); whTxt:SetTextColor(unpack(MCL_COLORS.TEXT_WARNING)) end)
 
     y = y - 24
 
@@ -975,7 +975,7 @@ local function PopulateCard(data)
         d:SetPoint("TOPLEFT", P, "TOPLEFT", 10, y)
         d:SetWidth(cw - 4)
         d:SetText(description)
-        d:SetTextColor(0.9, 0.9, 0.2, 1)
+        d:SetTextColor(unpack(MCL_COLORS.TEXT_HIGHLIGHT))
         d:SetJustifyH("LEFT")
         d:SetWordWrap(true)
         y = y - d:GetStringHeight() - 6
@@ -986,13 +986,13 @@ local function PopulateCard(data)
     sep:SetHeight(1)
     sep:SetPoint("TOPLEFT", P, "TOPLEFT", 10, y)
     sep:SetWidth(cw - 4)
-    sep:SetColorTexture(0.25, 0.25, 0.3, 0.6)
+    sep:SetColorTexture(MCL_SHADE("BORDER_DEFAULT", 0.6))
     y = y - 6
 
     -- ── Source Details ──
     local gd = Guide.mountLookup and Guide.mountLookup[spellID]
     local mt = Guide:GetMethodText(data.method or (gd and gd.method))
-    if mt then Row("Source:", mt, nil, {0.4, 0.78, 0.95, 1}) end
+    if mt then Row("Source:", mt, nil, MCL_COLORS.TEXT_ACCENT) end
 
     if gd then
         -- Drop rate
@@ -1040,7 +1040,7 @@ local function PopulateCard(data)
         if rep then
             y = y - 4
             local rl = rep.isFriendship and L["Friendship:"] or rep.isRenown and L["Renown:"] or L["Reputation:"]
-            Row(rl, rep.factionName, nil, {0.4, 0.78, 0.95, 1})
+            Row(rl, rep.factionName, nil, MCL_COLORS.TEXT_ACCENT)
             Row(L["Required:"], rep.requiredText, nil, {0.9, 0.9, 0.2, 1})
             local curClr = rep.isMet and {0.3, 0.85, 0.4, 1} or {0.9, 0.25, 0.25, 1}
             Row(L["Current:"], rep.currentText, nil, curClr)
@@ -1153,7 +1153,7 @@ local function PopulateCard(data)
                     end
                 end)
                 achBtn:SetScript("OnEnter", function()
-                    achVal:SetTextColor(1, 1, 1, 1)
+                    achVal:SetTextColor(unpack(MCL_COLORS.TEXT_PRIMARY))
                     GameTooltip:SetOwner(achBtn, "ANCHOR_RIGHT")
                     GameTooltip:AddLine(achName, 1, 1, 1)
                     GameTooltip:AddLine(achDone and L["Completed"] or L["In progress"],
@@ -1216,7 +1216,7 @@ local function PopulateCard(data)
         sf2:SetPoint("TOPLEFT", P, "TOPLEFT", 10, y)
         sf2:SetWidth(cw - 4)
         sf2:SetText(blizzSource)
-        sf2:SetTextColor(0.65, 0.75, 0.85, 1)
+        sf2:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
         sf2:SetJustifyH("LEFT")
         sf2:SetWordWrap(true)
         y = y - sf2:GetStringHeight() - 4
@@ -1230,7 +1230,7 @@ local function PopulateCard(data)
         sp2:SetHeight(1)
         sp2:SetPoint("TOPLEFT", P, "TOPLEFT", 10, y)
         sp2:SetWidth(cw - 4)
-        sp2:SetColorTexture(0.25, 0.25, 0.3, 0.6)
+        sp2:SetColorTexture(MCL_SHADE("BORDER_DEFAULT", 0.6))
         y = y - 6
 
         local lines = {}
@@ -1249,35 +1249,35 @@ local function PopulateCard(data)
             ib:SetBackdrop({
                 bgFile   = "Interface\\Buttons\\WHITE8x8",
                 edgeFile = "Interface\\Buttons\\WHITE8x8",
-                edgeSize = 1,
+                edgeSize = MCL_PixelEdge(ib),
             })
-            ib:SetBackdropColor(0.1, 0.13, 0.18, 0.9)
-            ib:SetBackdropBorderColor(0.25, 0.4, 0.6, 0.6)
+            ib:SetBackdropColor(MCL_SHADE("SURFACE_RAISED", 0.9))
+            ib:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT_DIM))
 
             local ii = ib:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             ii:SetPoint("LEFT", 8, 0)
-            ii:SetText("|cFF66AADD\226\150\186|r")
+            ii:SetText(MCL_HEX("TEXT_ACCENT") .. "\226\150\186|r")
 
             local il = ib:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             il:SetPoint("LEFT", ii, "RIGHT", 4, 0)
             il:SetText(L["Instructions"])
-            il:SetTextColor(0.5, 0.75, 0.95, 1)
+            il:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
             local ic = ib:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             ic:SetPoint("RIGHT", -8, 0)
-            ic:SetText("|cFF556677(" .. ne .. " lines)|r")
+            ic:SetText(MCL_HEX("TEXT_MUTED") .. "(" .. ne .. " lines)|r")
 
             ib:SetScript("OnClick", function()
                 cardNotesExpanded = true
                 PopulateCard(data)
             end)
             ib:SetScript("OnEnter", function(s)
-                s:SetBackdropBorderColor(0.35, 0.55, 0.8, 0.9)
-                il:SetTextColor(0.7, 0.9, 1, 1)
+                s:SetBackdropBorderColor(MCL_SHADE("BORDER_ACCENT", 0.9))
+                il:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
             end)
             ib:SetScript("OnLeave", function(s)
-                s:SetBackdropBorderColor(0.25, 0.4, 0.6, 0.6)
-                il:SetTextColor(0.5, 0.75, 0.95, 1)
+                s:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT_DIM))
+                il:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
             end)
             y = y - 26
         else
@@ -1299,7 +1299,7 @@ local function PopulateCard(data)
                                 fs:SetPoint("TOPLEFT", P, "TOPLEFT", 14, y)
                                 fs:SetWidth(cw - 8)
                                 fs:SetText(pt)
-                                fs:SetTextColor(0.7, 0.85, 0.95, 1)
+                                fs:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
                                 fs:SetJustifyH("LEFT")
                                 fs:SetWordWrap(true)
                                 y = y - fs:GetStringHeight() - 2
@@ -1320,7 +1320,7 @@ local function PopulateCard(data)
                                 fs:SetPoint("TOPLEFT", P, "TOPLEFT", 14, y)
                                 fs:SetWidth(cw - 8)
                                 fs:SetText(tail)
-                                fs:SetTextColor(0.7, 0.85, 0.95, 1)
+                                fs:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
                                 fs:SetJustifyH("LEFT")
                                 fs:SetWordWrap(true)
                                 y = y - fs:GetStringHeight() - 2
@@ -1337,8 +1337,8 @@ local function PopulateCard(data)
                     local fs = P:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                     fs:SetPoint("TOPLEFT", P, "TOPLEFT", 14, y)
                     fs:SetWidth(cw - 8)
-                    fs:SetText("|cFF8888AA\226\128\162|r " .. display)
-                    fs:SetTextColor(0.7, 0.85, 0.95, 1)
+                    fs:SetText(MCL_HEX("TEXT_MUTED") .. "\226\128\162|r " .. display)
+                    fs:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
                     fs:SetJustifyH("LEFT")
                     fs:SetWordWrap(true)
                     y = y - fs:GetStringHeight() - 2
@@ -1347,8 +1347,8 @@ local function PopulateCard(data)
                     local fs = P:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                     fs:SetPoint("TOPLEFT", P, "TOPLEFT", 14, y)
                     fs:SetWidth(cw - 8)
-                    fs:SetText("|cFF8888AA\226\128\162|r " .. t)
-                    fs:SetTextColor(0.7, 0.85, 0.95, 1)
+                    fs:SetText(MCL_HEX("TEXT_MUTED") .. "\226\128\162|r " .. t)
+                    fs:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
                     fs:SetJustifyH("LEFT")
                     fs:SetWordWrap(true)
                     y = y - fs:GetStringHeight() - 2
@@ -1362,31 +1362,31 @@ local function PopulateCard(data)
             cb:SetBackdrop({
                 bgFile   = "Interface\\Buttons\\WHITE8x8",
                 edgeFile = "Interface\\Buttons\\WHITE8x8",
-                edgeSize = 1,
+                edgeSize = MCL_PixelEdge(cb),
             })
-            cb:SetBackdropColor(0.1, 0.13, 0.18, 0.9)
-            cb:SetBackdropBorderColor(0.25, 0.4, 0.6, 0.6)
+            cb:SetBackdropColor(MCL_SHADE("SURFACE_RAISED", 0.9))
+            cb:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT_DIM))
 
             local cbi = cb:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             cbi:SetPoint("LEFT", 8, 0)
-            cbi:SetText("|cFF66AADD\226\150\188|r")
+            cbi:SetText(MCL_HEX("TEXT_ACCENT") .. "\226\150\188|r")
 
             local cbl = cb:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             cbl:SetPoint("LEFT", cbi, "RIGHT", 4, 0)
             cbl:SetText(L["Collapse"])
-            cbl:SetTextColor(0.5, 0.75, 0.95, 1)
+            cbl:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
             cb:SetScript("OnClick", function()
                 cardNotesExpanded = false
                 PopulateCard(data)
             end)
             cb:SetScript("OnEnter", function(s)
-                s:SetBackdropBorderColor(0.35, 0.55, 0.8, 0.9)
-                cbl:SetTextColor(0.7, 0.9, 1, 1)
+                s:SetBackdropBorderColor(MCL_SHADE("BORDER_ACCENT", 0.9))
+                cbl:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
             end)
             cb:SetScript("OnLeave", function(s)
-                s:SetBackdropBorderColor(0.25, 0.4, 0.6, 0.6)
-                cbl:SetTextColor(0.5, 0.75, 0.95, 1)
+                s:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT_DIM))
+                cbl:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
             end)
             y = y - 26
         end

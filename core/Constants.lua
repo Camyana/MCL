@@ -174,6 +174,20 @@ C.TYPE = {
 C.UI_SCALE_MIN = 0.7
 C.UI_SCALE_MAX = 1.4
 
+-- =========================================================
+-- WHICH CLIENT
+-- =========================================================
+-- World of Warcraft: Forever reports interface 16001 (patch 1.60.1) and
+-- has the 16xxx range to itself; retail is in the 110000-129999 range and
+-- Classic lower still, so a range test keeps working when Forever
+-- patches. Used for the few places where a feature cannot work there -
+-- the Simple Armory and Data for Azeroth links, which only know about
+-- retail characters - and for the art style a fresh install starts on.
+function C.IsForever()
+    local _, _, _, toc = GetBuildInfo()
+    return toc ~= nil and toc >= 16000 and toc < 20000
+end
+
 function C.UIScale()
     local scale = MCL_SETTINGS and MCL_SETTINGS.uiScale
     if type(scale) ~= "number" then return 1 end
@@ -188,8 +202,128 @@ function C.ApplyUIScale(scale)
     scale = scale or C.UIScale()
     if MCL_mainFrame then MCL_mainFrame:SetScale(scale) end
     if MCL_MountCard then MCL_MountCard:SetScale(scale) end
+    -- Hairline edges were sized for the scale they were built at.
+    C.RefreshPixelEdges()
     return scale
 end
+
+-- Hairline (1px) backdrop edges.
+--
+-- Two things are needed for a 1px border to draw reliably at any UI
+-- scale, and this helper does both for every frame that sizes its edge
+-- through it:
+--
+--   1. The edge is exactly one physical pixel. edgeSize = 1 is one UI
+--      unit, which at a UI scale of 0.65 on a 1440p screen is 1.2px - and
+--      without snapping that draws as one pixel or two depending on where
+--      it lands.
+--
+--   2. Pixel snapping is OFF on the backdrop's pieces. With snapping on,
+--      a 1px edge that landed on a particular sub-pixel position was
+--      collapsed to nothing: the first row of category cards lost its
+--      bottom border while every other row kept it, and moving the card
+--      half a unit brought it back. Nothing was covering it (checked in
+--      game), and padding the edge past a pixel did not help; turning
+--      snapping off on the edge did. Unsnapped, a quad draws every pixel
+--      whose centre it covers, and a one-pixel-tall quad always covers
+--      exactly one. The pieces are flat WHITE8x8, so there is no texture
+--      detail to blur.
+--
+-- The pieces only exist once SetBackdrop has run, and this is called
+-- while building the table passed TO SetBackdrop, so the unsnap is queued
+-- and applied on the next frame. At worst one frame shows a snapped edge.
+--
+-- Call once the frame is parented so its scale is known. Every frame
+-- sized this way is remembered, so a later scale change can re-size its
+-- edge (RefreshPixelEdges).
+local pixelEdgeFrames = setmetatable({}, { __mode = "k" })
+local pendingUnsnap = {}
+local unsnapQueued = false
+
+local BACKDROP_PIECES = {
+    "TopLeftCorner", "TopRightCorner", "BottomLeftCorner", "BottomRightCorner",
+    "TopEdge", "BottomEdge", "LeftEdge", "RightEdge", "Center",
+}
+
+local function UnsnapBackdrop(frame)
+    for i = 1, #BACKDROP_PIECES do
+        local piece = frame[BACKDROP_PIECES[i]]
+        if piece and piece.SetSnapToPixelGrid then
+            piece:SetSnapToPixelGrid(false)
+            piece:SetTexelSnappingBias(0)
+        end
+    end
+end
+
+local function FlushUnsnap()
+    unsnapQueued = false
+    for frame in pairs(pendingUnsnap) do
+        pendingUnsnap[frame] = nil
+        UnsnapBackdrop(frame)
+    end
+end
+
+function C.PixelEdge(frame, px)
+    px = px or 1
+    if frame then
+        pixelEdgeFrames[frame] = px
+        pendingUnsnap[frame] = true
+        if not unsnapQueued and C_Timer and C_Timer.After then
+            unsnapQueued = true
+            C_Timer.After(0, FlushUnsnap)
+        end
+    end
+    if not (PixelUtil and PixelUtil.GetNearestPixelSize) then return px end
+    local scale = (frame and frame.GetEffectiveScale and frame:GetEffectiveScale())
+        or UIParent:GetEffectiveScale()
+    return PixelUtil.GetNearestPixelSize(px, scale, px)
+end
+
+local function copyTable(t)
+    local out = {}
+    for k, v in pairs(t) do out[k] = v end
+    return out
+end
+
+-- A shared backdrop table, with its hairline edge sized for `frame`.
+-- Shared tables cannot hold a per-frame size, so this hands back a copy.
+-- Only an edge of exactly 1 is touched: Forever's ornate 12/16/32px
+-- borders are artwork and are meant to scale with the UI.
+function C.PixelBackdrop(frame, info)
+    if type(info) ~= "table" or info.edgeSize ~= 1 then return info end
+    local copy = copyTable(info)
+    copy.edgeSize = C.PixelEdge(frame, 1)
+    return copy
+end
+
+-- Re-size every registered edge for its frame's current scale. Colours
+-- are read back and restored, because re-applying a backdrop resets them
+-- and many of these frames were recoloured after they were built.
+function C.RefreshPixelEdges()
+    for frame, px in pairs(pixelEdgeFrames) do
+        local info = frame.backdropInfo
+        if not frame:GetParent() then
+            -- Released by a layout rebuild; nothing will show it again.
+            pixelEdgeFrames[frame] = nil
+        elseif info and frame.SetBackdrop then
+            local size = C.PixelEdge(frame, px)
+            if info.edgeSize ~= size then
+                local r, g, b, a = frame:GetBackdropColor()
+                local br, bg, bb, ba = frame:GetBackdropBorderColor()
+                local copy = copyTable(info)
+                copy.edgeSize = size
+                frame:SetBackdrop(copy)
+                UnsnapBackdrop(frame)
+                if r then frame:SetBackdropColor(r, g, b, a) end
+                if br then frame:SetBackdropBorderColor(br, bg, bb, ba) end
+            end
+        end
+    end
+end
+
+-- The guide files are built on globals and never see the namespace.
+MCL_PixelEdge = C.PixelEdge
+MCL_PixelBackdrop = C.PixelBackdrop
 
 -- Re-size a FontString in place, keeping its font file and optionally
 -- forcing an outline for the two heaviest steps.

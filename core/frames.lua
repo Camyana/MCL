@@ -234,84 +234,27 @@ end
 -- =========================================================
 -- Mount icon hover
 -- =========================================================
--- Everything here is allocated on the FIRST hover, never at creation. A
--- full build produces well over a thousand of these buttons and a user
--- will hover a few dozen of them; eagerly giving each one a glow texture
--- and a two-child animation group is real memory for no benefit.
+-- No animation: hovering only swaps the border to the theme's hover
+-- colour and back.  There used to be a scale pop and an additive glow
+-- here; the pop grew the backdrop past the icon, which read as the
+-- background swelling to fill rather than as a highlight.
 --
--- The pop is deliberately a one-shot that returns to 1.0 rather than a
--- scale that is held while hovered. A frame parked at a non-1.0 scale
--- reports the wrong size to any layout code that measures it, and a
--- recycled frame whose group was stopped mid-flight would stay enlarged
--- forever. The persistent part of the hover state is carried by the
--- border colour and the glow, which have no such failure mode.
-local MOUNT_HOVER_BORDER = { 0.52, 0.82, 1.00, 1 }
-
-local function EnsureMountHoverFX(backdropFrame)
-    if backdropFrame.__mclFX then return backdropFrame.__mclFX end
-
-    local fx = {}
-    fx.glow = backdropFrame:CreateTexture(nil, "OVERLAY")
-    fx.glow:SetPoint("TOPLEFT", backdropFrame, "TOPLEFT", -4, 4)
-    fx.glow:SetPoint("BOTTOMRIGHT", backdropFrame, "BOTTOMRIGHT", 4, -4)
-    fx.glow:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
-    fx.glow:SetBlendMode("ADD")
-    fx.glow:SetVertexColor(0.36, 0.68, 0.92, 1)
-    fx.glow:SetAlpha(0)
-
-    local pop = backdropFrame:CreateAnimationGroup()
-    local up = pop:CreateAnimation("Scale")
-    up:SetScaleFrom(1, 1); up:SetScaleTo(1.10, 1.10)
-    up:SetOrigin("CENTER", 0, 0); up:SetDuration(0.09)
-    up:SetSmoothing("OUT"); up:SetOrder(1)
-    local down = pop:CreateAnimation("Scale")
-    down:SetScaleFrom(1.10, 1.10); down:SetScaleTo(1, 1)
-    down:SetOrigin("CENTER", 0, 0); down:SetDuration(0.07)
-    down:SetSmoothing("IN"); down:SetOrder(2)
-    local function settle() backdropFrame:SetScale(1) end
-    pop:SetScript("OnFinished", settle)
-    pop:SetScript("OnStop", settle)
-
-    fx.pop = pop
-    backdropFrame.__mclPulse = pop   -- so Anim:Release stops it on recycle
-    backdropFrame.__mclFX = fx
-    return fx
+-- The hover colour is read from the palette on every hover, not cached,
+-- so a style change takes effect without rebuilding the grid.
+local function MountHoverBorder()
+    return MCL_COLORS.BORDER_HOVER or MCL_COLORS.BORDER_ACCENT_BRIGHT
 end
 
 local function AttachMountHover(backdropFrame, mountFrame)
     -- The scripts live on the Button, which is what actually takes mouse
     -- input; the visuals live on the backdrop behind it.
     mountFrame:SetScript("OnEnter", function()
-        local A = MCLcore.Anim
-        if not (A and A:IsEnabled()) then
-            backdropFrame:SetBackdropBorderColor(unpack(MOUNT_HOVER_BORDER))
-            return
-        end
-        local fx = EnsureMountHoverFX(backdropFrame)
-        backdropFrame.__mclBaseLevel = backdropFrame.__mclBaseLevel or backdropFrame:GetFrameLevel()
-        backdropFrame:SetFrameLevel(backdropFrame.__mclBaseLevel + 5)
-        if not fx.pop:IsPlaying() then fx.pop:Play() end
-        A:Tween(fx.glow, "glow", 0.12, { fx.glow:GetAlpha() }, { 0.55 },
-            function(t, v) t:SetAlpha(v) end, "outQuad")
-        A:BorderColor(backdropFrame, MOUNT_HOVER_BORDER, 0.12, "outQuad")
+        backdropFrame:SetBackdropBorderColor(unpack(MountHoverBorder()))
     end)
 
     mountFrame:SetScript("OnLeave", function()
-        local A = MCLcore.Anim
         local rest = backdropFrame.restBorder or { 0.27, 0.28, 0.34, 0.6 }
-        if not (A and A:IsEnabled()) then
-            backdropFrame:SetBackdropBorderColor(unpack(rest))
-            return
-        end
-        local fx = backdropFrame.__mclFX
-        if fx then
-            A:Tween(fx.glow, "glow", 0.16, { fx.glow:GetAlpha() }, { 0 },
-                function(t, v) t:SetAlpha(v) end, "inOutQuad")
-        end
-        A:BorderColor(backdropFrame, rest, 0.16, "inOutQuad")
-        if backdropFrame.__mclBaseLevel then
-            backdropFrame:SetFrameLevel(backdropFrame.__mclBaseLevel)
-        end
+        backdropFrame:SetBackdropBorderColor(unpack(rest))
     end)
 end
 
@@ -464,13 +407,13 @@ local function ThrottledMountCreation(mountList, categoryFrame, config, callback
                                 backdropFrame:SetBackdrop({
                                     bgFile = "Interface\\Buttons\\WHITE8x8",
                                     edgeFile = "Interface\\Buttons\\WHITE8x8",
-                                    edgeSize = 1
+                                    edgeSize = MCL_PixelEdge(backdropFrame)
                                 })
 
                                 local collected = IsMountCollected(mount_Id)
                                 backdropFrame.collected = collected
                                 if collected then
-                                    mountFrame.tex:SetVertexColor(1, 1, 1, 1)
+                                    mountFrame.tex:SetVertexColor(unpack(MCL_COLORS.TINT_NONE))
                                     backdropFrame.restBg     = { 0.12, 0.18, 0.12, 0.5 }
                                     backdropFrame.restBorder = { 0.25, 0.65, 0.25, 0.8 }
                                 else
@@ -478,7 +421,7 @@ local function ThrottledMountCreation(mountList, categoryFrame, config, callback
                                     -- to 0.45 grey muddies the art; draining the colour keeps
                                     -- the silhouette readable while still reading as inactive.
                                     mountFrame.tex:SetDesaturated(true)
-                                    mountFrame.tex:SetVertexColor(0.7, 0.7, 0.7, 0.85)
+                                    mountFrame.tex:SetVertexColor(MCL_SHADE("TINT_DIM", 0.85))
                                     backdropFrame.restBg     = { 0.078, 0.082, 0.098, 0.5 }
                                     backdropFrame.restBorder = { 0.27, 0.28, 0.34, 0.6 }
                                 end
@@ -545,23 +488,29 @@ end
 -- Resting, hover and selected states used to be written out longhand at
 -- six separate sites with slightly different literals. They live here now
 -- so a nav tab, an expansion icon and a header button can never drift.
-local NAV_STATE = {
-    normal = {
-        bg     = { 0.135, 0.142, 0.168, 0.95 },
-        border = { 0.20,  0.21,  0.26,  0.9 },
-        text   = { 0.72,  0.76,  0.84,  1 },
-    },
-    hover = {
-        bg     = { 0.170, 0.190, 0.240, 1 },
-        border = { 0.30,  0.60,  0.90,  0.8 },
-        text   = { 0.92,  0.94,  0.98,  1 },
-    },
-    selected = {
-        bg     = { 0.150, 0.200, 0.290, 1 },
-        border = { 0.30,  0.60,  0.90,  1 },
-        text   = { 0.52,  0.82,  1.00,  1 },
-    },
+--
+-- These name palette TOKENS rather than holding colours. C.ApplyTheme
+-- replaces every table inside MCL_COLORS when the art style changes, so
+-- a palette captured while this file loaded would keep painting the old
+-- theme after a switch - and this file loads before the saved choice is
+-- applied. RefreshNavState re-reads them; CreateMainFrame calls it
+-- before the window is built.
+local NAV_TOKENS = {
+    normal   = { bg = "SURFACE_RAISED",   border = "BORDER_SUBTLE", text = "TEXT_BODY" },
+    hover    = { bg = "SURFACE_HOVER",    border = "BORDER_ACCENT", text = "TEXT_PRIMARY" },
+    selected = { bg = "SURFACE_SELECTED", border = "BORDER_ACCENT", text = "TEXT_ACCENT_BRIGHT" },
 }
+local NAV_STATE = { normal = {}, hover = {}, selected = {} }
+
+local function RefreshNavState()
+    for name, tokens in pairs(NAV_TOKENS) do
+        local state = NAV_STATE[name]
+        state.bg     = MCL_COLORS[tokens.bg]
+        state.border = MCL_COLORS[tokens.border]
+        state.text   = MCL_COLORS[tokens.text]
+    end
+end
+RefreshNavState()
 
 -- Hover-in is faster than hover-out on purpose: a quick attack reads as
 -- responsive, while a slower release stops the sidebar twitching as the
@@ -587,7 +536,7 @@ local function StyleNavButton(button, isExpansionIcon)
     button:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+        edgeSize = MCL_PixelEdge(button),
         insets = { left = 1, right = 1, top = 1, bottom = 1 },
     })
     button:SetBackdropColor(unpack(NAV_STATE.normal.bg))
@@ -838,11 +787,13 @@ function MCL_frames:OpenMainFrame()
 end
 
 function MCL_frames:CreateMainFrame()
+    -- Pick up the active theme before anything is painted.
+    RefreshNavState()
     MCL_mainFrame = CreateFrame("Frame", "MCLFrame", UIParent, "MCLCleanFrameTemplate");
     MCL_mainFrame:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+        edgeSize = MCL_PixelEdge(MCL_mainFrame),
     })
     -- The body sits one step above the sidebar, and the window's own edge
     -- is the strongest border in the UI - it used to be dimmer than the
@@ -861,10 +812,17 @@ function MCL_frames:CreateMainFrame()
     MCL_mainFrame.headerBar:SetPoint("TOPLEFT", MCL_mainFrame, "TOPLEFT", 0, 0)
     MCL_mainFrame.headerBar:SetPoint("TOPRIGHT", MCL_mainFrame, "TOPRIGHT", 0, 0)
     MCL_mainFrame.headerBar:SetHeight(HEADER_HEIGHT)
+    -- The bar is opaque and sits flush on the window's corner, so it paints
+    -- over the window's own 1px edge; without an edge of its own the title
+    -- row was the one part of the window with no frame. The bottom edge is
+    -- drawn under headerAccent, which covers it.
     MCL_mainFrame.headerBar:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = MCL_PixelEdge(MCL_mainFrame.headerBar),
     })
     MCL_mainFrame.headerBar:SetBackdropColor(Surface("CHROME_BAR"))
+    MCL_mainFrame.headerBar:SetBackdropBorderColor(unpack(COLORS.BORDER_STRONG))
     MCL_mainFrame.headerBar:SetFrameLevel(MCL_mainFrame:GetFrameLevel() + 3)
 
     -- Accent line at bottom of header
@@ -899,7 +857,7 @@ function MCL_frames:CreateMainFrame()
         btn:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8x8",
             edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
+            edgeSize = MCL_PixelEdge(btn),
             insets = { left = 1, right = 1, top = 1, bottom = 1 },
         })
         -- Resting and hover states are carried on the button so the
@@ -907,14 +865,14 @@ function MCL_frames:CreateMainFrame()
         -- override the one field that differs, instead of restating the
         -- whole handler.
         btn.stateNormal = {
-            bg     = { 0.135, 0.142, 0.168, 0.95 },
-            border = { 0.27,  0.28,  0.34,  0.9 },
-            text   = { 0.72,  0.76,  0.84,  1 },
+            bg     = MCL_COLORS.SURFACE_RAISED,
+            border = MCL_COLORS.BORDER_DEFAULT,
+            text   = MCL_COLORS.TEXT_BODY,
         }
         btn.stateHover = {
-            bg     = { 0.170, 0.190, 0.240, 1 },
-            border = { 0.30,  0.60,  0.90,  1 },
-            text   = { 0.52,  0.82,  1.00,  1 },
+            bg     = MCL_COLORS.SURFACE_HOVER,
+            border = MCL_COLORS.BORDER_ACCENT,
+            text   = MCL_COLORS.TEXT_ACCENT_BRIGHT,
         }
 
         btn:SetBackdropColor(unpack(btn.stateNormal.bg))
@@ -956,9 +914,9 @@ function MCL_frames:CreateMainFrame()
     -- that hovers red. Only the hover state differs - everything else is
     -- inherited from CreateHeaderButton.
     MCL_mainFrame.customClose.stateHover = {
-        bg     = { 0.78, 0.28, 0.28, 1 },
-        border = { 0.90, 0.42, 0.42, 1 },
-        text   = { 1,    1,    1,    1 },
+        bg     = { MCL_SHADE("BORDER_DANGER", 1) },
+        border = MCL_COLORS.TEXT_DANGER,
+        text   = MCL_COLORS.TEXT_PRIMARY,
     }
     
     -- Refresh button
@@ -979,37 +937,52 @@ function MCL_frames:CreateMainFrame()
     MCL_mainFrame.refresh.icon:SetPoint("CENTER", 0, 0)
     MCL_mainFrame.refresh.icon:SetTexture("Interface\\Buttons\\UI-RefreshButton")
     MCL_mainFrame.refresh.icon:SetDesaturated(true)
-    MCL_mainFrame.refresh.icon:SetVertexColor(0.72, 0.76, 0.84, 1)
+    MCL_mainFrame.refresh.icon:SetVertexColor(unpack(MCL_COLORS.TINT_ACCENT))
     -- The shared handler tints frame.icon when the state names one, so an
     -- icon button needs two extra fields rather than two extra handlers.
-    MCL_mainFrame.refresh.stateNormal.icon = { 0.72, 0.76, 0.84, 1 }
-    MCL_mainFrame.refresh.stateHover.icon  = { 0.52, 0.82, 1.00, 1 }
+    MCL_mainFrame.refresh.stateNormal.icon = MCL_COLORS.TEXT_BODY
+    MCL_mainFrame.refresh.stateHover.icon  = MCL_COLORS.TEXT_ACCENT_BRIGHT
     
-    -- SA button
-    MCL_mainFrame.sa = CreateHeaderButton(
-        MCL_mainFrame.headerBar, 30, "SA",
-        L["Simple Armory"],
-        L["Copy your Simple Armory profile link"],
-        function()
-            if MCLcore.Function and MCLcore.Function.simplearmoryLink then
-                MCLcore.Function:simplearmoryLink()
+    -- SA and DFA copy a link to your character on simplearmory.com and
+    -- dataforazeroth.com. Both index retail characters only, so on Forever
+    -- they produce a URL for a character neither site has ever heard of.
+    -- The buttons are therefore not built there at all, rather than left
+    -- to hand out links that cannot work.
+    --
+    -- They also sit in the header's anchor chain, each hanging off the one
+    -- to its right, so whatever comes next has to anchor to the last
+    -- button actually created.
+    local headerAnchor = MCL_mainFrame.refresh
+
+    if not (MCLcore.C and MCLcore.C.IsForever and MCLcore.C.IsForever()) then
+        -- SA button
+        MCL_mainFrame.sa = CreateHeaderButton(
+            MCL_mainFrame.headerBar, 30, "SA",
+            L["Simple Armory"],
+            L["Copy your Simple Armory profile link"],
+            function()
+                if MCLcore.Function and MCLcore.Function.simplearmoryLink then
+                    MCLcore.Function:simplearmoryLink()
+                end
             end
-        end
-    )
-    MCL_mainFrame.sa:SetPoint("RIGHT", MCL_mainFrame.refresh, "LEFT", -3, 0)
-    
-    -- DFA button
-    MCL_mainFrame.dfa = CreateHeaderButton(
-        MCL_mainFrame.headerBar, 30, "DFA",
-        L["Data for Azeroth"],
-        L["Copy your Data for Azeroth profile link"],
-        function()
-            if MCLcore.Function and MCLcore.Function.dfaLink then
-                MCLcore.Function:dfaLink()
+        )
+        MCL_mainFrame.sa:SetPoint("RIGHT", MCL_mainFrame.refresh, "LEFT", -3, 0)
+
+        -- DFA button
+        MCL_mainFrame.dfa = CreateHeaderButton(
+            MCL_mainFrame.headerBar, 30, "DFA",
+            L["Data for Azeroth"],
+            L["Copy your Data for Azeroth profile link"],
+            function()
+                if MCLcore.Function and MCLcore.Function.dfaLink then
+                    MCLcore.Function:dfaLink()
+                end
             end
-        end
-    )
-    MCL_mainFrame.dfa:SetPoint("RIGHT", MCL_mainFrame.sa, "LEFT", -3, 0)
+        )
+        MCL_mainFrame.dfa:SetPoint("RIGHT", MCL_mainFrame.sa, "LEFT", -3, 0)
+
+        headerAnchor = MCL_mainFrame.dfa
+    end
 
     -- Report button (bug icon)
     MCL_mainFrame.report = CreateHeaderButton(
@@ -1022,7 +995,7 @@ function MCL_frames:CreateMainFrame()
             end
         end
     )
-    MCL_mainFrame.report:SetPoint("RIGHT", MCL_mainFrame.dfa, "LEFT", -3, 0)
+    MCL_mainFrame.report:SetPoint("RIGHT", headerAnchor, "LEFT", -3, 0)
     -- Use bug icon instead of text
     MCL_mainFrame.report.text:Hide()
     MCL_mainFrame.report.icon = MCL_mainFrame.report:CreateTexture(nil, "OVERLAY")
@@ -1030,10 +1003,10 @@ function MCL_frames:CreateMainFrame()
     MCL_mainFrame.report.icon:SetPoint("CENTER", 0, 0)
     MCL_mainFrame.report.icon:SetTexture("Interface\\HELPFRAME\\HelpIcon-Bug")
     MCL_mainFrame.report.icon:SetDesaturated(true)
-    MCL_mainFrame.report.icon:SetVertexColor(0.70, 0.42, 0.42, 1)
-    MCL_mainFrame.report.stateNormal.icon = { 0.70, 0.42, 0.42, 1 }
-    MCL_mainFrame.report.stateHover.border = { 0.90, 0.42, 0.42, 1 }
-    MCL_mainFrame.report.stateHover.icon   = { 1,    0.55, 0.55, 1 }
+    MCL_mainFrame.report.icon:SetVertexColor(unpack(MCL_COLORS.TEXT_DANGER))
+    MCL_mainFrame.report.stateNormal.icon = { MCL_SHADE("TEXT_DANGER", 0.85) }
+    MCL_mainFrame.report.stateHover.border = MCL_COLORS.TEXT_DANGER
+    MCL_mainFrame.report.stateHover.icon   = MCL_COLORS.TEXT_DANGER
 
     -- Compare button (group compare feature)
     MCL_mainFrame.compare = CreateHeaderButton(
@@ -1083,7 +1056,7 @@ function MCL_frames:CreateMainFrame()
 	for row = 1, 3 do
 		for col = 1, row do
 			local dot = MCL_mainFrame.resizeGrip:CreateTexture(nil, "OVERLAY")
-			dot:SetColorTexture(1, 1, 1, 1)
+			dot:SetColorTexture(MCL_SHADE("HIGHLIGHT_WHITE", 1))
 			dot:SetVertexColor(unpack(COLORS.BORDER_STRONG))
 			dot:SetSize(2, 2)
 			dot:SetPoint("BOTTOMRIGHT", MCL_mainFrame.resizeGrip, "BOTTOMRIGHT",
@@ -1134,7 +1107,7 @@ function MCL_frames:CreateMainFrame()
 		-- and WoW gives a scrollbar thumb no expanded hit area, so it was
 		-- also nearly undraggable. The explicit SetHeight is gone because
 		-- the scroll range overwrites it on the next frame anyway.
-		scrollThumb:SetColorTexture(0.28, 0.32, 0.42, 0.9)
+		scrollThumb:SetColorTexture(unpack(MCL_COLORS.SURFACE_ACCENT_STRONG))
 		scrollThumb:SetWidth(6)
 	end
 	-- Hide the up/down scroll buttons for a clean look
@@ -1628,7 +1601,7 @@ function MCL_frames:SetTabs()
         -- Right-aligned count (always offset to leave room for checkmark)
         tab.countText = tab:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         tab.countText:SetPoint("RIGHT", tab.checkmark, "LEFT", -2, 0)
-        tab.countText:SetTextColor(0.5, 0.55, 0.65, 1)
+        tab.countText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
         local sectionStats = MCLcore.stats and MCLcore.stats[v.name]
         if sectionStats and sectionStats.collected and sectionStats.total then
             tab.countText:SetText(string.format("%d/%d", sectionStats.collected, sectionStats.total))
@@ -1687,7 +1660,7 @@ function MCL_frames:SetTabs()
         -- Right-aligned count (offset to match other tabs)
         tab.countText = tab:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         tab.countText:SetPoint("RIGHT", tab.checkmark, "LEFT", -2, 0)
-        tab.countText:SetTextColor(0.5, 0.55, 0.65, 1)
+        tab.countText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
         local pinnedCount = MCL_PINNED and #MCL_PINNED or 0
         if pinnedCount > 0 then
             tab.countText:SetText(tostring(pinnedCount))
@@ -1759,7 +1732,7 @@ function MCL_frames:SetTabs()
         tab.checkmark:Hide()
         tab.countText = tab:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         tab.countText:SetPoint("RIGHT", tab.checkmark, "LEFT", -2, 0)
-        tab.countText:SetTextColor(0.5, 0.55, 0.65, 1)
+        tab.countText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
         local hiddenCount = MCL_HIDDEN and #MCL_HIDDEN or 0
         if hiddenCount > 0 then
             tab.countText:SetText(tostring(hiddenCount))
@@ -1914,7 +1887,7 @@ function MCL_frames:createNavFrame(relativeFrame, title)
         frame:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8x8",
             edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
+            edgeSize = MCL_PixelEdge(frame),
         })
         frame:SetBackdropColor(Surface("SURFACE_0"))
         frame:SetBackdropBorderColor(unpack(COLORS.BORDER_STRONG))
@@ -1923,12 +1896,18 @@ function MCL_frames:createNavFrame(relativeFrame, title)
     -- Header bar (matches main frame header exactly)
     frame.headerBar = CreateFrame("Frame", nil, frame, "BackdropTemplate")
     frame.headerBar:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
-    frame.headerBar:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 1, 0)  -- extend 1px right to cover main frame left border
+    frame.headerBar:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 1, 0)  -- extend 1px right so its edge sits on the main frame's left border
     frame.headerBar:SetHeight(34)
+    -- Edged like the main header, for the same reason. Its right edge lands
+    -- on the column the window's left border occupies, so the divider
+    -- between the sidebar and the body now runs up through the header too.
     frame.headerBar:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = MCL_PixelEdge(frame.headerBar),
     })
     frame.headerBar:SetBackdropColor(Surface("CHROME_BAR"))
+    frame.headerBar:SetBackdropBorderColor(unpack(COLORS.BORDER_STRONG))
     frame.headerBar:SetFrameLevel(frame:GetFrameLevel() + 5)  -- above main frame's borderFrame
     
     frame.title = frame.headerBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -1952,7 +1931,7 @@ function MCL_frames:createNavFrame(relativeFrame, title)
     frame.searchContainer:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+        edgeSize = MCL_PixelEdge(frame.searchContainer),
         insets = { left = 1, right = 1, top = 1, bottom = 1 },
     })
     frame.searchContainer:SetBackdropColor(unpack(COLORS.SURFACE_3))
@@ -1971,7 +1950,7 @@ function MCL_frames:createNavFrame(relativeFrame, title)
     frame.searchBox:SetPoint("LEFT", frame.searchIcon, "RIGHT", 3, 0)
     frame.searchBox:SetPoint("RIGHT", frame.searchContainer, "RIGHT", -6, 0)
     frame.searchBox:SetFontObject("GameFontHighlightSmall")
-    frame.searchBox:SetTextColor(1, 1, 1, 1)
+    frame.searchBox:SetTextColor(unpack(MCL_COLORS.TEXT_PRIMARY))
     frame.searchBox:SetAutoFocus(false)
     frame.searchBox:SetMaxLetters(50)
     frame.searchBox:EnableMouse(true)
@@ -2106,12 +2085,12 @@ function MCL_frames:createContentFrame(relativeFrame, title, sectionIcon)
         frame:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8x8",
             edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1
+            edgeSize = MCL_PixelEdge(frame)
         })
         frame:SetBackdropColor(Surface("SURFACE_2"))
         frame:SetBackdropBorderColor(unpack(COLORS.BORDER_SUBTLE))
     else
-        frame:SetBackdropColor(0, 0, 0, 0)  -- Transparent background for other content
+        frame:SetBackdropColor(unpack(MCL_COLORS.TRANSPARENT))  -- Transparent background for other content
     end
     
     -- Title text (placed first so icon can anchor to it)
@@ -2143,7 +2122,7 @@ function MCL_frames:createContentFrame(relativeFrame, title, sectionIcon)
         instructionsFrame:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8x8",
             edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1
+            edgeSize = MCL_PixelEdge(instructionsFrame)
         })
         instructionsFrame:SetBackdropColor(Surface("SURFACE_2", 0.7))
         instructionsFrame:SetBackdropBorderColor(unpack(COLORS.ACCENT_RULE))
@@ -2185,7 +2164,7 @@ function MCL_frames:createContentFrame(relativeFrame, title, sectionIcon)
         sortBtn:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8x8",
             edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1
+            edgeSize = MCL_PixelEdge(sortBtn)
         })
         sortBtn:SetBackdropColor(unpack(NAV_STATE.normal.bg))
         sortBtn:SetBackdropBorderColor(unpack(NAV_STATE.normal.border))
@@ -2236,7 +2215,7 @@ function MCL_frames:createContentFrame(relativeFrame, title, sectionIcon)
         filterBtn:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8x8",
             edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1
+            edgeSize = MCL_PixelEdge(filterBtn)
         })
         filterBtn:SetBackdropColor(unpack(NAV_STATE.normal.bg))
 
@@ -2303,14 +2282,14 @@ function MCL_frames:createZoneDropsFrame(relativeFrame)
     frame:SetWidth(availableWidth)
     frame:SetHeight(50)
     frame:SetPoint("TOPLEFT", relativeFrame, "TOPLEFT", 10, 0)
-    frame:SetBackdropColor(0, 0, 0, 0)
+    frame:SetBackdropColor(unpack(MCL_COLORS.TRANSPARENT))
     frame.name = "Current Zone"
 
     -- Title
     frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     frame.title:SetPoint("TOPLEFT", frame, "TOPLEFT", 24, -10)
     frame.title:SetText(L["Current Zone"])
-    frame.title:SetTextColor(0.4, 0.78, 0.95, 1)
+    frame.title:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
     -- Map icon next to title
     frame.mapIcon = frame:CreateTexture(nil, "ARTWORK")
@@ -2321,7 +2300,7 @@ function MCL_frames:createZoneDropsFrame(relativeFrame)
     -- Sub-title showing current zone name (updated on refresh)
     frame.zoneLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     frame.zoneLabel:SetPoint("TOPLEFT", frame.title, "BOTTOMLEFT", 0, -4)
-    frame.zoneLabel:SetTextColor(0.6, 0.65, 0.75, 1)
+    frame.zoneLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
     -- Container for mount rows (will be cleared/rebuilt on refresh)
     frame.mountContainer = CreateFrame("Frame", nil, frame)
@@ -2384,7 +2363,7 @@ function MCL_frames:RefreshZoneDrops()
         local noData = container:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         noData:SetPoint("TOPLEFT", container, "TOPLEFT", 15, 0)
         noData:SetText(L["No drop mounts found for this zone."])
-        noData:SetTextColor(0.5, 0.55, 0.65, 1)
+        noData:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
         local dummyRow = CreateFrame("Frame", nil, container)
         dummyRow:SetSize(1, 30)
         dummyRow.fontStr = noData
@@ -2438,15 +2417,15 @@ function MCL_frames:RefreshZoneDrops()
                     row:SetBackdrop({
                         bgFile   = "Interface\\Buttons\\WHITE8x8",
                         edgeFile = "Interface\\Buttons\\WHITE8x8",
-                        edgeSize = 1,
+                        edgeSize = MCL_PixelEdge(row),
                     })
 
                     if isCollected then
-                        row:SetBackdropColor(0.04, 0.14, 0.04, 0.6)
-                        row:SetBackdropBorderColor(0.1, 0.4, 0.1, 0.5)
+                        row:SetBackdropColor(MCL_SHADE("SURFACE_SUCCESS", 0.6))
+                        row:SetBackdropBorderColor(MCL_SHADE("BORDER_SUCCESS", 0.5))
                     else
-                        row:SetBackdropColor(0.08, 0.08, 0.14, 0.8)
-                        row:SetBackdropBorderColor(0.2, 0.2, 0.25, 0.6)
+                        row:SetBackdropColor(MCL_SHADE("SURFACE_WINDOW", 0.8))
+                        row:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_SUBTLE))
                     end
 
                     -- Mount icon
@@ -2455,7 +2434,7 @@ function MCL_frames:RefreshZoneDrops()
                     row.icon:SetPoint("LEFT", row, "LEFT", 6, 0)
                     row.icon:SetTexture(icon)
                     if not isCollected then
-                        row.icon:SetVertexColor(0.7, 0.7, 0.7, 0.9)
+                        row.icon:SetVertexColor(MCL_SHADE("TINT_DIM", 0.9))
                     end
 
                     -- Collected check
@@ -2473,9 +2452,9 @@ function MCL_frames:RefreshZoneDrops()
                     row.nameText:SetPoint("LEFT", row.icon, "RIGHT", 8, 4)
                     row.nameText:SetText(mountName)
                     if isCollected then
-                        row.nameText:SetTextColor(0.3, 0.9, 0.3, 1)
+                        row.nameText:SetTextColor(unpack(MCL_COLORS.TEXT_SUCCESS))
                     else
-                        row.nameText:SetTextColor(0.95, 0.95, 1, 1)
+                        row.nameText:SetTextColor(unpack(MCL_COLORS.TEXT_PRIMARY))
                     end
 
                     -- Source method
@@ -2483,7 +2462,7 @@ function MCL_frames:RefreshZoneDrops()
                     row.sourceText:SetPoint("TOPLEFT", row.nameText, "BOTTOMLEFT", 0, -1)
                     local methodText = (MCL_GUIDE and MCL_GUIDE.GetMethodText) and MCL_GUIDE:GetMethodText(info.method) or info.method or "Unknown"
                     row.sourceText:SetText(methodText)
-                    row.sourceText:SetTextColor(0.4, 0.65, 0.85, 1)
+                    row.sourceText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
                     -- Drop rate (right side)
                     if info.chance and info.chance > 0 then
@@ -2511,7 +2490,7 @@ function MCL_frames:RefreshZoneDrops()
                         row.npcText = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
                         row.npcText:SetPoint("TOPRIGHT", row.chanceText or row, row.chanceText and "BOTTOMRIGHT" or "RIGHT", 0, row.chanceText and -1 or -4)
                         row.npcText:SetText(npcName)
-                        row.npcText:SetTextColor(0.6, 0.6, 0.7, 1)
+                        row.npcText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
                     end
 
                     -- Waypoint button if coords available for this map
@@ -2539,8 +2518,8 @@ function MCL_frames:RefreshZoneDrops()
 
                     -- Hover effects
                     row:SetScript("OnEnter", function(self)
-                        self:SetBackdropColor(0.14, 0.14, 0.22, 1)
-                        self:SetBackdropBorderColor(0.3, 0.6, 0.9, 0.8)
+                        self:SetBackdropColor(unpack(MCL_COLORS.SURFACE_HOVER))
+                        self:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT))
                         -- Show tooltip
                         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                         if spellID then
@@ -2561,11 +2540,11 @@ function MCL_frames:RefreshZoneDrops()
                     end)
                     row:SetScript("OnLeave", function(self)
                         if isCollected then
-                            self:SetBackdropColor(0.04, 0.14, 0.04, 0.6)
-                            self:SetBackdropBorderColor(0.1, 0.4, 0.1, 0.5)
+                            self:SetBackdropColor(MCL_SHADE("SURFACE_SUCCESS", 0.6))
+                            self:SetBackdropBorderColor(MCL_SHADE("BORDER_SUCCESS", 0.5))
                         else
-                            self:SetBackdropColor(0.08, 0.08, 0.14, 0.8)
-                            self:SetBackdropBorderColor(0.2, 0.2, 0.25, 0.6)
+                            self:SetBackdropColor(MCL_SHADE("SURFACE_WINDOW", 0.8))
+                            self:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_SUBTLE))
                         end
                         GameTooltip:Hide()
                     end)
@@ -2620,14 +2599,14 @@ function MCL_frames:createRepFilterFrame(relativeFrame)
     frame:SetWidth(availableWidth)
     frame:SetHeight(50)
     frame:SetPoint("TOPLEFT", relativeFrame, "TOPLEFT", 10, 0)
-    frame:SetBackdropColor(0, 0, 0, 0)
+    frame:SetBackdropColor(unpack(MCL_COLORS.TRANSPARENT))
     frame.name = "Reputation"
 
     -- Title
     frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     frame.title:SetPoint("TOPLEFT", frame, "TOPLEFT", 24, -10)
     frame.title:SetText(L["Reputation Mounts"])
-    frame.title:SetTextColor(0.4, 0.78, 0.95, 1)
+    frame.title:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
     -- Reputation icon next to title
     frame.repIcon = frame:CreateTexture(nil, "ARTWORK")
@@ -2638,7 +2617,7 @@ function MCL_frames:createRepFilterFrame(relativeFrame)
     -- Sub-title (updated on refresh)
     frame.subLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     frame.subLabel:SetPoint("TOPLEFT", frame.title, "BOTTOMLEFT", 0, -4)
-    frame.subLabel:SetTextColor(0.6, 0.65, 0.75, 1)
+    frame.subLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
     -- "Can Afford" checkbox — filters to mounts the player can actually purchase
     frame.canAfford = false
@@ -2649,7 +2628,7 @@ function MCL_frames:createRepFilterFrame(relativeFrame)
     frame.affordCheck.text = frame.affordCheck:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     frame.affordCheck.text:SetPoint("RIGHT", frame.affordCheck, "LEFT", -4, 0)
     frame.affordCheck.text:SetText(L["Can Afford"])
-    frame.affordCheck.text:SetTextColor(0.7, 0.78, 0.88, 1)
+    frame.affordCheck.text:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
     frame.affordCheck:SetScript("OnClick", function(self)
         frame.canAfford = self:GetChecked()
         MCLcore.Frames:RefreshRepFilter()
@@ -2702,7 +2681,7 @@ function MCL_frames:RefreshRepFilter()
         local noData = container:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         noData:SetPoint("TOPLEFT", container, "TOPLEFT", 15, 0)
         noData:SetText("MCL_Guide reputation data not loaded.")
-        noData:SetTextColor(0.5, 0.55, 0.65, 1)
+        noData:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
         container._noDataText = noData
         local dummyRow = CreateFrame("Frame", nil, container)
         dummyRow:SetSize(1, 30)
@@ -2875,12 +2854,12 @@ function MCL_frames:RefreshRepFilter()
                     headerLabel = headerLabel .. "  |cFF1FB7EB(Renown)|r"
                 end
                 header.text:SetText(headerLabel)
-                header.text:SetTextColor(0.9, 0.8, 0.5, 1)
+                header.text:SetTextColor(unpack(MCL_COLORS.TEXT_HIGHLIGHT))
                 header.line = header:CreateTexture(nil, "ARTWORK")
                 header.line:SetHeight(1)
                 header.line:SetPoint("LEFT", header.text, "RIGHT", 8, 0)
                 header.line:SetPoint("RIGHT", header, "RIGHT", 0, 0)
-                header.line:SetColorTexture(0.3, 0.3, 0.35, 0.5)
+                header.line:SetColorTexture(MCL_SHADE("BORDER_DEFAULT", 0.5))
                 table.insert(container.rows, header)
                 yOffset = yOffset - 30
             end
@@ -2892,23 +2871,23 @@ function MCL_frames:RefreshRepFilter()
             row:SetBackdrop({
                 bgFile   = "Interface\\Buttons\\WHITE8x8",
                 edgeFile = "Interface\\Buttons\\WHITE8x8",
-                edgeSize = 1,
+                edgeSize = MCL_PixelEdge(row),
             })
-            row:SetBackdropColor(0.08, 0.08, 0.14, 0.8)
-            row:SetBackdropBorderColor(0.2, 0.2, 0.25, 0.6)
+            row:SetBackdropColor(MCL_SHADE("SURFACE_WINDOW", 0.8))
+            row:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_SUBTLE))
 
             -- Mount icon
             row.icon = row:CreateTexture(nil, "ARTWORK")
             row.icon:SetSize(32, 32)
             row.icon:SetPoint("LEFT", row, "LEFT", 6, 0)
             row.icon:SetTexture(m.icon)
-            row.icon:SetVertexColor(0.7, 0.7, 0.7, 0.9)
+            row.icon:SetVertexColor(MCL_SHADE("TINT_DIM", 0.9))
 
             -- Mount name
             row.nameText = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             row.nameText:SetPoint("LEFT", row.icon, "RIGHT", 8, 4)
             row.nameText:SetText(m.mountName)
-            row.nameText:SetTextColor(0.95, 0.95, 1, 1)
+            row.nameText:SetTextColor(unpack(MCL_COLORS.TEXT_PRIMARY))
 
             -- Required standing (below name)
             local reqLabel
@@ -2920,7 +2899,7 @@ function MCL_frames:RefreshRepFilter()
             row.reqText = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
             row.reqText:SetPoint("TOPLEFT", row.nameText, "BOTTOMLEFT", 0, -1)
             row.reqText:SetText(m.factionName .. " — " .. reqLabel)
-            row.reqText:SetTextColor(0.4, 0.65, 0.85, 1)
+            row.reqText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
             -- Cost info (right side)
             local costs = MCL_GUIDE_CURRENCY_DATA and MCL_GUIDE_CURRENCY_DATA[m.spellId]
@@ -2945,9 +2924,9 @@ function MCL_frames:RefreshRepFilter()
                     row.costText:SetPoint("RIGHT", row, "RIGHT", -10, 0)
                     row.costText:SetText(table.concat(costParts, "  "))
                     if m.canAfford then
-                        row.costText:SetTextColor(0.3, 0.9, 0.3, 1)
+                        row.costText:SetTextColor(unpack(MCL_COLORS.TEXT_SUCCESS))
                     else
-                        row.costText:SetTextColor(1, 0.3, 0.3, 1)
+                        row.costText:SetTextColor(unpack(MCL_COLORS.TEXT_DANGER))
                     end
                 end
             end
@@ -2957,8 +2936,8 @@ function MCL_frames:RefreshRepFilter()
             local mountID = m.mountID
             local mountName = m.mountName
             row:SetScript("OnEnter", function(self)
-                self:SetBackdropColor(0.14, 0.14, 0.22, 1)
-                self:SetBackdropBorderColor(0.3, 0.6, 0.9, 0.8)
+                self:SetBackdropColor(unpack(MCL_COLORS.SURFACE_HOVER))
+                self:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT))
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                 if spellId then GameTooltip:SetSpellByID(spellId) end
                 GameTooltip:Show()
@@ -2970,8 +2949,8 @@ function MCL_frames:RefreshRepFilter()
                 end
             end)
             row:SetScript("OnLeave", function(self)
-                self:SetBackdropColor(0.08, 0.08, 0.14, 0.8)
-                self:SetBackdropBorderColor(0.2, 0.2, 0.25, 0.6)
+                self:SetBackdropColor(MCL_SHADE("SURFACE_WINDOW", 0.8))
+                self:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_SUBTLE))
                 GameTooltip:Hide()
             end)
             row:SetScript("OnClick", function(self, button)
@@ -3005,7 +2984,7 @@ function MCL_frames:RefreshRepFilter()
         elseif totalUnlocked == 0 then
             noData:SetText(L["No unlocked uncollected reputation mounts found."])
         end
-        noData:SetTextColor(0.5, 0.55, 0.65, 1)
+        noData:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
         container._noDataText = noData
         local dummyRow = CreateFrame("Frame", nil, container)
         dummyRow:SetSize(1, 30)
@@ -3029,7 +3008,7 @@ function MCL_frames:createAboutFrame(relativeFrame)
     frame:SetWidth(availableWidth)
     frame:SetHeight(700)
     frame:SetPoint("TOPLEFT", relativeFrame, "TOPLEFT", 10, 0)
-    frame:SetBackdropColor(0, 0, 0, 0)
+    frame:SetBackdropColor(unpack(MCL_COLORS.TRANSPARENT))
     frame.name = "About"
 
     -- ── Helper: card container (same style as Settings cards) ──
@@ -3041,28 +3020,28 @@ function MCL_frames:createAboutFrame(relativeFrame)
         card:SetBackdrop({
             bgFile   = "Interface\\Buttons\\WHITE8x8",
             edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
+            edgeSize = MCL_PixelEdge(card),
         })
-        card:SetBackdropColor(0.06, 0.06, 0.09, 0.9)
-        card:SetBackdropBorderColor(0.2, 0.2, 0.25, 0.6)
+        card:SetBackdropColor(MCL_SHADE("SURFACE_SUNKEN", 0.9))
+        card:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_SUBTLE))
 
         local header = CreateFrame("Frame", nil, card, "BackdropTemplate")
         header:SetPoint("TOPLEFT", card, "TOPLEFT", 1, -1)
         header:SetPoint("TOPRIGHT", card, "TOPRIGHT", -1, -1)
         header:SetHeight(26)
         header:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-        header:SetBackdropColor(0.08, 0.08, 0.12, 1)
+        header:SetBackdropColor(unpack(MCL_COLORS.SURFACE_WINDOW))
 
         local headerText = header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         headerText:SetPoint("LEFT", header, "LEFT", 10, 0)
         headerText:SetText(title)
-        headerText:SetTextColor(0.4, 0.78, 0.95, 1)
+        headerText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
         local accent = card:CreateTexture(nil, "ARTWORK")
         accent:SetHeight(1)
         accent:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 0, 0)
         accent:SetPoint("TOPRIGHT", header, "BOTTOMRIGHT", 0, 0)
-        accent:SetColorTexture(0.2, 0.5, 0.8, 0.3)
+        accent:SetColorTexture(MCL_SHADE("BORDER_ACCENT", 0.3))
 
         return card
     end
@@ -3077,7 +3056,7 @@ function MCL_frames:createAboutFrame(relativeFrame)
         local lbl = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         lbl:SetPoint("LEFT", row, "LEFT", 0, 0)
         lbl:SetText(label)
-        lbl:SetTextColor(0.7, 0.78, 0.88, 1)
+        lbl:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
 
         local link = CreateFrame("Button", nil, row)
         link:SetPoint("LEFT", lbl, "RIGHT", 6, 0)
@@ -3111,7 +3090,7 @@ function MCL_frames:createAboutFrame(relativeFrame)
     frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     frame.title:SetPoint("TOPLEFT", frame, "TOPLEFT", 24, yOffset)
     frame.title:SetText(L["About MCL"])
-    frame.title:SetTextColor(0.4, 0.78, 0.95, 1)
+    frame.title:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
     frame.aboutIcon = frame:CreateTexture(nil, "ARTWORK")
     frame.aboutIcon:SetSize(20, 20)
@@ -3121,7 +3100,7 @@ function MCL_frames:createAboutFrame(relativeFrame)
     -- Version
     local versionText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     versionText:SetPoint("TOPLEFT", frame.title, "BOTTOMLEFT", 0, -4)
-    versionText:SetTextColor(0.6, 0.65, 0.75, 1)
+    versionText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
     local tocVersion = C_AddOns and C_AddOns.GetAddOnMetadata and C_AddOns.GetAddOnMetadata("MCL", "Version")
     versionText:SetText(L["Version:"] .. " " .. (tocVersion or "unknown"))
 
@@ -3150,7 +3129,7 @@ function MCL_frames:createAboutFrame(relativeFrame)
             textY = textY - 6
         else
             fs:SetText(line)
-            fs:SetTextColor(0.75, 0.78, 0.85, 1)
+            fs:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
             textY = textY - 16
         end
     end
@@ -3181,7 +3160,7 @@ function MCL_frames:createAboutFrame(relativeFrame)
             textY = textY - 6
         else
             fs:SetText(line)
-            fs:SetTextColor(0.75, 0.78, 0.85, 1)
+            fs:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
             textY = textY - 16
         end
     end
@@ -3224,7 +3203,7 @@ function MCL_frames:createAboutFrame(relativeFrame)
             textY = textY - 6
         else
             fs:SetText(line)
-            fs:SetTextColor(0.75, 0.78, 0.85, 1)
+            fs:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
             textY = textY - 16
         end
     end
@@ -3248,13 +3227,13 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     frame:SetWidth(availableWidth)
     frame:SetHeight(750)
     frame:SetPoint("TOPLEFT", relativeFrame, "TOPLEFT", 10, 0)
-    frame:SetBackdropColor(0, 0, 0, 0)
+    frame:SetBackdropColor(unpack(MCL_COLORS.TRANSPARENT))
     
     -- Title text (placed first so icon can anchor to it)
     frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     frame.title:SetPoint("TOPLEFT", frame, "TOPLEFT", 24, -10)
     frame.title:SetText(L["Settings"])
-    frame.title:SetTextColor(0.4, 0.78, 0.95, 1)
+    frame.title:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
     frame.name = "Settings"
     
     -- Section icon (anchored to title for vertical centering)
@@ -3274,10 +3253,10 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         card:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8x8",
             edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1
+            edgeSize = MCL_PixelEdge(card)
         })
-        card:SetBackdropColor(0.06, 0.06, 0.09, 0.9)
-        card:SetBackdropBorderColor(0.2, 0.2, 0.25, 0.6)
+        card:SetBackdropColor(MCL_SHADE("SURFACE_SUNKEN", 0.9))
+        card:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_SUBTLE))
         
         -- Card header bar
         local header = CreateFrame("Frame", nil, card, "BackdropTemplate")
@@ -3285,19 +3264,19 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         header:SetPoint("TOPRIGHT", card, "TOPRIGHT", -1, -1)
         header:SetHeight(26)
         header:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-        header:SetBackdropColor(0.08, 0.08, 0.12, 1)
+        header:SetBackdropColor(unpack(MCL_COLORS.SURFACE_WINDOW))
         
         local headerText = header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         headerText:SetPoint("LEFT", header, "LEFT", 10, 0)
         headerText:SetText(title)
-        headerText:SetTextColor(0.4, 0.78, 0.95, 1)
+        headerText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
         
         -- Accent line under header
         local accent = card:CreateTexture(nil, "ARTWORK")
         accent:SetHeight(1)
         accent:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 0, 0)
         accent:SetPoint("TOPRIGHT", header, "BOTTOMRIGHT", 0, 0)
-        accent:SetColorTexture(0.2, 0.5, 0.8, 0.3)
+        accent:SetColorTexture(MCL_SHADE("BORDER_ACCENT", 0.3))
         
         return card
     end
@@ -3313,13 +3292,13 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         
         local bg = checkbox:CreateTexture(nil, "BACKGROUND")
         bg:SetAllPoints()
-        bg:SetColorTexture(0.08, 0.08, 0.1, 0.8)
+        bg:SetColorTexture(MCL_SHADE("SURFACE_WINDOW", 0.8))
         
         local border = CreateFrame("Frame", nil, checkbox, "BackdropTemplate")
         border:SetPoint("TOPLEFT", -1, 1)
         border:SetPoint("BOTTOMRIGHT", 1, -1)
-        border:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-        border:SetBackdropBorderColor(0.25, 0.25, 0.3, 1)
+        border:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = MCL_PixelEdge(border) })
+        border:SetBackdropBorderColor(MCL_SHADE("BORDER_DEFAULT", 1))
         checkbox.borderFrame = border
         
         -- Checkmark texture
@@ -3328,18 +3307,18 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         check:SetPoint("CENTER")
         check:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
         check:SetDesaturated(true)
-        check:SetVertexColor(0.4, 0.78, 0.95, 1)
+        check:SetVertexColor(unpack(MCL_COLORS.TINT_ACCENT))
         check:Hide()
         checkbox.checkMark = check
         
         local function updateVisuals()
             if checkbox:GetChecked() then
-                bg:SetColorTexture(0.15, 0.25, 0.4, 0.9)
-                border:SetBackdropBorderColor(0.3, 0.6, 0.9, 1)
+                bg:SetColorTexture(unpack(MCL_COLORS.SURFACE_ACCENT_STRONG))
+                border:SetBackdropBorderColor(MCL_SHADE("BORDER_ACCENT", 1))
                 check:Show()
             else
-                bg:SetColorTexture(0.08, 0.08, 0.1, 0.8)
-                border:SetBackdropBorderColor(0.25, 0.25, 0.3, 1)
+                bg:SetColorTexture(MCL_SHADE("SURFACE_WINDOW", 0.8))
+                border:SetBackdropBorderColor(MCL_SHADE("BORDER_DEFAULT", 1))
                 check:Hide()
             end
         end
@@ -3349,7 +3328,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
             if self.originalOnClick then self.originalOnClick(self) end
         end)
         checkbox:SetScript("OnEnter", function(self)
-            border:SetBackdropBorderColor(0.3, 0.6, 0.9, 0.8)
+            border:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT))
         end)
         checkbox:SetScript("OnLeave", function(self)
             updateVisuals()
@@ -3367,7 +3346,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         if thumb then
             thumb:SetTexture("Interface\\Buttons\\WHITE8x8")
             thumb:SetSize(12, 16)
-            thumb:SetVertexColor(0.4, 0.78, 0.95, 1)
+            thumb:SetVertexColor(unpack(MCL_COLORS.TINT_ACCENT))
         end
         
         slider:EnableMouse(true)
@@ -3375,7 +3354,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         
         -- Track background
         local trackBg = slider:CreateTexture(nil, "BACKGROUND")
-        trackBg:SetColorTexture(0.08, 0.08, 0.1, 1)
+        trackBg:SetColorTexture(unpack(MCL_COLORS.SURFACE_WINDOW))
         trackBg:SetHeight(4)
         trackBg:SetPoint("LEFT", slider, "LEFT", 10, 0)
         trackBg:SetPoint("RIGHT", slider, "RIGHT", -10, 0)
@@ -3384,12 +3363,12 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         local trackBorder = CreateFrame("Frame", nil, slider, "BackdropTemplate")
         trackBorder:SetPoint("TOPLEFT", trackBg, "TOPLEFT", -1, 1)
         trackBorder:SetPoint("BOTTOMRIGHT", trackBg, "BOTTOMRIGHT", 1, -1)
-        trackBorder:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-        trackBorder:SetBackdropBorderColor(0.2, 0.2, 0.25, 0.6)
+        trackBorder:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = MCL_PixelEdge(trackBorder) })
+        trackBorder:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_SUBTLE))
         
         -- Progress fill
         local progress = slider:CreateTexture(nil, "ARTWORK")
-        progress:SetColorTexture(0.2, 0.45, 0.75, 0.8)
+        progress:SetColorTexture(MCL_SHADE("SURFACE_ACCENT_STRONG", 0.8))
         progress:SetHeight(4)
         progress:SetPoint("LEFT", trackBg, "LEFT")
         
@@ -3412,12 +3391,12 @@ function MCL_frames:createSettingsFrame(relativeFrame)
             inputBox:SetBackdrop({
                 bgFile = "Interface\\Buttons\\WHITE8x8",
                 edgeFile = "Interface\\Buttons\\WHITE8x8",
-                edgeSize = 1
+                edgeSize = MCL_PixelEdge(inputBox)
             })
-            inputBox:SetBackdropColor(0.06, 0.06, 0.09, 0.9)
-            inputBox:SetBackdropBorderColor(0.2, 0.2, 0.25, 0.6)
+            inputBox:SetBackdropColor(MCL_SHADE("SURFACE_SUNKEN", 0.9))
+            inputBox:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_SUBTLE))
             inputBox:SetFontObject(GameFontHighlightSmall)
-            inputBox:SetTextColor(0.7, 0.78, 0.88, 1)
+            inputBox:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
             inputBox:SetJustifyH("CENTER")
             inputBox:SetAutoFocus(false)
             inputBox:SetNumeric(true)
@@ -3450,7 +3429,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
             
             -- Focus styling
             inputBox:SetScript("OnEditFocusGained", function(self)
-                self:SetBackdropBorderColor(0.3, 0.6, 0.9, 0.8)
+                self:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT))
             end)
             
             slider.inputBox = inputBox
@@ -3474,7 +3453,61 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     end
     
     local yPos = -45
-    
+
+    -- =====================================================
+    -- CARD 0: Art Style
+    -- =====================================================
+    -- Reopens the first-run picker.  It is passed true, which is what
+    -- tells it that frames already exist and a reload is needed - on the
+    -- first-run path it is passed false and simply applies the choice.
+    local styleCard = createCard(frame, L["Art Style"], yPos, 90)
+
+    local styleNow = styleCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    styleNow:SetPoint("TOPLEFT", styleCard, "TOPLEFT", 12, -38)
+    local function refreshStyleLabel()
+        local C = MCLcore.C
+        local theme = C and C.ActiveTheme and C.ActiveTheme()
+        local name = theme and (L[theme.name] or theme.name) or "?"
+        styleNow:SetText((L["Art Style"] or "Art Style") .. ": |cFFFFFFFF" .. name .. "|r")
+    end
+    refreshStyleLabel()
+    styleNow:SetTextColor(unpack(MCL_COLORS.TEXT_BODY))
+
+    local styleBtn = CreateFrame("Button", nil, styleCard, "BackdropTemplate")
+    styleBtn:SetSize(130, 24)
+    styleBtn:SetPoint("TOPRIGHT", styleCard, "TOPRIGHT", -12, -34)
+    styleBtn:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = MCL_PixelEdge(styleBtn)
+    })
+    styleBtn:SetBackdropColor(unpack(MCL_COLORS.SURFACE_RAISED))
+    styleBtn:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_DEFAULT))
+    local styleBtnText = styleBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    styleBtnText:SetPoint("CENTER")
+    styleBtnText:SetText(L["Change Style"] or "Change Style...")
+    styleBtnText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
+    styleBtn:SetScript("OnEnter", function(self)
+        self:SetBackdropColor(unpack(MCL_COLORS.SURFACE_HOVER))
+        self:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT))
+    end)
+    styleBtn:SetScript("OnLeave", function(self)
+        self:SetBackdropColor(unpack(MCL_COLORS.SURFACE_RAISED))
+        self:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_DEFAULT))
+    end)
+    styleBtn:SetScript("OnClick", function()
+        if MCLcore.StylePicker then
+            MCLcore.StylePicker:Show(true)
+        end
+    end)
+
+    local styleHint = styleCard:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    styleHint:SetPoint("TOPLEFT", styleCard, "TOPLEFT", 12, -60)
+    styleHint:SetText(L["Art Style Desc"] or "Choose how MCL is drawn.")
+    styleHint:SetTextColor(unpack(MCL_COLORS.TEXT_MUTED))
+
+    yPos = yPos - 100
+
     -- =====================================================
     -- CARD 1: Display Options
     -- =====================================================
@@ -3494,7 +3527,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     local hideLabel = displayCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     hideLabel:SetPoint("LEFT", hideCheck, "RIGHT", 8, 0)
     hideLabel:SetText(L["Hide Collected Mounts"])
-    hideLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+    hideLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
     displayY = displayY - 30
     
     -- Show Unobtainable
@@ -3507,7 +3540,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     local unobtLabel = displayCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     unobtLabel:SetPoint("LEFT", unobtCheck, "RIGHT", 8, 0)
     unobtLabel:SetText(L["Show Unobtainable Mounts"])
-    unobtLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+    unobtLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
     displayY = displayY - 30
     
     -- Enable Mount Card Hover
@@ -3520,7 +3553,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     local hoverLabel = displayCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     hoverLabel:SetPoint("LEFT", hoverCheck, "RIGHT", 8, 0)
     hoverLabel:SetText(L["Enable Mount Card on Hover"])
-    hoverLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+    hoverLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
     displayY = displayY - 30
 
     -- Enable Animations
@@ -3543,7 +3576,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     local animLabel = displayCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     animLabel:SetPoint("LEFT", animCheck, "RIGHT", 8, 0)
     animLabel:SetText(L["Enable Animations"])
-    animLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+    animLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
     displayY = displayY - 30
 
     -- Show a line in the corner when MCL has finished loading
@@ -3563,7 +3596,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     local readyLabel = displayCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     readyLabel:SetPoint("LEFT", readyCheck, "RIGHT", 8, 0)
     readyLabel:SetText(L["Show a message when MCL is ready"])
-    readyLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+    readyLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
     displayY = displayY - 34
 
     -- Window scale
@@ -3576,7 +3609,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     scaleLabel:SetPoint("TOPLEFT", displayCard, "TOPLEFT", 12, displayY)
     scaleLabel:SetText((L["Window Scale"]) .. ": "
         .. math.floor((MCL_SETTINGS.uiScale or 1) * 100 + 0.5) .. "%")
-    scaleLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+    scaleLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
 
     local uiScaleSlider = CreateFrame("Slider", nil, displayCard)
     uiScaleSlider:SetPoint("TOPLEFT", displayCard, "TOPLEFT", 12, displayY - 24)
@@ -3592,11 +3625,11 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     local scaleMinLabel = displayCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     scaleMinLabel:SetPoint("LEFT", uiScaleSlider, "LEFT", 0, -15)
     scaleMinLabel:SetText(math.floor(C.UI_SCALE_MIN * 100) .. "%")
-    scaleMinLabel:SetTextColor(0.5, 0.55, 0.65, 1)
+    scaleMinLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
     local scaleMaxLabel = displayCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     scaleMaxLabel:SetPoint("RIGHT", uiScaleSlider, "RIGHT", 0, -15)
     scaleMaxLabel:SetText(math.floor(C.UI_SCALE_MAX * 100) .. "%")
-    scaleMaxLabel:SetTextColor(0.5, 0.55, 0.65, 1)
+    scaleMaxLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
     -- Applying mid-drag resizes the window the slider lives in, so the
     -- slider slides out from under the cursor while you are still holding
@@ -3650,7 +3683,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     local minimapLabel = displayCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     minimapLabel:SetPoint("LEFT", minimapCheck, "RIGHT", 8, 0)
     minimapLabel:SetText(L["Show Minimap Icon"])
-    minimapLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+    minimapLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
     displayY = displayY - 30
 
     -- Hide Total Mounts Bar
@@ -3671,7 +3704,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     local totalBarLabel = displayCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     totalBarLabel:SetPoint("LEFT", totalBarCheck, "RIGHT", 8, 0)
     totalBarLabel:SetText(L["Hide Total Mounts Bar"])
-    totalBarLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+    totalBarLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
     displayY = displayY - 30
 
     -- Enable Hidden Mounts feature (adds a "Hidden" tab below Pinned)
@@ -3692,7 +3725,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     local hiddenSettingLabel = displayCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     hiddenSettingLabel:SetPoint("LEFT", hiddenCheck, "RIGHT", 8, 0)
     hiddenSettingLabel:SetText(L["Enable Hidden Mounts"])
-    hiddenSettingLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+    hiddenSettingLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
 
     yPos = yPos - 360
     
@@ -3704,7 +3737,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     local mountsLabel = layoutCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     mountsLabel:SetPoint("TOPLEFT", layoutCard, "TOPLEFT", 12, -34)
     mountsLabel:SetText((L["Mounts Per Row"]) .. ": " .. (MCL_SETTINGS.mountsPerRow or 12))
-    mountsLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+    mountsLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
     
     local mountsSlider = CreateFrame("Slider", nil, layoutCard)
     mountsSlider:SetPoint("TOPLEFT", layoutCard, "TOPLEFT", 12, -58)
@@ -3721,11 +3754,11 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     local mprMin = layoutCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     mprMin:SetPoint("LEFT", mountsSlider, "LEFT", 0, -15)
     mprMin:SetText("6")
-    mprMin:SetTextColor(0.5, 0.55, 0.65, 1)
+    mprMin:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
     local mprMax = layoutCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     mprMax:SetPoint("RIGHT", mountsSlider, "RIGHT", 0, -15)
     mprMax:SetText("24")
-    mprMax:SetTextColor(0.5, 0.55, 0.65, 1)
+    mprMax:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
     
     mountsSlider.originalOnValueChanged = function(self, value)
         MCL_SETTINGS.mountsPerRow = math.floor(value)
@@ -3756,7 +3789,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         local texLabel = progressCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         texLabel:SetPoint("TOPLEFT", progressCard, "TOPLEFT", 12, -34)
         texLabel:SetText(L["Progress Bar Texture"])
-        texLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        texLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
         
         -- Dropdown button
         local ddBtn = CreateFrame("Button", nil, progressCard, "BackdropTemplate")
@@ -3765,10 +3798,10 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         ddBtn:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8x8",
             edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1
+            edgeSize = MCL_PixelEdge(ddBtn)
         })
-        ddBtn:SetBackdropColor(0.08, 0.08, 0.1, 0.9)
-        ddBtn:SetBackdropBorderColor(0.2, 0.2, 0.25, 0.6)
+        ddBtn:SetBackdropColor(MCL_SHADE("SURFACE_WINDOW", 0.9))
+        ddBtn:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_SUBTLE))
         
         -- Preview texture inside dropdown button
         local ddPreview = ddBtn:CreateTexture(nil, "ARTWORK")
@@ -3777,18 +3810,18 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         
         local ddText = ddBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         ddText:SetPoint("CENTER", ddPreview, "CENTER")
-        ddText:SetTextColor(0.9, 0.9, 0.95, 1)
+        ddText:SetTextColor(unpack(MCL_COLORS.TEXT_PRIMARY))
         
         -- Shadow for readability
         local ddShadow = ddBtn:CreateFontString(nil, "BACKGROUND", "GameFontHighlightSmall")
         ddShadow:SetPoint("CENTER", ddPreview, "CENTER", 1, -1)
-        ddShadow:SetTextColor(0, 0, 0, 0.8)
+        ddShadow:SetTextColor(MCL_SHADE("TEXT_INVERSE", 0.8))
         
         -- Arrow
         local ddArrow = ddBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         ddArrow:SetPoint("RIGHT", ddBtn, "RIGHT", -8, 0)
         ddArrow:SetText("\226\150\188")  -- ▼
-        ddArrow:SetTextColor(0.5, 0.55, 0.65, 1)
+        ddArrow:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
         
         -- Set current selection
         local curTex = MCL_SETTINGS.statusBarTexture or "Blizzard"
@@ -3804,10 +3837,10 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         ddList:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8x8",
             edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1
+            edgeSize = MCL_PixelEdge(ddList)
         })
-        ddList:SetBackdropColor(0.06, 0.06, 0.09, 0.98)
-        ddList:SetBackdropBorderColor(0.2, 0.2, 0.25, 0.8)
+        ddList:SetBackdropColor(MCL_SHADE("SURFACE_SUNKEN", 0.98))
+        ddList:SetBackdropBorderColor(MCL_SHADE("BORDER_SUBTLE", 0.8))
         ddList:SetFrameStrata("DIALOG")
         ddList:Hide()
         
@@ -3837,7 +3870,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
             btn:SetSize(180, btnHeight - 2)
             btn:SetPoint("TOPLEFT", ddScrollChild, "TOPLEFT", 5, -(i-1) * btnHeight - 5)
             btn:SetBackdrop({ bgFile = "Interface\\Tooltips\\UI-Tooltip-Background" })
-            btn:SetBackdropColor(0.08, 0.08, 0.1, 0.3)
+            btn:SetBackdropColor(MCL_SHADE("SURFACE_WINDOW", 0.3))
             
             local prev = btn:CreateTexture(nil, "ARTWORK")
             prev:SetSize(170, 16)
@@ -3848,14 +3881,14 @@ function MCL_frames:createSettingsFrame(relativeFrame)
             local nText = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
             nText:SetPoint("CENTER", prev, "CENTER")
             nText:SetText(tName)
-            nText:SetTextColor(0.9, 0.9, 0.95, 1)
+            nText:SetTextColor(unpack(MCL_COLORS.TEXT_PRIMARY))
             
             local nShadow = btn:CreateFontString(nil, "BACKGROUND", "GameFontHighlightSmall")
             nShadow:SetPoint("CENTER", prev, "CENTER", 1, -1)
             nShadow:SetText(tName)
-            nShadow:SetTextColor(0, 0, 0, 0.8)
+            nShadow:SetTextColor(MCL_SHADE("TEXT_INVERSE", 0.8))
             
-            btn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.15, 0.25, 0.4, 0.6) end)
+            btn:SetScript("OnEnter", function(self) self:SetBackdropColor(MCL_SHADE("SURFACE_ACCENT_STRONG", 0.6)) end)
             btn:SetScript("OnLeave", function(self)
                 self:SetBackdropColor(MCL_SETTINGS.statusBarTexture == tName and 0.15 or 0.08, MCL_SETTINGS.statusBarTexture == tName and 0.3 or 0.08, MCL_SETTINGS.statusBarTexture == tName and 0.5 or 0.1, MCL_SETTINGS.statusBarTexture == tName and 0.5 or 0.3)
             end)
@@ -3870,18 +3903,18 @@ function MCL_frames:createSettingsFrame(relativeFrame)
             end)
             btn.texName = tName
             table.insert(texBtns, btn)
-            if MCL_SETTINGS.statusBarTexture == tName then btn:SetBackdropColor(0.15, 0.3, 0.5, 0.5) end
+            if MCL_SETTINGS.statusBarTexture == tName then btn:SetBackdropColor(MCL_SHADE("SURFACE_ACCENT_STRONG", 0.5)) end
         end
         
         ddBtn:SetScript("OnClick", function() if ddList:IsShown() then ddList:Hide() else ddList:Show() end end)
-        ddBtn:SetScript("OnEnter", function(self) self:SetBackdropBorderColor(0.3, 0.6, 0.9, 0.8) end)
-        ddBtn:SetScript("OnLeave", function(self) self:SetBackdropBorderColor(0.2, 0.2, 0.25, 0.6) end)
+        ddBtn:SetScript("OnEnter", function(self) self:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT)) end)
+        ddBtn:SetScript("OnLeave", function(self) self:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_SUBTLE)) end)
         frame:SetScript("OnMouseDown", function() ddList:Hide() end)
     else
         local texNote = progressCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         texNote:SetPoint("TOPLEFT", progressCard, "TOPLEFT", 12, -34)
         texNote:SetText(L["LibSharedMedia not available"])
-        texNote:SetTextColor(0.5, 0.4, 0.4, 1)
+        texNote:SetTextColor(unpack(MCL_COLORS.TEXT_DANGER))
     end
     
     -- -----------------------------------------------------------------
@@ -3890,7 +3923,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     local colorLabel = progressCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     colorLabel:SetPoint("TOPLEFT", progressCard, "TOPLEFT", 12, -100)
     colorLabel:SetText(L["Progress Colors"])
-    colorLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+    colorLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
     
     -- Helper: create a color swatch + label that opens the WoW color picker
     local function createColorSwatch(parent, xOff, yOff, colorKey, labelText)
@@ -3902,18 +3935,18 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         swatch:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8x8",
             edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
+            edgeSize = MCL_PixelEdge(swatch),
         })
         swatch:SetBackdropColor(c.r, c.g, c.b, 1)
-        swatch:SetBackdropBorderColor(0.4, 0.4, 0.45, 1)
+        swatch:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_STRONG))
         
         local lbl = parent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         lbl:SetPoint("LEFT", swatch, "RIGHT", 6, 0)
         lbl:SetText(labelText)
-        lbl:SetTextColor(0.6, 0.66, 0.75, 1)
+        lbl:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
         
-        swatch:SetScript("OnEnter", function(self) self:SetBackdropBorderColor(0.3, 0.6, 0.9, 1) end)
-        swatch:SetScript("OnLeave", function(self) self:SetBackdropBorderColor(0.4, 0.4, 0.45, 1) end)
+        swatch:SetScript("OnEnter", function(self) self:SetBackdropBorderColor(MCL_SHADE("BORDER_ACCENT", 1)) end)
+        swatch:SetScript("OnLeave", function(self) self:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_STRONG)) end)
         swatch:SetScript("OnClick", function()
             local cur = MCL_SETTINGS.progressColors[colorKey]
             local info = {
@@ -3954,19 +3987,19 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     resetColorsBtn:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+        edgeSize = MCL_PixelEdge(resetColorsBtn),
     })
-    resetColorsBtn:SetBackdropColor(0.1, 0.15, 0.25, 0.8)
-    resetColorsBtn:SetBackdropBorderColor(0.2, 0.5, 0.8, 0.6)
+    resetColorsBtn:SetBackdropColor(unpack(MCL_COLORS.SURFACE_ACCENT))
+    resetColorsBtn:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT_DIM))
     local rcText = resetColorsBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     rcText:SetPoint("CENTER")
     rcText:SetText(L["Reset Colors"])
-    rcText:SetTextColor(0.4, 0.78, 0.95, 1)
+    rcText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
     resetColorsBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.15, 0.25, 0.4, 0.9); self:SetBackdropBorderColor(0.3, 0.6, 0.9, 1)
+        self:SetBackdropColor(unpack(MCL_COLORS.SURFACE_ACCENT_STRONG)); self:SetBackdropBorderColor(MCL_SHADE("BORDER_ACCENT", 1))
     end)
     resetColorsBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.1, 0.15, 0.25, 0.8); self:SetBackdropBorderColor(0.2, 0.5, 0.8, 0.6)
+        self:SetBackdropColor(unpack(MCL_COLORS.SURFACE_ACCENT)); self:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT_DIM))
     end)
     resetColorsBtn:SetScript("OnClick", function()
         MCLcore.Function:updateFromDefaults("Colors")
@@ -3985,19 +4018,19 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     resetTexBtn:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+        edgeSize = MCL_PixelEdge(resetTexBtn),
     })
-    resetTexBtn:SetBackdropColor(0.1, 0.15, 0.25, 0.8)
-    resetTexBtn:SetBackdropBorderColor(0.2, 0.5, 0.8, 0.6)
+    resetTexBtn:SetBackdropColor(unpack(MCL_COLORS.SURFACE_ACCENT))
+    resetTexBtn:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT_DIM))
     local rtText = resetTexBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     rtText:SetPoint("CENTER")
     rtText:SetText(L["Reset Texture"])
-    rtText:SetTextColor(0.4, 0.78, 0.95, 1)
+    rtText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
     resetTexBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.15, 0.25, 0.4, 0.9); self:SetBackdropBorderColor(0.3, 0.6, 0.9, 1)
+        self:SetBackdropColor(unpack(MCL_COLORS.SURFACE_ACCENT_STRONG)); self:SetBackdropBorderColor(MCL_SHADE("BORDER_ACCENT", 1))
     end)
     resetTexBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.1, 0.15, 0.25, 0.8); self:SetBackdropBorderColor(0.2, 0.5, 0.8, 0.6)
+        self:SetBackdropColor(unpack(MCL_COLORS.SURFACE_ACCENT)); self:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT_DIM))
     end)
     resetTexBtn:SetScript("OnClick", function()
         MCLcore.Function:updateFromDefaults("Texture")
@@ -4014,7 +4047,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     local opacityLabel = opacityCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     opacityLabel:SetPoint("TOPLEFT", opacityCard, "TOPLEFT", 12, -34)
     opacityLabel:SetText((L["Opacity"]) .. ": " .. math.floor(opacityValue * 100) .. "%")
-    opacityLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+    opacityLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
     
     local opacitySlider = CreateFrame("Slider", nil, opacityCard)
     opacitySlider:SetPoint("TOPLEFT", opacityCard, "TOPLEFT", 12, -56)
@@ -4030,28 +4063,28 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     -- Min/max labels
     local opMin = opacityCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     opMin:SetPoint("LEFT", opacitySlider, "LEFT", 0, -15)
-    opMin:SetText("10%"); opMin:SetTextColor(0.5, 0.55, 0.65, 1)
+    opMin:SetText("10%"); opMin:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
     local opMax = opacityCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     opMax:SetPoint("RIGHT", opacitySlider, "RIGHT", 0, -15)
-    opMax:SetText("100%"); opMax:SetTextColor(0.5, 0.55, 0.65, 1)
+    opMax:SetText("100%"); opMax:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
     
     opacitySlider.originalOnValueChanged = function(self, value)
         MCL_SETTINGS.opacity = value
         opacityLabel:SetText((L["Opacity"]) .. ": " .. math.floor(value * 100) .. "%")
         -- Main frame body
         if MCL_mainFrame and MCL_mainFrame.SetBackdropColor then
-            MCL_mainFrame:SetBackdropColor(0.10, 0.10, 0.18, value)
+            MCL_mainFrame:SetBackdropColor(MCL_SHADE("SURFACE_PANEL", value))
         end
         -- Main frame header bar
         if MCL_mainFrame and MCL_mainFrame.headerBar then
-            MCL_mainFrame.headerBar:SetBackdropColor(0.08, 0.08, 0.12, value)
+            MCL_mainFrame.headerBar:SetBackdropColor(MCL_SHADE("SURFACE_WINDOW", value))
         end
         -- Side-nav frame
         if MCLcore.MCL_MF_Nav then
-            MCLcore.MCL_MF_Nav:SetBackdropColor(0.06, 0.06, 0.09, value)
+            MCLcore.MCL_MF_Nav:SetBackdropColor(MCL_SHADE("SURFACE_SUNKEN", value))
             -- Nav header bar
             if MCLcore.MCL_MF_Nav.headerBar then
-                MCLcore.MCL_MF_Nav.headerBar:SetBackdropColor(0.08, 0.08, 0.12, value)
+                MCLcore.MCL_MF_Nav.headerBar:SetBackdropColor(MCL_SHADE("SURFACE_WINDOW", value))
             end
         end
     end
@@ -4064,19 +4097,19 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     resetOpBtn:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+        edgeSize = MCL_PixelEdge(resetOpBtn),
     })
-    resetOpBtn:SetBackdropColor(0.1, 0.15, 0.25, 0.8)
-    resetOpBtn:SetBackdropBorderColor(0.2, 0.5, 0.8, 0.6)
+    resetOpBtn:SetBackdropColor(unpack(MCL_COLORS.SURFACE_ACCENT))
+    resetOpBtn:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT_DIM))
     local roText = resetOpBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     roText:SetPoint("CENTER")
     roText:SetText(L["Reset Opacity"])
-    roText:SetTextColor(0.4, 0.78, 0.95, 1)
+    roText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
     resetOpBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.15, 0.25, 0.4, 0.9); self:SetBackdropBorderColor(0.3, 0.6, 0.9, 1)
+        self:SetBackdropColor(unpack(MCL_COLORS.SURFACE_ACCENT_STRONG)); self:SetBackdropBorderColor(MCL_SHADE("BORDER_ACCENT", 1))
     end)
     resetOpBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.1, 0.15, 0.25, 0.8); self:SetBackdropBorderColor(0.2, 0.5, 0.8, 0.6)
+        self:SetBackdropColor(unpack(MCL_COLORS.SURFACE_ACCENT)); self:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT_DIM))
     end)
     resetOpBtn:SetScript("OnClick", function()
         MCLcore.Function:updateFromDefaults("Opacity")
@@ -4163,35 +4196,35 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     unlockBtn:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1
+        edgeSize = MCL_PixelEdge(unlockBtn)
     })
-    unlockBtn:SetBackdropColor(0.1, 0.15, 0.25, 0.8)
-    unlockBtn:SetBackdropBorderColor(0.2, 0.5, 0.8, 0.6)
+    unlockBtn:SetBackdropColor(unpack(MCL_COLORS.SURFACE_ACCENT))
+    unlockBtn:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT_DIM))
     
     local unlockText = unlockBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     unlockText:SetPoint("CENTER")
     unlockText:SetText(L["Unlock Toast Position"])
-    unlockText:SetTextColor(0.4, 0.78, 0.95, 1)
+    unlockText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
     
     unlockBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.15, 0.25, 0.4, 0.9)
-        self:SetBackdropBorderColor(0.3, 0.6, 0.9, 1)
+        self:SetBackdropColor(unpack(MCL_COLORS.SURFACE_ACCENT_STRONG))
+        self:SetBackdropBorderColor(MCL_SHADE("BORDER_ACCENT", 1))
     end)
     unlockBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.1, 0.15, 0.25, 0.8)
-        self:SetBackdropBorderColor(0.2, 0.5, 0.8, 0.6)
+        self:SetBackdropColor(unpack(MCL_COLORS.SURFACE_ACCENT))
+        self:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT_DIM))
     end)
     unlockBtn:SetScript("OnClick", function()
         if MCLcore.Toast then
             local isUnlocked = MCLcore.Toast:ToggleUnlock()
             if isUnlocked then
                 unlockText:SetText(L["Lock Toast Position"])
-                unlockBtn:SetBackdropColor(0.25, 0.15, 0.08, 0.8)
-                unlockBtn:SetBackdropBorderColor(0.8, 0.6, 0.2, 0.8)
+                unlockBtn:SetBackdropColor(unpack(MCL_COLORS.SURFACE_WARNING))
+                unlockBtn:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_GOLD))
             else
                 unlockText:SetText(L["Unlock Toast Position"])
-                unlockBtn:SetBackdropColor(0.1, 0.15, 0.25, 0.8)
-                unlockBtn:SetBackdropBorderColor(0.2, 0.5, 0.8, 0.6)
+                unlockBtn:SetBackdropColor(unpack(MCL_COLORS.SURFACE_ACCENT))
+                unlockBtn:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT_DIM))
                 -- Refresh X/Y inputs after dragging
                 if toastXInput and toastYInput and MCLcore.Toast.GetPosition then
                     local cx, cy = MCLcore.Toast:GetPosition()
@@ -4209,21 +4242,21 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     resetPosBtn:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1
+        edgeSize = MCL_PixelEdge(resetPosBtn)
     })
-    resetPosBtn:SetBackdropColor(0.1, 0.15, 0.25, 0.8)
-    resetPosBtn:SetBackdropBorderColor(0.2, 0.5, 0.8, 0.6)
+    resetPosBtn:SetBackdropColor(unpack(MCL_COLORS.SURFACE_ACCENT))
+    resetPosBtn:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT_DIM))
     local resetPosText = resetPosBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     resetPosText:SetPoint("CENTER")
     resetPosText:SetText(L["Reset Position"])
-    resetPosText:SetTextColor(0.4, 0.78, 0.95, 1)
+    resetPosText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
     resetPosBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.15, 0.25, 0.4, 0.9)
-        self:SetBackdropBorderColor(0.3, 0.6, 0.9, 1)
+        self:SetBackdropColor(unpack(MCL_COLORS.SURFACE_ACCENT_STRONG))
+        self:SetBackdropBorderColor(MCL_SHADE("BORDER_ACCENT", 1))
     end)
     resetPosBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.1, 0.15, 0.25, 0.8)
-        self:SetBackdropBorderColor(0.2, 0.5, 0.8, 0.6)
+        self:SetBackdropColor(unpack(MCL_COLORS.SURFACE_ACCENT))
+        self:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT_DIM))
     end)
     resetPosBtn:SetScript("OnClick", function()
         if MCLcore.Toast then
@@ -4239,7 +4272,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     local coordLabel = toastCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     coordLabel:SetPoint("TOPLEFT", toastCard, "TOPLEFT", 12, toastY)
     coordLabel:SetText(L["Toast Position"])
-    coordLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+    coordLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
     toastY = toastY - 22
     
     -- Get current position
@@ -4253,7 +4286,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         local lbl = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         lbl:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOff)
         lbl:SetText(labelText)
-        lbl:SetTextColor(0.5, 0.55, 0.65, 1)
+        lbl:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
         
         local input = CreateFrame("EditBox", nil, parent, "BackdropTemplate")
         input:SetSize(60, 22)
@@ -4261,21 +4294,21 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         input:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8x8",
             edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1
+            edgeSize = MCL_PixelEdge(input)
         })
-        input:SetBackdropColor(0.06, 0.06, 0.09, 0.9)
-        input:SetBackdropBorderColor(0.2, 0.2, 0.25, 0.6)
+        input:SetBackdropColor(MCL_SHADE("SURFACE_SUNKEN", 0.9))
+        input:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_SUBTLE))
         input:SetFontObject(GameFontHighlightSmall)
-        input:SetTextColor(0.7, 0.78, 0.88, 1)
+        input:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
         input:SetJustifyH("CENTER")
         input:SetAutoFocus(false)
         input:SetText(tostring(math.floor(defaultVal)))
         
         input:SetScript("OnEnter", function(self)
-            self:SetBackdropBorderColor(0.3, 0.6, 0.9, 0.8)
+            self:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT))
         end)
         input:SetScript("OnLeave", function(self)
-            self:SetBackdropBorderColor(0.2, 0.2, 0.25, 0.6)
+            self:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_SUBTLE))
         end)
         
         return input
@@ -4287,7 +4320,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     local yLbl = toastCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     yLbl:SetPoint("LEFT", toastXInput, "RIGHT", 16, 0)
     yLbl:SetText("Y:")
-    yLbl:SetTextColor(0.5, 0.55, 0.65, 1)
+    yLbl:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
     toastYInput:SetPoint("LEFT", yLbl, "RIGHT", 6, 0)
     
     -- Apply button
@@ -4297,21 +4330,21 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     applyBtn:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1
+        edgeSize = MCL_PixelEdge(applyBtn)
     })
-    applyBtn:SetBackdropColor(0.1, 0.15, 0.25, 0.8)
-    applyBtn:SetBackdropBorderColor(0.2, 0.5, 0.8, 0.6)
+    applyBtn:SetBackdropColor(unpack(MCL_COLORS.SURFACE_ACCENT))
+    applyBtn:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT_DIM))
     local applyText = applyBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     applyText:SetPoint("CENTER")
     applyText:SetText(L["Apply"])
-    applyText:SetTextColor(0.4, 0.78, 0.95, 1)
+    applyText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
     applyBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.15, 0.25, 0.4, 0.9)
-        self:SetBackdropBorderColor(0.3, 0.6, 0.9, 1)
+        self:SetBackdropColor(unpack(MCL_COLORS.SURFACE_ACCENT_STRONG))
+        self:SetBackdropBorderColor(MCL_SHADE("BORDER_ACCENT", 1))
     end)
     applyBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.1, 0.15, 0.25, 0.8)
-        self:SetBackdropBorderColor(0.2, 0.5, 0.8, 0.6)
+        self:SetBackdropColor(unpack(MCL_COLORS.SURFACE_ACCENT))
+        self:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT_DIM))
     end)
     applyBtn:SetScript("OnClick", function()
         if MCLcore.Toast then
@@ -4360,7 +4393,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         local showPinsLabel = pinCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         showPinsLabel:SetPoint("LEFT", showPinsCheck, "RIGHT", 8, 0)
         showPinsLabel:SetText(L["Show Map Icons"])
-        showPinsLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        showPinsLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
         pinY = pinY - 30
         
         -- Checkbox: Show Mount List on Map
@@ -4382,7 +4415,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         local showPanelLabel = pinCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         showPanelLabel:SetPoint("LEFT", showPanelCheck, "RIGHT", 8, 0)
         showPanelLabel:SetText(L["Show Mount List on Map"])
-        showPanelLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        showPanelLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
         pinY = pinY - 30
 
         -- Checkbox: Show Map Legend Tab
@@ -4400,7 +4433,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         local showLegendLabel = pinCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         showLegendLabel:SetPoint("LEFT", showLegendCheck, "RIGHT", 8, 0)
         showLegendLabel:SetText(L["Show Map Legend Tab"])
-        showLegendLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        showLegendLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
         pinY = pinY - 30
 
         -- Checkbox: Show Child-Map Mounts
@@ -4421,7 +4454,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         local showChildLabel = pinCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         showChildLabel:SetPoint("LEFT", showChildCheck, "RIGHT", 8, 0)
         showChildLabel:SetText(L["Show Child-Map Mounts"])
-        showChildLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        showChildLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
         pinY = pinY - 30
         
         -- Checkbox: Show Rare Pins
@@ -4439,7 +4472,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         local rarePinsLabel = pinCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         rarePinsLabel:SetPoint("LEFT", rarePinsCheck, "RIGHT", 8, 0)
         rarePinsLabel:SetText(L["Show Rare Pins"])
-        rarePinsLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        rarePinsLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
         pinY = pinY - 30
 
         -- Checkbox: Show guide star
@@ -4457,7 +4490,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         local starLabel = pinCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         starLabel:SetPoint("LEFT", starCheck, "RIGHT", 8, 0)
         starLabel:SetText(L["Star pins with a guide"])
-        starLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        starLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
         pinY = pinY - 30
 
         -- Slider: Map Pin Size
@@ -4466,7 +4499,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         local pinLabel = pinCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         pinLabel:SetPoint("TOPLEFT", pinCard, "TOPLEFT", 12, pinY)
         pinLabel:SetText(mapPinSizePrefix .. " " .. string.format("%.1fx", pinScaleValue))
-        pinLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        pinLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
         
         local pinSlider = CreateFrame("Slider", nil, pinCard)
         pinSlider:SetPoint("TOPLEFT", pinCard, "TOPLEFT", 12, pinY - 22)
@@ -4481,10 +4514,10 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         
         local pinMin = pinCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         pinMin:SetPoint("LEFT", pinSlider, "LEFT", 0, -15)
-        pinMin:SetText("0.5x"); pinMin:SetTextColor(0.5, 0.55, 0.65, 1)
+        pinMin:SetText("0.5x"); pinMin:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
         local pinMax = pinCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         pinMax:SetPoint("RIGHT", pinSlider, "RIGHT", 0, -15)
-        pinMax:SetText("4.0x"); pinMax:SetTextColor(0.5, 0.55, 0.65, 1)
+        pinMax:SetText("4.0x"); pinMax:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
         
         pinSlider.originalOnValueChanged = function(self, value)
             value = math.floor(value * 10 + 0.5) / 10  -- round to 1 decimal
@@ -4506,7 +4539,8 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     -- CARD 8: Guide Window (step chains and routes)
     -- =====================================================
     do
-        local guideCard = createCard(frame, L["Guide Window"], yPos, 250)
+        local guideCardHeight = 260
+        local guideCard = createCard(frame, L["Guide Window"], yPos, guideCardHeight)
         local gY = -34
 
         -- Checkbox: numbered step markers on the map
@@ -4521,7 +4555,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         local markersLabel = guideCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         markersLabel:SetPoint("LEFT", markersCheck, "RIGHT", 8, 0)
         markersLabel:SetText(L["Show numbered step markers"])
-        markersLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        markersLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
         gY = gY - 30
 
         -- Checkbox: a route moves on by itself once you get there
@@ -4536,7 +4570,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         local autoAdvLabel = guideCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         autoAdvLabel:SetPoint("LEFT", autoAdvCheck, "RIGHT", 8, 0)
         autoAdvLabel:SetText(L["Advance the route on arrival"])
-        autoAdvLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        autoAdvLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
         gY = gY - 30
 
         -- Checkbox: draw the route's legs on the world map
@@ -4554,7 +4588,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         local routePathLabel = guideCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         routePathLabel:SetPoint("LEFT", routePathCheck, "RIGHT", 8, 0)
         routePathLabel:SetText(L["Draw the route on the map"])
-        routePathLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        routePathLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
         gY = gY - 30
 
         -- Checkbox: point at the next stop from the minimap
@@ -4572,7 +4606,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         local miniRouteLabel = guideCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         miniRouteLabel:SetPoint("LEFT", miniRouteCheck, "RIGHT", 8, 0)
         miniRouteLabel:SetText(L["Point to the next stop on the minimap"])
-        miniRouteLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        miniRouteLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
         gY = gY - 30
 
         -- Slider: guide window scale
@@ -4582,7 +4616,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         local guideLabel = guideCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         guideLabel:SetPoint("TOPLEFT", guideCard, "TOPLEFT", 12, gY)
         guideLabel:SetText(guidePrefix .. " " .. string.format("%.2fx", guideScale))
-        guideLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        guideLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
 
         local guideSlider = CreateFrame("Slider", nil, guideCard)
         guideSlider:SetPoint("TOPLEFT", guideCard, "TOPLEFT", 12, gY - 22)
@@ -4597,10 +4631,10 @@ function MCL_frames:createSettingsFrame(relativeFrame)
 
         local guideMin = guideCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         guideMin:SetPoint("LEFT", guideSlider, "LEFT", 0, -15)
-        guideMin:SetText("0.5x"); guideMin:SetTextColor(0.5, 0.55, 0.65, 1)
+        guideMin:SetText("0.5x"); guideMin:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
         local guideMax = guideCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         guideMax:SetPoint("RIGHT", guideSlider, "RIGHT", 0, -15)
-        guideMax:SetText("2.0x"); guideMax:SetTextColor(0.5, 0.55, 0.65, 1)
+        guideMax:SetText("2.0x"); guideMax:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
         guideSlider.originalOnValueChanged = function(self, value)
             value = math.floor(value * 20 + 0.5) / 20
@@ -4620,32 +4654,33 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         guideResetBtn:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8x8",
             edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1
+            edgeSize = MCL_PixelEdge(guideResetBtn)
         })
-        guideResetBtn:SetBackdropColor(0.12, 0.13, 0.16, 0.7)
-        guideResetBtn:SetBackdropBorderColor(0.30, 0.32, 0.38, 0.8)
+        guideResetBtn:SetBackdropColor(MCL_SHADE("SURFACE_RAISED", 0.7))
+        guideResetBtn:SetBackdropBorderColor(MCL_SHADE("BORDER_STRONG", 0.8))
 
         local guideResetText = guideResetBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         guideResetText:SetPoint("CENTER")
         guideResetText:SetText(L["Reset Position"])
-        guideResetText:SetTextColor(0.7, 0.75, 0.82, 1)
+        guideResetText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
-        guideResetBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.18, 0.19, 0.23, 0.9) end)
-        guideResetBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.12, 0.13, 0.16, 0.7) end)
+        guideResetBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(MCL_SHADE("SURFACE_HOVER", 0.9)) end)
+        guideResetBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(MCL_SHADE("SURFACE_RAISED", 0.7)) end)
         guideResetBtn:SetScript("OnClick", function()
             if MCL_GUIDE and MCL_GUIDE.StepTracker then
                 MCL_GUIDE.StepTracker:ResetPosition()
             end
         end)
 
-        yPos = yPos - 330
+        yPos = yPos - (guideCardHeight + 10)
     end
 
     -- =====================================================
     -- CARD 9: Rare Mount Alerts
     -- =====================================================
     do
-        local alertCard = createCard(frame, L["Rare Mount Alerts"], yPos, 320)
+        local alertCardHeight = 290
+        local alertCard = createCard(frame, L["Rare Mount Alerts"], yPos, alertCardHeight)
         local aY = -34
 
         -- Checkbox: enable
@@ -4664,7 +4699,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         local alertLabel = alertCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         alertLabel:SetPoint("LEFT", alertCheck, "RIGHT", 8, 0)
         alertLabel:SetText(L["Alert on rares that drop a mount"])
-        alertLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        alertLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
         aY = aY - 30
 
         -- Checkbox: sound cue
@@ -4682,7 +4717,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         local alertSoundLabel = alertCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         alertSoundLabel:SetPoint("LEFT", alertSoundCheck, "RIGHT", 8, 0)
         alertSoundLabel:SetText(L["Play a sound"])
-        alertSoundLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        alertSoundLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
 
         -- Which sound: click to step through them, hearing each one.
         local soundBtn = CreateFrame("Button", nil, alertCard, "BackdropTemplate")
@@ -4691,14 +4726,14 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         soundBtn:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8x8",
             edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1
+            edgeSize = MCL_PixelEdge(soundBtn)
         })
-        soundBtn:SetBackdropColor(0.10, 0.20, 0.30, 0.7)
-        soundBtn:SetBackdropBorderColor(0.20, 0.45, 0.68, 0.8)
+        soundBtn:SetBackdropColor(MCL_SHADE("SURFACE_ACCENT", 0.7))
+        soundBtn:SetBackdropBorderColor(MCL_SHADE("BORDER_ACCENT_DIM", 0.8))
 
         local soundText = soundBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         soundText:SetPoint("CENTER")
-        soundText:SetTextColor(0.7, 0.85, 1, 1)
+        soundText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
 
         local function RefreshSoundText()
             local s = MCL_GUIDE and MCL_GUIDE.RareAlert and MCL_GUIDE.RareAlert:GetSound()
@@ -4707,13 +4742,13 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         RefreshSoundText()
 
         soundBtn:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(0.15, 0.30, 0.45, 0.9)
+            self:SetBackdropColor(unpack(MCL_COLORS.SURFACE_ACCENT_STRONG))
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
             GameTooltip:AddLine(L["Click to hear the next sound"], 1, 1, 1)
             GameTooltip:Show()
         end)
         soundBtn:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(0.10, 0.20, 0.30, 0.7)
+            self:SetBackdropColor(MCL_SHADE("SURFACE_ACCENT", 0.7))
             GameTooltip:Hide()
         end)
         soundBtn:SetScript("OnClick", function()
@@ -4727,7 +4762,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         -- Ignored rares: the count, and a way to empty the list
         local ignoredLabel = alertCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         ignoredLabel:SetPoint("TOPLEFT", alertCard, "TOPLEFT", 12, aY - 4)
-        ignoredLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        ignoredLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
 
         -- The names, not just a count: a list you can't read is a list you
         -- can't correct.
@@ -4736,7 +4771,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         ignoredNames:SetWidth(300)
         ignoredNames:SetJustifyH("LEFT")
         ignoredNames:SetWordWrap(true)
-        ignoredNames:SetTextColor(0.62, 0.68, 0.76, 1)
+        ignoredNames:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
         local function RefreshIgnoredText()
             local list = (MCL_GUIDE and MCL_GUIDE.RareAlert
@@ -4773,22 +4808,22 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         clearIgnored:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8x8",
             edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1
+            edgeSize = MCL_PixelEdge(clearIgnored)
         })
-        clearIgnored:SetBackdropColor(0.12, 0.12, 0.16, 1)
-        clearIgnored:SetBackdropBorderColor(0.3, 0.3, 0.36, 1)
+        clearIgnored:SetBackdropColor(unpack(MCL_COLORS.SURFACE_RAISED))
+        clearIgnored:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_STRONG))
         local clearText = clearIgnored:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         clearText:SetPoint("CENTER")
         clearText:SetText(L["Clear"])
-        clearText:SetTextColor(0.7, 0.78, 0.88, 1)
+        clearText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
         clearIgnored:SetScript("OnEnter", function(self)
-            self:SetBackdropBorderColor(0.3, 0.66, 0.96, 1)
+            self:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT_BRIGHT))
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
             GameTooltip:AddLine(L["Shift-right-click an alert to ignore that rare"], 1, 1, 1, true)
             GameTooltip:Show()
         end)
         clearIgnored:SetScript("OnLeave", function(self)
-            self:SetBackdropBorderColor(0.3, 0.3, 0.36, 1)
+            self:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_STRONG))
             GameTooltip:Hide()
         end)
         clearIgnored:SetScript("OnClick", function()
@@ -4811,7 +4846,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         local clearWpLabel = alertCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         clearWpLabel:SetPoint("LEFT", clearWpCheck, "RIGHT", 8, 0)
         clearWpLabel:SetText(L["Clear the waypoint on arrival"])
-        clearWpLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        clearWpLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
         aY = aY - 30
 
         -- Slider: banner scale
@@ -4821,7 +4856,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         local scaleLabel = alertCard:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         scaleLabel:SetPoint("TOPLEFT", alertCard, "TOPLEFT", 12, aY)
         scaleLabel:SetText(scalePrefix .. " " .. string.format("%.2fx", alertScale))
-        scaleLabel:SetTextColor(0.7, 0.78, 0.88, 1)
+        scaleLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
 
         local scaleSlider = CreateFrame("Slider", nil, alertCard)
         scaleSlider:SetPoint("TOPLEFT", alertCard, "TOPLEFT", 12, aY - 22)
@@ -4836,10 +4871,10 @@ function MCL_frames:createSettingsFrame(relativeFrame)
 
         local scaleMin = alertCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         scaleMin:SetPoint("LEFT", scaleSlider, "LEFT", 0, -15)
-        scaleMin:SetText("0.4x"); scaleMin:SetTextColor(0.5, 0.55, 0.65, 1)
+        scaleMin:SetText("0.4x"); scaleMin:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
         local scaleMax = alertCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         scaleMax:SetPoint("RIGHT", scaleSlider, "RIGHT", 0, -15)
-        scaleMax:SetText("1.5x"); scaleMax:SetTextColor(0.5, 0.55, 0.65, 1)
+        scaleMax:SetText("1.5x"); scaleMax:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
         scaleSlider.originalOnValueChanged = function(self, value)
             value = math.floor(value * 20 + 0.5) / 20   -- round to 0.05
@@ -4860,14 +4895,14 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         moveBtn:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8x8",
             edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1
+            edgeSize = MCL_PixelEdge(moveBtn)
         })
-        moveBtn:SetBackdropColor(0.10, 0.20, 0.30, 0.7)
-        moveBtn:SetBackdropBorderColor(0.20, 0.45, 0.68, 0.8)
+        moveBtn:SetBackdropColor(MCL_SHADE("SURFACE_ACCENT", 0.7))
+        moveBtn:SetBackdropBorderColor(MCL_SHADE("BORDER_ACCENT_DIM", 0.8))
 
         local moveText = moveBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         moveText:SetPoint("CENTER")
-        moveText:SetTextColor(0.7, 0.85, 1, 1)
+        moveText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
 
         local function RefreshMoveText()
             local on = MCL_GUIDE and MCL_GUIDE.RareAlert and MCL_GUIDE.RareAlert:IsUnlocked()
@@ -4876,10 +4911,10 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         RefreshMoveText()
 
         moveBtn:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(0.15, 0.30, 0.45, 0.9)
+            self:SetBackdropColor(unpack(MCL_COLORS.SURFACE_ACCENT_STRONG))
         end)
         moveBtn:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(0.10, 0.20, 0.30, 0.7)
+            self:SetBackdropColor(MCL_SHADE("SURFACE_ACCENT", 0.7))
         end)
         moveBtn:SetScript("OnClick", function()
             if MCL_GUIDE and MCL_GUIDE.RareAlert then
@@ -4894,21 +4929,21 @@ function MCL_frames:createSettingsFrame(relativeFrame)
         resetPosBtn:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8x8",
             edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1
+            edgeSize = MCL_PixelEdge(resetPosBtn)
         })
-        resetPosBtn:SetBackdropColor(0.12, 0.13, 0.16, 0.7)
-        resetPosBtn:SetBackdropBorderColor(0.30, 0.32, 0.38, 0.8)
+        resetPosBtn:SetBackdropColor(MCL_SHADE("SURFACE_RAISED", 0.7))
+        resetPosBtn:SetBackdropBorderColor(MCL_SHADE("BORDER_STRONG", 0.8))
 
         local resetPosText = resetPosBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         resetPosText:SetPoint("CENTER")
         resetPosText:SetText(L["Reset Position"])
-        resetPosText:SetTextColor(0.7, 0.75, 0.82, 1)
+        resetPosText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
 
         resetPosBtn:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(0.18, 0.19, 0.23, 0.9)
+            self:SetBackdropColor(MCL_SHADE("SURFACE_HOVER", 0.9))
         end)
         resetPosBtn:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(0.12, 0.13, 0.16, 0.7)
+            self:SetBackdropColor(MCL_SHADE("SURFACE_RAISED", 0.7))
         end)
         resetPosBtn:SetScript("OnClick", function()
             if MCL_GUIDE and MCL_GUIDE.RareAlert then
@@ -4916,7 +4951,9 @@ function MCL_frames:createSettingsFrame(relativeFrame)
             end
         end)
 
-        yPos = yPos - 260
+        -- Step by the card's own height plus the usual gap, so the card
+        -- below can't ride up into it again if rows are added.
+        yPos = yPos - (alertCardHeight + 10)
     end
 
     -- =====================================================
@@ -4928,7 +4965,7 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     dangerAccent:SetHeight(1)
     dangerAccent:SetPoint("TOPLEFT", resetCard, "TOPLEFT", 1, -27)
     dangerAccent:SetPoint("TOPRIGHT", resetCard, "TOPRIGHT", -1, -27)
-    dangerAccent:SetColorTexture(0.6, 0.15, 0.15, 0.5)
+    dangerAccent:SetColorTexture(MCL_SHADE("SURFACE_DANGER", 0.5))
     
     local resetBtn = CreateFrame("Button", nil, resetCard, "BackdropTemplate")
     resetBtn:SetSize(130, 26)
@@ -4936,25 +4973,25 @@ function MCL_frames:createSettingsFrame(relativeFrame)
     resetBtn:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1
+        edgeSize = MCL_PixelEdge(resetBtn)
     })
-    resetBtn:SetBackdropColor(0.4, 0.08, 0.08, 0.7)
-    resetBtn:SetBackdropBorderColor(0.55, 0.12, 0.12, 0.8)
+    resetBtn:SetBackdropColor(MCL_SHADE("SURFACE_DANGER", 0.7))
+    resetBtn:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_DANGER))
     
     local resetText = resetBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     resetText:SetPoint("CENTER")
     resetText:SetText(L["Reset Settings"])
-    resetText:SetTextColor(0.9, 0.6, 0.6, 1)
+    resetText:SetTextColor(unpack(MCL_COLORS.TEXT_DANGER))
     
     resetBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.55, 0.12, 0.12, 0.9)
-        self:SetBackdropBorderColor(0.8, 0.2, 0.2, 1)
-        resetText:SetTextColor(1, 0.8, 0.8, 1)
+        self:SetBackdropColor(unpack(MCL_COLORS.SURFACE_DANGER))
+        self:SetBackdropBorderColor(MCL_SHADE("BORDER_DANGER", 1))
+        resetText:SetTextColor(unpack(MCL_COLORS.TEXT_DANGER))
     end)
     resetBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.4, 0.08, 0.08, 0.7)
-        self:SetBackdropBorderColor(0.55, 0.12, 0.12, 0.8)
-        resetText:SetTextColor(0.9, 0.6, 0.6, 1)
+        self:SetBackdropColor(MCL_SHADE("SURFACE_DANGER", 0.7))
+        self:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_DANGER))
+        resetText:SetTextColor(unpack(MCL_COLORS.TEXT_DANGER))
     end)
     resetBtn:SetScript("OnClick", function() StaticPopup_Show("MCL_RESET_SETTINGS") end)
     
@@ -5045,7 +5082,7 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
         totalFrame:SetBackdrop({
             bgFile   = "Interface\\Buttons\\WHITE8x8",
             edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
+            edgeSize = MCL_PixelEdge(totalFrame),
         })
         totalFrame:SetBackdropColor(Surface("SURFACE_2"))
         totalFrame:SetBackdropBorderColor(unpack(COLORS.BORDER_ACCENT))
@@ -5121,7 +5158,7 @@ function MCL_frames:createOverviewCategory(set, relativeFrame)
             sectionFrame:SetBackdrop({
                 bgFile = "Interface\\Buttons\\WHITE8x8",
                 edgeFile = "Interface\\Buttons\\WHITE8x8",
-                edgeSize = 1
+                edgeSize = MCL_PixelEdge(sectionFrame)
             })
             sectionFrame:SetBackdropColor(Surface("SURFACE_2"))
             sectionFrame:SetBackdropBorderColor(unpack(COLORS.BORDER_SUBTLE))
@@ -5396,6 +5433,21 @@ for _, categoryName in ipairs(sortedCategoryNames) do
     local totalMounts = 0
     local collectedMounts = 0
     local displayedMounts = 0  -- Track mounts that will actually be displayed
+    -- Mounts the journal has positively confirmed belong to the other
+    -- faction, and mounts it could not tell us about yet. Kept apart so an
+    -- all-Horde category can be dropped on an Alliance character without
+    -- also dropping every category during the early-login window, when the
+    -- journal answers nothing and every mount looks unknown.
+    local oppositeFactionMounts = 0
+    local unknownFactionMounts = 0
+    -- Once the journal has loaded, a mount it returns nothing for is not
+    -- "unknown" - it is not in this client's journal at all. Forever ships
+    -- mount rows the journal never exposes (GetMountInfoByID(3168), the
+    -- Crimson Rooster, returns nothing), and counting those as unknown kept
+    -- their categories drawing as empty 0/0 cards.
+    local notInJournalMounts = 0
+    local journalReady = C_MountJournal.GetNumMounts
+        and (C_MountJournal.GetNumMounts() or 0) > 0 or false
     
     -- Combine both mounts and mountID arrays
     local mountList = {}
@@ -5443,6 +5495,13 @@ for _, categoryName in ipairs(sortedCategoryNames) do
             elseif faction_specific == true then
                 if faction == 0 then faction = "Horde" elseif faction == 1 then faction = "Alliance" end
                 allowed = (faction == playerFaction)
+                if not allowed then
+                    oppositeFactionMounts = oppositeFactionMounts + 1
+                end
+            elseif journalReady then
+                notInJournalMounts = notInJournalMounts + 1
+            else
+                unknownFactionMounts = unknownFactionMounts + 1
             end
             if allowed then
                 local isCollected = IsMountCollected(mount_Id)
@@ -5461,8 +5520,19 @@ for _, categoryName in ipairs(sortedCategoryNames) do
     -- Hide fully-collected categories when the "Hide Collected Mounts" filter is active.
     -- Otherwise, show a category as long as it has mounts defined in data (even when
     -- totalMounts is 0 because the mount journal isn't ready yet).
+    -- A category made up entirely of the other faction's mounts is skipped:
+    -- it drew as an empty "Kodos (0/0)" card on an Alliance character. Only
+    -- when every mount has been positively identified as opposite-faction,
+    -- though - one unknown and the journal may simply not be ready, which
+    -- is the case the comment above protects.
+    local onlyOtherFaction = (totalMounts == 0
+                              and (oppositeFactionMounts + notInJournalMounts) > 0
+                              and unknownFactionMounts == 0)
+
     if MCL_SETTINGS.hideCollectedMounts and totalMounts > 0 and displayedMounts == 0 then
         -- All mounts collected & filter is on — skip this category entirely
+    elseif onlyOtherFaction then
+        -- Nothing in this category can ever be collected on this character.
     else
 
     -- Apply user-selected sort mode to the mount list
@@ -5537,10 +5607,12 @@ for _, categoryName in ipairs(sortedCategoryNames) do
         categoryFrame:SetWidth(columnWidth)
         categoryFrame:SetHeight(categoryHeight)  -- Dynamic height
         categoryFrame:SetPoint("TOPLEFT", relativeFrame, "TOPLEFT", xPos, yPos)
+        -- Whole-pixel edge: at a UI scale below 1 a 1-unit edge is thinner
+        -- than a pixel and the bottom one dropped out on some rows.
         categoryFrame:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8x8",
             edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1
+            edgeSize = MCL_PixelEdge(categoryFrame),
         })
         categoryFrame:SetBackdropColor(Surface("SURFACE_2"))
         categoryFrame:SetBackdropBorderColor(unpack(COLORS.BORDER_SUBTLE))
@@ -5569,7 +5641,7 @@ for _, categoryName in ipairs(sortedCategoryNames) do
         categoryFrame.toggleBtn:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8x8",
             edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
+            edgeSize = MCL_PixelEdge(categoryFrame.toggleBtn),
             insets = { left = 1, right = 1, top = 1, bottom = 1 },
         })
         categoryFrame.toggleBtn:SetBackdropColor(unpack(COLORS.SURFACE_3))
@@ -5662,22 +5734,59 @@ for _, categoryName in ipairs(sortedCategoryNames) do
         categoryFrame.titleBtn:SetPoint("TOPRIGHT", categoryFrame, "TOPRIGHT", 0, 0)
         categoryFrame.titleBtn:SetHeight(28)
         categoryFrame.titleBtn:SetFrameLevel(categoryFrame:GetFrameLevel() + 5)
-        categoryFrame.titleBtn:SetScript("OnEnter", function()
+
+        -- Card hover covers the whole card, not just the title strip.
+        --
+        -- WoW sends a frame OnLeave the moment the cursor moves onto one
+        -- of its own mouse-enabled children (the title bar, the eye, every
+        -- mount icon), so the card's enter/leave events alone would flicker
+        -- off over each icon. Instead any enter or leave on the card or its
+        -- title bar re-asks IsMouseOver, and while the cursor is inside, a
+        -- short OnUpdate watches for it leaving by any route - including
+        -- straight off a mount icon, which tells the card nothing.
+        local function SetCardHover(on)
+            if categoryFrame.__mclHover == on then return end
+            categoryFrame.__mclHover = on
             local A = MCLcore.Anim
-            A:TextColor(categoryFrame.title, COLORS.ACCENT, 0.10)
-            A:BorderColor(categoryFrame, COLORS.BORDER_ACCENT, 0.10)
-            A:BorderColor(categoryFrame.toggleBtn, COLORS.BORDER_ACCENT, 0.10)
-            A:TextColor(categoryFrame.toggleLabel, COLORS.ACCENT, 0.10)
+            if on then
+                A:TextColor(categoryFrame.title, COLORS.ACCENT, 0.10)
+                A:BorderColor(categoryFrame, COLORS.BORDER_ACCENT, 0.10)
+                A:BorderColor(categoryFrame.toggleBtn, COLORS.BORDER_ACCENT, 0.10)
+                A:TextColor(categoryFrame.toggleLabel, COLORS.ACCENT, 0.10)
+            else
+                A:TextColor(categoryFrame.title,
+                    categoryFrame.mapHidden and COLORS.TEXT_MUTED or COLORS.TEXT_BODY,
+                    0.16, "inOutQuad")
+                A:BorderColor(categoryFrame, COLORS.BORDER_SUBTLE, 0.16, "inOutQuad")
+                A:BorderColor(categoryFrame.toggleBtn, COLORS.BORDER_DEFAULT, 0.16, "inOutQuad")
+                A:TextColor(categoryFrame.toggleLabel, COLORS.TEXT_MUTED, 0.16, "inOutQuad")
+            end
+        end
+
+        local function WatchCardHover()
+            if not categoryFrame:IsMouseOver() then
+                categoryFrame:SetScript("OnUpdate", nil)
+                SetCardHover(false)
+                return
+            end
+            SetCardHover(true)
+            categoryFrame:SetScript("OnUpdate", function(self)
+                if not self:IsMouseOver() then
+                    self:SetScript("OnUpdate", nil)
+                    SetCardHover(false)
+                end
+            end)
+        end
+
+        categoryFrame:EnableMouse(true)
+        categoryFrame:SetScript("OnEnter", WatchCardHover)
+        categoryFrame:SetScript("OnLeave", WatchCardHover)
+        categoryFrame:SetScript("OnHide", function(self)
+            self:SetScript("OnUpdate", nil)
+            SetCardHover(false)
         end)
-        categoryFrame.titleBtn:SetScript("OnLeave", function()
-            local A = MCLcore.Anim
-            A:TextColor(categoryFrame.title,
-                categoryFrame.mapHidden and COLORS.TEXT_MUTED or COLORS.TEXT_BODY,
-                0.16, "inOutQuad")
-            A:BorderColor(categoryFrame, COLORS.BORDER_SUBTLE, 0.16, "inOutQuad")
-            A:BorderColor(categoryFrame.toggleBtn, COLORS.BORDER_DEFAULT, 0.16, "inOutQuad")
-            A:TextColor(categoryFrame.toggleLabel, COLORS.TEXT_MUTED, 0.16, "inOutQuad")
-        end)
+        categoryFrame.titleBtn:SetScript("OnEnter", WatchCardHover)
+        categoryFrame.titleBtn:SetScript("OnLeave", WatchCardHover)
 
         -- Store in list for reflow
         table.insert(categoryFramesList, categoryFrame)
@@ -5773,7 +5882,7 @@ for _, categoryName in ipairs(sortedCategoryNames) do
         categoryFrame.inlineCount = categoryFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         categoryFrame.inlineCount:SetPoint("LEFT", categoryFrame.title, "RIGHT", 6, 0)
         categoryFrame.inlineCount:SetText(string.format("|cff888888(%d/%d)|r", collectedMounts, totalMounts))
-        categoryFrame.inlineCount:SetTextColor(0.5, 0.5, 0.5, 1)
+        categoryFrame.inlineCount:SetTextColor(unpack(MCL_COLORS.TEXT_MUTED))
 
         -- Apply initial collapsed state
         local function SetCategoryCollapsed(cf, collapsed)
@@ -5920,12 +6029,12 @@ function MCL_frames:createTimelineCategoryFrame(set, relativeFrame, sectionName)
             local yearText = divider:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
             yearText:SetPoint("LEFT", 6, 0)
             yearText:SetText(tostring(thisYear))
-            yearText:SetTextColor(0.55, 0.6, 0.7, 1)
+            yearText:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
             local line = divider:CreateTexture(nil, "ARTWORK")
             line:SetHeight(1)
             line:SetPoint("LEFT", yearText, "RIGHT", 8, 0)
             line:SetPoint("RIGHT", divider, "RIGHT", -4, 0)
-            line:SetColorTexture(0.25, 0.25, 0.3, 0.6)
+            line:SetColorTexture(MCL_SHADE("BORDER_DEFAULT", 0.6))
             table.insert(layoutOrder, {type = "divider", frame = divider})
             yOffset = yOffset - 26
         end
@@ -6013,11 +6122,11 @@ function MCL_frames:createTimelineCategoryFrame(set, relativeFrame, sectionName)
         row:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8x8",
             edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
+            edgeSize = MCL_PixelEdge(row),
             insets = { left = 1, right = 1, top = 1, bottom = 1 },
         })
-        row:SetBackdropColor(0.06, 0.06, 0.09, 0.9)
-        row:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.8)
+        row:SetBackdropColor(MCL_SHADE("SURFACE_SUNKEN", 0.9))
+        row:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_DEFAULT))
         row.collapseKey = collapseKey
         row.expandedHeight = expandedHeight
         row.isCollapsed = isCollapsed
@@ -6029,14 +6138,14 @@ function MCL_frames:createTimelineCategoryFrame(set, relativeFrame, sectionName)
         row.toggleBtn:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8x8",
             edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
+            edgeSize = MCL_PixelEdge(row.toggleBtn),
             insets = { left = 1, right = 1, top = 1, bottom = 1 },
         })
-        row.toggleBtn:SetBackdropColor(0.10, 0.10, 0.15, 0.9)
-        row.toggleBtn:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.8)
+        row.toggleBtn:SetBackdropColor(MCL_SHADE("SURFACE_PANEL", 0.9))
+        row.toggleBtn:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_DEFAULT))
         row.toggleLabel = row.toggleBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         row.toggleLabel:SetPoint("CENTER", 0, 1)
-        row.toggleLabel:SetTextColor(0.5, 0.55, 0.65, 1)
+        row.toggleLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
         row.toggleLabel:SetText(isCollapsed and "+" or "\226\136\146")
 
         -- Month label
@@ -6053,7 +6162,7 @@ function MCL_frames:createTimelineCategoryFrame(set, relativeFrame, sectionName)
             displayName = L[displayName] or displayName
         end
         row.title:SetText(displayName)
-        row.title:SetTextColor(0.7, 0.78, 0.88, 1)
+        row.title:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
 
         -- Inline count
         row.inlineCount = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -6068,7 +6177,7 @@ function MCL_frames:createTimelineCategoryFrame(set, relativeFrame, sectionName)
             pip:SetSize(pipWidth, pipHeight)
             pip:SetPoint("LEFT", row.inlineCount, "RIGHT", 6, 0)
             pip:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8x8"})
-            pip:SetBackdropColor(0.12, 0.12, 0.15, 0.8)
+            pip:SetBackdropColor(MCL_SHADE("SURFACE_RAISED", 0.8))
             local fill = pip:CreateTexture(nil, "OVERLAY")
             fill:SetHeight(pipHeight)
             fill:SetPoint("LEFT", pip, "LEFT", 0, 0)
@@ -6086,7 +6195,7 @@ function MCL_frames:createTimelineCategoryFrame(set, relativeFrame, sectionName)
                     fill:SetColorTexture(cols.low.r, cols.low.g, cols.low.b, 1)
                 end
             else
-                fill:SetColorTexture(0.5, 0.5, 0.5, 1)
+                fill:SetColorTexture(unpack(MCL_COLORS.BORDER_STRONG))
             end
             row.pip = pip
         end
@@ -6129,16 +6238,16 @@ function MCL_frames:createTimelineCategoryFrame(set, relativeFrame, sectionName)
         row.titleBtn:SetHeight(ROW_COLLAPSED_HEIGHT)
         row.titleBtn:SetFrameLevel(row:GetFrameLevel() + 5)
         row.titleBtn:SetScript("OnEnter", function()
-            row.title:SetTextColor(0.4, 0.78, 0.95, 1)
-            row:SetBackdropBorderColor(0.3, 0.6, 0.9, 0.8)
-            row.toggleBtn:SetBackdropBorderColor(0.3, 0.6, 0.9, 0.8)
-            row.toggleLabel:SetTextColor(0.4, 0.78, 0.95, 1)
+            row.title:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
+            row:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT))
+            row.toggleBtn:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_ACCENT))
+            row.toggleLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
         end)
         row.titleBtn:SetScript("OnLeave", function()
-            row.title:SetTextColor(0.7, 0.78, 0.88, 1)
-            row:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.8)
-            row.toggleBtn:SetBackdropBorderColor(0.25, 0.25, 0.3, 0.8)
-            row.toggleLabel:SetTextColor(0.5, 0.55, 0.65, 1)
+            row.title:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT_BRIGHT))
+            row:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_DEFAULT))
+            row.toggleBtn:SetBackdropBorderColor(unpack(MCL_COLORS.BORDER_DEFAULT))
+            row.toggleLabel:SetTextColor(unpack(MCL_COLORS.TEXT_ACCENT))
         end)
 
         table.insert(allRowFrames, row)

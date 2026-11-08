@@ -115,13 +115,13 @@ local function Build()
 
     line = frame:CreateLine(nil, "OVERLAY")
     line:SetThickness(2.5)
-    line:SetColorTexture(0.30, 0.72, 0.96, 0.85)
+    line:SetColorTexture(MCL_SHADE("BORDER_ACCENT", 0.85))
 
     -- A dot on the outer end, so which way the line points is not a
     -- question you have to think about.
     tip = frame:CreateTexture(nil, "OVERLAY")
     tip:SetSize(6, 6)
-    tip:SetColorTexture(0.30, 0.72, 0.96, 1)
+    tip:SetColorTexture(MCL_SHADE("BORDER_ACCENT", 1))
 
     return frame
 end
