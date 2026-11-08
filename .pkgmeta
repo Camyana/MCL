@@ -7,3 +7,8 @@
 manual-changelog:
     filename: CHANGELOG.md
     markup-type: markdown
+
+# MCL ships two TOC files - MCL.toc for retail and MCL_Forever.toc for
+# World of Warcraft: Forever.  With more than one, the packager cannot
+# work out the addon's folder name and aborts the build, so name it.
+package-as: MCL

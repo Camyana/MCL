@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.14.1
+
+3.14.0 never reached CurseForge. MCL now carries two TOC files, one for retail
+and one for Forever, and the packager would not build an addon with more than
+one until it was told the addon's folder name. This release is 3.14.0 with that
+fixed - everything in the 3.14.0 notes below is in it.
+
 ## 3.14.0
 
 ### World of Warcraft: Forever
