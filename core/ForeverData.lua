@@ -48,7 +48,7 @@ MCLcore.mountList[1] = {
 		},
 		NightElf = {
 			name = "Night Elf",
-			mounts = {"m26", "m31", "m32", "m34", "m85", "m87", "m107"},
+			mounts = {"m26", "m31", "m32", "m34", "m2995", "m85", "m87", "m107"},
 			mountID = {}
 		},
 		Skyborne = {
@@ -73,12 +73,12 @@ MCLcore.mountList[2] = {
 		},
 		Tauren = {
 			name = "Tauren",
-			mounts = {"m70", "m71", "m72", "m101", "m102", "m103"},
+			mounts = {"m70", "m71", "m72", "m3037", "m101", "m102", "m103"},
 			mountID = {}
 		},
 		Undead = {
 			name = "Undead",
-			mounts = {"m28", "m65", "m66", "m67", "m68", "m100"},
+			mounts = {"m28", "m65", "m66", "m67", "m3038", "m68", "m100"},
 			mountID = {}
 		},
 		Skyborne = {
@@ -114,16 +114,6 @@ MCLcore.mountList[4] = {
 	}
 }
 MCLcore.mountList[5] = {
-	name = "Quest",
-	categories = {
-		Quest = {
-			name = "Quest",
-			mounts = {"m2995", "m3037", "m3038"},
-			mountID = {}
-		},
-	}
-}
-MCLcore.mountList[6] = {
 	name = "PVP",
 	categories = {
 		PvPRewards = {
@@ -133,7 +123,7 @@ MCLcore.mountList[6] = {
 		},
 	}
 }
-MCLcore.mountList[7] = {
+MCLcore.mountList[6] = {
 	name = "Class",
 	categories = {
 		Paladin = {
@@ -148,7 +138,7 @@ MCLcore.mountList[7] = {
 		},
 	}
 }
-MCLcore.mountList[8] = {
+MCLcore.mountList[7] = {
 	name = "Rewards",
 	categories = {
 		Legacy = {
@@ -163,7 +153,7 @@ MCLcore.mountList[8] = {
 		},
 	}
 }
-MCLcore.mountList[9] = {
+MCLcore.mountList[8] = {
 	name = "Unconfirmed",
 	categories = {
 		SkeletalHorses = {
@@ -204,49 +194,43 @@ MCLcore.sectionNames[4] = {
 	isExpansion = false,
 }
 MCLcore.sectionNames[5] = {
-	name = "Quest",
-	mounts = MCLcore.mountList[5],
-	icon = "Interface\\AddOns\\MCL\\icons\\mists.blp",
-	isExpansion = false,
-}
-MCLcore.sectionNames[6] = {
 	name = "PVP",
-	mounts = MCLcore.mountList[6],
+	mounts = MCLcore.mountList[5],
 	icon = "Interface\\AddOns\\MCL\\icons\\pvp.blp",
 	isExpansion = false,
 }
-MCLcore.sectionNames[7] = {
+MCLcore.sectionNames[6] = {
 	name = "Class",
-	mounts = MCLcore.mountList[7],
+	mounts = MCLcore.mountList[6],
 	icon = "Interface\\AddOns\\MCL\\icons\\sl.blp",
 	isExpansion = false,
 }
-MCLcore.sectionNames[8] = {
+MCLcore.sectionNames[7] = {
 	name = "Rewards",
-	mounts = MCLcore.mountList[8],
+	mounts = MCLcore.mountList[7],
 	icon = "Interface\\AddOns\\MCL\\icons\\other.blp",
 	isExpansion = false,
 }
-MCLcore.sectionNames[9] = {
+MCLcore.sectionNames[8] = {
 	name = "Unconfirmed",
-	mounts = MCLcore.mountList[9],
+	mounts = MCLcore.mountList[8],
 	icon = "Interface\\AddOns\\MCL\\icons\\unobtainable.blp",
 	isExpansion = false,
 }
-MCLcore.sectionNames[10] = {
+MCLcore.sectionNames[9] = {
 	name = "Pinned",
 	mounts = {MCL_PINNED},
 	icon = "Interface\\AddOns\\MCL\\icons\\pin.blp",
 	isExpansion = false,
 }
-MCLcore.sectionNames[11] = {
+MCLcore.sectionNames[10] = {
 	name = "Hidden",
 	mounts = {MCL_HIDDEN},
 	icon = "Interface\\AddOns\\MCL\\icons\\unobtainable.blp",
 	isExpansion = false,
 	hiddenFromOverview = true,
 }
-MCLcore.sectionNames[12] = {
+MCLcore.sectionNames[11] = {
 	name = "Overview",
 	mounts = {},
 	icon = "Interface\\AddOns\\MCL\\icons\\mcl.blp",

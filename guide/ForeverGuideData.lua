@@ -15,7 +15,7 @@
 -- client so Wowhead has it; drop and spawn data is crowd-sourced and
 -- Forever launched on 2026-11-04, so much of it does not exist yet. A
 -- mount with no known source is simply absent from this file rather than
--- given a guessed one - 26 of the 104 listed mounts are in that
+-- given a guessed one - 25 of the 104 listed mounts are in that
 -- position today. Re-running the scraper is how that number comes down.
 --------------------------------------------------------
 
@@ -234,6 +234,15 @@ MCL_GUIDE_DATA.mounts = {
 		itemId = 13334,
 		coords = {
 			{ m = 1420, x = 59.8, y = 52.6 },
+		},
+	},
+	[17481] = {
+		name = "Rivendare's Deathcharger",
+		method = "BOSS",
+		itemId = 13335,
+		lockBossName = "Baron Rivendare",
+		coords = {
+			{ m = 1423, x = 26.1, y = 10.4 },
 		},
 	},
 	[18989] = {
@@ -495,36 +504,50 @@ MCL_GUIDE_DATA.mounts = {
 		method = "BOSS",
 		itemId = 19872,
 		lockBossName = "Bloodlord Mandokir",
+		coords = {
+			{ m = 1434, x = 54, y = 17.6 },
+		},
 	},
 	[24252] = {
 		name = "Swift Zulian Tiger",
 		method = "BOSS",
 		itemId = 19902,
 		lockBossName = "High Priest Thekal",
+		coords = {
+			{ m = 1434, x = 54, y = 17.6 },
+		},
 	},
 	[25953] = {
 		name = "Summon Blue Qiraji Battle Tank",
 		method = "BOSS",
 		itemId = 21218,
-		lockBossName = "Qiraji Mindslayer",
+		coords = {
+			{ m = 1451, x = 29, y = 92.7, n = "Ahn'Qiraj Temple trash" },
+		},
 	},
 	[26054] = {
 		name = "Summon Red Qiraji Battle Tank",
 		method = "BOSS",
 		itemId = 21321,
-		lockBossName = "Qiraji Mindslayer",
+		coords = {
+			{ m = 1451, x = 29, y = 92.7, n = "Ahn'Qiraj Temple trash" },
+		},
 	},
 	[26055] = {
 		name = "Summon Yellow Qiraji Battle Tank",
 		method = "BOSS",
 		itemId = 21324,
-		lockBossName = "Qiraji Mindslayer",
+		coords = {
+			{ m = 1451, x = 29, y = 92.7, n = "Ahn'Qiraj Temple trash" },
+		},
 	},
 	[26056] = {
 		name = "Summon Green Qiraji Battle Tank",
 		method = "BOSS",
 		itemId = 21323,
-		lockBossName = "Qiraji Mindslayer",
+		coords = {
+			{ m = 1451, x = 29, y = 92.7, n = "Ahn'Qiraj Temple trash" },
+		},
 	},
 	[1286011] = {
 		name = "Swift Empyrean Galestrider",
@@ -622,12 +645,15 @@ MCL_GUIDE_DATA.zones = {
 	[1413] = { 1301636 },
 	[1416] = { 23509, 23510 },
 	[1420] = { 17462, 17463, 17464, 17465, 23246 },
+	[1423] = { 17481 },
 	[1424] = { 458, 472, 6648, 23227, 23228, 23229 },
 	[1426] = { 6777, 6898, 6899, 10873, 10969, 17453, 17454, 23222, 23223, 23225, 23238, 23239, 23240 },
 	[1429] = { 458, 472, 6648, 23227, 23228, 23229 },
 	[1433] = { 1301636 },
+	[1434] = { 24242, 24252 },
 	[1437] = { 458, 470, 472, 6648 },
 	[1445] = { 458, 472, 6648, 23227, 23228, 23229 },
+	[1451] = { 25953, 26054, 26055, 26056 },
 	[1452] = { 17229 },
 	[1454] = { 580, 6653, 6654, 23250, 23251, 23252 },
 	[1457] = { 8394, 10789, 10793, 23219, 23221, 23338 },

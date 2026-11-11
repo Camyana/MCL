@@ -1,5 +1,33 @@
 # Changelog
 
+## 3.14.2
+
+**Forever: the Striped Dawnsaber, White Kodo and Black Skeletal Horse now sit
+with their race.** Each is the new colour in a starter mount quest - *Your
+First Feline Friend*, *Your First Riding Kodo* and *A Steed in Death as They
+Were in Life* - where you pick one mount free from the race's three classic
+colours plus this one. Unlike the classic three, no vendor is known to sell
+them, which is why they had been filed under Quest. But they are racial mounts
+like the rest, so they are now under Night Elf, Tauren and Undead. With nothing
+left in it, the Quest section is gone. The guide still sends you to the quest
+for all three.
+
+**Forever: dungeon and raid mounts are on the map.** The guide had no location
+for any of them, because nobody has recorded where anything stands inside an
+instance yet. The game itself knows where each instance's door is, so they are
+now pinned at the entrance: Rivendare's Deathcharger at the Stratholme gate in
+the Eastern Plaguelands, the Swift Razzashi Raptor and Swift Zulian Tiger at
+Zul'Gurub in Stranglethorn Vale, and the four Qiraji Battle Tanks at the
+Ahn'Qiraj gates in Silithus. The tanks no longer name a Qiraji Mindslayer as
+their boss - their crystals drop from the temple's trash, not from one mob -
+and the Deathcharger is in the guide for the first time, from Baron Rivendare.
+
+**Map pins are all one size.** Boss, rare and dungeon pins used to draw a third
+larger than vendor pins, which made them look more important rather than just
+different. Every pin now matches the vendor size; the coloured border and the
+label still say what each one is, and the pin scale setting still resizes them
+all together. This applies on retail as well as Forever.
+
 ## 3.14.1
 
 3.14.0 never reached CurseForge. MCL now carries two TOC files, one for retail

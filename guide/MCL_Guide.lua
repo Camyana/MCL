@@ -590,7 +590,22 @@ function Guide:IsUnavailableOnChar(mountID)
 
     -- Blizzard's own "hide on this character" flag covers wrong class AND wrong
     -- faction (and other per-character restrictions).
-    if shouldHideOnChar == true then
+    --
+    -- Forever is the exception.  Its Mount table copies retail's flags, which
+    -- include "hide from the journal unless learned" on mounts retail retired:
+    -- the Zul'Gurub raptor and tiger, and vanilla colours such as the Black
+    -- Wolf that Forever hands out from Your First Riding Wolf.  There the flag
+    -- says nothing about whether this character can get the mount, and it hid
+    -- the Zul'Gurub pins outright.  So on Forever it only counts for class
+    -- mounts, the one restriction nothing else here can see; faction is
+    -- checked below with the same rule the Forever collection log uses.
+    local trustHideFlag = true
+    if MCLcore.C and MCLcore.C.IsForever and MCLcore.C.IsForever() then
+        local section = self.MapPins and self.MapPins.GetSectionInfo
+            and self.MapPins:GetSectionInfo(mountID)
+        trustHideFlag = (section == "Class")
+    end
+    if shouldHideOnChar == true and trustHideFlag then
         return true
     end
 

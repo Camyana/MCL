@@ -821,28 +821,33 @@ local function HideMiniCard()
     if ReleaseStepMarkers then ReleaseStepMarkers() end
 end
 
--- ─── Pin sizing & colours by source type ────────────────────
+-- ─── Pin colours by source type ─────────────────────────────
+-- Every pin draws at one size, whatever its source. Bosses and rares used
+-- to be a third larger than vendors, which made them read as more
+-- important rather than just different; the border colour and the label
+-- already tell them apart. mapPinScale still scales them all together.
+local PIN_SIZE = 26
 local PIN_STYLES = {
     -- method        = { size, borderR, borderG, borderB, label, labelR, labelG, labelB }
-    NPC              = { 36, 0.64, 0.21, 0.93, L["Rare"],     0.78, 0.43, 1.00 },
-    BOSS             = { 36, 0.90, 0.49, 0.13, L["Boss"],     1.00, 0.65, 0.20 },
-    ZONE             = { 36, 0.64, 0.21, 0.93, L["Zone"],     0.78, 0.43, 1.00 },
-    VENDOR           = { 26, 0.85, 0.72, 0.26, L["Vendor"], 1.00, 0.84, 0.30 },
-    QUEST            = { 30, 0.98, 0.82, 0.00, L["Quest"],   1.00, 0.90, 0.30 },
-    FISHING          = { 28, 0.30, 0.70, 0.90, L["Fish"],     0.40, 0.80, 1.00 },
-    USE              = { 30, 0.50, 0.80, 0.50, L["Loot"],     0.55, 0.90, 0.55 },
-    SPECIAL          = { 30, 0.90, 0.80, 0.20, L["Special"],0.95, 0.85, 0.30 },
-    MINING           = { 28, 0.70, 0.55, 0.35, L["Mining"], 0.80, 0.65, 0.40 },
-    COLLECTION       = { 30, 0.40, 0.75, 0.95, L["Collect"],0.50, 0.85, 1.00 },
-    ARCH             = { 28, 0.75, 0.60, 0.40, L["Arch"],     0.85, 0.70, 0.45 },
-    Treasure         = { 30, 0.85, 0.65, 0.13, L["Treasure"], 0.95, 0.75, 0.20 },
-    Chest            = { 30, 0.85, 0.65, 0.13, L["Chest"],    0.95, 0.75, 0.20 },
-    Dungeon          = { 36, 0.90, 0.49, 0.13, L["Dungeon"],  1.00, 0.65, 0.20 },
-    ["Grand Hunt"]   = { 30, 0.64, 0.21, 0.93, L["Grand Hunt"], 0.78, 0.43, 1.00 },
-    Reputation       = { 30, 0.20, 0.70, 0.50, L["Reputation"], 0.30, 0.85, 0.60 },
-    ParagonReputation= { 30, 0.20, 0.70, 0.50, L["Reputation"], 0.30, 0.85, 0.60 },
+    NPC              = { PIN_SIZE, 0.64, 0.21, 0.93, L["Rare"],     0.78, 0.43, 1.00 },
+    BOSS             = { PIN_SIZE, 0.90, 0.49, 0.13, L["Boss"],     1.00, 0.65, 0.20 },
+    ZONE             = { PIN_SIZE, 0.64, 0.21, 0.93, L["Zone"],     0.78, 0.43, 1.00 },
+    VENDOR           = { PIN_SIZE, 0.85, 0.72, 0.26, L["Vendor"], 1.00, 0.84, 0.30 },
+    QUEST            = { PIN_SIZE, 0.98, 0.82, 0.00, L["Quest"],   1.00, 0.90, 0.30 },
+    FISHING          = { PIN_SIZE, 0.30, 0.70, 0.90, L["Fish"],     0.40, 0.80, 1.00 },
+    USE              = { PIN_SIZE, 0.50, 0.80, 0.50, L["Loot"],     0.55, 0.90, 0.55 },
+    SPECIAL          = { PIN_SIZE, 0.90, 0.80, 0.20, L["Special"],0.95, 0.85, 0.30 },
+    MINING           = { PIN_SIZE, 0.70, 0.55, 0.35, L["Mining"], 0.80, 0.65, 0.40 },
+    COLLECTION       = { PIN_SIZE, 0.40, 0.75, 0.95, L["Collect"],0.50, 0.85, 1.00 },
+    ARCH             = { PIN_SIZE, 0.75, 0.60, 0.40, L["Arch"],     0.85, 0.70, 0.45 },
+    Treasure         = { PIN_SIZE, 0.85, 0.65, 0.13, L["Treasure"], 0.95, 0.75, 0.20 },
+    Chest            = { PIN_SIZE, 0.85, 0.65, 0.13, L["Chest"],    0.95, 0.75, 0.20 },
+    Dungeon          = { PIN_SIZE, 0.90, 0.49, 0.13, L["Dungeon"],  1.00, 0.65, 0.20 },
+    ["Grand Hunt"]   = { PIN_SIZE, 0.64, 0.21, 0.93, L["Grand Hunt"], 0.78, 0.43, 1.00 },
+    Reputation       = { PIN_SIZE, 0.20, 0.70, 0.50, L["Reputation"], 0.30, 0.85, 0.60 },
+    ParagonReputation= { PIN_SIZE, 0.20, 0.70, 0.50, L["Reputation"], 0.30, 0.85, 0.60 },
 }
-local DEFAULT_STYLE  = { 28, 0.50, 0.50, 0.50, "",       0.60, 0.60, 0.60 }
+local DEFAULT_STYLE  = { PIN_SIZE, 0.50, 0.50, 0.50, "",       0.60, 0.60, 0.60 }
 
 -- ── Hover slide-away animation settings ─────────────────────
 local SLIDE_DURATION      = 0.18   -- seconds for slide animation
@@ -985,7 +990,7 @@ function MCL_GuidePinMixin:OnAcquired(mountData, waypoint)
     local scale = MCL_GUIDE_SETTINGS and MCL_GUIDE_SETTINGS.mapPinScale or 2.0
     local pinSize = math.floor(style[1] * scale + 0.5)
 
-    -- Resize pin to match source type
+    -- Size the pin (the same for every source type)
     self:SetSize(pinSize, pinSize)
     self.visual:SetSize(pinSize, pinSize)
     self.visual:ClearAllPoints()
